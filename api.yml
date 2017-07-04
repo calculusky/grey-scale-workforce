@@ -1,0 +1,184 @@
+parameters:
+  sessionId:
+    name: travel-session-id
+    description: The Session ID of an authorized user
+    in: header
+    required: true
+    type: string
+
+  offset:
+    name: offset
+    description: The starting position to query from or the amount of records(rows) to skip. Default is 0.
+    in: path
+    required: false
+    default: 0
+    type: integer
+    format: int32
+    minimum: 0
+
+
+  limit:
+    name: limit
+    description: The total amount of records to retrieve. Default is 10.
+    in: path
+    required: false
+    default: 10
+    type: integer
+    format: int32
+    maximum: 20
+
+  req_id:
+    name: id
+    type: integer
+    in: path
+    required: true
+    description: "The travel request id"
+
+  req_status:
+    name: statusId
+    in: path
+    type: integer
+    format: int32
+    maximum: 2
+    required: true
+    enum: [0, 1, 2]
+    description: "The status of the travel request. 0 = for Pending Approval,
+     1 = Approved, 2 = Rejected"
+
+  usr_id:
+    name: userId
+    type: integer
+    required: true
+    in: path
+    description: The user id
+
+#----------------------Definitions-------------------------------
+definitions:
+  User:
+    required:
+      - usr_id
+      - usr_username
+      - usr_first_name
+      - usr_last_name
+      - usr_email
+      - usr_created_at
+      - usr_updated_at
+    properties:
+      usr_id:
+        $ref: '#/parameters/usr_id'
+      usr_username:
+        type: string
+      usr_first_name:
+        type: string
+      usr_last_name:
+        type: string
+      usr_email:
+        type: string
+      usr_gender:
+        type: string
+      usr_created_at:
+        type: string
+        format: date
+      usr_updated_at:
+        type: string
+        format: date
+
+  newRequest:
+    type: "object"
+    required:
+      - "req_manager_id"
+      - "req_arrangements"
+      - "req_reasons"
+      - "req_departure_city"
+      - "req_arrival_city"
+      - "req_departure_date"
+      - "req_return_date"
+    properties:
+      req_manager_id:
+        description: "The Manager you are sending this request to for approval.
+                      Basically you should be sending user id of the manager."
+        name: req_manager_id
+        in: body
+        type: integer
+        required: true
+      req_arrangements:
+        name: req_arrangements
+        description: A list of arrangements needed for this travel. Must be a either of <b>Flight, Hotel,
+            Rental Car</b> or <b>Taxi Service</b>
+        in: body
+        required: truen
+        type: array
+        items:
+          type: string
+          enum: ['Flight', 'Hotel', 'Rental Car', 'Taxi Service']
+          collectionFormat: multi
+      req_reasons:
+        name: req_reasons
+        description: The reasons/purpose for this travel request
+        in: body
+        required: true
+        type: string
+
+      req_departure_city:
+        name: req_departure_city
+        description: The city of take off. Which city will you be taking off from?
+        in: body
+        required: true
+        type: string
+
+      req_arrival_city:
+        name: req_arrival_city
+        description: The intended city to visit. Which city are you visiting?
+        in: body
+        required: true
+        type: string
+
+      req_departure_date:
+        name: req_departure_date
+        description: The intended date for departure. When will you be leaving your current city?
+        in: body
+        required: true
+        type: string
+        format: date
+
+      req_return_date:
+        name: req_return_date
+        description: The intended date to return. When will you likely return from your visit?
+        in: body
+        required: true
+        type: string
+        format: date
+
+  Request:
+    description: A representation of a Travel Request Object
+    allOf:
+      - type: object
+        properties:
+          req_id:
+            $ref: '#/parameters/req_id'
+          req_requester_id:
+            type: integer
+            description: The User/Staff that requested for this Travel
+          req_status:
+            $ref: '#/parameters/req_status'
+          req_approved_by:
+            type: integer
+          created_at:
+            type: string
+            format: date-time
+            description: The date this request was created
+          updated_at:
+            type: string
+            format: date-time
+            description: The date this request was updated
+      - $ref: '#/definitions/newRequest'
+  Session:
+    required:
+      - token
+    properties:
+      token:
+        type: string
+      username:
+        type: string
+      date:
+        type: string
