@@ -69,6 +69,7 @@ class RecognitionService {
      */
     auth(req, res, next) {
         const token = req.header('x-travels-token');
+        console.log(req.headers);
         if (token) {
             jwt.verify(token, 'mySecretKeyFile', (err, decoded)=> {
                 if (err) {
