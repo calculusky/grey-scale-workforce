@@ -1,165 +1,190 @@
 -- This API Business instances should be loaded into memory to avoid read on this table
 -- all the time.
-CREATE TABLE API_BUSINESS_INSTANCES(
-  api_id INTEGER(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  api_name VARCHAR (255) NOT NULL, #the business name
-  api_key VARCHAR (60) NOT NULL,#key name of this instance
-  api_owner_email VARCHAR (100) NOT NULL,
-  add_id INTEGER(10) NOT NULL,
-  api_description  VARCHAR (255) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+CREATE TABLE API_BUSINESS_INSTANCES (
+  api_id          INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  api_name        VARCHAR(255) NOT NULL, #the business name
+  api_key         VARCHAR(60)  NOT NULL, #key name of this instance
+  api_owner_email VARCHAR(100) NOT NULL,
+  add_id          INTEGER(10)  NOT NULL,
+  api_description VARCHAR(255) NOT NULL,
+  created_at      TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
 
-CREATE TABLE teams(
-  tme_id INTEGER(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  tme_name VARCHAR(100) NOT NULL,
+CREATE TABLE teams (
+  tme_id          INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  tme_name        VARCHAR(100) NOT NULL,
   tme_description VARCHAR(255) NULL,
-  api_instance INTEGER(10) NULL,
-  deleted INTEGER(4) NOT NULL DEFAULT 0,
-  deleted_at TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(api_instance) REFERENCES API_BUSINESS_INSTANCES(api_id)
-)ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+  api_instance    INTEGER(10)  NULL,
+  deleted         INTEGER(4)   NOT NULL             DEFAULT 0,
+  deleted_at      TIMESTAMP    NULL,
+  created_at      TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
 
-CREATE TABLE departments(
-  dpt_id INTEGER (10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  dpt_name VARCHAR (100) NOT NULL,
-  api_instance INTEGER(10) NOT NULL,
-  deleted INTEGER(4) NOT NULL DEFAULT 0,
-  deleted_at TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(api_instance) REFERENCES API_BUSINESS_INSTANCES(api_id)
-)ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+CREATE TABLE departments (
+  dpt_id       INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  dpt_name     VARCHAR(100) NOT NULL,
+  api_instance INTEGER(10)  NOT NULL,
+  deleted      INTEGER(4)   NOT NULL             DEFAULT 0,
+  deleted_at   TIMESTAMP    NULL,
+  created_at   TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
 
-CREATE TABLE countries(
-  cou_id INTEGER (10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  cou_short_name VARCHAR(4) NOT NULL,
-  cou_name VARCHAR (255) NOT NULL,
-  cou_phone_code INTEGER(11) NOT NULL,
-  deleted INTEGER(4) NOT NULL DEFAULT 0,
-  deleted_at TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+CREATE TABLE countries (
+  cou_id         INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  cou_short_name VARCHAR(4)   NOT NULL,
+  cou_name       VARCHAR(255) NOT NULL,
+  cou_phone_code INTEGER(11)  NOT NULL,
+  deleted        INTEGER(4)   NOT NULL             DEFAULT 0,
+  deleted_at     TIMESTAMP    NULL,
+  created_at     TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  updated_at     TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
 
-CREATE TABLE states(
-  ste_id INTEGER (10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  ste_name VARCHAR (255) NOT NULL,
-  cou_id INTEGER (10) NOT NULL,
-  deleted INTEGER(4) NOT NULL DEFAULT 0,
-  deleted_at TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (cou_id) REFERENCES countries(cou_id)
-)ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+CREATE TABLE states (
+  ste_id     INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  ste_name   VARCHAR(255) NOT NULL,
+  cou_id     INTEGER(10)  NOT NULL,
+  deleted    INTEGER(4)   NOT NULL             DEFAULT 0,
+  deleted_at TIMESTAMP    NULL,
+  created_at TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (cou_id) REFERENCES countries (cou_id)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
 
-CREATE TABLE addresses(
-  add_id INTEGER(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  cou_id INTEGER (10) NOT NULL,
-  add_address_line_1 VARCHAR (100) NOT NULL COMMENT 'The first line of address',
-  add_address_line_2 VARCHAR (100) NULL COMMENT 'An optional second address',
-  ste_id INTEGER(10) NOT NULL,
-  add_city VARCHAR(60) NOT NULL,
-  add_postal_code VARCHAR (15) NOT NULL,
-  add_location VARCHAR(100) NULL, -- GEOMETRY Lat and Lng
-  api_instance INTEGER(10) NULL,
-  deleted INTEGER(4) NOT NULL DEFAULT 0,
-  deleted_at TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(api_instance) REFERENCES API_BUSINESS_INSTANCES(api_id),
-  FOREIGN KEY(ste_id) REFERENCES states(ste_id),
-  FOREIGN KEY (cou_id) REFERENCES countries(cou_id)
-)ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+CREATE TABLE addresses (
+  add_id             INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  cou_id             INTEGER(10)  NOT NULL,
+  add_address_line_1 VARCHAR(100) NOT NULL
+  COMMENT 'The first line of address',
+  add_address_line_2 VARCHAR(100) NULL
+  COMMENT 'An optional second address',
+  ste_id             INTEGER(10)  NOT NULL,
+  add_city           VARCHAR(60)  NOT NULL,
+  add_postal_code    VARCHAR(15)  NOT NULL,
+  add_location       VARCHAR(100) NULL, -- GEOMETRY Lat and Lng
+  api_instance       INTEGER(10)  NULL,
+  deleted            INTEGER(4)   NOT NULL             DEFAULT 0,
+  deleted_at         TIMESTAMP    NULL,
+  created_at         TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  updated_at         TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id),
+  FOREIGN KEY (ste_id) REFERENCES states (ste_id),
+  FOREIGN KEY (cou_id) REFERENCES countries (cou_id)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
 
-CREATE TABLE users(
-  usr_id INTEGER(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  usr_email VARCHAR(200) NOT NULL UNIQUE,
-  usr_username VARCHAR (255) NOT NULL,
-  usr_password VARCHAR (60) NOT NULL,-- should be hashed
-  usr_first_name VARCHAR (255) NOT NULL,
-  usr_last_name VARCHAR (255) NOT NULL,
-  usr_middle_name VARCHAR (255) NOT NULL,
-  usr_gender ENUM('M', 'F', 'O') NOT NULL,
-  add_id INTEGER(10) NULL,
-  usr_last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  usr_type VARCHAR(10) NOT NULL DEFAULT 'regular',
-  tme_id INTEGER(10) NOT NULL DEFAULT 1, # 1 means the default team
-  usr_firebase_token VARCHAR (255) NULL, # mobile identifiers
-  api_instance INTEGER(10) NOT NULL,
-  deleted INTEGER(4) NOT NULL DEFAULT 0,
-  deleted_at TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(tme_id) REFERENCES teams(tme_id),
+CREATE TABLE users (
+  usr_id             INTEGER(10)          NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  usr_email          VARCHAR(200)         NOT NULL UNIQUE,
+  usr_username       VARCHAR(255)         NOT NULL,
+  usr_password       VARCHAR(60)          NOT NULL, -- should be hashed
+  usr_first_name     VARCHAR(255)         NOT NULL,
+  usr_last_name      VARCHAR(255)         NOT NULL,
+  usr_middle_name    VARCHAR(255)         NOT NULL,
+  usr_gender         ENUM ('M', 'F', 'O') NOT NULL,
+  add_id             INTEGER(10)          NULL,
+  usr_last_login     TIMESTAMP                                 DEFAULT CURRENT_TIMESTAMP,
+  usr_type           VARCHAR(10)          NOT NULL             DEFAULT 'regular',
+  tme_id             INTEGER(10)          NOT NULL             DEFAULT 1, # 1 means the default team
+  usr_firebase_token VARCHAR(255)         NULL, # mobile identifiers
+  api_instance       INTEGER(10)          NOT NULL,
+  deleted            INTEGER(4)           NOT NULL             DEFAULT 0,
+  deleted_at         TIMESTAMP            NULL,
+  created_at         TIMESTAMP                                 DEFAULT CURRENT_TIMESTAMP,
+  updated_at         TIMESTAMP                                 DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (tme_id) REFERENCES teams (tme_id),
   FOREIGN KEY (add_id) REFERENCES addresses (add_id),
-  FOREIGN KEY(api_instance) REFERENCES API_BUSINESS_INSTANCES(api_id)
-)ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+  FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
 
 
-
-CREATE TABLE staffs(
-  stf_id INTEGER(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  usr_id INTEGER(10) NOT NULL,
-  stf_employee_no VARCHAR(60) NOT NULL,
-  stf_birth_date DATE NOT NULL,
-  stf_employment_date DATE NULL,
-  api_instance INTEGER(10) NOT NULL,
-  deleted INTEGER(4) NOT NULL DEFAULT 0,
-  deleted_at TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usr_id) REFERENCES users(usr_id),
-  FOREIGN KEY(api_instance) REFERENCES API_BUSINESS_INSTANCES(api_id)
+CREATE TABLE staffs (
+  stf_id              INTEGER(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  usr_id              INTEGER(10) NOT NULL,
+  stf_employee_no     VARCHAR(60) NOT NULL,
+  stf_birth_date      DATE        NOT NULL,
+  stf_employment_date DATE        NULL,
+  api_instance        INTEGER(10) NOT NULL,
+  deleted             INTEGER(4)  NOT NULL             DEFAULT 0,
+  deleted_at          TIMESTAMP   NULL,
+  created_at          TIMESTAMP                        DEFAULT CURRENT_TIMESTAMP,
+  updated_at          TIMESTAMP                        DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usr_id) REFERENCES users (usr_id),
+  FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
 );
 
-CREATE TABLE staff_job_titles(
-  sjt_id INTEGER (10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  stf_id INTEGER (10) NOT NULL,
-  sjt_title VARCHAR (100) NOT NULL,
-  sjt_from_date DATE NOT NULL,
-  sjt_to_date DATE NULL,
-  api_instance INTEGER(10) NOT NULL,
-  deleted INTEGER(4) NOT NULL DEFAULT 0,
-  deleted_at TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(stf_id) REFERENCES staffs(stf_id),
-  FOREIGN KEY(api_instance) REFERENCES API_BUSINESS_INSTANCES(api_id)
-)ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+CREATE TABLE staff_job_titles (
+  sjt_id        INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  stf_id        INTEGER(10)  NOT NULL,
+  sjt_title     VARCHAR(100) NOT NULL,
+  sjt_from_date DATE         NOT NULL,
+  sjt_to_date   DATE         NULL,
+  api_instance  INTEGER(10)  NOT NULL,
+  deleted       INTEGER(4)   NOT NULL             DEFAULT 0,
+  deleted_at    TIMESTAMP    NULL,
+  created_at    TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (stf_id) REFERENCES staffs (stf_id),
+  FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
 
-CREATE TABLE travel_requests(
-  tvr_id INTEGER(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  stf_id INTEGER(10) NOT NULL, #--Staff ID, same as the requester id
-  tvr_reasons VARCHAR (255) NOT NULL,
-  tvr_arrangements VARCHAR (255) NOT NULL, # Arrangements
-  usr_manager_id INTEGER(10) NOT NULL COMMENT 'The manager this request is assigned to',
-  tvr_departure_city VARCHAR (255) NOT NULL,
-  tvr_arrival_city VARCHAR (255) NOT NULL,
-  tvr_departure_date DATETIME NOT NULL,
-  tvr_return_date DATETIME NOT NULL,
-  tvr_status INTEGER(10) NOT NULL DEFAULT 0,
-  usr_approved_by INTEGER(10) NULL,
-  api_instance INTEGER(10) NOT NULL,
-  deleted INTEGER(4) NOT NULL DEFAULT 0,
-  deleted_at TIMESTAMP NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(stf_id) REFERENCES staffs(stf_id),
-  FOREIGN KEY(usr_manager_id) REFERENCES users(usr_id),
-  FOREIGN KEY(usr_approved_by) REFERENCES users(usr_id),
-  FOREIGN KEY(api_instance) REFERENCES API_BUSINESS_INSTANCES(api_id)
-)ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+CREATE TABLE travel_requests (
+  tvr_id             INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  stf_id             INTEGER(10)  NOT NULL, #--Staff ID, same as the requester id
+  tvr_reasons        VARCHAR(255) NOT NULL,
+  tvr_arrangements   VARCHAR(255) NOT NULL, # Arrangements
+  usr_manager_id     INTEGER(10)  NOT NULL
+  COMMENT 'The manager this request is assigned to',
+  tvr_departure_city VARCHAR(255) NOT NULL,
+  tvr_arrival_city   VARCHAR(255) NOT NULL,
+  tvr_departure_date DATETIME     NOT NULL,
+  tvr_return_date    DATETIME     NOT NULL,
+  tvr_status         INTEGER(10)  NOT NULL             DEFAULT 0,
+  usr_approved_by    INTEGER(10)  NULL,
+  api_instance       INTEGER(10)  NOT NULL,
+  deleted            INTEGER(4)   NOT NULL             DEFAULT 0,
+  deleted_at         TIMESTAMP    NULL,
+  created_at         TIMESTAMP    NOT NULL             DEFAULT CURRENT_TIMESTAMP,
+  updated_at         TIMESTAMP    NOT NULL             DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (stf_id) REFERENCES staffs (stf_id),
+  FOREIGN KEY (usr_manager_id) REFERENCES users (usr_id),
+  FOREIGN KEY (usr_approved_by) REFERENCES users (usr_id),
+  FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
 
-ALTER TABLE API_BUSINESS_INSTANCES ADD CONSTRAINT FOREIGN KEY (add_id) REFERENCES addresses(add_id);
-
-
-
-
-
+ALTER TABLE API_BUSINESS_INSTANCES
+  ADD CONSTRAINT FOREIGN KEY (add_id) REFERENCES addresses (add_id);
 
 ##INSERTS
 INSERT INTO `countries` (`cou_id`, `cou_short_name`, `cou_name`, `cou_phone_code`) VALUES
@@ -409,7 +434,6 @@ INSERT INTO `countries` (`cou_id`, `cou_short_name`, `cou_name`, `cou_phone_code
   (244, 'YU', 'Yugoslavia', 38),
   (245, 'ZM', 'Zambia', 260),
   (246, 'ZW', 'Zimbabwe', 263);
-
 
 
 INSERT INTO `states` (`ste_id`, `ste_name`, `cou_id`) VALUES
@@ -2596,8 +2620,6 @@ INSERT INTO `states` (`ste_id`, `ste_name`, `cou_id`) VALUES
   (2181, 'Ajdabiya', 124);
 
 
-
-
 INSERT INTO `states` (`ste_id`, `ste_name`, `cou_id`) VALUES
   (2182, 'Fezzan', 124),
   (2183, 'Banghazi', 124),
@@ -4539,17 +4561,35 @@ INSERT INTO `states` (`ste_id`, `ste_name`, `cou_id`) VALUES
   (4119, 'Matabeleland South', 246),
   (4120, 'Midlands', 246);
 
-
 #Create Default Records
 
 INSERT INTO addresses (`add_id`, `ste_id`, `cou_id`,
-                       `add_address_line_1`,`add_address_line_2`, `add_city`,
+                       `add_address_line_1`, `add_address_line_2`, `add_city`,
                        `add_postal_code`, `add_location`)
-    values (1, 44, 3, 'Address 1', 'Address 2', 'Lagos', '23481', 'Lat 1, Lat 2');
+VALUES (1, 44, 3, 'Address 1', 'Address 2', 'Lagos', '23481', 'Lat 1, Lat 2');
 
 INSERT INTO API_BUSINESS_INSTANCES (`api_id`, `add_id`, `api_name`, `api_key`,
                                     `api_owner_email`, `api_description`)
-values (1, 1, 'Test', 'TestKey', 'donpaul120@gmail.com', 'Test Instance');
+VALUES (1, 1, 'Test', 'TestKey', 'donpaul120@gmail.com', 'Test Instance');
 
-INSERT INTO teams (`tme_id`,`tme_name`, `tme_description`)
-    values (1, 'default', 'Default Team');
+INSERT INTO teams (`tme_id`, `tme_name`, `tme_description`)
+VALUES (1, 'default', 'Default Team');
+# 3fd66f63f6f685195db10022daf0f8bcfa8e6c3443111be79fa01f5888f4
+
+#ADD default users
+INSERT INTO users (`usr_id`, `usr_email`, `usr_username`, `usr_password`,
+                   `usr_first_name`, `usr_last_name`, `usr_middle_name`, `usr_gender`,
+                   `api_instance`)
+VALUES (1, 'test1@gmail.com', 'test1@gmail.com', '3fd66f63f6f685195db10022daf0f8bcfa8e6c3443111be79fa01f5888f4',
+        'Manager', 'Test', 'Okay', 'M', 1);
+
+
+INSERT INTO users (`usr_id`, `usr_email`, `usr_username`, `usr_password`,
+                   `usr_first_name`, `usr_last_name`, `usr_middle_name`, `usr_gender`,
+                   `api_instance`)
+VALUES (2, 'test2@gmail.com', 'test2@gmail.com', '3fd66f63f6f685195db10022daf0f8bcfa8e6c3443111be79fa01f5888f4',
+        'StaffUser', 'Staff', 'Bright', 'M', 1);
+
+
+INSERT INTO staffs (`stf_id`, `usr_id`, `stf_employee_no`, `stf_birth_date`)
+VALUES (1, 2, '1111', '2017-07-11 03:02:13');
