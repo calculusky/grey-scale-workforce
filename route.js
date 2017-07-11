@@ -16,10 +16,10 @@ module.exports = function route() {
      */
     var app = express();
     app.set('port', process.env.PORT || 3000);
-    app.all('/*', function (req, res, next) {
-        res.header('Access-Control-Allow-Origin', '*');
-        next();
-    });
+    // app.all('/*', function (req, res, next) {
+    //     res.header('Access-Control-Allow-Origin', '*');
+    //     next();
+    // });
 
 
     /**
