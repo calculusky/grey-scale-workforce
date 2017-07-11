@@ -18,9 +18,9 @@ module.exports = function route() {
     app.set('port', process.env.PORT || 3000);
     app.all('/*', function (req, res, next) {
         res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Request-Headers', '*');
-        res.header('Access-Control-Request-Method', '*');
-        res.header('access-control-allow-credentials', '*');
+        res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin, ' +
+            'APIm-Debug-Trans-Id');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
         next();
     });
 
