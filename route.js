@@ -32,10 +32,11 @@ module.exports = function route() {
         if(fs.statSync(`${controllerPath}/${dir}`).isDirectory()){
             var filePath = `${controllerPath}/${dir}/controller`;
             fs.readdirSync(filePath).forEach(controller=> {
-                // console.log(controller);
-                var routeCtrl = require(`${filePath}/${controller}`);
-                swaggerAPIs.push(`${filePath}/${controller}`);
-                routeCtrl.controller(app, {API, jsonParser, urlencodedParser})
+                if(controller) {
+                    var routeCtrl = require(`${filePath}/${controller}`);
+                    swaggerAPIs.push(`${filePath}/${controller}`);
+                    routeCtrl.controller(app, {API, jsonParser, urlencodedParser});
+                }
             });
         }
     });
