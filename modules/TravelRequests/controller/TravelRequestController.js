@@ -1,10 +1,9 @@
 /**
  * Created by paulex on 7/5/17.
  */
-
-module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
-
-
+const RecognitionService = require('../../Users/model/services/RecognitionService');
+module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
+    app.use('/request*', (req, res, next)=>API.recognitions().auth(req, res, next));
     /**
      * @swagger
      * /request:
@@ -27,8 +26,13 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *          $ref: '#/definitions/newRequest'
      */
     app.post('/request', jsonParser, (req, res)=> {
-        console.log(req.body);
-        return res.json(req.body);
+        API.travels().createTravelRequest(req.body, req.who)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 
 
@@ -55,7 +59,14 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *              $ref: '#/definitions/newRequest'
      */
     app.put('/requests/:id', jsonParser, (req, res)=> {
-
+        res.send("Not yet implemented");
+        // API.travels().getTravelRequests(req.body, req.who)
+        //     .then(({data, code})=>{
+        //         return res.status(code).send(data);
+        //     })
+        //     .catch(({err, code})=>{
+        //         return res.status(code).send(err);
+        //     });
     });
 
 
@@ -80,16 +91,14 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *         type: integer
      *
      */
-    app.get('/requests/:id', (req, res)=> {
-        return res.json({
-            req_type: 1,
-            req_requester_id: 2,
-            req_manager_id: 3,
-            req_status: 4,
-            req_approved_by: 8,
-            req_details: 9,
-            req_duration: 10
-        });
+    app.get('/requests/:id', (req, urlencodedParser, res)=> {
+        API.travels().getTravelRequests(req.params.id, undefined, req.who)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 
 
@@ -117,7 +126,13 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *          - $ref: '#/parameters/limit'
      */
     app.get('/requests/status/:statusId', urlencodedParser, (req, res)=> {
-
+        API.travels().getTravelRequests(req.params.statusId, "status", req.who)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 
     /**
@@ -144,8 +159,14 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *          - $ref: '#/parameters/req_status'
      */
     app.get('/requests/user/:userId/status/:statusId', urlencodedParser, (req, res)=> {
-        console.log(req.body);
-        res.json({});
+        return res.send("Not yet implemented");
+        // API.travels().getTravelRequests({user_id:req.param("userId"), status:req.param("statusId")}, undefined, req.who)
+        //     .then(({data, code})=>{
+        //         return res.status(code).send(data);
+        //     })
+        //     .catch(({err, code})=>{
+        //         return res.status(code).send(err);
+        //     });
     });
 
 
@@ -172,7 +193,13 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *          - $ref: '#/parameters/limit'
      */
     app.get('/requests/user/:id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        console.log(req.params);
+        API.travels().getTravelRequests(req.params.id, "user_id", req.who, req.params.offset, req.params.limit)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 
 
@@ -199,7 +226,7 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *          - $ref: '#/parameters/req_status'
      */
     app.put('/requests/:id/status/:statusId', urlencodedParser, (req, res)=> {
-        res.json({});
+        res.send("Not yet implemented");
     });
 
     /**
@@ -219,7 +246,13 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *          - $ref: '#/parameters/req_id'
      */
     app.delete('/requests/:id', (req, res)=> {
-        res.status(200).send("successfully deleted");
+        API.travels().deleteTravelRequest("id", req.params.id, req.who)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 
 };
