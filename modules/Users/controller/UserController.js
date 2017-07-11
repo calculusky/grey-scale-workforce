@@ -1,9 +1,13 @@
-const Log = require(`${__dirname}/../../../core/logger`);
 /**
+ * @author Paul Okeke
  * Created by paulex on 7/4/17.
  */
 
+const Log = require(`${__dirname}/../../../core/logger`);
+const RecognitionService = require('../model/services/RecognitionService');
+
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
+    app.use('/users', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
@@ -17,13 +21,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      operationId: loginUser
      *      responses:
      *          '200':
-     *              description: "A Session Object"
-     *              schema:
-     *                  type: Object
-     *                  $ref: '#/definitions/Session'
+     *             $ref: '#/definitions/Session'
+     *          '400':
+     *              - name: Invalid Request
      *      parameters:
      *          - name: username
-     *            description: Unique username
+     *            description: Unique Username
      *            in: formData
      *            required: true
      *            type: string
@@ -39,7 +42,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
         Log.info('/login', "login occurred");
         //Build parameter
 
-        API.users().loginUser(req.body.username, req.body.password)
+        API.recognitions().login(req.body.username, req.body.password)
             .then(sessionObj=> {
                 console.log(sessionObj);
                 res.send(sessionObj);
@@ -63,14 +66,55 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *              description: "Logout out successfully"
      *
      *      parameters:
-     *          - name: travel-session-id
-     *            description: A Valid session ID
-     *            in: header
-     *            required: true
-     *            type: string
+     *          - $ref: '#/parameters/sessionId'
      */
     app.get('/logout', (req, res)=> {
+        API.recognitions().logout(req.header('travel-session-id'))
+            .then(msg=> {
+                return res.send(msg);
+            })
+            .catch(err=> {
+                return res.status(503).send(err);
+            });
+    });
 
+
+    /**
+     * @swagger
+     * /users:
+     *  post:
+     *      description: 'Creates a new User'
+     *      summary: "Creates a new User"
+     *      tags: [User]
+     *      produces:
+     *      - application/json
+     *      operationId: "postUser"
+     *      responses:
+     *          '200':
+     *              description: "Successfully created a new User"
+     *              schema:
+     *                  $ref: '#/definitions/User'
+     *          '400':
+     *              description: "Some fields are required"
+     *          '401':
+     *              description: "Unauthorized"
+     *      parameters:
+     *          - $ref: '#/parameters/sessionId'
+     *          - name: "New User"
+     *            in: body
+     *            required: true
+     *            schema:
+     *              $ref: '#/definitions/newUser'
+     */
+    app.post('/users', jsonParser, (req, res)=> {
+        // Log.info("/users", req.body);
+        API.users().createUser(req.body)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 
     /**
@@ -78,7 +122,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * /users/{id}:
      *  get:
      *      description: "To get a user details for a particular user by supplying the id.
-     *                  Use when the ID is known"
+     *                    Use when the ID is known"
      *      summary: "Retrieves a user details by the given ID"
      *      tags: [User]
      *      produces:
@@ -90,6 +134,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *              schema:
      *                  $ref: '#/definitions/User'
      *      parameters:
+     *          - $ref: '#/parameters/sessionId'
      *          - name: id
      *            description: The ID of the user
      *            in: path
@@ -98,12 +143,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.get("/users/:id", urlencodedParser, (req, res)=> {
         Log.info('/users/:id', `/users/:${req.params.id}`);
-        API.users().getUser(req.params.id)
-            .then(user=> {
-                return res.send(user);
+        API.users().getUsers(req.params.id)
+            .then(({data, code=200})=> {
+                return res.status(code).send(data);
             })
-            .catch(err=> {
-                return res.status(500).send(err);
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
             });
     });
 
@@ -125,8 +170,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *                  type: array
      *                  items:
      *                      $ref: '#/definitions/User'
-     *
      *      parameters:
+     *          - $ref: '#/parameters/sessionId'
      *          - name: offset
      *            description: The starting position to query from or the amount of records(rows) to skip
      *            in: path
@@ -141,232 +186,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *            default: 10
      *            type: integer
      *
-     *
      */
     app.get("/users/:offset/:limit", urlencodedParser, (req, res)=> {
-
-    });
-
-    /**
-     * @swagger
-     * /request:
-     *  post:
-     *      description: "Creates a new Travel Request"
-     *      summary: "Create a new Travel Request"
-     *      tags: ['Travel Request']
-     *      produces:
-     *      -   application/json
-     *      operationId: postRequest
-     *      responses:
-     *          '200':
-     *              description: "The newly created Travel Request"
-     *              schema:
-     *                  $ref: '#/definitions/Request'
-     *      parameters:
-     *      - $ref: '#/parameters/sessionId'
-     *      - name: "travel-request"
-     *        in: body
-     *        required: true
-     *        schema:
-     *          $ref: '#/definitions/newRequest'
-     */
-    app.post('/request', jsonParser, (req, res)=> {
-        console.log(req.body);
-        return res.json(req.body);
-    });
-
-
-    /**
-     * @swagger
-     * /requests/{id}:
-     *  put:
-     *      summary: "Update an existing travel request."
-     *      description: "Update an already existing travel request"
-     *      tags: ['Travel Request']
-     *      produces:
-     *      - application/json
-     *      operationId: "updateRequest"
-     *      responses:
-     *          '200':
-     *              description: "Returns a Travel Request Object"
-     *              schema:
-     *                  $ref: '#/definitions/Request'
-     *      parameters:
-     *          - $ref: '#/parameters/sessionId'
-     *          - $ref : '#/parameters/req_id'
-     *          - name: 'travel-request'
-     *            in: body
-     *            required: true
-     *            schema:
-     *              $ref: '#/definitions/newRequest'
-     */
-    app.put('/requests/:id', jsonParser, (req, res)=> {
-
-    });
-
-
-    /**
-     * @swagger
-     * /requests/{id}:
-     *    get:
-     *      description: "Returns a Specific Travel Request by the given ID"
-     *      summary: "Finds a Travel Request by the given ID"
-     *      tags: ['Travel Request']
-     *      produces:
-     *      -   application/json
-     *      operationId: "getRequest"
-     *      responses:
-     *          '200':
-     *             description: "A Travel Request Object"
-     *             schema:
-     *                  $ref: '#/definitions/Request'
-     *      parameters:
-     *       - name: id
-     *         description: Request ID
-     *         in: path
-     *         required: true
-     *         type: integer
-     *
-     */
-    app.get('/requests/:id', (req, res)=> {
-        return res.json({
-            req_type: 1,
-            req_requester_id: 2,
-            req_manager_id: 3,
-            req_status: 4,
-            req_approved_by: 8,
-            req_details: 9,
-            req_duration: 10
-        });
-    });
-
-
-    /**
-     * @swagger
-     * /requests/status/{statusId}:
-     *  get:
-     *      summary: "Retrieves a Travel Request by status"
-     *      description: "This can be used to retrieve travel request based on their status conditions.
-     *                    e.g Approved Request, Pending Request or Rejected Request"
-     *      tags: ['Travel Request']
-     *      produces:
-     *      - application/json
-     *      operationId: "getRequest"
-     *      responses:
-     *          '200':
-     *              description: A list of Travel Request
-     *              schema:
-     *                  type: array
-     *                  $ref: '#/definitions/Request'
-     *      parameters:
-     *          - $ref: '#/parameters/sessionId'
-     *          - $ref: '#/parameters/req_status'
-     *          - $ref: '#/parameters/offset'
-     *          - $ref: '#/parameters/limit'
-     */
-    app.get('/requests/status/:statusId', urlencodedParser, (req, res)=> {
-
-    });
-
-    /**
-     * @swagger
-     * /requests/user/{userId}/status/{statusId}:
-     *  get:
-     *      summary: "Retrieves Travel Request that belongs a user by a request status id"
-     *      description: "Retrieves Travel Request by specifying the user id and the status id. e.g Say we want to
-     *                    retrieve a travel request that belongs to UserA and is Approved, this route a perfect fit
-     *                    for such."
-     *      tags: ['Travel Request']
-     *      produces:
-     *      - application/json
-     *      operationId: "getRequest"
-     *      responses:
-     *          '200':
-     *              description: 'Returns a list of Travel Request Object'
-     *              schema:
-     *                  type: array
-     *                  $ref: '#/definitions/Request'
-     *      parameters:
-     *          - $ref: '#/parameters/sessionId'
-     *          - $ref: '#/parameters/usr_id'
-     *          - $ref: '#/parameters/req_status'
-     */
-    app.get('/requests/user/:userId/status/:statusId', urlencodedParser, (req, res)=> {
-        console.log(req.body);
-        res.json({});
-    });
-
-
-    /**
-     * @swagger
-     * /requests/user/{userId}:
-     *  get:
-     *      description: 'Retrieves a list of Travel Request that belongs to a particular
-     *          user as specified by the userId path parameter'
-     *      summary: 'Retrieves Travel Request belonging to a User'
-     *      tags: ['Travel Request']
-     *      produces:
-     *      - application/json
-     *      operationId: "getRequest"
-     *      responses:
-     *          '200':
-     *              description: "A list of Travel Request"
-     *              schema:
-     *                  type: array
-     *                  $ref: '#/definitions/Request'
-     *      parameters:
-     *          - $ref: '#/parameters/usr_id'
-     *          - $ref: '#/parameters/offset'
-     *          - $ref: '#/parameters/limit'
-     */
-    app.get('/requests/user/:id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        console.log(req.params);
-    });
-
-
-    /**
-     * @swagger
-     * /requests/{id}/status/{statusId}:
-     *  put:
-     *      summary: "Updates the status of a Travel Request"
-     *      description: "This can be used to update a travel request to either of the following :
-     *                    Approved, Pending or Rejected"
-     *      tags: ['Travel Request']
-     *      produces:
-     *      - application/json
-     *      operationId: "updateRequest"
-     *      responses:
-     *          '200':
-     *              description: The updated travel request
-     *              schema:
-     *                  type: object
-     *                  $ref: '#/definitions/Request'
-     *      parameters:
-     *          - $ref: '#/parameters/sessionId'
-     *          - $ref: '#/parameters/req_id'
-     *          - $ref: '#/parameters/req_status'
-     */
-    app.put('/requests/:id/status/:statusId', urlencodedParser, (req, res)=> {
-        res.json({});
-    });
-
-    /**
-     * @swagger
-     * /requests/{id}:
-     *  delete:
-     *      summary: Deletes a travel request
-     *      description: "Deletes a travel request by the specified request {id}"
-     *      tags: ['Travel Request']
-     *      produces:
-     *      - application/json
-     *      operationId: deleteRequest
-     *      responses:
-     *          '200':
-     *              description: Returns true with the id of the request deleted
-     *      parameters:
-     *          - $ref: '#/parameters/req_id'
-     */
-    app.delete('/requests/:id', (req, res)=> {
-        res.status(200).send("successfully deleted");
+        API.users().getUsers(req.params.id, undefined, req.who)
+            .then(({data, code=200})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 };

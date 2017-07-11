@@ -17,9 +17,7 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *      operationId: postRequest
      *      responses:
      *          '200':
-     *              description: "The newly created Travel Request"
-     *              schema:
-     *                  $ref: '#/definitions/Request'
+     *             $ref: '#/definitions/Request'
      *      parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - name: "travel-request"
@@ -46,9 +44,7 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *      operationId: "updateRequest"
      *      responses:
      *          '200':
-     *              description: "Returns a Travel Request Object"
-     *              schema:
-     *                  $ref: '#/definitions/Request'
+     *             $ref: '#/definitions/Request'
      *      parameters:
      *          - $ref: '#/parameters/sessionId'
      *          - $ref : '#/parameters/req_id'
@@ -75,9 +71,7 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
      *      operationId: "getRequest"
      *      responses:
      *          '200':
-     *             description: "A Travel Request Object"
-     *             schema:
-     *                  $ref: '#/definitions/Request'
+     *             $ref: '#/definitions/Request'
      *      parameters:
      *       - name: id
      *         description: Request ID
@@ -227,5 +221,5 @@ module.exports.controller = function(app, {API, jsonParser, urlencodedParser}){
     app.delete('/requests/:id', (req, res)=> {
         res.status(200).send("successfully deleted");
     });
-    
+
 };

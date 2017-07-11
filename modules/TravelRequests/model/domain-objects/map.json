@@ -1,0 +1,16 @@
+{
+  "id":"tvr_id",
+  "staff_id":"stf_id",
+  "manager_id":"usr_manager_id",
+  "approved_by":"usr_approved_by",
+  "api_instance_id":"api_instance",
+  "reasons":"tvr_reasons",
+  "arrangements":"tvr_arrangements",
+  "departure_city":"tvr_departure_city",
+  "arrival_city":"tvr_arrival_city",
+  "departure_date":"tvr_departure_date",
+  "return_date":"tvr_return_date",
+  "status":"tvr_status",
+  "created_at":"created_at",
+  "updated_at":"updated_at"
+}

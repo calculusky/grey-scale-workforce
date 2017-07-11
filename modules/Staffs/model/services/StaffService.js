@@ -3,20 +3,20 @@ const MapperFactory = require('../../../MapperFactory');
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
 /**
+ * @name StaffService
  * Created by paulex on 7/4/17.
  */
-
-class UserService {
+class StaffService {
 
     constructor() {
 
     }
 
     getName() {
-        return "userService";
+        return "staffService";
     }
 
-    getUsers(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    getStaffs(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         if (!value || value.trim() == '') {
             //Its important that all queries are streamlined to majorly for each business
             value = who.api;
@@ -28,8 +28,8 @@ class UserService {
             value['api_instance_id'] = who.api;
             by = "*_and";
         }
-        const UserMapper = MapperFactory.build(MapperFactory.USER);
-        return UserMapper.findDomainRecord({by, value})
+        const StaffMapper = MapperFactory.build(MapperFactory.STAFF);
+        return StaffMapper.findDomainRecord({by, value})
             .then(result=> {
                 return (Util.buildResponse({data: {items: result.records}}));
             });
@@ -40,20 +40,16 @@ class UserService {
      * @param body
      * @param who
      */
-    createUser(body = {}, who = {}) {
-        const User = DomainFactory.build(DomainFactory.USER);
+    createStaff(body = {}, who = {}) {
+        const Staff = DomainFactory.build(DomainFactory.STAFF);
         body['api_instance_id'] = who.api;
-        let user = new User(body);
+        let staff = new Staff(body);
         //Get Mapper
-        if (user.password) {
-            user.setPassword(Password.encrypt(user.password).hash);
-        }
-        const UserMapper = MapperFactory.build(MapperFactory.USER);
-        // console.log(user);
-        return UserMapper.createDomainRecord(user).then(user=> {
-            if (!user) return Promise.reject();
-            delete user.password;
-            return Util.buildResponse({data: user});
+        const StaffMapper = MapperFactory.build(MapperFactory.STAFF);
+        // console.log(staff);
+        return StaffMapper.createDomainRecord(staff).then(staff=> {
+            if (!staff) return Promise.reject();
+            return Util.buildResponse({data: staff});
         });
     }
 
@@ -63,15 +59,15 @@ class UserService {
      * @param value
      * @returns {*}
      */
-    deleteUser(by = "id", value) {
-        const UserMapper = MapperFactory.build(MapperFactory.USER);
-        return UserMapper.deleteDomainRecord({by, value}).then(count=> {
+    deleteStaff(by = "id", value) {
+        const StaffMapper = MapperFactory.build(MapperFactory.STAFF);
+        return StaffMapper.deleteDomainRecord({by, value}).then(count=> {
             if (!count) {
                 return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Util.buildResponse({data: {message: "User deleted"}});
+            return Util.buildResponse({data: {message: "Staff deleted"}});
         });
     }
 }
 
-module.exports = UserService;
+module.exports = StaffService;

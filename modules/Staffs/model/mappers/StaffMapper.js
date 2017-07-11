@@ -5,13 +5,13 @@
 const ModelMapper = require('../../../../core/model/ModelMapper');
 
 
-class UserMapper extends ModelMapper{
+class StaffMapper extends ModelMapper{
     constructor(context) {
         super(context);
         this.primaryKey = "id";
-        this.tableName = "users";
-        this.domainName = "User";
+        this.tableName = "staffs";
+        this.domainName = "Staff";
     }
 }
 
-module.exports = UserMapper;
+module.exports = StaffMapper;

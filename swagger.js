@@ -12,7 +12,9 @@ Swagger.prototype.config = function (app, config) {
     // function config(app, routePath){
     const swaggerDoc = require("swagger-jsdoc");
     const path = require("path");
-    app.use('/swagger', config['express'].static(path.join(__dirname, config['swaggerUI'])));
+    app.use('/swagger', config['express'].static(path.join(__dirname, config['swaggerUI']), {
+        etag: false
+    }));
     var swaggerDefinition = {
         info: config.info || { // API informations (required)
             title: 'Hello World', // Title (required)

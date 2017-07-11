@@ -4,31 +4,31 @@ const DomainObject = require('../../../../core/model/DomainObject');
 const map = require('./map.json');
 
 /**
- * Created by paulex on 7/5/17.
+ * @author Paul Okeke
+ * Created by paulex on 7/4/17.
+ * @name Staff
  */
-
-class TravelRequest extends DomainObject {
+class Staff extends DomainObject {
 
     constructor(data) {
         super(data, map);
+        /*PLEASE DON'T PUT instance fields here that are not mapped to DB*/
     }
 
     required() {
         return [
-            'staff_id',
-            'manager_id',
-            'arrangements',
-            'reasons',
-            'departure_city',
-            'arrival_city',
-            'departure_date',
-            'return_date'
+            'user_id',
+            'emp_no',
+            'birth_date',
+            'api_instance_id'
         ];
     }
 
     guard() {
         return [
-            'id'
+            'id',
+            'password',
+            'email'
         ];
     }
 
@@ -39,7 +39,7 @@ class TravelRequest extends DomainObject {
             "deleted_at"
         ];
     }
-
 }
 
-module.exports = TravelRequest;
+//noinspection JSUnresolvedVariable
+module.exports = Staff;

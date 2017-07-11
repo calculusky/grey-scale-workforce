@@ -1,0 +1,17 @@
+{
+  "id":"usr_id",
+  "address_id":"add_id",
+  "team_id":"tme_id",
+  "email":"usr_email",
+  "username":"usr_username",
+  "api_instance_id":"api_instance",
+  "password":"usr_password",
+  "first_name":"usr_first_name",
+  "last_name":"usr_last_name",
+  "middle_name":"usr_middle_name",
+  "gender":"usr_gender",
+  "last_login":"usr_last_login",
+  "firebase_token":"usr_firebase_token",
+  "created_at":"created_at",
+  "updated_at":"updated_at"
+}
