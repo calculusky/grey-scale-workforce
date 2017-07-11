@@ -4591,5 +4591,5 @@ VALUES (2, 'test2@gmail.com', 'test2@gmail.com', '3fd66f63f6f685195db10022daf0f8
         'StaffUser', 'Staff', 'Bright', 'M', 1);
 
 
-INSERT INTO staffs (`stf_id`, `usr_id`, `stf_employee_no`, `stf_birth_date`)
-VALUES (1, 2, '1111', '2017-07-11 03:02:13');
+INSERT INTO staffs (`stf_id`, `usr_id`, `stf_employee_no`, `stf_birth_date`, `api_instance`)
+VALUES (1, 2, '1111', '2017-07-11 03:02:13', 1);
