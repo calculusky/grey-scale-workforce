@@ -48,7 +48,7 @@ module.exports = function route() {
      *  - name: Travel Request
      *    description: Travel Requests
      *
-     *  - User: User
+     *  - name: User
      *    description: Users
      *
      */

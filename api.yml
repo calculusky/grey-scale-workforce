@@ -11,7 +11,6 @@ parameters:
     description: The starting position to query from or the amount of records(rows) to skip. Default is 0.
     in: path
     required: false
-    default: 0
     type: integer
     format: int32
     minimum: 0
@@ -22,7 +21,6 @@ parameters:
     description: The total amount of records to retrieve. Default is 10.
     in: path
     required: false
-    default: 10
     type: integer
     format: int32
     maximum: 20
@@ -116,81 +114,61 @@ definitions:
     type: "object"
     description: "A new Travel Request Object"
     required:
-      - "manager_id"
-      - "arrangements"
-      - "reasons"
-      - "departure_city"
-      - "arrival_city"
-      - "departure_date"
-      - "return_date"
+    - "manager_id"
+    - "arrangements"
+    - "reasons"
+    - "departure_city"
+    - "arrival_city"
+    - "departure_date"
+    - "return_date"
     properties:
       manager_id:
         description: "The Manager you are sending this request to for approval.
                       Basically you should be sending user id of the manager."
-        name: manager_id
-        in: body
         type: integer
-        required: true
       arrangements:
-        name: arrangements
         description: A list of arrangements needed for this travel. Must be a either of <b>Flight, Hotel,
             Rental Car</b> or <b>Taxi Service</b>
-        in: body
-        required: true
         type: array
         items:
           type: string
-          enum: ['Flight', 'Hotel', 'Rental Car', 'Taxi Service']
-          collectionFormat: multi
       reasons:
-        name: reasons
         description: The reasons/purpose for this travel request
-        in: body
-        required: true
         type: string
-
       departure_city:
-        name: departure_city
         description: The city of take off. Which city will you be taking off from?
-        in: body
-        required: true
         type: string
-
       arrival_city:
-        name: arrival_city
         description: The intended city to visit. Which city are you visiting?
-        in: body
-        required: true
         type: string
-
       departure_date:
-        name: departure_date
         description: The intended date for departure. When will you be leaving your current city?
-        in: body
-        required: true
         type: string
-        format: date-time
-
+        format: date-tim
       return_date:
-        name: return_date
         description: The intended date to return. When will you likely return from your visit?
-        in: body
-        required: true
         type: string
         format: date-time
 
   Request:
     description: A representation of a Travel Request Object
     allOf:
+      - $ref: '#/definitions/newRequest'
       - type: object
         properties:
           id:
-            $ref: '#/parameters/req_id'
+            type: integer
+            description: The Travel Request ID
           staff_id:
             type: integer
             description: The Staff that requested for this Travel
           status:
-            $ref: '#/parameters/req_status'
+            type: integer
+            description: The Request Status
+            enum:
+            - 0
+            - 1
+            - 2
           approved_by:
             type: integer
           created_at:
@@ -201,7 +179,25 @@ definitions:
             type: string
             format: date-time
             description: The date this request was updated
-      - $ref: '#/definitions/newRequest'
+
+  200TravelRequest:
+    type: object
+    required:
+    - status
+    - data
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Request'
+
+
+
   Session:
     required:
       - token

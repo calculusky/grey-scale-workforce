@@ -16,14 +16,18 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      description: "Authenticates a user to the service"
      *      summary: "Login User"
      *      tags: [User]
+     *      consumes:
+     *      - application/x-www-form-urlencoded
      *      produces:
      *      -  application/json
      *      operationId: loginUser
      *      responses:
      *          '200':
-     *             $ref: '#/definitions/Session'
+     *             description: "Login Successful"
+     *             schema:
+     *              $ref: '#/definitions/Session'
      *          '400':
-     *              - name: Invalid Request
+     *             description: 'Invalid Request'
      *      parameters:
      *          - name: username
      *            description: Unique Username
@@ -40,14 +44,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.post('/login', urlencodedParser, (req, res)=> {
         Log.info('/login', "login occurred");
-        //Build parameter
-
         API.recognitions().login(req.body.username, req.body.password)
-            .then(sessionObj=> {
-                console.log(sessionObj);
-                res.send(sessionObj);
-            }).catch(err=> {
-            res.status(401).send(err);
+            .then(({data, code})=> {
+                console.log(data);
+                res.status(code).send(data);
+            }).catch(({err, code})=> {
+            res.status(code).send(err);
         });
     });
 
@@ -133,6 +135,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *              description: "A User Object"
      *              schema:
      *                  $ref: '#/definitions/User'
+     *
      *      parameters:
      *          - $ref: '#/parameters/sessionId'
      *          - name: id
@@ -172,19 +175,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *                      $ref: '#/definitions/User'
      *      parameters:
      *          - $ref: '#/parameters/sessionId'
-     *          - name: offset
-     *            description: The starting position to query from or the amount of records(rows) to skip
-     *            in: path
-     *            required: false
-     *            default: 0
-     *            type: integer
-     *
-     *          - name: limit
-     *            description: The total amount of records to retrieve
-     *            in: path
-     *            required: false
-     *            default: 10
-     *            type: integer
+     *          - $ref: '#/parameters/offset'
+     *          - $ref: '#/parameters/limit'
      *
      */
     app.get("/users/:offset/:limit", urlencodedParser, (req, res)=> {

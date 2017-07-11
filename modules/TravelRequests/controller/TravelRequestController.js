@@ -16,7 +16,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      operationId: postRequest
      *      responses:
      *          '200':
-     *             $ref: '#/definitions/Request'
+     *              description: Created Successfully
+     *              $ref: '#/definitions/Request'
      *      parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - name: "travel-request"
@@ -48,7 +49,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      operationId: "updateRequest"
      *      responses:
      *          '200':
-     *             $ref: '#/definitions/Request'
+     *              description: Successful
+     *              $ref: '#/definitions/Request'
      *      parameters:
      *          - $ref: '#/parameters/sessionId'
      *          - $ref : '#/parameters/req_id'
@@ -82,7 +84,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      operationId: "getRequest"
      *      responses:
      *          '200':
-     *             $ref: '#/definitions/Request'
+     *              description: Successful
+     *              $ref: '#/definitions/Request'
      *      parameters:
      *       - name: id
      *         description: Request ID
@@ -104,7 +107,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /requests/status/{statusId}:
+     * /requests/status/{statusId}/{offset}/{limit}:
      *  get:
      *      summary: "Retrieves a Travel Request by status"
      *      description: "This can be used to retrieve travel request based on their status conditions.
@@ -112,13 +115,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      tags: ['Travel Request']
      *      produces:
      *      - application/json
-     *      operationId: "getRequest"
+     *      operationId: "getRequestByStatus"
      *      responses:
      *          '200':
      *              description: A list of Travel Request
      *              schema:
      *                  type: array
-     *                  $ref: '#/definitions/Request'
+     *                  items:
+     *                      $ref: '#/definitions/Request'
      *      parameters:
      *          - $ref: '#/parameters/sessionId'
      *          - $ref: '#/parameters/req_status'
@@ -146,13 +150,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      tags: ['Travel Request']
      *      produces:
      *      - application/json
-     *      operationId: "getRequest"
+     *      operationId: "getRequestByUserAndStatus"
      *      responses:
      *          '200':
      *              description: 'Returns a list of Travel Request Object'
      *              schema:
      *                  type: array
-     *                  $ref: '#/definitions/Request'
+     *                  items:
+     *                      $ref: '#/definitions/Request'
      *      parameters:
      *          - $ref: '#/parameters/sessionId'
      *          - $ref: '#/parameters/usr_id'
@@ -172,7 +177,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /requests/user/{userId}:
+     * /requests/user/{userId}/{offset}/{limit}:
      *  get:
      *      description: 'Retrieves a list of Travel Request that belongs to a particular
      *          user as specified by the userId path parameter'
@@ -180,13 +185,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      tags: ['Travel Request']
      *      produces:
      *      - application/json
-     *      operationId: "getRequest"
+     *      operationId: "getRequestByUser"
      *      responses:
      *          '200':
      *              description: "A list of Travel Request"
      *              schema:
-     *                  type: array
-     *                  $ref: '#/definitions/Request'
+     *                  $ref: '#/definitions/200TravelRequest'
      *      parameters:
      *          - $ref: '#/parameters/usr_id'
      *          - $ref: '#/parameters/offset'
@@ -213,12 +217,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      tags: ['Travel Request']
      *      produces:
      *      - application/json
-     *      operationId: "updateRequest"
+     *      operationId: "updateRequestStatus"
      *      responses:
      *          '200':
-     *              description: The updated travel request
+     *              description: 'The updated travel request'
      *              schema:
-     *                  type: object
      *                  $ref: '#/definitions/Request'
      *      parameters:
      *          - $ref: '#/parameters/sessionId'
