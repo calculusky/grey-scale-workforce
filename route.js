@@ -9,6 +9,7 @@ const fs = require('fs');
 const swagger = require('./swagger');
 const express = require("express");
 var cors = require('cors');
+var methodOverride = require('method-override')
 
 module.exports = function route() {
 
@@ -17,7 +18,7 @@ module.exports = function route() {
      */
     var app = express();
     app.set('port', process.env.PORT || 3000);
-    // app.use(cors());
+    app.use(methodOverride());
     app.use(function (req, res, next) {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Credentials', "true");
