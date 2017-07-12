@@ -26,11 +26,11 @@ module.exports = function route() {
         res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin');
         res.header('Access-Control-Expose-Headers', "true");
         console.log("Cors MiddleWare");
-        console.log(req);
+        // console.log(req);
         console.log(req.headers);
         if (req.method == 'OPTIONS'
-            || req.headers.includes('Access-Control-Request-Headers')
-            || req.headers.includes('Access-Control-Request-Method')) {
+            || req.header('Access-Control-Request-Headers')
+            || req.header('Access-Control-Request-Method')) {
             return res.status(200);
         } else {
             return next();
