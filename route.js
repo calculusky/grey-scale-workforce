@@ -18,22 +18,22 @@ module.exports = function route() {
      */
     var app = express();
     app.set('port', process.env.PORT || 3000);
-    app.use(methodOverride());
-    app.use(function (req, res, next) {
-        res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Allow-Credentials', "true");
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin');
-        res.header('Access-Control-Expose-Headers', "true");
-        console.log("Cors MiddleWare");
-        console.log(req.method);
-        console.log(req.headers);
-        if (req.method == 'OPTIONS') {
-            return res.status(200);
-        } else {
-            return next();
-        }
-    });
+    app.use(cors());
+    // app.use(function (req, res, next) {
+    //     res.header('Access-Control-Allow-Origin', '*');
+    //     res.header('Access-Control-Allow-Credentials', "true");
+    //     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    //     res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin');
+    //     res.header('Access-Control-Expose-Headers', "true");
+    //     console.log("Cors MiddleWare");
+    //     console.log(req.method);
+    //     console.log(req.headers);
+    //     if (req.method == 'OPTIONS') {
+    //         return res.status(200);
+    //     } else {
+    //         return next();
+    //     }
+    // });
 
 
     /**
