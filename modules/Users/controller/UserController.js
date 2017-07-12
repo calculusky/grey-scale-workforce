@@ -40,7 +40,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *            format: password
      *
      */
-    app.post('/login' ,urlencodedParser, (req, res)=> {
+    app.post('/login', jsonParser,urlencodedParser, (req, res)=> {
         Log.info('/login', req.body);
         API.recognitions().login(req.body.username, req.body.password)
             .then(({data, code})=> {
