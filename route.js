@@ -9,7 +9,6 @@ const fs = require('fs');
 const swagger = require('./swagger');
 const express = require("express");
 var cors = require('cors');
-var methodOverride = require('method-override')
 
 module.exports = function route() {
 
@@ -31,6 +30,7 @@ module.exports = function route() {
         if (req.method == 'OPTIONS'
             || req.header('Access-Control-Request-Headers')
             || req.header('Access-Control-Request-Method')) {
+            console.log("Matched CORS");
             return res.status(200);
         } else {
             return next();
