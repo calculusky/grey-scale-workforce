@@ -24,6 +24,8 @@ module.exports = function route() {
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
         res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin');
         res.header('Access-Control-Expose-Headers', "true");
+        console.log("Cors MiddleWare");
+        console.log(req.method);
         if (req.method == 'OPTIONS') {
             return res.status(200);
         } else {
