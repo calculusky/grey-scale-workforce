@@ -19,7 +19,7 @@ module.exports = function route() {
     app.set('port', process.env.PORT || 3000);
     // app.use(cors());
     app.use(function (req, res, next) {
-        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Origin', 'https://eu.apiconnect.ibmcloud.com');
         res.header('Access-Control-Allow-Credentials', "true");
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
         res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin');
@@ -32,7 +32,7 @@ module.exports = function route() {
             || req.header('access-control-request-Method')
             || req.header('origin')) {
             console.log("Matched CORS");
-            return res.send(200);
+            return res.sendStatus(200);
         } else {
             return next();
         }
