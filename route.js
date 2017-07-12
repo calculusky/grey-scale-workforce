@@ -18,7 +18,6 @@ module.exports = function route() {
     var app = express();
     app.set('port', process.env.PORT || 3000);
     app.options('*', cors());
-    app.use('/users/:offset/:limit', cors());
     // app.use('/*',function (req, res, next) {
     //     res.header('Access-Control-Allow-Origin', '*');
     //     // res.header('Access-Control-Allow-Credentials', "true");
