@@ -26,6 +26,7 @@ module.exports = function route() {
         res.header('Access-Control-Expose-Headers', "true");
         console.log("Cors MiddleWare");
         console.log(req.method);
+        console.log(req.headers);
         if (req.method == 'OPTIONS') {
             return res.status(200);
         } else {
