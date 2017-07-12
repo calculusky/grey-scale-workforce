@@ -28,8 +28,9 @@ module.exports = function route() {
         // console.log(req);
         console.log(req.headers);
         if (req.method == 'OPTIONS'
-            || req.header('Access-Control-Request-Headers')
-            || req.header('Access-Control-Request-Method')) {
+            || req.header('access-control-request-Headers')
+            || req.header('access-control-request-Method')
+            || req.header('origin')) {
             console.log("Matched CORS");
             return res.status(200);
         } else {
