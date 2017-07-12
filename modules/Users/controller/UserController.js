@@ -7,8 +7,7 @@ const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../model/services/RecognitionService');
 
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
-    // app.use('/users', (req, res, next)=>API.recognitions().auth(req, res, next));
-
+    app.use('/users/*', (req, res, next)=>API.recognitions().auth(req, res, next));
     /**
      * @swagger
      * /login:
@@ -180,8 +179,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *          - $ref: '#/parameters/limit'
      *
      */
-    app.options('/users/:offset?/:limit?', cors());
-    app.get("/users/:offset?/:limit?", cors(),urlencodedParser, (req, res)=> {
+    // app.options('/users/:offset?/:limit?', cors());
+    app.get("/users/:offset?/:limit?", urlencodedParser, (req, res)=> {
         Log.info(req.params);
         Log.info(req.headers);
         API.users().getUsers(req.params.id, undefined, req.who)

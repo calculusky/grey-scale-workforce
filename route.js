@@ -8,7 +8,7 @@ const API = require('./API.js');
 const fs = require('fs');
 const swagger = require('./swagger');
 const express = require("express");
-
+var cors = require('cors');
 
 module.exports = function route() {
 
@@ -17,15 +17,19 @@ module.exports = function route() {
      */
     var app = express();
     app.set('port', process.env.PORT || 3000);
-    
-    // app.use('/*',function (req, res, next) {
-    //     res.header('Access-Control-Allow-Origin', '*');
-    //     // res.header('Access-Control-Allow-Credentials', "true");
-    //     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    //     res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin');
-    //     res.header('Access-Control-Expose-Headers', "true");
-    //     next();
-    // });
+    // app.use(cors());
+    app.use('/*', function (req, res, next) {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Credentials', "true");
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin');
+        res.header('Access-Control-Expose-Headers', "true");
+        if (req.method == 'OPTIONS') {
+            return res.status(200);
+        } else {
+            return next();
+        }
+    });
 
 
     /**
@@ -35,10 +39,10 @@ module.exports = function route() {
     var controllerPath = './modules';
     var swaggerAPIs = ['./route*.js', './api.yml'];
     fs.readdirSync(controllerPath).forEach(dir=> {
-        if(fs.statSync(`${controllerPath}/${dir}`).isDirectory()){
+        if (fs.statSync(`${controllerPath}/${dir}`).isDirectory()) {
             var filePath = `${controllerPath}/${dir}/controller`;
             fs.readdirSync(filePath).forEach(controller=> {
-                if(controller) {
+                if (controller) {
                     var routeCtrl = require(`${filePath}/${controller}`);
                     swaggerAPIs.push(`${filePath}/${controller}`);
                     routeCtrl.controller(app, {API, jsonParser, urlencodedParser});
