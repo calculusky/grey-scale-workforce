@@ -8,6 +8,7 @@ const API = require('./API.js');
 const fs = require('fs');
 const swagger = require('./swagger');
 const express = require("express");
+// var cors = require('cors');
 
 module.exports = function route() {
 
@@ -16,11 +17,12 @@ module.exports = function route() {
      */
     var app = express();
     app.set('port', process.env.PORT || 3000);
-    app.all('/*', function (req, res, next) {
+    app.all('/*',function (req, res, next) {
         res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin, ' +
-            'APIm-Debug-Trans-Id');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
+        // res.header('Access-Control-Allow-Credentials', "true");
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin');
+        res.header('Access-Control-Expose-Headers', "true");
         next();
     });
 
