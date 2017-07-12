@@ -20,9 +20,19 @@ class RecognitionService {
     }
 
     login(username, password) {
+
         let [valid, , cMsg] = Util.validatePayLoad({username, password}, ["username", "password"]);
 
         if (!valid) return Promise.reject(Util.buildResponse({status: "fail", data: cMsg}, 400));
+
+        if (typeof username !== 'string' || typeof password !== 'string') {
+            return Promise.reject(Util.buildResponse({
+                status: "fail", data: {
+                    message: "Unauthorized",
+                    description: "Invalid format for username or password"
+                }
+            }, 400));
+        }
 
         //decrypt the password
         password = Password.decrypt(password);
@@ -42,7 +52,7 @@ class RecognitionService {
                     let token = jwt.sign({
                         sub: user.id,
                         name: user.username,
-                        api:user['api_instance_id']
+                        api: user['api_instance_id']
                     }, "mySecretKeyFile");
                     console.log(token);
                     return resolve(Util.buildResponse({data: {token, user}}));

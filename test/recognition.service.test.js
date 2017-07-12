@@ -18,6 +18,19 @@ it("Should should check that the username and password are  not empty", ()=> {
 });
 
 
+it("Should return 400 if the username and password isn't string", ()=> {
+    return expect(API.recognitions().login({}, {})).rejects.toEqual({
+        err: {
+            status: 'fail',
+            data: {
+                message: "Unauthorized",
+                description: "Invalid format for username or password"
+            }
+        },
+        code: 400
+    });
+});
+
 it("Should return 401 if the user doesn't exist", ()=> {
     return expect(API.recognitions().login("donpaul", "adebisi")).rejects.toEqual({
         err: {

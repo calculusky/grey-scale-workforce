@@ -45,10 +45,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
         API.recognitions().login(req.body.username, req.body.password)
             .then(({data, code})=> {
                 console.log(data);
-                res.status(code).json(data);
+                res.status(code).send(data);
             }).catch(({err, code})=> {
             console.log(err);
-            res.status(code).json(err);
+            res.status(code).send(err);
         });
     });
 
