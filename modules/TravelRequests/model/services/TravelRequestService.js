@@ -20,7 +20,7 @@ class TravelRequestService{
     }
     
     getTravelRequests(value, by = "id", who = {api: -1}, offset = 0, limit = 10){
-        if (!value || value.trim() == '') {
+        if (!value || ""+value.trim() == '') {
             //Its important that all queries are streamlined to majorly for each business
             value = who.api;
             by = "api_instance_id";

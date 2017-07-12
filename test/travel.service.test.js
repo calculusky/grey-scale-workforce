@@ -19,9 +19,9 @@ beforeAll(()=> {
         .then(data=> {
             var user = data.data.data;
             API.staffs().createStaff({
-                user_id:user.id,
-                emp_no:"111",
-                birth_date:"1992-01-10",
+                user_id: user.id,
+                emp_no: "111",
+                birth_date: "1992-01-10",
                 api_instance_id: 1
             }, {api: 1})
                 .then(data=> {
@@ -73,7 +73,10 @@ it("Should return a user object", ()=> {
 
 
 afterAll(()=> {
-    API.travels().deleteTravelRequest("reasons", "No Reason");
-    API.staffs().deleteStaff("emp_no", "111");
-    API.users().deleteUser("username", "manager");
+    API.travels().deleteTravelRequest("reasons", "No Reason")
+        .then(()=> {
+            API.staffs().deleteStaff("emp_no", "111").then(()=> {
+                API.users().deleteUser("username", "manager");
+            });
+        });
 });

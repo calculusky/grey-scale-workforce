@@ -15,7 +15,6 @@ parameters:
     format: int32
     minimum: 0
 
-
   limit:
     name: limit
     description: The total amount of records to retrieve. Default is 10.
@@ -52,7 +51,36 @@ parameters:
 
 #----------------------Definitions-------------------------------
 definitions:
-  newUser:
+  loginInput:
+    type: object
+    required:
+    - username
+    - password
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+        format: password
+
+  loginOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          user:
+            $ref: '#/definitions/User'
+          token:
+            type: string
+    required:
+      - status
+      - data
+
+
+  postUserInput:
     required:
       - email
       - username
@@ -61,7 +89,6 @@ definitions:
       - last_name
       - middle_name
       - gender
-      - api_instance_id
     properties:
       email:
         type: string
@@ -79,8 +106,35 @@ definitions:
       gender:
         type: string
         enum: ['M', 'F', 'O']
-      api_instance_id:
+
+
+  postUserOutput:
+    type: object
+    properties:
+      status:
         type: string
+      data:
+        $ref: '#/definitions/postUserInput'
+    required:
+      - data
+      - status
+
+  getUserOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+    required:
+      - data
+      - status
+
   User:
     required:
       - id
@@ -92,7 +146,7 @@ definitions:
       - updated_at
     properties:
       id:
-        $ref: '#/parameters/usr_id'
+        type: string
       username:
         type: string
       first_name:
@@ -110,7 +164,7 @@ definitions:
         type: string
         format: date
 
-  newRequest:
+  postRequestInput:
     type: "object"
     description: "A new Travel Request Object"
     required:
@@ -150,10 +204,37 @@ definitions:
         type: string
         format: date-time
 
-  Request:
+  postRequestOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        $ref: '#/definitions/postRequestInput'
+    required:
+      - data
+      - status
+
+  getRequestOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/TravelRequest'
+    required:
+      - data
+      - status
+
+  TravelRequest:
     description: A representation of a Travel Request Object
     allOf:
-      - $ref: '#/definitions/newRequest'
+      - $ref: '#/definitions/postRequestInput'
       - type: object
         properties:
           id:
@@ -166,9 +247,9 @@ definitions:
             type: integer
             description: The Request Status
             enum:
-            - 0
-            - 1
-            - 2
+              - 0
+              - 1
+              - 2
           approved_by:
             type: integer
           created_at:
@@ -180,32 +261,3 @@ definitions:
             format: date-time
             description: The date this request was updated
 
-  200TravelRequest:
-    type: object
-    required:
-    - status
-    - data
-    properties:
-      status:
-        type: string
-      data:
-        type: object
-        properties:
-          items:
-            type: array
-            items:
-              $ref: '#/definitions/Request'
-
-
-
-  Session:
-    required:
-      - token
-    properties:
-      token:
-        type: string
-      username:
-        type: string
-      date:
-        type: string
-        format: date-time

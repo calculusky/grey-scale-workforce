@@ -17,9 +17,10 @@ Swagger.prototype.config = function (app, config) {
     }));
     var swaggerDefinition = {
         info: config.info || { // API informations (required)
-            title: 'Hello World', // Title (required)
+            title: 'Travels API', // Title (required)
             version: '1.0.0', // Version (required)
-            description: 'A sample API' // Description (optional)
+            description: 'A Travels API', // Description (optional)
+            "x-ibm-name": "ncdmb-travels-api"
         },
         host: config.host, // Host (optional)
         basePath: '/' // Base path (optional)

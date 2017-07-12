@@ -22,7 +22,7 @@ module.exports = function route() {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Credentials', "true");
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'apim-debug, x-travels-token, Content-Type, Accept, Origin');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, apim-debug, x-travels-token, Content-Type, Accept');
         res.header('Access-Control-Expose-Headers', "true");
         console.log("Cors MiddleWare");
         // console.log(req);
@@ -80,8 +80,10 @@ module.exports = function route() {
         info: {
             title: "NCDMB Travels API.",
             version: "1.0",
-            description: "Travels Documentation"
-        }
+            description: "Travels Documentation",
+            "x-ibm-name": "ncdmb-travels-api"
+        },
+        schemes: ['http']
     });
 
     app.listen(9003, ()=>console.log("Started Travels API"));
