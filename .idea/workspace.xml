@@ -29,8 +29,8 @@
       <file leaf-file-name="UserService.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modules/Users/model/services/UserService.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="774">
-              <caret line="43" column="37" selection-start-line="43" selection-start-column="37" selection-end-line="43" selection-end-column="37" />
+            <state relative-caret-position="104">
+              <caret line="18" column="4" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -41,26 +41,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="162">
               <caret line="9" column="1" selection-start-line="9" selection-start-column="1" selection-end-line="9" selection-end-column="1" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DomainFactory.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/modules/DomainFactory.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="468">
-              <caret line="26" column="5" selection-start-line="26" selection-start-column="5" selection-end-line="26" selection-end-column="5" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="MapperFactory.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/modules/MapperFactory.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="522">
-              <caret line="29" column="0" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -98,11 +78,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="route.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="route.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/route.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="252">
-              <caret line="19" column="4" selection-start-line="19" selection-start-column="4" selection-end-line="19" selection-end-column="4" />
+            <state relative-caret-position="342">
+              <caret line="37" column="9" selection-start-line="37" selection-start-column="9" selection-end-line="37" selection-end-column="9" />
               <folding>
                 <element signature="e#0#39#0" expanded="false" />
               </folding>
@@ -110,21 +90,31 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="UserController.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="UserController.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modules/Users/controller/UserController.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="220">
-              <caret line="187" column="40" selection-start-line="187" selection-start-column="40" selection-end-line="187" selection-end-column="40" />
+            <state relative-caret-position="148">
+              <caret line="180" column="0" selection-start-line="180" selection-start-column="0" selection-end-line="180" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="UserMapper.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/modules/Users/model/mappers/UserMapper.js">
+      <file leaf-file-name="RecognitionService.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/Users/model/services/RecognitionService.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="288">
-              <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+            <state relative-caret-position="112">
+              <caret line="72" column="20" selection-start-line="72" selection-start-column="20" selection-end-line="72" selection-end-column="20" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="api.yml" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/api.yml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="72">
+              <caret line="4" column="14" selection-start-line="4" selection-start-column="8" selection-end-line="4" selection-end-column="14" />
               <folding />
             </state>
           </provider>
@@ -181,8 +171,8 @@
         <option value="$PROJECT_DIR$/modules/TravelRequests/model/domain-objects/TravelRequest.js" />
         <option value="$PROJECT_DIR$/modules/TravelRequests/model/services/TravelRequestService.js" />
         <option value="$PROJECT_DIR$/modules/TravelRequests/model/mappers/TravelRequestMapper.js" />
-        <option value="$PROJECT_DIR$/route.js" />
         <option value="$PROJECT_DIR$/modules/Users/controller/UserController.js" />
+        <option value="$PROJECT_DIR$/route.js" />
       </list>
     </option>
   </component>
@@ -470,12 +460,12 @@
       <workItem from="1499220599006" duration="24609000" />
       <workItem from="1499268192003" duration="1036000" />
       <workItem from="1499284820267" duration="11007000" />
-      <workItem from="1499821378744" duration="1288000" />
+      <workItem from="1499821378744" duration="11793000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="132839000" />
+    <option name="totallyTimeSpent" value="143344000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="-37" width="1366" height="805" extended-state="6" />
@@ -537,13 +527,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/package.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="10" column="1" selection-start-line="10" selection-start-column="1" selection-end-line="10" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/index.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -636,21 +619,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/modules/TravelRequests/model/TravelRequest.js" />
     <entry file="file://$PROJECT_DIR$/modules/Users/services/UserService.js" />
-    <entry file="file://$PROJECT_DIR$/api.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1426">
-          <caret line="51" column="12" selection-start-line="51" selection-start-column="12" selection-end-line="51" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Users/model/domain-objects/dbMap.json" />
-    <entry file="file://$PROJECT_DIR$/modules/Users/model/services/RecognitionService.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="11" column="34" selection-start-line="11" selection-start-column="34" selection-end-line="11" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/TravelRequests/controller/TravelRequestController.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
@@ -768,6 +737,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
           <caret line="23" column="27" selection-start-line="23" selection-start-column="27" selection-end-line="23" selection-end-column="27" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -817,22 +787,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Users/model/services/UserService.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="774">
-          <caret line="43" column="37" selection-start-line="43" selection-start-column="37" selection-end-line="43" selection-end-column="37" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Users/model/domain-objects/User.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="9" column="1" selection-start-line="9" selection-start-column="1" selection-end-line="9" selection-end-column="1" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/TravelRequests/model/domain-objects/TravelRequest.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="432">
@@ -859,21 +813,61 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/route.js">
+    <entry file="file://$PROJECT_DIR$/modules/Users/model/services/UserService.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="19" column="4" selection-start-line="19" selection-start-column="4" selection-end-line="19" selection-end-column="4" />
-          <folding>
-            <element signature="e#0#39#0" expanded="false" />
-          </folding>
+        <state relative-caret-position="104">
+          <caret line="18" column="4" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Users/model/domain-objects/User.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="162">
+          <caret line="9" column="1" selection-start-line="9" selection-start-column="1" selection-end-line="9" selection-end-column="1" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Users/model/services/RecognitionService.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="112">
+          <caret line="72" column="20" selection-start-line="72" selection-start-column="20" selection-end-line="72" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/api.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="72">
+          <caret line="4" column="14" selection-start-line="4" selection-start-column="8" selection-end-line="4" selection-end-column="14" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/modules/Users/controller/UserController.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="220">
-          <caret line="187" column="40" selection-start-line="187" selection-start-column="40" selection-end-line="187" selection-end-column="40" />
+        <state relative-caret-position="148">
+          <caret line="180" column="0" selection-start-line="180" selection-start-column="0" selection-end-line="180" selection-end-column="0" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/node_modules/express/lib/response.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="145">
+          <caret line="105" column="0" selection-start-line="105" selection-start-column="0" selection-end-line="105" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/route.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="342">
+          <caret line="37" column="9" selection-start-line="37" selection-start-column="9" selection-end-line="37" selection-end-column="9" />
+          <folding>
+            <element signature="e#0#39#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>

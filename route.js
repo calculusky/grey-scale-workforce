@@ -32,7 +32,7 @@ module.exports = function route() {
             || req.header('access-control-request-Method')
             || req.header('origin')) {
             console.log("Matched CORS");
-            return res.status(200);
+            return res.send(200);
         } else {
             return next();
         }
