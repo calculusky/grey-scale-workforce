@@ -180,8 +180,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *          - $ref: '#/parameters/limit'
      *
      */
-    app.options('/users/:offset/:limit', cors());
-    app.get("/users/:offset/:limit", cors(),urlencodedParser, (req, res)=> {
+    app.options('/users/:offset?/:limit?', cors());
+    app.get("/users/:offset?/:limit?", cors(),urlencodedParser, (req, res)=> {
         Log.info(req.params);
         Log.info(req.headers);
         API.users().getUsers(req.params.id, undefined, req.who)
