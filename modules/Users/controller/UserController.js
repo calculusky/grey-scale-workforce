@@ -181,6 +181,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *
      */
     app.get("/users/:offset/:limit", urlencodedParser, (req, res)=> {
+        Log.info(req.params);
+        Log.info(req.headers);
         API.users().getUsers(req.params.id, undefined, req.who)
             .then(({data, code=200})=> {
                 return res.status(code).send(data);
