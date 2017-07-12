@@ -7,7 +7,7 @@ const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../model/services/RecognitionService');
 
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
-    app.use('/users/*', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/users*', (req, res, next)=>API.recognitions().auth(req, res, next));
     /**
      * @swagger
      * /login:
