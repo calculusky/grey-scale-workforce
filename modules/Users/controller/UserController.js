@@ -108,7 +108,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *              $ref: '#/definitions/newUser'
      */
     app.post('/users', jsonParser, (req, res)=> {
-        // Log.info("/users", req.body);
+        Log.info("/users", req.body);
         API.users().createUser(req.body)
             .then(({data, code})=> {
                 return res.status(code).send(data);
