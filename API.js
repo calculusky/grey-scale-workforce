@@ -25,15 +25,17 @@ class API {
         fs.readdirSync(modulesPath).forEach(dir=> {
             if (fs.statSync(`${modulesPath}/${dir}`).isDirectory()) {
                 let servicePath = `${modulesPath}/${dir}/model/services`;
-                fs.readdirSync(servicePath).forEach(service=> {
-                    let serviceObj = require(`${servicePath}/${service}`);
-                    //Save all services into their own object
-                    serviceObj = new serviceObj(/*Insert Context Object here*/);
-                    if (!API._(this).services) {
-                        API._(this).services = {};
-                    }
-                    API._(this).services[serviceObj.getName()] = serviceObj;
-                });
+                if (fs.existsSync(servicePath))
+                    fs.readdirSync(servicePath).forEach(service=> {
+                        let serviceObj = require(`${servicePath}/${service}`);
+                        //Save all services into their own object
+                        serviceObj = new serviceObj(/*Insert Context Object here*/);
+                        if (!API._(this).services) {
+                            API._(this).services = {};
+                        }
+                        API._(this).services[serviceObj.getName()] = serviceObj;
+
+                    });
             }
         });
     }
@@ -57,13 +59,13 @@ class API {
      *
      * @returns {StaffService|*}
      */
-    staffs(){
+    staffs() {
         return API._(this)['services']['staffService'];
     }
 
 
     /**
-     * 
+     *
      * @returns {RecognitionService|*}
      */
     recognitions() {

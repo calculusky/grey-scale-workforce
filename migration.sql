@@ -18,7 +18,7 @@ CREATE TABLE teams (
   tme_id          INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
   tme_name        VARCHAR(100) NOT NULL,
   tme_description VARCHAR(255) NULL,
-  api_instance    INTEGER(10)  NULL,
+  api_instance    INTEGER(10)  NOT NULL,
   deleted         INTEGER(4)   NOT NULL             DEFAULT 0,
   deleted_at      TIMESTAMP    NULL,
   created_at      TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
@@ -30,13 +30,14 @@ CREATE TABLE teams (
   AUTO_INCREMENT = 1;
 
 CREATE TABLE departments (
-  dpt_id       INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  dpt_name     VARCHAR(100) NOT NULL,
-  api_instance INTEGER(10)  NOT NULL,
-  deleted      INTEGER(4)   NOT NULL             DEFAULT 0,
-  deleted_at   TIMESTAMP    NULL,
-  created_at   TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
-  updated_at   TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  dpt_id        INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  dpt_code_name VARCHAR(20)  NULL,
+  dpt_name      VARCHAR(100) NOT NULL,
+  api_instance  INTEGER(10)  NOT NULL,
+  deleted       INTEGER(4)   NOT NULL             DEFAULT 0,
+  deleted_at    TIMESTAMP    NULL,
+  created_at    TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
 )
   ENGINE = InnoDB
@@ -95,6 +96,7 @@ CREATE TABLE addresses (
   DEFAULT CHARSET = utf8
   AUTO_INCREMENT = 1;
 
+#Users
 CREATE TABLE users (
   usr_id             INTEGER(10)          NOT NULL PRIMARY KEY AUTO_INCREMENT,
   usr_email          VARCHAR(200)         NOT NULL UNIQUE,
@@ -117,6 +119,7 @@ CREATE TABLE users (
   FOREIGN KEY (tme_id) REFERENCES teams (tme_id),
   FOREIGN KEY (add_id) REFERENCES addresses (add_id),
   FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
+    ON DELETE CASCADE
 )
   ENGINE = InnoDB
   DEFAULT CHARSET = utf8
@@ -125,17 +128,40 @@ CREATE TABLE users (
 
 CREATE TABLE staffs (
   stf_id              INTEGER(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  usr_id              INTEGER(10) NOT NULL,
+  usr_id              INTEGER(10) NOT NULL UNIQUE,
   stf_employee_no     VARCHAR(60) NOT NULL,
   stf_birth_date      DATE        NOT NULL,
   stf_employment_date DATE        NULL,
-  api_instance        INTEGER(10) NOT NULL,
   deleted             INTEGER(4)  NOT NULL             DEFAULT 0,
   deleted_at          TIMESTAMP   NULL,
   created_at          TIMESTAMP                        DEFAULT CURRENT_TIMESTAMP,
   updated_at          TIMESTAMP                        DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usr_id) REFERENCES users (usr_id),
-  FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
+  FOREIGN KEY (usr_id) REFERENCES users (usr_id)
+    ON DELETE CASCADE
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
+
+#Staff Departments
+CREATE TABLE staffs_departments (
+  sdp_id INTEGER(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  stf_id INTEGER(10) NOT NULL,
+  dpt_id INTEGER(10) NOT NULL,
+  FOREIGN KEY (stf_id) REFERENCES staffs (stf_id),
+  FOREIGN KEY (dpt_id) REFERENCES departments (dpt_id)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  AUTO_INCREMENT = 1;
+
+# Departments Manager
+CREATE TABLE departments_manager(
+  dpm_id INTEGER(10)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  dpt_id INTEGER(10) NOT NULL,
+  stf_id INTEGER(10) NOT NULL,
+  FOREIGN KEY (stf_id) REFERENCES staffs (stf_id),
+  FOREIGN KEY (dpt_id) REFERENCES departments (dpt_id)
 );
 
 CREATE TABLE staff_job_titles (
@@ -149,7 +175,8 @@ CREATE TABLE staff_job_titles (
   deleted_at    TIMESTAMP    NULL,
   created_at    TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP                         DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (stf_id) REFERENCES staffs (stf_id),
+  FOREIGN KEY (stf_id) REFERENCES staffs (stf_id)
+    ON DELETE CASCADE,
   FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
 )
   ENGINE = InnoDB
@@ -161,23 +188,25 @@ CREATE TABLE travel_requests (
   stf_id             INTEGER(10)  NOT NULL, #--Staff ID, same as the requester id
   tvr_reasons        VARCHAR(255) NOT NULL,
   tvr_arrangements   VARCHAR(255) NOT NULL, # Arrangements
-  usr_manager_id     INTEGER(10)  NOT NULL
+  stf_manager_id     INTEGER(10)  NOT NULL
   COMMENT 'The manager this request is assigned to',
   tvr_departure_city VARCHAR(255) NOT NULL,
   tvr_arrival_city   VARCHAR(255) NOT NULL,
   tvr_departure_date DATETIME     NOT NULL,
   tvr_return_date    DATETIME     NOT NULL,
   tvr_status         INTEGER(10)  NOT NULL             DEFAULT 0,
-  usr_approved_by    INTEGER(10)  NULL,
+  stf_approved_by    INTEGER(10)  NULL,
   api_instance       INTEGER(10)  NOT NULL,
   deleted            INTEGER(4)   NOT NULL             DEFAULT 0,
   deleted_at         TIMESTAMP    NULL,
   created_at         TIMESTAMP    NOT NULL             DEFAULT CURRENT_TIMESTAMP,
   updated_at         TIMESTAMP    NOT NULL             DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (stf_id) REFERENCES staffs (stf_id),
-  FOREIGN KEY (usr_manager_id) REFERENCES users (usr_id),
-  FOREIGN KEY (usr_approved_by) REFERENCES users (usr_id),
+  FOREIGN KEY (stf_id) REFERENCES staffs (stf_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (stf_manager_id) REFERENCES staffs (stf_id),
+  FOREIGN KEY (stf_approved_by) REFERENCES staffs (stf_id),
   FOREIGN KEY (api_instance) REFERENCES API_BUSINESS_INSTANCES (api_id)
+    ON DELETE CASCADE
 )
   ENGINE = InnoDB
   DEFAULT CHARSET = utf8
@@ -4570,26 +4599,47 @@ VALUES (1, 44, 3, 'Address 1', 'Address 2', 'Lagos', '23481', 'Lat 1, Lat 2');
 
 INSERT INTO API_BUSINESS_INSTANCES (`api_id`, `add_id`, `api_name`, `api_key`,
                                     `api_owner_email`, `api_description`)
-VALUES (1, 1, 'Test', 'TestKey', 'donpaul120@gmail.com', 'Test Instance');
+VALUES (1, 1, 'TravelsDefault', 'PTravels', 'donpaul120@gmail.com', 'Test Instance');
 
-INSERT INTO teams (`tme_id`, `tme_name`, `tme_description`)
-VALUES (1, 'default', 'Default Team');
+INSERT INTO teams (`tme_id`, `tme_name`, `tme_description`, `api_instance`)
+VALUES (1, 'default', 'Default Team', 1);
 # 3fd66f63f6f685195db10022daf0f8bcfa8e6c3443111be79fa01f5888f4
 
 #ADD default users
 INSERT INTO users (`usr_id`, `usr_email`, `usr_username`, `usr_password`,
                    `usr_first_name`, `usr_last_name`, `usr_middle_name`, `usr_gender`,
                    `api_instance`)
-VALUES (1, 'test1@gmail.com', 'test1@gmail.com', '3fd66f63f6f685195db10022daf0f8bcfa8e6c3443111be79fa01f5888f4',
-        'Manager', 'Test', 'Okay', 'M', 1);
+VALUES (1, 'staff@gmail.com', 'staff@gmail.com', '3fd66f63f6f685195db10022daf0f8bcfa8e6c3443111be79fa01f5888f4',
+        'Staff', 'Okoye', 'Mbakwe', 'M', 1);
 
 
 INSERT INTO users (`usr_id`, `usr_email`, `usr_username`, `usr_password`,
                    `usr_first_name`, `usr_last_name`, `usr_middle_name`, `usr_gender`,
                    `api_instance`)
-VALUES (2, 'test2@gmail.com', 'test2@gmail.com', '3fd66f63f6f685195db10022daf0f8bcfa8e6c3443111be79fa01f5888f4',
-        'StaffUser', 'Staff', 'Bright', 'M', 1);
+
+VALUES (2, 'manager@gmail.com', 'manager@gmail.com', '3fd66f63f6f685195db10022daf0f8bcfa8e6c3443111be79fa01f5888f4',
+        'Manager', 'Felix', 'Xomi', 'M', 1);
+
+#Create Departments
 
 
-INSERT INTO staffs (`stf_id`, `usr_id`, `stf_employee_no`, `stf_birth_date`, `api_instance`)
-VALUES (1, 2, '1111', '2017-07-11 03:02:13', 1);
+INSERT INTO staffs (`stf_id`, `usr_id`, `stf_employee_no`, `stf_birth_date`)
+VALUES (1, 1, '1111', '2017-07-11 03:02:13');
+
+INSERT INTO staffs (`stf_id`, `usr_id`, `stf_employee_no`, `stf_birth_date`)
+VALUES (2, 2, '11551', '2017-07-11 03:02:13');
+
+
+INSERT INTO departments (`dpt_id`, `dpt_code_name`, `dpt_name`, `api_instance`)
+VALUES (1, 'PRC', 'Procurement', 1);
+
+INSERT INTO staffs_departments (`dpt_id`, `stf_id`)
+VALUES (1, 1);
+
+
+INSERT INTO staffs_departments (`dpt_id`, `stf_id`)
+VALUES (1, 2);
+
+
+INSERT INTO departments_manager (`dpt_id`, `stf_id`)
+VALUES (1, 2);

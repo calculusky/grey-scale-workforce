@@ -24,13 +24,10 @@ module.exports = function route() {
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, apim-debug, x-travels-token, Content-Type, Accept');
         res.header('Access-Control-Expose-Headers', "true");
-        console.log("Cors MiddleWare");
-        // console.log(req);
-        console.log(req.headers);
+       
         if (req.method == 'OPTIONS'
             || req.header('access-control-request-Headers')
             || req.header('access-control-request-Method')) {
-            console.log("Matched CORS");
             return res.sendStatus(200);
         } else {
             return next();
@@ -66,6 +63,12 @@ module.exports = function route() {
      *
      *  - name: User
      *    description: Users
+     *    
+     *  - name: Staff
+     *    description: Staffs
+     *
+     *  - name: Departments
+     *    description: Departments
      *
      */
 
@@ -78,7 +81,7 @@ module.exports = function route() {
         swaggerUI: "swagger-ui/dist",
         apis: swaggerAPIs,
         info: {
-            title: "NCDMB Travels API.",
+            title: "Travels API.",
             version: "1.0",
             description: "Travels Documentation",
             "x-ibm-name": "ncdmb-travels-api"

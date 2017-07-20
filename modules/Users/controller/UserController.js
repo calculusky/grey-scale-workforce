@@ -15,7 +15,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     summary: "Login User"
      *     tags: [User]
      *     consumes:
-     *     - application/x-www-form-urlencoded
      *     - application/json
      *     produces:
      *     -  application/json
@@ -101,7 +100,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.post('/users', jsonParser, (req, res)=> {
         Log.info("/users", req.body);
-        API.users().createUser(req.body)
+        API.users().createUser(req.body, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -178,5 +177,31 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             .catch(({err, code})=> {
                 return res.status(code).send(err);
             });
+    });
+
+    /**
+     * @swagger
+     * /users/{id}/staffs:
+     *   get:
+     *     summary: 'Retrieve the staff details for the specified user {id}'
+     *     description: ''
+     *     tags: [User]
+     *     produces:
+     *     - application/json
+     *     operationId: getUserStaffDetails
+     *     responses:
+     *       '200':
+     *         description: ''
+     *         schema:
+     *           $ref: '#/definitions/getUserStaffDetailsOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - in: path
+     *       name: id
+     *       required: true
+     *       type: integer
+     */
+    app.get('/users/:id/staffs', urlencodedParser, (req, res)=>{
+        
     });
 };

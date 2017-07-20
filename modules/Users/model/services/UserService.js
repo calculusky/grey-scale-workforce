@@ -47,6 +47,7 @@ class UserService {
         //Get Mapper
         if (user.password) {
             user.setPassword(Password.encrypt(user.password).hash);
+            console.log(user.password);
         }
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         // console.log(user);

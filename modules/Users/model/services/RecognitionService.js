@@ -54,7 +54,7 @@ class RecognitionService {
                         name: user.username,
                         api: user['api_instance_id']
                     }, "mySecretKeyFile");
-                    console.log(token);
+                    delete user.firebase_token;
                     return resolve(Util.buildResponse({data: {token, user}}));
                 }).catch(err=> {
                 // Log.e();
@@ -79,7 +79,7 @@ class RecognitionService {
      */
     auth(req, res, next) {
         const token = req.header('x-travels-token');
-        console.log(req.headers);
+        // console.log(req.headers);
         if (token) {
             jwt.verify(token, 'mySecretKeyFile', (err, decoded)=> {
                 if (err) {

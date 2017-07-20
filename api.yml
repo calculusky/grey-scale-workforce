@@ -103,6 +103,11 @@ definitions:
         type: string
       middle_name:
         type: string
+      user_type:
+        type: string
+        enum:
+        - regular
+        - admin
       gender:
         type: string
         enum: ['M', 'F', 'O']
@@ -261,3 +266,225 @@ definitions:
             format: date-time
             description: The date this request was updated
 
+
+  Staff:
+    description: A representation of a Staff object
+    properties:
+      id:
+        type: integer
+        description: The staff id
+      user_id:
+        type: integer
+        description: The user id
+      emp_no:
+        type: string
+        description: The employee no
+      birth_date:
+        type: string
+        description: The Employee Birth Date
+      employment_date:
+        type: string
+        format: date
+        description: The Employment Date
+      created_at:
+        type: string
+        format: date-time
+        description: The date this staff was created
+      updated_at:
+        type: string
+        format: date-time
+        description: The date this staff was updated
+
+  postStaffInput:
+    type: object
+    required:
+      - user_id
+      - emp_no
+      - birth_date
+    properties:
+      user_id:
+        type: integer
+      emp_no:
+        type: string
+      birth_date:
+        type: string
+        format: date
+      employment_date:
+        type: string
+        format: date
+
+  postStaffOutput:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: '#/definitions/postStaffInput'
+      required:
+        - data
+        - status
+
+
+  getStaffOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Staff'
+    required:
+      - data
+      - status
+
+  UserStaffDetails:
+    properties:
+      $ref: '#/definitions/Staff'
+      user:
+        type: object
+        $ref: '#/definitions/User'
+      departments:
+        type: array
+        items:
+          type: object
+      managers:
+        type: array
+        items:
+          type: object
+
+
+  getUserStaffDetailsOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/UserStaffDetails'
+    required:
+    - status
+    - data
+
+  Department:
+    properties:
+      id:
+        type: integer
+        description: The department id
+      dept_name:
+        type: string
+        description: The department name
+      created_at:
+        type: string
+        format: date-time
+        description: The date this department was created
+      updated_at:
+        type: string
+        format: date-time
+        description: The date this department was updated
+
+  getDepartmentsOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Department'
+    required:
+    - status
+    - data
+
+  DepartmentManager:
+    type: object
+    properties:
+      dept_id:
+        type: integer
+        description: Department ID
+      dept_name:
+        type: string
+        description: The department name
+      manager:
+        type: object
+        $ref: '#/definitions/Staff'
+
+  DepartmentStaff:
+    type: object
+    properties:
+      dept_id:
+        type: integer
+        description: Department ID
+      staffs:
+        type: array
+        items:
+          $ref: '#/definitions/Staff'
+
+  getStaffDepartmentsOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Department'
+    required:
+    - status
+    - data
+
+  getStaffManagersOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/DepartmentManager'
+    required:
+    - status
+    - data
+
+
+  getDepartmentStaffsOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/DepartmentStaff'
+
+  getDepartmentManagerOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/DepartmentManager'

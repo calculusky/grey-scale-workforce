@@ -1,8 +1,8 @@
 {
   "id":"tvr_id",
   "staff_id":"stf_id",
-  "manager_id":"usr_manager_id",
-  "approved_by":"usr_approved_by",
+  "manager_id":"stf_manager_id",
+  "approved_by":"stf_approved_by",
   "api_instance_id":"api_instance",
   "reasons":"tvr_reasons",
   "arrangements":"tvr_arrangements",

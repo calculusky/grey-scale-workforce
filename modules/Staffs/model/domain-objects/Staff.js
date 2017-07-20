@@ -19,8 +19,7 @@ class Staff extends DomainObject {
         return [
             'user_id',
             'emp_no',
-            'birth_date',
-            'api_instance_id'
+            'birth_date'
         ];
     }
 

@@ -1,7 +1,6 @@
 {
   "id":"stf_id",
   "user_id":"usr_id",
-  "api_instance_id":"api_instance",
   "emp_no":"stf_employee_no",
   "birth_date":"stf_birth_date",
   "employment_date":"stf_employment_date",
