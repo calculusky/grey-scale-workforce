@@ -1,8 +1,8 @@
-/**
- * Created by paulex on 7/8/17.
- */
+//noinspection JSUnresolvedFunction
+const RelationShips = require('./links/Relationships');
 
 const privateStore = new WeakMap();
+
 /**
  * @author Paul Okeke
  * @Date 7/8/17
@@ -19,6 +19,7 @@ class DomainObject {
         this._(this).data = data;
         this._(this).map = map;
 
+
         //------Map data to Domain instances------//
         let hasData = (data && (Object.keys(data).length > 0));
         if (hasData) {
@@ -28,6 +29,7 @@ class DomainObject {
                     this[key] = data[key];
             });
         }
+        this._(this).relations = new RelationShips(this);
     }
 
     /**
@@ -58,7 +60,9 @@ class DomainObject {
         return newData;
     }
 
-    getTableColumn(clientName){
+    getTableColumn(clientName) {
+        //TODO if the clientName is already in its tableColumn format
+        //return as it is
         return this._(this).map[clientName];
     }
 
@@ -71,7 +75,11 @@ class DomainObject {
     }
 
     softDeletes() {
-        return {uses: false, columns: {status:'deleted', date:"deleted_at"}};
+        return {uses: false, columns: {status: 'deleted', date: "deleted_at"}};
+    }
+
+    relations(){
+        return this._(this).relations;
     }
 
     _(instance) {

@@ -19,8 +19,8 @@ class TravelRequestService{
         return "travelRequestService";
     }
     
-    getTravelRequests(value, by = "id", who = {api: -1}, offset = 0, limit = 10){
-        if (!value || ""+value.trim() == '') {
+    getTravelRequests(value, by = "id", who = {api: -1}, offset, limit){
+        if (!value || `${value.trim()}` == '') {
             //Its important that all queries are streamlined to majorly for each business
             value = who.api;
             by = "api_instance_id";
@@ -32,7 +32,7 @@ class TravelRequestService{
             by = "*_and";
         }
         const TravelRequestMapper = MapperFactory.build(MapperFactory.TRAVEL_REQUEST);
-        return TravelRequestMapper.findDomainRecord({by, value})
+        return TravelRequestMapper.findDomainRecord({by, value}, offset, limit)
             .then(result=> {
                 return (Util.buildResponse({data: {items: result.records}}));
             });

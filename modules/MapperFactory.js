@@ -29,6 +29,8 @@ class MapperFactory {
                 return Utils.loadMapper(mapperStore, "../../modules/TravelRequests/model/mappers/TravelRequestMapper");
             case MapperFactory.STAFF:
                 return Utils.loadMapper(mapperStore, "../../modules/Staffs/model/mappers/StaffMapper");
+            case MapperFactory.DEPARTMENT:
+                return Utils.loadMapper(mapperStore, "../../modules/Departments/model/mappers/DepartmentMapper");
         }
     }
 }
@@ -36,5 +38,6 @@ class MapperFactory {
 MapperFactory.USER = "User";
 MapperFactory.STAFF = "Staff";
 MapperFactory.TRAVEL_REQUEST = "TravelRequest";
+MapperFactory.DEPARTMENT = "Department";
 
 module.exports = MapperFactory;

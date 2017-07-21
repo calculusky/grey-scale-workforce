@@ -6,9 +6,9 @@ const map = require('./map.json');
 /**
  * @author Paul Okeke
  * Created by paulex on 7/4/17.
- * @name Staff
+ * @name Department
  */
-class Staff extends DomainObject {
+class Department extends DomainObject {
 
     constructor(data) {
         super(data, map);
@@ -17,17 +17,14 @@ class Staff extends DomainObject {
 
     required() {
         return [
-            'user_id',
-            'emp_no',
-            'birth_date'
+            'name',
+            'api_instance_id'
         ];
     }
 
     guard() {
         return [
-            'id',
-            'password',
-            'email'
+            'api_instance_id'
         ];
     }
 
@@ -39,15 +36,14 @@ class Staff extends DomainObject {
         ];
     }
     
-    departments(){
-        //A Staff has many departments
-        return this.relations().belongsToMany('Department','staffs_departments', 'stf_id');
+    staffs(){
+        return this.relations().belongsToMany("Staff", "staffs_departments", "dpt_id");
     }
-
-    user(){
-        return this.relations().hasOne('User');
+    
+    managers(){
+        return this.relations().belongsToMany('Staff', 'departments_manager', 'dpt_id');
     }
 }
 
 //noinspection JSUnresolvedVariable
-module.exports = Staff;
+module.exports = Department;

@@ -25,6 +25,8 @@ class DomainFactory {
                 return require('./TravelRequests/model/domain-objects/TravelRequest');
             case DomainFactory.STAFF:
                 return require('./Staffs/model/domain-objects/Staff');
+            case DomainFactory.DEPARTMENT:
+                return require('./Departments/model/domain-objects/Department');
         }
     }
 
@@ -34,5 +36,6 @@ class DomainFactory {
 DomainFactory.USER = "User";
 DomainFactory.TRAVEL_REQUEST = "TravelRequest";
 DomainFactory.STAFF = "Staff";
+DomainFactory.DEPARTMENT = "Department";
 
 module.exports = DomainFactory;

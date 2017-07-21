@@ -207,7 +207,6 @@ class ModelMapper {
             });
     }
 
-
     /**
      * Sub-classes MUST override this method and return
      * the Domain Object the primarily work with

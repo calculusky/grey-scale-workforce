@@ -343,18 +343,19 @@ definitions:
 
   UserStaffDetails:
     properties:
-      $ref: '#/definitions/Staff'
+      staff:
+        $ref: '#/definitions/Staff'
       user:
         type: object
         $ref: '#/definitions/User'
       departments:
         type: array
         items:
-          type: object
+          $ref: '#/definitions/Department'
       managers:
         type: array
         items:
-          type: object
+          $ref: '#/definitions/DepartmentManager'
 
 
   getUserStaffDetailsOutput:
@@ -378,7 +379,7 @@ definitions:
       id:
         type: integer
         description: The department id
-      dept_name:
+      name:
         type: string
         description: The department name
       created_at:
@@ -406,18 +407,30 @@ definitions:
     - status
     - data
 
+  StaffManager:
+    type: object
+    properties:
+      staff_id:
+        type: integer
+      managers:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/Staff'
+          properties:
+            department:
+              $ref: '#/definitions/Department'
+
   DepartmentManager:
     type: object
     properties:
       dept_id:
         type: integer
         description: Department ID
-      dept_name:
-        type: string
-        description: The department name
       manager:
-        type: object
-        $ref: '#/definitions/Staff'
+        type: array
+        items:
+          $ref: '#/definitions/Staff'
 
   DepartmentStaff:
     type: object
@@ -441,7 +454,14 @@ definitions:
           items:
             type: array
             items:
-              $ref: '#/definitions/Department'
+              type: object
+              properties:
+                staff_id:
+                  type: integer
+                departments:
+                  type: array
+                  items:
+                    $ref: '#/definitions/Department'
     required:
     - status
     - data
@@ -457,7 +477,7 @@ definitions:
           items:
             type: array
             items:
-              $ref: '#/definitions/DepartmentManager'
+              $ref: '#/definitions/StaffManager'
     required:
     - status
     - data

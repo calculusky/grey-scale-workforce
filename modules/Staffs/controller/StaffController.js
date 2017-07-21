@@ -94,7 +94,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *
      */
     app.get('/staffs/:id', urlencodedParser, (req, res)=> {
-        return res.send("Not yet implemented");
+        Log.info('/staffs/:id', `/staffs/:${req.params.id}`);
+        API.staffs().getStaffs(req.params.id)
+            .then(({data, code=200})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 
 
@@ -122,8 +129,15 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *       description: The staff id
      *       required: true
      */
-    app.get('/staffs/:id(\d)/managers', urlencodedParser, (req, res)=> {
-        return res.send("Not yet implemented");
+    app.get('/staffs/:id/managers', urlencodedParser, (req, res)=> {
+        Log.info('/staffs/:id/managers', `/staffs/:${req.params.id}/managers`);
+        API.staffs().getStaffManagers(req.params.id)
+            .then(({data, code=200})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 
     /**
@@ -148,6 +162,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *       required: true
      */
     app.get('/staffs/:id/departments', urlencodedParser, (req, res)=>{
-        return res.send("Not yet implemented");
+        Log.info('/staffs/:id/departments', `/staffs/:${req.params.id}/departments`);
+        API.staffs().getStaffDepartments(req.params.id)
+            .then(({data, code=200})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
     });
 };

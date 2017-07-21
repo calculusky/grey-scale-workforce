@@ -181,7 +181,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /users/{id}/staffs:
+     * /users/{id}/staff:
      *   get:
      *     summary: 'Retrieve the staff details for the specified user {id}'
      *     description: ''
@@ -201,7 +201,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *       required: true
      *       type: integer
      */
-    app.get('/users/:id/staffs', urlencodedParser, (req, res)=>{
+    app.get('/users/:id/staff', urlencodedParser, (req, res)=>{
         
     });
 };

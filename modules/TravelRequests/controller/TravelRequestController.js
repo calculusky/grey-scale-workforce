@@ -147,7 +147,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /requests/user/{userId}/status/{statusId}:
      *  get:
-     *    summary: "Retrieves Travel Request that belongs a user by a request status id"
+     *    summary: "Retrieves Travel Request that belongs to a user by a request status id"
      *    description: "Retrieves Travel Request by specifying the user id and the status id. e.g Say we want to
      *                    retrieve a travel request that belongs to UserA and is Approved, this route a perfect fit
      *                    for such."

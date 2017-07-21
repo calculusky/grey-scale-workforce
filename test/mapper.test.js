@@ -175,3 +175,8 @@ it("deleteDomainRecord:should delete a record from the DB", ()=>{
     modelMapper.tableName = "users";
     expect(modelMapper.deleteDomainRecord({value:3})).resolves.toEqual(1);
 });
+
+
+it('', ()=>{
+    
+});
