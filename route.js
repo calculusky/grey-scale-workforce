@@ -24,13 +24,26 @@ module.exports = function route() {
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, apim-debug, x-travels-token, Content-Type, Accept');
         res.header('Access-Control-Expose-Headers', "true");
-       
+
         if (req.method == 'OPTIONS'
             || req.header('access-control-request-Headers')
             || req.header('access-control-request-Method')) {
             return res.sendStatus(200);
         } else {
             return next();
+        }
+    });
+
+    app.use(jsonParser);
+    app.use(function(error, req, res, next) {
+        if (error instanceof SyntaxError) {
+            return res.status(400).send({
+                status:'fail',
+                message:'Invalid body payload format',
+                description:"Ensure that the data payload sent is in correct format"
+            });
+        } else {
+            next();
         }
     });
 
@@ -63,7 +76,7 @@ module.exports = function route() {
      *
      *  - name: User
      *    description: Users
-     *    
+     *
      *  - name: Staff
      *    description: Staffs
      *

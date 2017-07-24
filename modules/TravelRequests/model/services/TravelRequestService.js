@@ -35,8 +35,6 @@ class TravelRequestService{
         return TravelRequestMapper.findDomainRecord({by, value}, offset, limit)
             .then(result=> {
                 return (Util.buildResponse({data: {items: result.records}}));
-            }).catch(err=>{
-                return err;
             });
     }
     
@@ -50,8 +48,6 @@ class TravelRequestService{
         return TravelRequestMapper.createDomainRecord(travelRequest).then(travelRequest=> {
             if (!travelRequest) return Promise.reject();
             return Util.buildResponse({data: travelRequest});
-        }).catch(err=>{
-            return err;
         });
     }
     
@@ -62,8 +58,6 @@ class TravelRequestService{
                 return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
             return Util.buildResponse({data: {message: "Travel Request deleted"}});
-        }).catch(err=>{
-            return err;
         });
     }
     
