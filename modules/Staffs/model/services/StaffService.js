@@ -124,6 +124,8 @@ class StaffService {
                             departments.forEach(dept=> {
                                 fetchManagers(staff, dept);
                             });
+                            //if this staff doesn't belong to any department lets return something empty
+                            if(!departments.length) return (Util.buildResponse({data: {items}}));
                         });
                     }
                     const fetchManagers = (staff, department) => {

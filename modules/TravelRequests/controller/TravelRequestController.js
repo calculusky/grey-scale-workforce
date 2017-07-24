@@ -92,6 +92,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *         schema:
      *           $ref: '#/definitions/getRequestOutput'
      *     parameters:
+     *     - $ref: '#/parameters/sessionId'
      *     - name: id
      *       description: Request ID
      *       in: path
@@ -196,6 +197,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        schema:
      *          $ref: '#/definitions/getRequestOutput'
      *    parameters:
+     *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/usr_id'
      *    - $ref: '#/parameters/offset'
      *    - $ref: '#/parameters/limit'
@@ -250,6 +252,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      '200':
      *        description: Returns true with the id of the request deleted
      *    parameters:
+     *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/req_id'
      */
     app.delete('/requests/:id', (req, res)=> {

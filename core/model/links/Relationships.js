@@ -70,6 +70,8 @@ class Relationships {
                     if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
                 }
                 if (0 === rowLen) return resolve(records);
+            }).catch(err=>{
+                return reject(err);
             });
         };
         return new Promise(executor);
