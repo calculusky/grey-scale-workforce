@@ -28,6 +28,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        $ref: '#/definitions/postRequestInput'
      */
     app.post('/request', jsonParser, (req, res)=> {
+        console.log(req.body);
         API.travels().createTravelRequest(req.body, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);

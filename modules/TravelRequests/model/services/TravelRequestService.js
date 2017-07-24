@@ -20,7 +20,7 @@ class TravelRequestService{
     }
     
     getTravelRequests(value, by = "id", who = {api: -1}, offset, limit){
-        if (!value || `${value.trim()}` == '') {
+        if (!value || `${""+value+"".trim()}` == '') {
             //Its important that all queries are streamlined to majorly for each business
             value = who.api;
             by = "api_instance_id";
@@ -35,6 +35,8 @@ class TravelRequestService{
         return TravelRequestMapper.findDomainRecord({by, value}, offset, limit)
             .then(result=> {
                 return (Util.buildResponse({data: {items: result.records}}));
+            }).catch(err=>{
+                return err;
             });
     }
     
@@ -48,6 +50,8 @@ class TravelRequestService{
         return TravelRequestMapper.createDomainRecord(travelRequest).then(travelRequest=> {
             if (!travelRequest) return Promise.reject();
             return Util.buildResponse({data: travelRequest});
+        }).catch(err=>{
+            return err;
         });
     }
     
@@ -58,6 +62,8 @@ class TravelRequestService{
                 return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
             return Util.buildResponse({data: {message: "Travel Request deleted"}});
+        }).catch(err=>{
+            return err;
         });
     }
     

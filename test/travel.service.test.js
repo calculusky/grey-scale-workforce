@@ -7,7 +7,7 @@ var request = "";
 beforeAll(()=> {
 
     return API.users().createUser({
-        email: "manager@gmail.com",
+        email: "manager22222@gmail.com",
         username: "manager",
         password: "admin",
         first_name: "manager",
@@ -18,7 +18,7 @@ beforeAll(()=> {
     }, {api: 1})
         .then(data=> {
             var user = data.data.data;
-            API.staffs().createStaff({
+            return API.staffs().createStaff({
                 user_id: user.id,
                 emp_no: "111",
                 birth_date: "1992-01-10",
@@ -26,9 +26,9 @@ beforeAll(()=> {
             }, {api: 1})
                 .then(data=> {
                     var staff = data.data.data;
-                    API.travels().createTravelRequest({
+                    return API.travels().createTravelRequest({
                         "staff_id": staff.id,
-                        "manager_id": user.id,
+                        "manager_id": staff.id,
                         "arrangements": "Flight",
                         "reasons": "No Reason",
                         "departure_city": "Lagos",
@@ -46,8 +46,6 @@ beforeAll(()=> {
                     });
                 });
         });
-
-
 });
 
 // beforeAll(()=> {
@@ -69,6 +67,11 @@ it("Should return a user object", ()=> {
         },
         code: 200
     });
+});
+
+
+it('Should create get a travel request by the user', ()=>{
+
 });
 
 
