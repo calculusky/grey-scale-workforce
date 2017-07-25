@@ -24,6 +24,19 @@ it("Should resolve without an input", ()=> {
     return expect(API.users().getUsers()).resolves.toBeDefined();
 });
 
+describe("Validate fields before inserting", ()=>{
+    it("Should return the field that didn't pass validation", ()=>{
+        return expect(API.users().createUser({
+            email: "bankole"
+        }, {api:1})).rejects.toEqual({
+            "code": 400,
+            "err": {
+                "data": {"message": "I was expecting an email address in email"}, "status": "fail"
+            }
+        });
+    });
+});
+
 it("Should return a user object", ()=> {
     return expect(API.users().getUsers("banky", "username")).resolves.toEqual({
         data: {

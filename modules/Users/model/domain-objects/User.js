@@ -48,6 +48,13 @@ class User extends DomainObject {
             "deleted_at"
         ];
     }
+
+    rules(){
+        return {
+            email:'email',
+            gender:'in(M, F, O)'
+        }
+    }
 }
 
 //noinspection JSUnresolvedVariable

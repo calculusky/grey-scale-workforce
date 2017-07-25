@@ -2,6 +2,7 @@ const DomainFactory = require('../../../DomainFactory');
 const MapperFactory = require('../../../MapperFactory');
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
+const validate = require('validate-fields')();
 /**
  * Created by paulex on 7/4/17.
  */
@@ -44,6 +45,13 @@ class UserService {
         const User = DomainFactory.build(DomainFactory.USER);
         body['api_instance_id'] = who.api;
         let user = new User(body);
+
+        //enforce the validation
+        let isValid = validate(user.rules(), user);
+        if(!isValid){
+            return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        }
+        
         //Get Mapper
         if (user.password) {
             user.setPassword(Password.encrypt(user.password).hash);

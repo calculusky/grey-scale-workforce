@@ -2,6 +2,7 @@ const DomainFactory = require('../../../DomainFactory');
 const MapperFactory = require('../../../MapperFactory');
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
+const validate = require('validate-fields')();
 /**
  * @name StaffService
  * Created by paulex on 7/4/17.
@@ -44,6 +45,13 @@ class StaffService {
         const Staff = DomainFactory.build(DomainFactory.STAFF);
         body['api_instance_id'] = who.api;
         let staff = new Staff(body);
+
+        //enforce the validation
+        let isValid = validate(staff.rules(), staff);
+        if(!isValid){
+            return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        }
+        
         //Get Mapper
         const StaffMapper = MapperFactory.build(MapperFactory.STAFF);
         // console.log(staff);

@@ -79,10 +79,7 @@ class ModelMapper {
             "an instance of DomainObject.");
 
         let dbData = domainObject.serialize();
-        // console.log(dbData);
-        // if (!Object.keys(dbData).length) {
-        //     return Promise.reject();
-        // }
+
         //First check that the required fields are specified
 
         var [valid, , cMsg] = Util.validatePayLoad(domainObject, domainObject.required());
@@ -99,13 +96,8 @@ class ModelMapper {
             return Promise.resolve(domainObject);
         }).catch(err=> {
             Log.e('createDomainRecord', err);
-            const error = Util.buildResponse({
-                status: "error",
-                msg: "An internal server error occurred.",
-                type: "Database",
-                code: `${err.errno} - ${err.code}`
-            }, 500);
-            return Promise.reject(error)
+            const error = Util.buildResponse(Util.getMysqlError(err), 400);
+            return Promise.reject(error);
         });
     }
 
@@ -151,12 +143,7 @@ class ModelMapper {
             })
             .catch(err=> {
                 Log.e('updateDomainRecord', err);
-                const error = Util.buildResponse({
-                    status: "error",
-                    msg: "An internal server error occurred.",
-                    type: "Database",
-                    code: `${err.errno} - ${err.code}`
-                }, 500);
+                const error = Util.buildResponse(Util.getMysqlError(err), 400);
                 return Promise.reject(error)
             });
     }
@@ -196,13 +183,8 @@ class ModelMapper {
                 return Promise.resolve(itemsDeleted);
             })
             .catch(err=> {
-                Log.e('updateDomainRecord', err);
-                const error = Util.buildResponse({
-                    status: "error",
-                    msg: "An internal server error occurred.",
-                    type: "Database",
-                    code: `${err.errno} - ${err.code}`
-                }, 500);
+                Log.e('deleteDomainRecord', err);
+                const error = Util.buildResponse(Util.getMysqlError(err), 400);
                 return Promise.reject(error)
             });
     }

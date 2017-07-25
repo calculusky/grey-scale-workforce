@@ -78,6 +78,14 @@ class DomainObject {
         return {uses: false, columns: {status: 'deleted', date: "deleted_at"}};
     }
 
+    /**
+     * Should be overridden by sub-classes
+     * @returns {{}}
+     */
+    rules(){
+        return {};
+    }
+
     relations(){
         return this._(this).relations;
     }

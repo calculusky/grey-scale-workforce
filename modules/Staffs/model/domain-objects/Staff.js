@@ -38,13 +38,21 @@ class Staff extends DomainObject {
             "deleted_at"
         ];
     }
-    
-    departments(){
-        //A Staff has many departments
-        return this.relations().belongsToMany('Department','staffs_departments', 'stf_id');
+
+    rules() {
+        return {
+            user_id: Number,
+            emp_no: String,
+            birth_date: Date
+        }
     }
 
-    user(){
+    departments() {
+        //A Staff has many departments
+        return this.relations().belongsToMany('Department', 'staffs_departments', 'stf_id');
+    }
+
+    user() {
         return this.relations().hasOne('User');
     }
 }

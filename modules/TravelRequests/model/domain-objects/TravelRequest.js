@@ -40,6 +40,18 @@ class TravelRequest extends DomainObject {
         ];
     }
 
+    rules() {
+        return {
+            staff_id: Number,
+            manager_id: Number,
+            reasons: String,
+            departure_city: String,
+            arrival_city: String,
+            departure_date: Date,
+            return_date: Date
+        }
+    }
+
 }
 
 module.exports = TravelRequest;

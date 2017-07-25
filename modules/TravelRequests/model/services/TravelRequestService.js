@@ -5,6 +5,7 @@ const DomainFactory = require('../../../DomainFactory');
 const MapperFactory = require('../../../MapperFactory');
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
+const validate = require('validate-fields')();
 
 /**
  * @name TravelRequestService
@@ -42,6 +43,13 @@ class TravelRequestService{
         const TravelRequest = DomainFactory.build(DomainFactory.TRAVEL_REQUEST);
         body['api_instance_id'] = who.api;
         let travelRequest = new TravelRequest(body);
+
+        //enforce the validation
+        let isValid = validate(travelRequest.rules(), travelRequest);
+        if(!isValid){
+            return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        }
+
         //Get Mapper
         const TravelRequestMapper = MapperFactory.build(MapperFactory.TRAVEL_REQUEST);
         // console.log(travelRequest);

@@ -51,7 +51,76 @@ module.exports.validateGuarded = function (payload, guarded = []) {
     return [payload, guardedKeys];
 };
 
-module.exports.buildResponse = function ({status="success", data, msg, type, code, isRoute=true}, statusCode = 200) {
+module.exports.getMysqlError = function (err) {
+    switch (err.errno) {
+        case 1452:
+            return {
+                status: "error",
+                msg: "A related field value doesn't exist. Foreign key constraint",
+                type: "Database",
+                code: `${err.errno} - ${err.code}`,
+                desc: "You are trying to insert a record that has relationship with " +
+                "another entity of which the related entity doesn't exist"
+            };
+        case 1062:
+            return {
+
+            };
+        case 1586:
+            return {
+                status: "error",
+                msg: "Duplicate Key value entry",
+                type: "Database",
+                code: `${err.errno} - ${err.code}`,
+                desc: "There is a unique key constraint in one of the fields you are trying to insert."
+            };
+        case 1022://ER_DUP_KEY
+            return {
+                status: "error",
+                msg: "Duplicate Key value entry",
+                type: "Database",
+                code: `${err.errno} - ${err.code}`,
+                desc: "There is a unique key constraint in one of the fields you are trying to insert."
+            };
+
+        case 1048:
+            return {
+                status: "error",
+                msg: "Cannot insert null",
+                type: "Database",
+                code: `${err.errno} - ${err.code}`,
+                desc: "Null values are not allowed into one of the fields you want to update/add."
+            };
+        case 1216:
+            return {
+                status: "error",
+                msg: "The related field value doesn't exist. Foreign key constraint",
+                type: "Database",
+                code: `${err.errno} - ${err.code}`,
+                desc: "You are trying to insert a record that has relationship with " +
+                "another entity of which the related entity doesn't exist"
+            };
+        case 1217:
+            return {
+                status: "error",
+                msg: "You can't delete this record because it has a related entity",
+                type: "Database",
+                code: `${err.errno} - ${err.code}`,
+                desc: "You maybe need to delete its related entity before trying to delete this record"
+            };
+        default:
+            return{
+                status: "error",
+                msg: "You are doing something wrong",
+                type: "Database",
+                code: `${err.errno} - ${err.code}`,
+                desc: "Properly check what you are inserting."
+            }
+
+    }
+};
+
+module.exports.buildResponse = function ({status="success", data, msg, type, code, desc, isRoute=true}, statusCode = 200) {
     let responseBody = {};
     responseBody.status = status;
 
@@ -59,6 +128,7 @@ module.exports.buildResponse = function ({status="success", data, msg, type, cod
     if (msg) responseBody.message = msg;
     if (type) responseBody.type = type;
     if (code) responseBody.code = code;
+    if(desc) responseBody.description = desc;
     if (isRoute) {
         let response = {};
         if (status == "success") {

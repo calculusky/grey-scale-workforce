@@ -35,6 +35,12 @@ class Department extends DomainObject {
             "deleted_at"
         ];
     }
+
+    rules(){
+        return {
+            name: String
+        };
+    }
     
     staffs(){
         return this.relations().belongsToMany("Staff", "staffs_departments", "dpt_id");
