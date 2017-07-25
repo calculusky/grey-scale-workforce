@@ -48,6 +48,12 @@ parameters:
     required: true
     in: path
     description: The user id
+  staffId:
+    name: staffId
+    type: integer
+    required: true
+    in: path
+    description: The Staff id
 
 #----------------------Definitions-------------------------------
 definitions:

@@ -183,15 +183,15 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /requests/user/{userId}/{offset}/{limit}:
+     * /requests/staff/{staffId}/{offset}/{limit}:
      *  get:
      *    description: 'Retrieves a list of Travel Request that belongs to a particular
-     *          user as specified by the userId path parameter'
-     *    summary: 'Retrieves Travel Request belonging to a User'
+     *          Staff as specified by the StaffId path parameter'
+     *    summary: 'Retrieves Travel Request belonging to a Staff'
      *    tags: ['Travel Request']
      *    produces:
      *    - application/json
-     *    operationId: "getRequestByUser"
+     *    operationId: "getRequestByStaff"
      *    responses:
      *      '200':
      *        description: "A list of Travel Request"
@@ -199,12 +199,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *          $ref: '#/definitions/getRequestOutput'
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/usr_id'
+     *    - $ref: '#/parameters/staffId'
      *    - $ref: '#/parameters/offset'
      *    - $ref: '#/parameters/limit'
      */
-    app.get('/requests/user/:id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        API.travels().getTravelRequests(req.params.id, "user_id", req.who, req.params.offset, req.params.limit)
+    app.get('/requests/staff/:id/:offset?/:limit?', urlencodedParser, (req, res)=> {
+        console.log(req.params);
+        API.travels().getTravelRequests(req.params.id, "staff_id", req.who, req.params.offset, req.params.limit)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

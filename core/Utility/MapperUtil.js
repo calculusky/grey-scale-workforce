@@ -97,7 +97,7 @@ module.exports.getMysqlError = function (err) {
                 msg: "The related field value doesn't exist. Foreign key constraint",
                 type: "Database",
                 code: `${err.errno} - ${err.code}`,
-                desc: "You are trying to insert a record that has relationship with " +
+                desc: "You are trying to insert a record that have a relationship with " +
                 "another entity of which the related entity doesn't exist"
             };
         case 1217:
@@ -116,7 +116,6 @@ module.exports.getMysqlError = function (err) {
                 code: `${err.errno} - ${err.code}`,
                 desc: "Properly check what you are inserting."
             }
-
     }
 };
 

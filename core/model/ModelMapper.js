@@ -42,7 +42,7 @@ class ModelMapper {
         const DomainObject = DomainFactory.build(this.domainName);
         let domainObject = new DomainObject();
 
-        let resultSets = KNEX.select(fields).from(this.tableName).limit(limit).offset(offset);
+        let resultSets = KNEX.select(fields).from(this.tableName).limit(parseInt(limit)).offset(parseInt(offset));
         //if this query is based on a condition:e.g where clause 
         if (by !== ModelMapper._all && by !== ModelMapper._andWhere) {
             resultSets = resultSets.where(domainObject.getTableColumn(by), value);
@@ -59,11 +59,10 @@ class ModelMapper {
                         domains.push(domain);
                     }
                     return resolve({records: domains, query: resultSets.toString()});
-                })
-                .catch(err=> {
-                    Log.e(err);
-                    return reject({err, query: resultSets.toString()});
-                });
+                }).catch(err=> {
+                Log.e("findDomainRecord", err);
+                return reject({err, query: resultSets.toString()});
+            });
         };
         return new Promise(executor);
     }

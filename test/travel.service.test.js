@@ -83,6 +83,14 @@ describe("Test to see that the validation is done", ()=> {
     });
 });
 
+it("should return travel request by its 'user_id'", ()=> {
+    return expect(API.travels()
+        .getTravelRequests(1, "user_id", {api: 1}, 0, 10))
+        .resolves.toEqual({
+            
+        });
+});
+
 
 // afterAll(()=> {
 //     API.travels().deleteTravelRequest("reasons", "No Reason")

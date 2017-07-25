@@ -19,7 +19,7 @@ class UserService {
 
     getUsers(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         if (!value || value.trim() == '') {
-            //Its important that all queries are streamlined to majorly for each business
+            //Its important that all queries are streamlined majorly for each business
             value = who.api;
             by = "api_instance_id";
         } else if (value) {
@@ -55,7 +55,6 @@ class UserService {
         //Get Mapper
         if (user.password) {
             user.setPassword(Password.encrypt(user.password).hash);
-            console.log(user.password);
         }
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         // console.log(user);
