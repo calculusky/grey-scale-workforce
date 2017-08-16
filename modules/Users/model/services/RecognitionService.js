@@ -78,7 +78,7 @@ class RecognitionService {
      * @param next
      */
     auth(req, res, next) {
-        const token = req.header('x-travels-token');
+        const token = req.header('x-working-token');
         // console.log(req.headers);
         if (token) {
             jwt.verify(token, 'mySecretKeyFile', (err, decoded)=> {
@@ -97,7 +97,7 @@ class RecognitionService {
                 status: 'fail',
                 data: {
                     message: "Unauthorized Access",
-                    description: "Unauthorized. Send a valid token on the header [x-travels-token]"
+                    description: "Unauthorized. Send a valid token on the header [x-working-token]"
                 },
                 isRoute: false
             }));

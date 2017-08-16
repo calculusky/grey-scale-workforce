@@ -1,8 +1,0 @@
-{
-    "id":"dpt_id",
-    "code_name":"dpt_code_name",
-    "name":"dpt_name",
-    "api_instance_id":"api_instance",
-    "created_at":"created_at",
-    "updated_at":"updated_at"
-}

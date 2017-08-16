@@ -25,19 +25,19 @@ class MapperFactory {
         switch (mapperName) {
             case MapperFactory.USER:
                 return Utils.loadMapper(mapperStore, "../../modules/Users/model/mappers/UserMapper");
-            case MapperFactory.TRAVEL_REQUEST:
-                return Utils.loadMapper(mapperStore, "../../modules/TravelRequests/model/mappers/TravelRequestMapper");
+            case MapperFactory.WORK_ORDER:
+                return Utils.loadMapper(mapperStore, "../../modules/WorkOrders/model/mappers/WorkOrderMapper");
             case MapperFactory.STAFF:
                 return Utils.loadMapper(mapperStore, "../../modules/Staffs/model/mappers/StaffMapper");
-            case MapperFactory.DEPARTMENT:
-                return Utils.loadMapper(mapperStore, "../../modules/Departments/model/mappers/DepartmentMapper");
+            case MapperFactory.FAULT:
+                return Utils.loadMapper(mapperStore, "../../modules/Faults/model/mappers/FaultMapper");
         }
     }
 }
 
 MapperFactory.USER = "User";
 MapperFactory.STAFF = "Staff";
-MapperFactory.TRAVEL_REQUEST = "TravelRequest";
-MapperFactory.DEPARTMENT = "Department";
+MapperFactory.WORK_ORDER = "TravelRequest";
+MapperFactory.FAULT = "Fault";
 
 module.exports = MapperFactory;

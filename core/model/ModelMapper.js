@@ -6,7 +6,7 @@ const KNEX = require('knex')({
         host: '127.0.0.1',
         user: 'root',
         password: 'Nigeriasns$1',
-        database: 'travels'
+        database: 'mr_working'
     }
 });
 

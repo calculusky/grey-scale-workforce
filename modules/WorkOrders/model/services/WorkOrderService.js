@@ -8,19 +8,19 @@ const Util = require('../../../../core/Utility/MapperUtil');
 const validate = require('validate-fields')();
 
 /**
- * @name TravelRequestService
+ * @name WorkOrderService
  */
-class TravelRequestService{
+class WorkOrderService{
     
     constructor(){
         
     }
 
     getName(){
-        return "travelRequestService";
+        return "workOrderService";
     }
-    
-    getTravelRequests(value, by = "id", who = {api: -1}, offset, limit){
+
+    getWorkOrders(value, by = "id", who = {api: -1}, offset, limit){
         if (!value || `${""+value+"".trim()}` == '') {
             //Its important that all queries are streamlined to majorly for each business
             value = who.api;
@@ -32,43 +32,43 @@ class TravelRequestService{
             value['api_instance_id'] = who.api;
             by = "*_and";
         }
-        const TravelRequestMapper = MapperFactory.build(MapperFactory.TRAVEL_REQUEST);
-        return TravelRequestMapper.findDomainRecord({by, value}, offset, limit)
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.findDomainRecord({by, value}, offset, limit)
             .then(result=> {
                 return (Util.buildResponse({data: {items: result.records}}));
             });
     }
     
-    createTravelRequest(body = {}, who = {}){
-        const TravelRequest = DomainFactory.build(DomainFactory.TRAVEL_REQUEST);
+    createWorkOrder(body = {}, who = {}){
+        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         body['api_instance_id'] = who.api;
-        let travelRequest = new TravelRequest(body);
+        let workOrder = new WorkOrder(body);
 
         //enforce the validation
-        let isValid = validate(travelRequest.rules(), travelRequest);
+        let isValid = validate(workOrder.rules(), workOrder);
         if(!isValid){
             return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
 
         //Get Mapper
-        const TravelRequestMapper = MapperFactory.build(MapperFactory.TRAVEL_REQUEST);
-        // console.log(travelRequest);
-        return TravelRequestMapper.createDomainRecord(travelRequest).then(travelRequest=> {
-            if (!travelRequest) return Promise.reject();
-            return Util.buildResponse({data: travelRequest});
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        // console.log(workOrder);
+        return WorkOrderMapper.createDomainRecord(workOrder).then(workOrder=> {
+            if (!workOrder) return Promise.reject();
+            return Util.buildResponse({data: workOrder});
         });
     }
     
-    deleteTravelRequest(by = "id", value){
-        const TravelRequestMapper = MapperFactory.build(MapperFactory.TRAVEL_REQUEST);
-        return TravelRequestMapper.deleteDomainRecord({by, value}).then(count=> {
+    deleteWorkOrder(by = "id", value){
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.deleteDomainRecord({by, value}).then(count=> {
             if (!count) {
                 return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Util.buildResponse({data: {message: "Travel Request deleted"}});
+            return Util.buildResponse({data: {message: "Work Order deleted"}});
         });
     }
     
 }
 
-module.exports = TravelRequestService;
+module.exports = WorkOrderService;

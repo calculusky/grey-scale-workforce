@@ -3,14 +3,14 @@
  */
 const ModelMapper = require('../../../../core/model/ModelMapper');
 
-class TravelRequestMapper extends ModelMapper{
+class WorkOrderMapper extends ModelMapper{
 
     constructor(context){
         super(context);
         this.primaryKey = "id";
-        this.tableName = "travel_requests";
-        this.domainName = "TravelRequest";
+        this.tableName = "work_orders";
+        this.domainName = "WorkOrder";
     }
 }
 
-module.exports = TravelRequestMapper;
+module.exports = WorkOrderMapper;

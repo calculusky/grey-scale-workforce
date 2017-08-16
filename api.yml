@@ -1,6 +1,6 @@
 parameters:
   sessionId:
-    name: x-travels-token
+    name: x-working-token
     description: The Session ID of an authorized user
     in: header
     required: true
@@ -42,12 +42,18 @@ parameters:
     description: "The status of the travel request. 0 = for Pending Approval,
      1 = Approved, 2 = Rejected"
 
-  usr_id:
+  user_id:
     name: userId
     type: integer
     required: true
     in: path
     description: The user id
+  fault_id:
+    name: faultId
+    type: integer
+    required: true
+    in: path
+    description: The Fault ID
   staffId:
     name: staffId
     type: integer
@@ -175,58 +181,37 @@ definitions:
         type: string
         format: date
 
-  postRequestInput:
+  postFaultInput:
     type: "object"
-    description: "A new Travel Request Object"
+    description: "A new Fault Object"
     required:
-    - "manager_id"
-    - "arrangements"
-    - "reasons"
-    - "departure_city"
-    - "arrival_city"
-    - "departure_date"
-    - "return_date"
+    - "asset_id"
+    - "summary"
+    - "issue_date"
     properties:
-      manager_id:
-        description: "The Manager you are sending this request to for approval.
-                      Basically you should be sending user id of the manager."
+      asset_id:
+        description: "The Asset ID this fault is related to."
         type: integer
-      arrangements:
-        description: A list of arrangements needed for this travel. Must be a either of <b>Flight, Hotel,
-            Rental Car</b> or <b>Taxi Service</b>
-        type: array
-        items:
-          type: string
-      reasons:
-        description: The reasons/purpose for this travel request
+      summary:
+        description: A brief description of the fault
         type: string
-      departure_city:
-        description: The city of take off. Which city will you be taking off from?
-        type: string
-      arrival_city:
-        description: The intended city to visit. Which city are you visiting?
-        type: string
-      departure_date:
-        description: The intended date for departure. When will you be leaving your current city?
-        type: string
-        format: date-tim
-      return_date:
-        description: The intended date to return. When will you likely return from your visit?
+      issue_date:
+        description: The issue date of this fault
         type: string
         format: date-time
 
-  postRequestOutput:
+  postFaultOutput:
     type: object
     properties:
       status:
         type: string
       data:
-        $ref: '#/definitions/postRequestInput'
+        $ref: '#/definitions/postFaultInput'
     required:
       - data
       - status
 
-  getRequestOutput:
+  getFaultOutput:
     type: object
     properties:
       status:
@@ -237,23 +222,23 @@ definitions:
           items:
             type: array
             items:
-              $ref: '#/definitions/TravelRequest'
+              $ref: '#/definitions/Fault'
     required:
       - data
       - status
 
-  TravelRequest:
-    description: A representation of a Travel Request Object
+  Fault:
+    description: A representation of a Work Order Object
     allOf:
-      - $ref: '#/definitions/postRequestInput'
+      - $ref: '#/definitions/postFaultInput'
       - type: object
         properties:
           id:
             type: integer
-            description: The Travel Request ID
-          staff_id:
+            description: The Fault ID
+          asset_id:
             type: integer
-            description: The Staff that requested for this Travel
+            description: The Asset ID
           status:
             type: integer
             description: The Request Status
@@ -261,8 +246,13 @@ definitions:
               - 0
               - 1
               - 2
-          approved_by:
+          created_by:
             type: integer
+            description: The User that created this Fault
+          issue_date:
+            type: string
+            format: date-time
+            description: The date this fault was issued
           created_at:
             type: string
             format: date-time
@@ -272,115 +262,7 @@ definitions:
             format: date-time
             description: The date this request was updated
 
-
-  Staff:
-    description: A representation of a Staff object
-    properties:
-      id:
-        type: integer
-        description: The staff id
-      user_id:
-        type: integer
-        description: The user id
-      emp_no:
-        type: string
-        description: The employee no
-      birth_date:
-        type: string
-        description: The Employee Birth Date
-      employment_date:
-        type: string
-        format: date
-        description: The Employment Date
-      created_at:
-        type: string
-        format: date-time
-        description: The date this staff was created
-      updated_at:
-        type: string
-        format: date-time
-        description: The date this staff was updated
-
-  postStaffInput:
-    type: object
-    required:
-      - user_id
-      - emp_no
-      - birth_date
-    properties:
-      user_id:
-        type: integer
-      emp_no:
-        type: string
-      birth_date:
-        type: string
-        format: date
-      employment_date:
-        type: string
-        format: date
-
-  postStaffOutput:
-      type: object
-      properties:
-        status:
-          type: string
-        data:
-          $ref: '#/definitions/postStaffInput'
-      required:
-        - data
-        - status
-
-
-  getStaffOutput:
-    type: object
-    properties:
-      status:
-        type: string
-      data:
-        type: object
-        properties:
-          items:
-            type: array
-            items:
-              $ref: '#/definitions/Staff'
-    required:
-      - data
-      - status
-
-  UserStaffDetails:
-    properties:
-      staff:
-        $ref: '#/definitions/Staff'
-      user:
-        type: object
-        $ref: '#/definitions/User'
-      departments:
-        type: array
-        items:
-          $ref: '#/definitions/Department'
-      managers:
-        type: array
-        items:
-          $ref: '#/definitions/DepartmentManager'
-
-
-  getUserStaffDetailsOutput:
-    type: object
-    properties:
-      status:
-        type: string
-      data:
-        type: object
-        properties:
-          items:
-            type: array
-            items:
-              $ref: '#/definitions/UserStaffDetails'
-    required:
-    - status
-    - data
-
-  Department:
+  WorkOrder:
     properties:
       id:
         type: integer
@@ -397,7 +279,18 @@ definitions:
         format: date-time
         description: The date this department was updated
 
-  getDepartmentsOutput:
+  postWorkOrderOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        $ref: '#/definitions/postWorkOrderInput'
+    required:
+    - data
+    - status
+
+  getWorkOrderOutput:
     type: object
     properties:
       status:
@@ -408,109 +301,26 @@ definitions:
           items:
             type: array
             items:
-              $ref: '#/definitions/Department'
+              $ref: '#/definitions/WorkOrder'
     required:
     - status
     - data
 
-  StaffManager:
-    type: object
-    properties:
-      staff_id:
-        type: integer
-      managers:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/Staff'
-          properties:
-            department:
-              $ref: '#/definitions/Department'
+  postWorkOrderInput:
+      type: object
+      required:
+        - user_id
+        - emp_no
+        - birth_date
+      properties:
+        user_id:
+          type: integer
+        emp_no:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        employment_date:
+          type: string
+          format: date
 
-  DepartmentManager:
-    type: object
-    properties:
-      dept_id:
-        type: integer
-        description: Department ID
-      manager:
-        type: array
-        items:
-          $ref: '#/definitions/Staff'
-
-  DepartmentStaff:
-    type: object
-    properties:
-      dept_id:
-        type: integer
-        description: Department ID
-      staffs:
-        type: array
-        items:
-          $ref: '#/definitions/Staff'
-
-  getStaffDepartmentsOutput:
-    type: object
-    properties:
-      status:
-        type: string
-      data:
-        type: object
-        properties:
-          items:
-            type: array
-            items:
-              type: object
-              properties:
-                staff_id:
-                  type: integer
-                departments:
-                  type: array
-                  items:
-                    $ref: '#/definitions/Department'
-    required:
-    - status
-    - data
-
-  getStaffManagersOutput:
-    type: object
-    properties:
-      status:
-        type: string
-      data:
-        type: object
-        properties:
-          items:
-            type: array
-            items:
-              $ref: '#/definitions/StaffManager'
-    required:
-    - status
-    - data
-
-
-  getDepartmentStaffsOutput:
-    type: object
-    properties:
-      status:
-        type: string
-      data:
-        type: object
-        properties:
-          items:
-            type: array
-            items:
-              $ref: '#/definitions/DepartmentStaff'
-
-  getDepartmentManagerOutput:
-    type: object
-    properties:
-      status:
-        type: string
-      data:
-        type: object
-        properties:
-          items:
-            type: array
-            items:
-              $ref: '#/definitions/DepartmentManager'

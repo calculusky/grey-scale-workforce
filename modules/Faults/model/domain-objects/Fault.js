@@ -6,9 +6,9 @@ const map = require('./map.json');
 /**
  * @author Paul Okeke
  * Created by paulex on 7/4/17.
- * @name Staff
+ * @name Fault
  */
-class Staff extends DomainObject {
+class Fault extends DomainObject {
 
     constructor(data) {
         super(data, map);
@@ -17,17 +17,14 @@ class Staff extends DomainObject {
 
     required() {
         return [
-            'user_id',
-            'emp_no',
-            'birth_date'
+            'name',
+            'api_instance_id'
         ];
     }
 
     guard() {
         return [
-            'id',
-            'password',
-            'email'
+            'api_instance_id'
         ];
     }
 
@@ -39,23 +36,12 @@ class Staff extends DomainObject {
         ];
     }
 
-    rules() {
+    rules(){
         return {
-            user_id: Number,
-            emp_no: String,
-            birth_date: Date
-        }
-    }
-
-    departments() {
-        //A Staff has many departments
-        return this.relations().belongsToMany('Department', 'staffs_departments', 'stf_id');
-    }
-
-    user() {
-        return this.relations().hasOne('User');
+            name: String
+        };
     }
 }
 
 //noinspection JSUnresolvedVariable
-module.exports = Staff;
+module.exports = Fault;

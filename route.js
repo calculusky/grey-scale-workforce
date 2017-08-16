@@ -94,13 +94,13 @@ module.exports = function route() {
         swaggerUI: "swagger-ui/dist",
         apis: swaggerAPIs,
         info: {
-            title: "Travels API.",
+            title: "Mr.Working API.",
             version: "1.0",
-            description: "Travels Documentation",
-            "x-ibm-name": "ncdmb-travels-api"
+            description: "Mr.Working Documentation",
+            "x-ibm-name": "mr.working-api"
         },
         schemes: ['http']
     });
 
-    app.listen(9003, ()=>console.log("Started Travels API"));
+    app.listen(9003, ()=>console.log("Started MrWorking API"));
 };

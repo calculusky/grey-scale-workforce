@@ -3,21 +3,21 @@ const MapperFactory = require('../../../MapperFactory');
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
 /**
- * @name DepartmentService
+ * @name FaultService
  * Created by paulex on 7/4/17.
  */
-class DepartmentService {
+class FaultService {
 
     constructor() {
 
     }
 
     getName() {
-        return "departmentService";
+        return "faultService";
     }
 
-    getDepartments(value, by = "id", who = {api: -1}) {
-        if (!value || ""+value+"".trim() == '') {
+    getFaults(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+        if (!value || "" + value + "".trim() == '') {
             //Its important that all queries are streamlined to majorly for each business
             value = who.api;
             by = "api_instance_id";
@@ -28,8 +28,8 @@ class DepartmentService {
             value['api_instance_id'] = who.api;
             by = "*_and";
         }
-        const DepartmentMapper = MapperFactory.build(MapperFactory.DEPARTMENT);
-        return DepartmentMapper.findDomainRecord({by, value}, offset, limit)
+        const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
+        return FaultMapper.findDomainRecord({by, value}, offset, limit)
             .then(result=> {
                 return (Util.buildResponse({data: {items: result.records}}));
             });
@@ -40,13 +40,13 @@ class DepartmentService {
      * @param body
      * @param who
      */
-    createDepartment(body = {}, who = {}) {
-        const Department = DomainFactory.build(DomainFactory.DEPARTMENT);
+    createFault(body = {}, who = {}) {
+        const Fault = DomainFactory.build(DomainFactory.FAULT);
         body['api_instance_id'] = who.api;
-        let staff = new Department(body);
+        let staff = new Fault(body);
         //Get Mapper
-        const DepartmentMapper = MapperFactory.build(MapperFactory.DEPARTMENT);
-        return DepartmentMapper.createDomainRecord(staff).then(staff=> {
+        const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
+        return FaultMapper.createDomainRecord(staff).then(staff=> {
             if (!staff) return Promise.reject();
             return Util.buildResponse({data: staff});
         });
@@ -58,22 +58,15 @@ class DepartmentService {
      * @param value
      * @returns {*}
      */
-    deleteDepartment(by = "id", value) {
-        const DepartmentMapper = MapperFactory.build(MapperFactory.DEPARTMENT);
-        return DepartmentMapper.deleteDomainRecord({by, value}).then(count=> {
+    deleteFault(by = "id", value) {
+        const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
+        return FaultMapper.deleteDomainRecord({by, value}).then(count=> {
             if (!count) {
                 return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Util.buildResponse({data: {message: "Department deleted"}});
+            return Util.buildResponse({data: {message: "Fault deleted"}});
         });
-    }
-
-
-    getDepartmentManagers(value, by = "id") {
-        //-- first we need to get the department the staff belongs to
-        //-- iterate through the departments and get the corresponding manager for each
-        //There is no straight bullet to this.. sadly
     }
 }
 
-module.exports = DepartmentService;
+module.exports = FaultService;

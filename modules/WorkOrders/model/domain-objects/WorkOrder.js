@@ -7,7 +7,7 @@ const map = require('./map.json');
  * Created by paulex on 7/5/17.
  */
 
-class TravelRequest extends DomainObject {
+class WorkOrder extends DomainObject {
 
     constructor(data) {
         super(data, map);
@@ -54,4 +54,4 @@ class TravelRequest extends DomainObject {
 
 }
 
-module.exports = TravelRequest;
+module.exports = WorkOrder;

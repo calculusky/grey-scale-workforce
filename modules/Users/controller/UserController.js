@@ -178,30 +178,4 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(err);
             });
     });
-
-    /**
-     * @swagger
-     * /users/{id}/staff:
-     *   get:
-     *     summary: 'Retrieve the staff details for the specified user {id}'
-     *     description: ''
-     *     tags: [User]
-     *     produces:
-     *     - application/json
-     *     operationId: getUserStaffDetails
-     *     responses:
-     *       '200':
-     *         description: ''
-     *         schema:
-     *           $ref: '#/definitions/getUserStaffDetailsOutput'
-     *     parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - in: path
-     *       name: id
-     *       required: true
-     *       type: integer
-     */
-    app.get('/users/:id/staff', urlencodedParser, (req, res)=>{
-        
-    });
 };

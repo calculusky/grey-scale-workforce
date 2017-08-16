@@ -48,28 +48,27 @@ class API {
     }
 
     /**
-     * @returns {TravelRequestService|*}
-     */
-    travels() {
-        return API._(this)['services']['travelRequestService'];
-    }
-
-
-    /**
-     *
-     * @returns {StaffService|*}
-     */
-    staffs() {
-        return API._(this)['services']['staffService'];
-    }
-
-
-    /**
      *
      * @returns {RecognitionService|*}
      */
     recognitions() {
         return API._(this)['services']['recognitionService']
+    }
+
+    /**
+     *
+     * @returns {FaultService|*}
+     */
+    faults() {
+        return API._(this)['services']['faultService']
+    }
+
+    /**
+     *
+     * @returns {WorkOrderService|*}
+     */
+    workOrders() {
+        return API._(this)['services']['workOrderService']
     }
 
     /**
