@@ -2,8 +2,9 @@
  * Created by paulex on 7/2/17.
  */
 const bodyParser = require('body-parser');
-const urlencodedParser = bodyParser.urlencoded({extended: false});
+const urlencodedParser = bodyParser.urlencoded({extended: false, limit:'5mb'});
 const jsonParser = bodyParser.json();
+const multer = require('multer');
 const API = require('./API.js');
 const fs = require('fs');
 const swagger = require('./swagger');
@@ -22,7 +23,7 @@ module.exports = function route() {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Credentials', "true");
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, apim-debug, x-travels-token, Content-Type, Accept');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, apim-debug, x-working-token, Content-Type, Accept');
         res.header('Access-Control-Expose-Headers', "true");
 
         if (req.method == 'OPTIONS'
@@ -54,6 +55,7 @@ module.exports = function route() {
      */
     var controllerPath = './modules';
     var swaggerAPIs = ['./route*.js', './api.yml'];
+    let multiPart = multer({dest:"uploads/"});
     fs.readdirSync(controllerPath).forEach(dir=> {
         if (fs.statSync(`${controllerPath}/${dir}`).isDirectory()) {
             var filePath = `${controllerPath}/${dir}/controller`;
@@ -61,7 +63,7 @@ module.exports = function route() {
                 if (controller) {
                     var routeCtrl = require(`${filePath}/${controller}`);
                     swaggerAPIs.push(`${filePath}/${controller}`);
-                    routeCtrl.controller(app, {API, jsonParser, urlencodedParser});
+                    routeCtrl.controller(app, {API, jsonParser, urlencodedParser, multiPart});
                 }
             });
         }

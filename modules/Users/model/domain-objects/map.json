@@ -1,10 +1,7 @@
 {
-  "id":"usr_id",
-  "address_id":"add_id",
-  "team_id":"tme_id",
+  "id":"id",
   "email":"email",
   "username":"email",
-  "api_instance_id":"api_instance",
   "password":"password",
   "first_name":"first_name",
   "last_name":"last_name",

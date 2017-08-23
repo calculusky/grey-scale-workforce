@@ -72,6 +72,32 @@ class API {
     }
 
     /**
+     * 
+     * @returns {AssetService}
+     */
+    assets(){
+        return API._(this)['services']['assetService'];
+    }
+
+
+    /**
+     *
+     * @returns {NoteService}
+     */
+    notes(){
+        return API._(this)['services']['noteService'];
+    }
+
+
+    /**
+     *
+     * @returns {AttachmentService}
+     */
+    attachments(){
+        return API._(this)['services']['attachmentService'];
+    }
+
+    /**
      * This method theoretically can be accessed outside this class
      * however conventionally its should be private.
      * Notwithstanding this method can't be used outside of this class

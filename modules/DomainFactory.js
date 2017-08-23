@@ -18,15 +18,27 @@ class DomainFactory {
      * @param options
      */
     static build(domainName = "", ...options) {
-        switch (domainName) {
-            case DomainFactory.USER:
-                return require('./Users/model/domain-objects/User');
-            case DomainFactory.TRAVEL_REQUEST:
-                return require('./TravelRequests/model/domain-objects/TravelRequest');
-            case DomainFactory.WORK_ORDER:
-                return require('./WorkOrders/model/domain-objects/WorkOrder');
-            case DomainFactory.FAULT:
-                return require('./Faults/model/domain-objects/Fault');
+        try{
+            switch (domainName) {
+                case DomainFactory.USER:
+                    return require('./Users/model/domain-objects/User');
+                case DomainFactory.TRAVEL_REQUEST:
+                    return require('./TravelRequests/model/domain-objects/TravelRequest');
+                case DomainFactory.WORK_ORDER:
+                    return require('./WorkOrders/model/domain-objects/WorkOrder');
+                case DomainFactory.FAULT:
+                    return require('./Faults/model/domain-objects/Fault');
+                case DomainFactory.ASSET:
+                    return require('./Assets/model/domain-objects/Asset');
+                case DomainFactory.NOTE:
+                    return require('./Notes/model/domain-objects/Note');
+                case DomainFactory.ATTACHMENT:
+                    return require('./Attachments/model/domain-objects/Attachment');
+            }
+        }catch (e){
+            if(e.code=="MODULE_NOT_FOUND"){
+                return null;
+            }
         }
     }
 }
@@ -36,5 +48,8 @@ DomainFactory.USER = "User";
 DomainFactory.TRAVEL_REQUEST = "TravelRequest";
 DomainFactory.WORK_ORDER = "WorkOrder";
 DomainFactory.FAULT = "Fault";
+DomainFactory.ASSET = "Asset";
+DomainFactory.NOTE = "Note";
+DomainFactory.ATTACHMENT = "Attachment";
 
 module.exports = DomainFactory;

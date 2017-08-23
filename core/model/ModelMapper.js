@@ -80,13 +80,27 @@ class ModelMapper {
         let dbData = domainObject.serialize();
 
         //First check that the required fields are specified
-
         var [valid, , cMsg] = Util.validatePayLoad(domainObject, domainObject.required());
+        
 
         if (!valid) {
             const error = Util.buildResponse({status: "fail", data: cMsg}, 400);
             return Promise.reject(error);
         }
+        
+        var [filteredDomain, guardedKeys] = Util.validateGuarded(domainObject, domainObject.guard());
+
+        //Added on 21st august 2017 - Paul
+        if (Object.keys(filteredDomain).length == 0) {
+            const error = Util.buildResponse({
+                status: "fail", data: {
+                    message: "Nothing to update. Some included fields are not allowed for update.",
+                    guarded: guardedKeys
+                }
+            }, 400);
+            return Promise.reject(error);
+        }
+        dbData = filteredDomain.serialize(filteredDomain);
 
         let resultSets = KNEX.insert(dbData).into(this.tableName);
         return resultSets.then(result => {

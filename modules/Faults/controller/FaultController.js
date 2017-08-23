@@ -5,7 +5,7 @@
 const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
-module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
+module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
     app.use('/faults', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
@@ -31,8 +31,17 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        schema:
      *          $ref: '#/definitions/postFaultInput'
      */
-    app.post('/faults', jsonParser, (req, res)=> {
-        return res.send("Not yet implemented");
+    app.post('/faults', multiPart.array("files", 5), (req, res)=> {
+        console.log(req.files);
+        API.faults().createFault(req.body, req.who)
+            .then(({data, code})=> {
+                console.log(data);
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                console.log(code, err);
+                return res.status(code).send(err);
+            });
     });
 
     /**
@@ -59,7 +68,15 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *          $ref: '#/definitions/postFaultInput'
      */
     app.put('/faults', jsonParser, (req, res)=> {
-        return res.send("Not yet implemented");
+        API.faults().updateFault(req.body, req.who)
+            .then(({data, code})=> {
+                console.log(data);
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                console.log(code, err);
+                return res.status(code).send(err);
+            });
     });
 
     
@@ -95,6 +112,77 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(err);
             });
     });
+
+
+    /**
+     * @swagger
+     * /faults/{id}/notes/{offset}/{limit}:
+     *   get:
+     *     summary: Gets Notes for a Fault
+     *     description: ''
+     *     tags: [Fault]
+     *     produces:
+     *     - application/json
+     *     operationId: getFaultNotes
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getNoteOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - in: path
+     *       name: id
+     *       required: true
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/faults/:id/notes/:offset?/:limit?', urlencodedParser, (req, res)=> {
+        console.log("called");
+        return API.notes().getNotes(req.params['id'], "faults", "relation_id", req.who, req.params.offset, req.params.limit)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+
+    /**
+     * @swagger
+     * /faults/{id}/attachments/{offset}/{limit}:
+     *   get:
+     *     summary: Gets Attachments for a Fault
+     *     description: ''
+     *     tags: [Fault]
+     *     produces:
+     *     - application/json
+     *     operationId: getFaultAttachments
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getAttachmentOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - in: path
+     *       name: id
+     *       required: true
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/faults/:id/attachments/:offset?/:limit?', urlencodedParser, (req, res)=> {
+        console.log("called");
+        return API.attachments().getAttachments(req.params['id'], "faults", "relation_id", req.who, req.params.offset, req.params.limit)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
 
 
     // /**

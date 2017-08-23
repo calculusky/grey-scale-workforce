@@ -17,14 +17,18 @@ class Fault extends DomainObject {
 
     required() {
         return [
-            'name',
-            'api_instance_id'
+            'summary',
+            'issue_date',
+            'status',
+            'priority',
+            'asset_id'
         ];
     }
 
     guard() {
         return [
-            'api_instance_id'
+            'api_instance_id',
+            'id'
         ];
     }
 
@@ -36,10 +40,42 @@ class Fault extends DomainObject {
         ];
     }
 
-    rules(){
+    rules() {
         return {
             name: String
         };
+    }
+
+    /**
+     * Returns the User that owns the fault
+     * @returns {Promise}
+     */
+    user() {
+        return this.relations().belongsTo("User", "assigned_to");
+    }
+
+    /**
+     * Returns the associated Asset for this fault
+     * @returns {Promise}
+     */
+    asset(){
+        return this.relations().belongsTo("Asset");
+    }
+
+    /**
+     * Returns the notes for this fault
+     * @returns {Promise}
+     */
+    notes(){
+        return this.relations().morphMany("Note", 'module', 'relation_id');
+    }
+
+    /**
+     * Returns the attachments for this fault
+     * @returns {Promise}
+     */
+    attachments(){
+        return this.relations().morphMany("Attachment", "module", "relation_id");
     }
 }
 

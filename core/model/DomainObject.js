@@ -23,10 +23,10 @@ class DomainObject {
         //------Map data to Domain instances------//
         let hasData = (data && (Object.keys(data).length > 0));
         if (hasData) {
+            //lets check that the data object has the object.prototype
             let mapKeys = Object.keys(map);
             mapKeys.forEach(key=> {
-                if (data.hasOwnProperty(key))
-                    this[key] = data[key];
+                if (data[key]) this[key] = data[key];
             });
         }
         this._(this).relations = new RelationShips(this);
@@ -45,7 +45,7 @@ class DomainObject {
         let clKeys = Object.keys(map);
         if (to === 'db') {
             clKeys.forEach(key=> {
-                if (data.hasOwnProperty(key))
+                if (data[key])
                     newData[map[key]] = data[key];
             });
         } else {
@@ -82,11 +82,11 @@ class DomainObject {
      * Should be overridden by sub-classes
      * @returns {{}}
      */
-    rules(){
+    rules() {
         return {};
     }
 
-    relations(){
+    relations() {
         return this._(this).relations;
     }
 

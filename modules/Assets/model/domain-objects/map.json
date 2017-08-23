@@ -1,0 +1,14 @@
+{
+  "id": "id",
+  "asset_name": "asset_name",
+  "asset_type": "asset_type",
+  "status": "status",
+  "serial_no": "serial_no",
+  "description": "description",
+  "assigned_to": "assigned_to",
+  "assigned_to_multiple": "assigned_to_multiple",
+  "location":"location",
+  "deleted_at": "deleted_at",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}
