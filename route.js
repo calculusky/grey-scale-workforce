@@ -5,14 +5,17 @@ const bodyParser = require('body-parser');
 const urlencodedParser = bodyParser.urlencoded({extended: false, limit: '5mb'});
 const jsonParser = bodyParser.json();
 const multer = require('multer');
-const API = require('./API.js');
+var API = require('./API.js');
 const fs = require('fs');
 const swagger = require('./swagger');
 const express = require("express");
 var cors = require('cors');
 
-module.exports = function route() {
-
+module.exports = function route(context) {
+    
+    //Initialize the API
+    API = new API(context);
+    
     /**
      * Configure Express
      */

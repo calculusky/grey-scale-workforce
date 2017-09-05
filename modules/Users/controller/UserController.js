@@ -144,6 +144,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
+
     /**
      * @swagger
      * /users/{offset}/{limit}:
@@ -175,6 +176,43 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(data);
             })
             .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+
+    /**
+     * @swagger
+     * /users/{id}/register/fcm/{token}:
+     *  get:
+     *   description: "Register a mobile user fire-base token"
+     *   summary: "Register Fire-base token"
+     *   tags: [User]
+     *   produces:
+     *   - application/json
+     *   operationId: registerToken
+     *   responses:
+     *     '200':
+     *       description: "User"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getUserOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     *
+     */
+    app.put("/users/register/fcm/:token", urlencodedParser, (req, res)=> {
+        Log.info("registerFcmToken:", req.params);
+        API.users().registerFcmToken(req.params.token, req.who)
+            .then(({data, code=200})=> {
+                console.log('success', data);
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                console.error('err', err);
                 return res.status(code).send(err);
             });
     });

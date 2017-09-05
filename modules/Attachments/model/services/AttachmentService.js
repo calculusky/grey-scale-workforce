@@ -68,13 +68,13 @@ class AttachmentService {
     createAttachment(body = {}, who = {}) {
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
         body['api_instance_id'] = who.api;
-        let staff = new Attachment(body);
+        let attachment = new Attachment(body);
 
         //Get Mapper
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        return AttachmentMapper.createDomainRecord(staff).then(staff=> {
-            if (!staff) return Promise.reject();
-            return Util.buildResponse({data: staff});
+        return AttachmentMapper.createDomainRecord(attachment).then(attachment=> {
+            if (!attachment) return Promise.reject();
+            return Util.buildResponse({data: attachment});
         });
     }
 

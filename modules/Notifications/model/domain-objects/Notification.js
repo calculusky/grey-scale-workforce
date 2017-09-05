@@ -5,10 +5,10 @@ const map = require('./map.json');
 
 /**
  * @author Paul Okeke
- * Created by paulex on 9/4/17.
- * @name MeterReading
+ * Created by paulex on 7/4/17.
+ * @name Notification
  */
-class MeterReading extends DomainObject {
+class Notification extends DomainObject {
 
     constructor(data) {
         super(data, map);
@@ -17,8 +17,10 @@ class MeterReading extends DomainObject {
 
     required() {
         return [
-            'meter_no',
-            'current_reading'
+            'type',
+            'message',
+            'from',
+            'to'
         ];
     }
 
@@ -39,16 +41,14 @@ class MeterReading extends DomainObject {
 
     rules() {
         return {
-            meter_no: '*',
-            current_reading: 'numeric',
-            'current_bill?': 'numeric'
+            type: String,
+            message: String,
+            'status?': 'numeric',
+            from: String,
+            to: '*'
         };
-    }
-    
-    customer(){
-        return this.relations().belongsTo('Customer', 'meter_no', 'meter_no');
     }
 }
 
 //noinspection JSUnresolvedVariable
-module.exports = MeterReading;
+module.exports = Notification;

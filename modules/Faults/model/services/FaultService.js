@@ -10,9 +10,12 @@ const validate = require('validate-fields')();
  * Created by paulex on 7/4/17.
  */
 class FaultService {
-
-    constructor() {
-
+    /**
+     *
+     * @param api API
+     */
+    constructor(api) {
+        this.api = api;
     }
 
     getName() {
@@ -80,7 +83,7 @@ class FaultService {
      * @param limit
      */
     getFaultsAssignedTo(value, status = "?", offset = 0, limit = 10) {
-        
+
     }
 
     /**
@@ -88,8 +91,9 @@ class FaultService {
      * @param body
      * @param who
      * @param files
+     * @param API
      */
-    createFault(body = {}, who = {}, files = []) {
+    createFault(body = {}, who = {}, files = [], API) {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         body['api_instance_id'] = who.api;
         let fault = new Fault(body);
@@ -99,12 +103,25 @@ class FaultService {
             return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
 
+        //If there are files along with this request lets get it ready for upload
+        let attachments = [];
+        if (files.length) files.forEach(file=>attachments.push({
+            module: 'faults',
+            file_name: file.filename,
+            file_size: file.size,
+            file_path: file.path,
+            file_type: file.mimetype
+        }));
+
         //Get Mapper
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
         return FaultMapper.createDomainRecord(fault).then(fault=> {
             if (!fault) return Promise.reject();
+            attachments.forEach(attachment =>{ attachment['relation_id'] = fault.id; API.attachments().createAttachment(attachment)});
             if (fault.labels) fault.labels = JSON.parse(fault.labels);
             return Util.buildResponse({data: fault});
+        }).catch(err=>{
+            return Promise.reject(err);
         });
     }
 

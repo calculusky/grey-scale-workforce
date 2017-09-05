@@ -6,7 +6,7 @@ const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
-    app.use('/faults', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/faults*', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
@@ -32,8 +32,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postFaultInput'
      */
     app.post('/faults', multiPart.array("files", 5), (req, res)=> {
-        console.log(req.files);
-        API.faults().createFault(req.body, req.who)
+        API.faults().createFault(req.body, req.who, req.files, API)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);

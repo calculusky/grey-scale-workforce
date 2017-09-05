@@ -116,9 +116,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /customers/{id}:
+     * /customers/{account_no}:
      *   get:
-     *     summary: Gets List of customers
+     *     summary: Gets List of customers By the account no
      *     description: ''
      *     tags: [Customer]
      *     produces:
@@ -134,8 +134,38 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/customers/:id', urlencodedParser, (req, res)=> {
-        return API.customers().getCustomers(req.params['id'], "id")
+    app.get('/customers/:account_no', urlencodedParser, (req, res)=> {
+        return API.customers().getCustomers(req.params['account_no'], "id")
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
+     * /customers/meter/{meterNo}:
+     *   get:
+     *     summary: Gets List of customers by meter
+     *     description: ''
+     *     tags: [Customer]
+     *     produces:
+     *     - application/json
+     *     operationId: getCustomersByMeterNo
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getCustomerOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/customers/meter/:meterNo', urlencodedParser, (req, res)=> {
+        return API.customers().getCustomers(req.params['meterNo'], "meter_no")
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

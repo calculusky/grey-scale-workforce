@@ -48,10 +48,10 @@ class UserService {
 
         //enforce the validation
         let isValid = validate(user.rules(), user);
-        if(!isValid){
+        if (!isValid) {
             return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
-        
+
         //Get Mapper
         if (user.password) {
             //replace the password prefix as well for laravel sake
@@ -63,6 +63,49 @@ class UserService {
             if (!user) return Promise.reject();
             delete user.password;
             return Util.buildResponse({data: user});
+        });
+    }
+
+    /**
+     * Use to register a user fire-base token
+     * @param fcmToken
+     * @param who
+     * @returns {Promise.<User>|*}
+     */
+    registerFcmToken(fcmToken, who = {}) {
+        const User = DomainFactory.build(DomainFactory.USER);
+        let user = new User();
+        user.firebase_token = fcmToken;
+        const UserMapper = MapperFactory.build(MapperFactory.USER);
+        //since only a user can register his/her own device then its compulsory to
+        //take the user id from the decoded token
+        return UserMapper.updateDomainRecord({value: who.sub, domain: user}).then(result=> {
+            if (result.pop()) {
+                return Util.buildResponse({data: result.shift()});
+            } else {
+                return Promise.reject(Util.buildResponse({status: "fail", data: result.shift()}, 404));
+            }
+        });
+    }
+
+    /**
+     *
+     * @param by
+     * @param value
+     * @param body
+     * @returns {Promise.<User>|*}
+     */
+    updateUser(by, value, body = {}) {
+        const User = DomainFactory.build(DomainFactory.USER);
+        let user = new User(body);
+        const UserMapper = MapperFactory.build(MapperFactory.USER);
+
+        return UserMapper.updateDomainRecord({value, domain: user}).then(result=> {
+            if (result.pop()) {
+                return Util.buildResponse({data: result.shift()});
+            } else {
+                return Promise.reject(Util.buildResponse({status: "fail", data: result.shift()}, 404));
+            }
         });
     }
 

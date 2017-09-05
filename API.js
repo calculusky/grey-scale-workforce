@@ -18,7 +18,7 @@ let _privateStore = new WeakMap();
  */
 class API {
 
-    constructor() {
+    constructor(context) {
         //We should add all the services in all modules here
         //All services should have a getName method
         let modulesPath = './modules';
@@ -29,12 +29,11 @@ class API {
                     fs.readdirSync(servicePath).forEach(service=> {
                         let serviceObj = require(`${servicePath}/${service}`);
                         //Save all services into their own object
-                        serviceObj = new serviceObj(/*Insert Context Object here*/);
+                        serviceObj = new serviceObj(context);
                         if (!API._(this).services) {
                             API._(this).services = {};
                         }
                         API._(this).services[serviceObj.getName()] = serviceObj;
-
                     });
             }
         });
@@ -55,7 +54,8 @@ class API {
         return API._(this)['services']['customerService'];
     }
 
-    /**
+    /**const API = require('');
+
      * 
      * @returns {MeterReadingService|*}
      */
@@ -114,6 +114,14 @@ class API {
     }
 
     /**
+     * 
+     * @returns {NotificationService|*}
+     */
+    notifications(){
+        return API._(this)['services']['notificationService'];
+    }
+
+    /**
      * This method theoretically can be accessed outside this class
      * however conventionally its should be private.
      * Notwithstanding this method can't be used outside of this class
@@ -133,4 +141,4 @@ class API {
 
 }
 
-module.exports = new API();
+module.exports = API;

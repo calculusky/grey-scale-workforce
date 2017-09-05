@@ -6,7 +6,7 @@ const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
-    app.use('/meter_readings', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/meter_readings*', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
@@ -31,9 +31,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        schema:
      *          $ref: '#/definitions/postMeterReadingInput'
      */
-    app.post('/meter_readings', jsonParser, (req, res)=> {
-        console.log(req.body);
-        API.meter_readings().createMeterReading(req.body, req.who)
+    app.post('/meter_readings', multiPart.array('files', 4), (req, res)=> {
+        API.meter_readings().createMeterReading(req.body, req.who, req.files, API)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);
@@ -79,7 +78,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-    
+
     // /**
     //  * @swagger
     //  * /meter_readings/user/{user_id}/{offset}/{limit}:
@@ -136,6 +135,37 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.get('/meter_readings/:id', urlencodedParser, (req, res)=> {
         return API.meter_readings().getMeterReadings(req.params['id'], "id")
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+
+    /**
+     * @swagger
+     * /meter_readings/meter/{meterNo}:
+     *   get:
+     *     summary: Gets List of meter_readings by the meter no
+     *     description: ''
+     *     tags: [MeterReading]
+     *     produces:
+     *     - application/json
+     *     operationId: getMeterReadings
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getMeterReadingOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/meter_readings/meter/:meterNo', urlencodedParser, (req, res)=> {
+        return API.meter_readings().getMeterReadings(req.params['meterNo'], "meter_no")
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

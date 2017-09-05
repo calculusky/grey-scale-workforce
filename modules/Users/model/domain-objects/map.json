@@ -10,7 +10,7 @@
   "user_type":"user_type",
   "permissions":"permissions",
   "last_login":"usr_last_login",
-  "firebase_token":"firebase_token",
+  "firebase_token":"fire_base_token",
   "location":"location",
   "created_at":"created_at",
   "updated_at":"updated_at"

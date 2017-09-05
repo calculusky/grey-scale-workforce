@@ -36,6 +36,10 @@ class DomainFactory {
                     return require('./Attachments/model/domain-objects/Attachment');
                 case DomainFactory.CUSTOMER:
                     return require('./Customers/model/domain-objects/Customer');
+                case DomainFactory.METER_READING:
+                    return require('./SpotBilling/model/domain-objects/MeterReading');
+                case DomainFactory.NOTIFICATION:
+                    return require('./Notifications/model/domain-objects/Notification');
             }
         }catch (e){
             if(e.code=="MODULE_NOT_FOUND"){
@@ -54,5 +58,7 @@ DomainFactory.ASSET = "Asset";
 DomainFactory.NOTE = "Note";
 DomainFactory.ATTACHMENT = "Attachment";
 DomainFactory.CUSTOMER = "Customer";
+DomainFactory.METER_READING = "MeterReading";
+DomainFactory.NOTIFICATION = "Notification";
 
 module.exports = DomainFactory;
