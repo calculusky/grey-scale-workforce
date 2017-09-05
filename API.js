@@ -49,6 +49,22 @@ class API {
 
     /**
      *
+     * @returns {CustomerService|*}
+     */
+    customers(){
+        return API._(this)['services']['customerService'];
+    }
+
+    /**
+     * 
+     * @returns {MeterReadingService|*}
+     */
+    meter_readings(){
+        return API._(this)['services']['meterReadingService'];
+    }
+
+    /**
+     *
      * @returns {RecognitionService|*}
      */
     recognitions() {

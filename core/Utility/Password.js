@@ -2,11 +2,14 @@
  * Created by paulex on 7/10/17.
  */
 
-const crypto = require('crypto');
-const pbkdf2Sync = crypto.pbkdf2Sync;
+const bcrypt = require('bcrypt');
 
-const defaultSalt = "generatedSalt";
+const defaultSalt = 10;
 const defaultIteration = 1000;
+//because the users can be created from laravel and the password are mostly
+//bcrypted with the prefix $2y$, nodeJs uses a different bcrypt $2a$, so to compare
+//we have to replace $2y$ to fit in for bcrypt-node
+const prefix = "$2a$";
 
 class Password {
 
@@ -14,12 +17,12 @@ class Password {
      *
      * @param password
      * @param salt
-     * @returns {{salt: string, hash: *, iterations: number}}
+     * @returns {{salt: number, hash, iterations: number}}
      */
     static encrypt(password, salt = defaultSalt) {
         return {
             salt,
-            hash: pbkdf2Sync(password, salt, defaultIteration, 30, 'sha512').toString('hex'),
+            hash: bcrypt.hashSync(password, salt),
             iterations: defaultIteration
         };
     }
@@ -31,7 +34,17 @@ class Password {
      * @returns {*}
      */
     static decrypt(password, salt=defaultSalt) {
-        return pbkdf2Sync(password, salt, defaultIteration, 30, 'sha512').toString('hex');
+        return bcrypt.hashSync(password, salt);
+    }
+
+    /**
+     * Compares password
+     * @param value
+     * @param hash
+     */
+    static equals(value, hash){
+        hash = hash.replace('$2y$', prefix);
+        return bcrypt.compareSync(value, hash);
     }
 }
 

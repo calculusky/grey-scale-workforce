@@ -1,14 +1,17 @@
 {
   "id":"id",
   "email":"email",
-  "username":"email",
+  "username":"username",
   "password":"password",
   "first_name":"first_name",
   "last_name":"last_name",
   "middle_name":"middle_name",
   "gender":"gender",
+  "user_type":"user_type",
+  "permissions":"permissions",
   "last_login":"usr_last_login",
   "firebase_token":"firebase_token",
+  "location":"location",
   "created_at":"created_at",
   "updated_at":"updated_at"
 }

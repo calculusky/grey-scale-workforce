@@ -1,5 +1,6 @@
 const MapperFactory = require('../../../modules/MapperFactory');
 const DomainFactory = require('../../../modules/DomainFactory');
+const Log = require('../../logger.js');
 
 const KNEX = require('knex')({
     client: "mysql2", connection: {
@@ -80,7 +81,6 @@ class Relationships {
     /**
      * One - to - One Relationship
      * @param domainMapperName
-     * @param localKey - The
      * @param foreignKey
      */
     hasOne(domainMapperName, foreignKey = `${domainMapperName.toLowerCase()}_id`) {
@@ -105,12 +105,15 @@ class Relationships {
      */
     belongsTo(domainMapperName, foreignKey = `${domainMapperName.toLowerCase()}_id`, parentKey = "id") {
         let DomainMapper = MapperFactory.build(domainMapperName);
-        if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
-
+        if (!DomainMapper){
+            Log.e(`${this.constructor.name}:`,`Domain Mapper for ${domainMapperName} cannot be found.`);
+            throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
+        }
+        
         //Get the DomainObject for the domain we are retrieving.
         let DomainObject = DomainFactory.build(DomainMapper.domainName);
         if (!DomainObject){
-            console.log(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
+            Log.e(`${this.constructor.name}:`, `Domain Object for ${DomainMapper.domainName} cannot be found.`);
             throw new ReferenceError(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
         }
 
@@ -132,7 +135,7 @@ class Relationships {
                     records.push(domainObject);
                     if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
                 }
-                if (0 === rowLen) return resolve(records);
+                if (0 === rowLen) return resolve({records: records});
             }).catch(err=> {
                 console.log(err);
                 return reject(err)

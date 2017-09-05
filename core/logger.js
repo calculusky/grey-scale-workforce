@@ -5,9 +5,11 @@ module.exports = function logger() {
 
 };
 
+//TODO we should write all this to a file or better still get a logging lib
+
 module.exports.e = function (tag, message) {
     //TODO write log to file
-    console.log(tag, message);
+    console.error(tag, message);
 };
 
 module.exports.warn = function (tag, message) {

@@ -35,6 +35,8 @@ class MapperFactory {
                 return Utils.loadMapper(mapperStore, "../../modules/Notes/model/mappers/NoteMapper");
             case MapperFactory.ATTACHMENT:
                 return Utils.loadMapper(mapperStore, "../../modules/Attachments/model/mappers/AttachmentMapper");
+            case MapperFactory.CUSTOMER:
+                return Utils.loadMapper(mapperStore, "../../modules/Customers/model/mappers/CustomerMapper");
         }
     }
 }
@@ -46,6 +48,7 @@ MapperFactory.ASSET = "Asset";
 MapperFactory.NOTE = "Note";
 MapperFactory.NOTE = "Note";
 MapperFactory.ATTACHMENT = "Attachment";
+MapperFactory.CUSTOMER = "Customer";
 
 
 module.exports = MapperFactory;

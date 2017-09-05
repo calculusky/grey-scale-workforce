@@ -23,6 +23,66 @@ class ModelMapper {
 
     constructor(context) {
         this.context = context;
+        this.jsonFunction = {
+            '->[]': 'JSON_CONTAINS'//check mysql implementation
+        };
+
+        this._(this).whereJson = (column, value, resultSets, domainObject)=> {
+            //I think the process here can explain itself
+            let fnKeys = Object.keys(this.jsonFunction);
+            for (let i = 0; i < fnKeys.length; i++) {
+                let keyName = fnKeys[i];
+                if (column.includes(keyName)) {
+                    column = column.replace(keyName, '');
+                    let colName = domainObject.getTableColumn(column);
+                    if(!colName) break;
+                    switch (this.jsonFunction[keyName]) {
+                        case 'JSON_CONTAINS':
+                            console.log(typeof value);
+                            resultSets = resultSets.where(
+                                KNEX.raw(`${this.jsonFunction[keyName]}(${colName}, ${value})`)
+                            );
+                            break;
+                        default:
+                    }
+                    break;
+                }
+            }
+            return resultSets;
+        };
+
+        this._(this).buildWhere = (column, value = null, resultSets, domainObject)=> {
+            if (!value) return resultSets;
+            if (value && typeof value == 'object') {
+                //it means we have got a lot of work to do here
+                let colKeys = Object.keys(value);
+                for (let i = 0; i < colKeys.length; i++) {
+                    let col = colKeys[i], val = value[col];
+                    //support for json columns
+                    if (col.includes('->')) {
+                        //check if its sent as a json quoted string or not
+                        let isQuoted = val.substring(0, 1).indexOf("'")+1;
+                        val = (isQuoted) ? val : `'${val}'`;
+                        resultSets = this._(this).whereJson(col, val, resultSets, domainObject);
+                    } else {
+                        resultSets = (domainObject.getTableColumn(col))
+                            ? resultSets.where(domainObject.getTableColumn(col), val)
+                            : resultSets;
+                    }
+                }
+            } else {
+                //if there are json expression in this column
+                if (column.includes('->')) {
+                    let isQuoted = value.substring(0, 1).indexOf("'")+1;
+                    value = (isQuoted) ? value : `'${value}'`;
+                    //we need to look for the json function that matches this query
+                    resultSets = this._(this).whereJson(column, value, resultSets, domainObject);
+                } else {
+                    resultSets = resultSets.where(domainObject.getTableColumn(column), value);
+                }
+            }
+            return resultSets;
+        };
     }
 
     /**
@@ -43,12 +103,9 @@ class ModelMapper {
         let domainObject = new DomainObject();
 
         let resultSets = KNEX.select(fields).from(this.tableName).limit(parseInt(limit)).offset(parseInt(offset));
-        //if this query is based on a condition:e.g where clause 
-        if (by !== ModelMapper._all && by !== ModelMapper._andWhere) {
-            resultSets = resultSets.where(domainObject.getTableColumn(by), value);
-        } else if (by === ModelMapper._andWhere) {
-            resultSets = resultSets.where(domainObject.serialize(value));
-        }
+        //if this query is based on a condition:e.g where clause
+        resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
+
         let executor = (resolve, reject)=> {
             resultSets
                 .then(rows=> {
@@ -81,13 +138,13 @@ class ModelMapper {
 
         //First check that the required fields are specified
         var [valid, , cMsg] = Util.validatePayLoad(domainObject, domainObject.required());
-        
+
 
         if (!valid) {
             const error = Util.buildResponse({status: "fail", data: cMsg}, 400);
             return Promise.reject(error);
         }
-        
+
         var [filteredDomain, guardedKeys] = Util.validateGuarded(domainObject, domainObject.guard());
 
         //Added on 21st august 2017 - Paul
@@ -200,6 +257,11 @@ class ModelMapper {
                 const error = Util.buildResponse(Util.getMysqlError(err), 400);
                 return Promise.reject(error)
             });
+    }
+
+
+    whereJsonHasAny(column, value, moreWhere) {
+
     }
 
     /**

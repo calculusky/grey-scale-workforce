@@ -4,7 +4,10 @@
 // const Mapper = require('../core/model/ModelMapper');
 
 const UserMapper = require('../modules/Users/model/mappers/UserMapper');
+const FaultMapper = require('../modules/Faults/model/mappers/FaultMapper');
 const modelMapper = new UserMapper();
+const faultMapper = new FaultMapper();
+
 
 it('Test that findDomainRecord is defined', ()=> {
     expect.assertions(1);
@@ -46,17 +49,31 @@ it("Should retrieve rows based on the where clause", ()=> {
     expect.assertions(1);
     return modelMapper.findDomainRecord({by: "id", value: 1})
         .then(({records, query})=> {
-            expect(query).toEqual("select * from `users` where `usr_id` = 1 limit 10");
+            expect(query).toEqual("select * from `users` where `id` = 1 limit 10");
         });
 });
+
+it("Should retrieve rows when search involves json column types", ()=> {
+    faultMapper.tableName = "faults";
+    expect.assertions(1);
+    return faultMapper.findDomainRecord({
+        by: "id", value: {
+            'assigned_to->[]': `'{"id":1}'`,
+            'status': 1
+        }
+    }).then(({records, query})=> {
+        expect(query).toEqual("select * from `faults` where JSON_CONTAINS(assigned_to, '{\"id\":1}') and `status` = 1 limit 10");
+    });
+});
+
 
 it("Should retrieve rows based on where clause with the 'AND' operator", ()=> {
     modelMapper.tableName = "users";
     expect.assertions(1);
-    return modelMapper.findDomainRecord({by: "*_and", value: {"first_name": "ade", "username": "paulex"}})
+    return modelMapper.findDomainRecord({by: "*_and", value: {"username": "paulex", "first_name": "ade"}})
         .then(({records, query})=> {
-            expect(query).toEqual("select * from `users` where `usr_username` = 'paulex' and" +
-                " `usr_first_name` = 'ade' limit 10");
+            expect(query).toEqual("select * from `users` where `username` = 'paulex' and" +
+                " `first_name` = 'ade' limit 10");
         });
 });
 
@@ -69,7 +86,7 @@ it("Should throw error if the domainObject args isn't an instance of DomainObjec
 it("should return false if the object keys are empty.", ()=> {
     const User = require('../modules/Users/model/domain-objects/User');
     expect.assertions(1);
-    return modelMapper.createDomainRecord(new User()).catch(response=>{
+    return modelMapper.createDomainRecord(new User()).catch(response=> {
         expect(response).toBeDefined();
     });
 });
@@ -147,9 +164,9 @@ it("updateDomainRecord:should Resolve and update the resource", ()=> {
         email: "donpaul120@gmail.com",
         first_name: "balo"
     });
-    return expect(modelMapper.updateDomainRecord({value: 3, domain: user})).resolves.toEqual([{
+    return expect(modelMapper.updateDomainRecord({value: 1, domain: user})).resolves.toEqual([{
         "first_name": "balo"
-    }, 1]);
+    }, expect.any(Number)]);
 });
 
 //TODO test that BY is a string value
@@ -170,13 +187,13 @@ it("deleteDomainRecord:should throw error if the primaryKey or the tableName isn
     }).toThrow(/override the tableName/);
 });
 
-it("deleteDomainRecord:should delete a record from the DB", ()=>{
+it("deleteDomainRecord:should delete a record from the DB", ()=> {
     modelMapper.primaryKey = "id";
     modelMapper.tableName = "users";
-    expect(modelMapper.deleteDomainRecord({value:3})).resolves.toEqual(1);
+    expect(modelMapper.deleteDomainRecord({value: 3})).resolves.toEqual(1);
 });
 
 
-it('', ()=>{
-    
+it('', ()=> {
+
 });

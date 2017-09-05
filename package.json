@@ -1,7 +1,7 @@
 {
-  "name": "travels",
+  "name": "mrworking",
   "version": "1.0.0",
-  "description": "Nogic JQS Travels Request Server Application",
+  "description": "Mr.Working Server Application",
   "main": "index.js",
   "scripts": {
     "test": "jest"
@@ -16,6 +16,7 @@
   "author": "Paul Okeke",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^1.0.3",
     "body-parser": "^1.17.2",
     "cors": "^2.8.3",
     "express": "^4.15.3",

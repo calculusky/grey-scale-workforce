@@ -34,6 +34,8 @@ class DomainFactory {
                     return require('./Notes/model/domain-objects/Note');
                 case DomainFactory.ATTACHMENT:
                     return require('./Attachments/model/domain-objects/Attachment');
+                case DomainFactory.CUSTOMER:
+                    return require('./Customers/model/domain-objects/Customer');
             }
         }catch (e){
             if(e.code=="MODULE_NOT_FOUND"){
@@ -51,5 +53,6 @@ DomainFactory.FAULT = "Fault";
 DomainFactory.ASSET = "Asset";
 DomainFactory.NOTE = "Note";
 DomainFactory.ATTACHMENT = "Attachment";
+DomainFactory.CUSTOMER = "Customer";
 
 module.exports = DomainFactory;

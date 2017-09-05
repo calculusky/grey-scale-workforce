@@ -54,7 +54,8 @@ class UserService {
         
         //Get Mapper
         if (user.password) {
-            user.setPassword(Password.encrypt(user.password).hash);
+            //replace the password prefix as well for laravel sake
+            user.setPassword(Password.encrypt(user.password).hash.replace("$2a$", "$2y$"));
         }
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         // console.log(user);

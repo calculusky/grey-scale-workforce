@@ -23,7 +23,6 @@ class DomainObject {
         //------Map data to Domain instances------//
         let hasData = (data && (Object.keys(data).length > 0));
         if (hasData) {
-            //lets check that the data object has the object.prototype
             let mapKeys = Object.keys(map);
             mapKeys.forEach(key=> {
                 if (data[key]) this[key] = data[key];

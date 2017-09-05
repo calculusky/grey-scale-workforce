@@ -1,25 +1,25 @@
 /**
- * Created by paulex on 8/22/17.
+ * Created by paulex on 9/04/17.
  */
 
 const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
-module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
-    app.use('/attachments', (req, res, next)=>API.recognitions().auth(req, res, next));
+module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
+    app.use('/customers', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
-     * /attachments:
+     * /customers:
      *   post:
-     *     summary: Creates a Attachment
+     *     summary: Creates a Customer
      *     description: ''
-     *     tags: [Attachment]
+     *     tags: [Customer]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: createAttachment
+     *     operationId: createCustomer
      *     responses:
      *       '200':
      *         description: Successfully Added
@@ -29,11 +29,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        name: 'fault'
      *        required: true
      *        schema:
-     *          $ref: '#/definitions/postAttachmentInput'
+     *          $ref: '#/definitions/postCustomerInput'
      */
-    app.post('/attachments', multiPart.array('files', 8), (req, res)=> {
+    app.post('/customers', jsonParser, (req, res)=> {
         console.log(req.body);
-        API.attachments().createAttachment(req.body, req.who)
+        API.customers().createCustomer(req.body, req.who)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);
@@ -46,16 +46,16 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
-     * /attachments:
+     * /customers:
      *   put:
-     *     summary: Updates a Attachment
+     *     summary: Updates a Customer
      *     description: ''
-     *     tags: [Attachment]
+     *     tags: [Customer]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: updateAttachment
+     *     operationId: updateCustomer
      *     responses:
      *       '200':
      *         description: Successfully Added
@@ -65,10 +65,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        name: 'fault'
      *        required: true
      *        schema:
-     *          $ref: '#/definitions/postAttachmentInput'
+     *          $ref: '#/definitions/postCustomerInput'
      */
-    app.put('/attachments', jsonParser, (req, res)=> {
-        API.attachments().updateAttachment(req.body, req.who)
+    app.put('/customers', jsonParser, (req, res)=> {
+        API.customers().updateCustomer(req.body, req.who)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);
@@ -80,62 +80,31 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     });
 
     
-    /**
-     * @swagger
-     * /attachments/user/{user_id}/{offset}/{limit}:
-     *   get:
-     *     summary: Gets attachments assigned to a user
-     *     description: ''
-     *     tags: [Attachment]
-     *     produces:
-     *     - application/json
-     *     operationId: getAttachments
-     *     responses:
-     *       '200':
-     *         description: Successful
-     *         schema:
-     *           $ref: '#/definitions/getAttachmentOutput'
-     *     parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - in: path
-     *       name: user_id
-     *       required: true
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
-     */
-    app.get('/attachments/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        return API.attachments().getAttachments(req.params['user_id'], "note_by", req.who, req.params.offset, req.params.limit)
-            .then(({data, code})=> {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
-                return res.status(code).send(err);
-            });
-    });
-
-
     // /**
     //  * @swagger
-    //  * /attachments/{offset}/{limit}:
+    //  * /customers/user/{user_id}/{offset}/{limit}:
     //  *   get:
-    //  *     summary: Gets List of attachments
+    //  *     summary: Gets customers assigned to a user
     //  *     description: ''
-    //  *     tags: [Attachment]
+    //  *     tags: [Customer]
     //  *     produces:
     //  *     - application/json
-    //  *     operationId: getAttachments
+    //  *     operationId: getCustomers
     //  *     responses:
     //  *       '200':
     //  *         description: Successful
     //  *         schema:
-    //  *           $ref: '#/definitions/getAttachmentOutput'
+    //  *           $ref: '#/definitions/getCustomerOutput'
     //  *     parameters:
     //  *     - $ref: '#/parameters/sessionId'
+    //  *     - in: path
+    //  *       name: user_id
+    //  *       required: true
     //  *     - $ref: '#/parameters/offset'
     //  *     - $ref: '#/parameters/limit'
     //  */
-    // app.get('/attachments/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.attachments().getAttachments(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
+    // app.get('/customers/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
+    //     return API.customers().getCustomers(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
     //         .then(({data, code})=> {
     //             return res.status(code).send(data);
     //         })
@@ -144,16 +113,47 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     //         });
     // });
 
+
     /**
      * @swagger
-     * /attachments/{id}:
+     * /customers/{id}:
+     *   get:
+     *     summary: Gets List of customers
+     *     description: ''
+     *     tags: [Customer]
+     *     produces:
+     *     - application/json
+     *     operationId: getCustomers
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getCustomerOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/customers/:id', urlencodedParser, (req, res)=> {
+        return API.customers().getCustomers(req.params['id'], "id")
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
+     * /customers/{id}:
      *  delete:
-     *    summary: Deletes a Attachment
-     *    description: "Deletes a Attachment"
-     *    tags: [Attachment]
+     *    summary: Deletes a Customer
+     *    description: "Deletes a Customer"
+     *    tags: [Customer]
      *    produces:
      *    - application/json
-     *    operationId: deleteAttachment
+     *    operationId: deleteCustomer
      *    responses:
      *      '200':
      *        description: Returns true with the id of the request deleted
@@ -161,8 +161,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/fault_id'
      */
-    app.delete('/attachments/:id', urlencodedParser, (req, res)=> {
-        API.attachments().deleteAttachment("id", req.params.id)
+    app.delete('/customers/:id', urlencodedParser, (req, res)=> {
+        API.customers().deleteCustomer("id", req.params.id)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

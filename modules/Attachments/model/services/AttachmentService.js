@@ -16,17 +16,23 @@ class AttachmentService {
         return "attachmentService";
     }
 
+    /**
+     *
+     * @param value
+     * @param module
+     * @param by
+     * @param who
+     * @param offset
+     * @param limit
+     * @returns {Promise}
+     */
     getAttachments(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         if (!value || "" + value + "".trim() == '') {
             //Its important that all queries are streamlined to majorly for each business
             value = who.api;
             by = "api_instance_id";
         } else if (value) {
-            const temp = value;
-            value = {};
-            value[by] = temp;
-            value['module'] = module;
-            value['api_instance_id'] = who.api;
+            value = {[by]:value, 'module':module, 'api_instance_id':who.api};
             by = "*_and";
         }
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);

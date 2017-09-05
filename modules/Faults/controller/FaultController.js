@@ -79,7 +79,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-    
+
     /**
      * @swagger
      * /faults/user/{user_id}/{offset}/{limit}:
@@ -104,7 +104,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/limit'
      */
     app.get('/faults/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        return API.faults().getFaults(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
+        let assignedTo = {id: req.params['user_id']};
+        return API.faults().getFaults(`{"id":${req.params['user_id']}}`, "assigned_to->[]", req.who, req.params.offset, req.params.limit)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -184,36 +185,35 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     });
 
 
-
-    // /**
-    //  * @swagger
-    //  * /faults/{offset}/{limit}:
-    //  *   get:
-    //  *     summary: Gets List of faults
-    //  *     description: ''
-    //  *     tags: [Fault]
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: getFaults
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successful
-    //  *         schema:
-    //  *           $ref: '#/definitions/getFaultOutput'
-    //  *     parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  */
-    // app.get('/faults/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.faults().getFaults(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
-    //         .then(({data, code})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status(code).send(err);
-    //         });
-    // });
+    /**
+     * @swagger
+     * /faults/{offset}/{limit}:
+     *   get:
+     *     summary: Gets List of faults
+     *     description: ''
+     *     tags: [Fault]
+     *     produces:
+     *     - application/json
+     *     operationId: getFaults
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getFaultOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/faults/:id', urlencodedParser, (req, res)=> {
+        return API.faults().getFaults(req.params['id'], "id")
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status((code) ? code : 500).send((err) ? err : "Internal Server Error")
+            });
+    });
 
     /**
      * @swagger

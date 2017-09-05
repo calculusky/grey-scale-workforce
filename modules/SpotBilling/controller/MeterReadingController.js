@@ -1,25 +1,25 @@
 /**
- * Created by paulex on 8/22/17.
+ * Created by paulex on 9/04/17.
  */
 
 const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
-    app.use('/attachments', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/meter_readings', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
-     * /attachments:
+     * /meter_readings:
      *   post:
-     *     summary: Creates a Attachment
+     *     summary: Creates a MeterReading
      *     description: ''
-     *     tags: [Attachment]
+     *     tags: [MeterReading]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: createAttachment
+     *     operationId: createMeterReading
      *     responses:
      *       '200':
      *         description: Successfully Added
@@ -29,11 +29,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        name: 'fault'
      *        required: true
      *        schema:
-     *          $ref: '#/definitions/postAttachmentInput'
+     *          $ref: '#/definitions/postMeterReadingInput'
      */
-    app.post('/attachments', multiPart.array('files', 8), (req, res)=> {
+    app.post('/meter_readings', jsonParser, (req, res)=> {
         console.log(req.body);
-        API.attachments().createAttachment(req.body, req.who)
+        API.meter_readings().createMeterReading(req.body, req.who)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);
@@ -46,16 +46,16 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
-     * /attachments:
+     * /meter_readings:
      *   put:
-     *     summary: Updates a Attachment
+     *     summary: Updates a MeterReading
      *     description: ''
-     *     tags: [Attachment]
+     *     tags: [MeterReading]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: updateAttachment
+     *     operationId: updateMeterReading
      *     responses:
      *       '200':
      *         description: Successfully Added
@@ -65,10 +65,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        name: 'fault'
      *        required: true
      *        schema:
-     *          $ref: '#/definitions/postAttachmentInput'
+     *          $ref: '#/definitions/postMeterReadingInput'
      */
-    app.put('/attachments', jsonParser, (req, res)=> {
-        API.attachments().updateAttachment(req.body, req.who)
+    app.put('/meter_readings', jsonParser, (req, res)=> {
+        API.meter_readings().updateMeterReading(req.body, req.who)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);
@@ -80,62 +80,31 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     });
 
     
-    /**
-     * @swagger
-     * /attachments/user/{user_id}/{offset}/{limit}:
-     *   get:
-     *     summary: Gets attachments assigned to a user
-     *     description: ''
-     *     tags: [Attachment]
-     *     produces:
-     *     - application/json
-     *     operationId: getAttachments
-     *     responses:
-     *       '200':
-     *         description: Successful
-     *         schema:
-     *           $ref: '#/definitions/getAttachmentOutput'
-     *     parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - in: path
-     *       name: user_id
-     *       required: true
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
-     */
-    app.get('/attachments/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        return API.attachments().getAttachments(req.params['user_id'], "note_by", req.who, req.params.offset, req.params.limit)
-            .then(({data, code})=> {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
-                return res.status(code).send(err);
-            });
-    });
-
-
     // /**
     //  * @swagger
-    //  * /attachments/{offset}/{limit}:
+    //  * /meter_readings/user/{user_id}/{offset}/{limit}:
     //  *   get:
-    //  *     summary: Gets List of attachments
+    //  *     summary: Gets meter_readings assigned to a user
     //  *     description: ''
-    //  *     tags: [Attachment]
+    //  *     tags: [MeterReading]
     //  *     produces:
     //  *     - application/json
-    //  *     operationId: getAttachments
+    //  *     operationId: getMeterReadings
     //  *     responses:
     //  *       '200':
     //  *         description: Successful
     //  *         schema:
-    //  *           $ref: '#/definitions/getAttachmentOutput'
+    //  *           $ref: '#/definitions/getMeterReadingOutput'
     //  *     parameters:
     //  *     - $ref: '#/parameters/sessionId'
+    //  *     - in: path
+    //  *       name: user_id
+    //  *       required: true
     //  *     - $ref: '#/parameters/offset'
     //  *     - $ref: '#/parameters/limit'
     //  */
-    // app.get('/attachments/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.attachments().getAttachments(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
+    // app.get('/meter_readings/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
+    //     return API.meter_readings().getMeterReadings(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
     //         .then(({data, code})=> {
     //             return res.status(code).send(data);
     //         })
@@ -144,16 +113,47 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     //         });
     // });
 
+
     /**
      * @swagger
-     * /attachments/{id}:
+     * /meter_readings/{id}:
+     *   get:
+     *     summary: Gets List of meter_readings
+     *     description: ''
+     *     tags: [MeterReading]
+     *     produces:
+     *     - application/json
+     *     operationId: getMeterReadings
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getMeterReadingOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/meter_readings/:id', urlencodedParser, (req, res)=> {
+        return API.meter_readings().getMeterReadings(req.params['id'], "id")
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
+     * /meter_readings/{id}:
      *  delete:
-     *    summary: Deletes a Attachment
-     *    description: "Deletes a Attachment"
-     *    tags: [Attachment]
+     *    summary: Deletes a MeterReading
+     *    description: "Deletes a MeterReading"
+     *    tags: [MeterReading]
      *    produces:
      *    - application/json
-     *    operationId: deleteAttachment
+     *    operationId: deleteMeterReading
      *    responses:
      *      '200':
      *        description: Returns true with the id of the request deleted
@@ -161,8 +161,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/fault_id'
      */
-    app.delete('/attachments/:id', urlencodedParser, (req, res)=> {
-        API.attachments().deleteAttachment("id", req.params.id)
+    app.delete('/meter_readings/:id', urlencodedParser, (req, res)=> {
+        API.meter_readings().deleteMeterReading("id", req.params.id)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

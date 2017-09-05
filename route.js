@@ -2,7 +2,7 @@
  * Created by paulex on 7/2/17.
  */
 const bodyParser = require('body-parser');
-const urlencodedParser = bodyParser.urlencoded({extended: false, limit:'5mb'});
+const urlencodedParser = bodyParser.urlencoded({extended: false, limit: '5mb'});
 const jsonParser = bodyParser.json();
 const multer = require('multer');
 const API = require('./API.js');
@@ -36,12 +36,12 @@ module.exports = function route() {
     });
 
     app.use(jsonParser);
-    app.use(function(error, req, res, next) {
+    app.use(function (error, req, res, next) {
         if (error instanceof SyntaxError) {
             return res.status(400).send({
-                status:'fail',
-                message:'Invalid body payload format',
-                description:"Ensure that the data payload sent is in correct format"
+                status: 'fail',
+                message: 'Invalid body payload format',
+                description: "Ensure that the data payload sent is in correct format"
             });
         } else {
             next();
@@ -55,17 +55,19 @@ module.exports = function route() {
      */
     var controllerPath = './modules';
     var swaggerAPIs = ['./route*.js', './api.yml'];
-    let multiPart = multer({dest:"uploads/"});
+    let multiPart = multer({dest: "uploads/"});
     fs.readdirSync(controllerPath).forEach(dir=> {
         if (fs.statSync(`${controllerPath}/${dir}`).isDirectory()) {
             var filePath = `${controllerPath}/${dir}/controller`;
-            fs.readdirSync(filePath).forEach(controller=> {
-                if (controller) {
-                    var routeCtrl = require(`${filePath}/${controller}`);
-                    swaggerAPIs.push(`${filePath}/${controller}`);
-                    routeCtrl.controller(app, {API, jsonParser, urlencodedParser, multiPart});
-                }
-            });
+            if (fs.existsSync(filePath)) {
+                fs.readdirSync(filePath).forEach(controller=> {
+                    if (controller) {
+                        var routeCtrl = require(`${filePath}/${controller}`);
+                        swaggerAPIs.push(`${filePath}/${controller}`);
+                        routeCtrl.controller(app, {API, jsonParser, urlencodedParser, multiPart});
+                    }
+                });
+            }
         }
     });
 

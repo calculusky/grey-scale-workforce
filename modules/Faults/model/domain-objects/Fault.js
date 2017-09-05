@@ -21,7 +21,9 @@ class Fault extends DomainObject {
             'issue_date',
             'status',
             'priority',
-            'asset_id'
+            'related_to',
+            'relation_id',
+            'category_id'
         ];
     }
 
@@ -42,7 +44,11 @@ class Fault extends DomainObject {
 
     rules() {
         return {
-            name: String
+            summary: String,
+            related_to: String,
+            relation_id: String,
+            category_id: 'numeric',
+            status: 'numeric'
         };
     }
 
@@ -58,15 +64,23 @@ class Fault extends DomainObject {
      * Returns the associated Asset for this fault
      * @returns {Promise}
      */
-    asset(){
-        return this.relations().belongsTo("Asset");
+    asset() {
+        return this.relations().belongsTo("Asset", 'relation_id');
+    }
+
+    /**
+     * Returns the customer this fault was created for
+     * @returns {*}
+     */
+    customer() {
+        return this.relations().belongsTo("Customer", 'relation_id', 'account_no');
     }
 
     /**
      * Returns the notes for this fault
      * @returns {Promise}
      */
-    notes(){
+    notes() {
         return this.relations().morphMany("Note", 'module', 'relation_id');
     }
 
@@ -74,7 +88,7 @@ class Fault extends DomainObject {
      * Returns the attachments for this fault
      * @returns {Promise}
      */
-    attachments(){
+    attachments() {
         return this.relations().morphMany("Attachment", "module", "relation_id");
     }
 }

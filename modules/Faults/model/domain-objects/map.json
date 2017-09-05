@@ -1,6 +1,8 @@
 {
   "id": "id",
-  "asset_id": "asset_id",
+  "category_id": "fault_category_id",
+  "related_to": "related_to",
+  "relation_id": "relation_id",
   "labels": "labels",
   "priority": "priority",
   "status": "status",
@@ -8,6 +10,9 @@
   "issue_date": "issue_date",
   "completed_date": "completed_date",
   "assigned_to": "assigned_to",
+  "source": "source",
+  "source_id": "source_id",
+  "request_id": "request_id",
   "deleted_at": "deleted_at",
   "created_at": "created_at",
   "updated_at": "updated_at"
