@@ -2,7 +2,8 @@
  * Created by paulex on 7/10/17.
  */
 
-const API = require('../API');
+let API = require('../API');
+API = new API();
 
 it("Should should check that the username and password are  not empty", ()=> {
     return expect(API.recognitions().login()).rejects.toEqual({

@@ -20,18 +20,7 @@ class WorkOrderService{
         return "workOrderService";
     }
 
-    getWorkOrders(value, by = "id", who = {api: -1}, offset, limit){
-        if (!value || `${""+value+"".trim()}` == '') {
-            //Its important that all queries are streamlined to majorly for each business
-            value = who.api;
-            by = "api_instance_id";
-        } else if (value) {
-            const temp = value;
-            value = {};
-            value[by] = temp;
-            value['api_instance_id'] = who.api;
-            by = "*_and";
-        }
+    getWorkOrders(value='?', by = "id", who = {api: -1}, offset, limit){
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         return WorkOrderMapper.findDomainRecord({by, value}, offset, limit)
             .then(result=> {
@@ -58,7 +47,29 @@ class WorkOrderService{
             return Util.buildResponse({data: workOrder});
         });
     }
-    
+
+    /**
+     *
+     * @param orderId
+     * @param status
+     * @returns {Promise.<WorkOrder>|*}
+     */
+    changeWorkOrderStatus(orderId, status){
+        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
+        let workOrder = new WorkOrder();
+
+        workOrder.status = status;
+
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.updateDomainRecord({value: orderId, domain: workOrder}).then(result=> {
+            if (result.pop()) {
+                return Util.buildResponse({data: result.shift()});
+            } else {
+                return Promise.reject(Util.buildResponse({status: "fail", data: result.shift()}, 404));
+            }
+        });
+    }
+
     deleteWorkOrder(by = "id", value){
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         return WorkOrderMapper.deleteDomainRecord({by, value}).then(count=> {

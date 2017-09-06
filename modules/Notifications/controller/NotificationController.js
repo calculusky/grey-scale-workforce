@@ -81,35 +81,35 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     
 
 
-    /**
-     * @swagger
-     * /notifications/{offset}/{limit}:
-     *   get:
-     *     summary: Gets List of notifications
-     *     description: ''
-     *     tags: [Notification]
-     *     produces:
-     *     - application/json
-     *     operationId: getNotifications
-     *     responses:
-     *       '200':
-     *         description: Successful
-     *         schema:
-     *           $ref: '#/definitions/getNotificationOutput'
-     *     parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
-     */
-    app.get('/notifications/:id', urlencodedParser, (req, res)=> {
-        return API.notifications().getNotifications(req.params['id'], "id")
-            .then(({data, code})=> {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
-                return res.status((code) ? code : 500).send((err) ? err : "Internal Server Error")
-            });
-    });
+    // /**
+    //  * @swagger
+    //  * /notifications/{offset}/{limit}:
+    //  *   get:
+    //  *     summary: Gets List of notifications
+    //  *     description: ''
+    //  *     tags: [Notification]
+    //  *     produces:
+    //  *     - application/json
+    //  *     operationId: getNotifications
+    //  *     responses:
+    //  *       '200':
+    //  *         description: Successful
+    //  *         schema:
+    //  *           $ref: '#/definitions/getNotificationOutput'
+    //  *     parameters:
+    //  *     - $ref: '#/parameters/sessionId'
+    //  *     - $ref: '#/parameters/offset'
+    //  *     - $ref: '#/parameters/limit'
+    //  */
+    // app.get('/notifications/:id', urlencodedParser, (req, res)=> {
+    //     return API.notifications().getNotifications(req.params['id'], "id")
+    //         .then(({data, code})=> {
+    //             return res.status(code).send(data);
+    //         })
+    //         .catch(({err, code})=> {
+    //             return res.status((code) ? code : 500).send((err) ? err : "Internal Server Error")
+    //         });
+    // });
 
     /**
      * @swagger

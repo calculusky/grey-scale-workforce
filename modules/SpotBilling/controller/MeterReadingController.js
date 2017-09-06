@@ -43,6 +43,42 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
+
+    /**
+     * @swagger
+     * /meter_readings/spot_bill:
+     *   post:
+     *     summary: Generates Bill for a customer
+     *     description: 'Generates bill for a customer based on the current meter reading'
+     *     tags: [MeterReading]
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: createMeterReading
+     *     responses:
+     *       '200':
+     *         description: Successfully Added
+     *     parameters:
+     *      - $ref: '#/parameters/sessionId'
+     *      - in: body
+     *        name: 'fault'
+     *        required: true
+     *        schema:
+     *          $ref: '#/definitions/postMeterReadingInput'
+     */
+    app.post('/meter_readings/spot_bill', multiPart.array('files', 4), (req, res)=> {
+        API.meter_readings().generateBill(req.body, req.who, req.files, API)
+            .then(({data, code})=> {
+                console.log(data);
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                console.log(code, err);
+                return res.status(code).send(err);
+            });
+    });
+
     /**
      * @swagger
      * /meter_readings:
@@ -78,41 +114,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-
-    // /**
-    //  * @swagger
-    //  * /meter_readings/user/{user_id}/{offset}/{limit}:
-    //  *   get:
-    //  *     summary: Gets meter_readings assigned to a user
-    //  *     description: ''
-    //  *     tags: [MeterReading]
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: getMeterReadings
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successful
-    //  *         schema:
-    //  *           $ref: '#/definitions/getMeterReadingOutput'
-    //  *     parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - in: path
-    //  *       name: user_id
-    //  *       required: true
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  */
-    // app.get('/meter_readings/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.meter_readings().getMeterReadings(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
-    //         .then(({data, code})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status(code).send(err);
-    //         });
-    // });
-
-
     /**
      * @swagger
      * /meter_readings/{id}:
@@ -143,6 +144,34 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
+
+    /**
+     * @swagger
+     * /meter_readings/meter/{meter_no}:
+     *   get:
+     *     summary: Get the last meter reading
+     *     description: ''
+     *     tags: [MeterReading]
+     *     produces:
+     *     - application/json
+     *     operationId: getMeterReadings
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getMeterReadingOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get('/meter_readings/meter/:meter_no', urlencodedParser, (req, res)=> {
+        return API.meter_readings().getLastMeterReading(req.params['id'], "id")
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
 
     /**
      * @swagger

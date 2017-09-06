@@ -95,7 +95,9 @@ class NotificationService {
                             'title': 'MrWorking',
                             body: notification.message
                         },
-                        data: {},
+                        data: {
+                            type:notification.type
+                        },
                         registration_ids: fcmTokens
                     };
                     this.push(payload, API);
@@ -131,7 +133,7 @@ class NotificationService {
      * @returns {Promise}
      */
     push(payload, API, retrying = false) {
-        var SEVER_KEY = "AIzaSyDto30ctzBFqPRWpZGpGX_fc1wqlTD0oDE";
+        var SEVER_KEY = "AIzaSyAcsDeik3Pp7chgiUu89xAW26WA_ylDFcY";
         let fcmHeader = {"Content-Type": "application/json", "Authorization": "Key=" + SEVER_KEY};
         let rOptions = {headers: fcmHeader, url: "https://fcm.googleapis.com/fcm/send", json: payload};
 
@@ -141,7 +143,7 @@ class NotificationService {
                     console.log('FCM:', err);
                     return;
                 }
-                // console.log(body);
+                console.log(body);
                 if (body.failure === 0 && body['canonical_ids'] === 0) return resolve(true); //everything was successful
                 let results = body.results;
                 results.forEach((err, index)=> {

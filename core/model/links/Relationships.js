@@ -2,6 +2,7 @@ const MapperFactory = require('../../../modules/MapperFactory');
 const DomainFactory = require('../../../modules/DomainFactory');
 const Log = require('../../logger.js');
 
+//TODO we should remove this from here and make use of the context.database
 const KNEX = require('knex')({
     client: "mysql2", connection: {
         host: '127.0.0.1',

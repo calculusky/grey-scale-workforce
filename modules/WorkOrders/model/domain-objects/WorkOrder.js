@@ -15,14 +15,11 @@ class WorkOrder extends DomainObject {
 
     required() {
         return [
-            'staff_id',
-            'manager_id',
-            'arrangements',
-            'reasons',
-            'departure_city',
-            'arrival_city',
-            'departure_date',
-            'return_date'
+            'type_id',
+            'related_to',
+            'relation_id',
+            'summary',
+            'issue_date'
         ];
     }
 
@@ -42,13 +39,12 @@ class WorkOrder extends DomainObject {
 
     rules() {
         return {
-            staff_id: Number,
-            manager_id: Number,
-            reasons: String,
-            departure_city: String,
-            arrival_city: String,
-            departure_date: Date,
-            return_date: Date
+            type_id: 'int',
+            related_to: String,
+            relation_id: String,
+            'status?': 'numeric',
+            summary: String,
+            issue_date: Date
         }
     }
 

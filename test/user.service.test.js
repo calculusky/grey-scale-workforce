@@ -2,7 +2,8 @@
  * Created by paulex on 7/11/17.
  */
 
-const API = require('../API');
+let API = require('../API');
+API = new API();
 
 beforeAll(()=> {
     return API.users().createUser({

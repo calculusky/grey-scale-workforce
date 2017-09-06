@@ -7,8 +7,8 @@ const Util = require('../../../../core/Utility/MapperUtil');
  */
 class CustomerService {
 
-    constructor() {
-
+    constructor(context) {
+        this.context = context;
     }
 
     getName() {
@@ -68,6 +68,31 @@ class CustomerService {
         return CustomerMapper.createDomainRecord(customer).then(customer=> {
             if (!customer) return Promise.reject();
             return Util.buildResponse({data: customer});
+        });
+    }
+
+    /**
+     * We are majorly searching for customers by account_no and meter_no
+     * @param keyword
+     * @returns {Promise.<Customer>}
+     */
+    searchCustomers(keyword) {
+        const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
+        let fields = ['first_name', 'last_name', 'customer_type', 'meter_no', 'plain_address',
+            'account_no', 'old_account_no'];
+        let resultSets = this.context.database.select(fields).from('customers')
+            .where('account_no', 'like', `%${keyword}%`).orWhere('meter_no', 'like', `%${keyword}%`);
+        return resultSets.then(results=> {
+            let customers = [];
+            results.forEach(customer=> {
+                customer['customer_name'] = (customer['customer_name'])
+                    ? customer['customer_name']
+                    : `${customer.first_name} ${customer.last_name}`;
+                customers.push(new Customer(customer))
+            });
+            return Util.buildResponse({data: {items: customers}});
+        }).catch(err=> {
+            return Util.buildResponse({status: "fail", data: err}, 500);
         });
     }
 

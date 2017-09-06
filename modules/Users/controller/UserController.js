@@ -180,6 +180,38 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
+    /**
+     * @swagger
+     * /users/{id}:
+     *  put:
+     *   description: "Update User Details"
+     *   summary: "Update a User"
+     *   tags: [User]
+     *   produces:
+     *   - application/json
+     *   operationId: updateUser
+     *   responses:
+     *     '200':
+     *       description: "User"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getUserOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.put("/users/:id", jsonParser, (req, res)=> {
+        Log.info("updateUser:", req.body);
+        API.users().updateUser('id', req.params['id'], req.body)
+            .then(({data, code=200})=> {
+                console.log('success', data);
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                console.error('err', err);
+                return res.status(code).send(err);
+            });
+    });
 
     /**
      * @swagger

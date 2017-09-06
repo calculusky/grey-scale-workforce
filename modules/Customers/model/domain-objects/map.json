@@ -2,6 +2,7 @@
   "id": "id",
   "account_no": "account_no",
   "old_account_no": "old_account_no",
+  "meter_no": "meter_no",
   "first_name": "first_name",
   "last_name": "last_name",
   "email": "email",

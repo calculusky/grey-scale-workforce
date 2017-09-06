@@ -6,13 +6,13 @@ const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
-    app.use('/assets', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/assets*', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
      * /assets:
      *   post:
-     *     summary: Creates a Asset
+     *     summary: Creates an Asset
      *     description: ''
      *     tags: [Asset]
      *     consumes:
@@ -143,6 +143,36 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
     //             return res.status(code).send(err);
     //         });
     // });
+
+    /**
+     * @swagger
+     * /assets/search/{keyword}:
+     *   get:
+     *     summary: Search for a asset either by the Asset Name or by an Asset Type
+     *     description: ''
+     *     tags: [Asset]
+     *     produces:
+     *     - application/json
+     *     operationId: searchAssets
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getCustomerOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/assets/search/:keyword', urlencodedParser, (req, res)=> {
+        return API.assets().searchAssets(req.params['keyword'])
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
 
     /**
      * @swagger

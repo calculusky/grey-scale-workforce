@@ -77,17 +77,6 @@ class FaultService {
 
     /**
      *
-     * @param value
-     * @param status
-     * @param offset
-     * @param limit
-     */
-    getFaultsAssignedTo(value, status = "?", offset = 0, limit = 10) {
-
-    }
-
-    /**
-     *
      * @param body
      * @param who
      * @param files

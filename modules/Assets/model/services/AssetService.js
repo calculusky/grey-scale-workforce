@@ -8,8 +8,8 @@ const Util = require('../../../../core/Utility/MapperUtil');
  */
 class AssetService {
 
-    constructor() {
-
+    constructor(context) {
+        this.context = context;
     }
 
     getName() {
@@ -69,6 +69,26 @@ class AssetService {
         return AssetMapper.createDomainRecord(staff).then(staff=> {
             if (!staff) return Promise.reject();
             return Util.buildResponse({data: staff});
+        });
+    }
+
+
+    /**
+     * We are majorly searching for asset by name
+     * @param keyword
+     * @returns {Promise.<Customer>}
+     */
+    searchAssets(keyword) {
+        const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
+        let fields = ['id', 'asset_type', 'asset_name', 'status', 'serial_no'];
+        let resultSets = this.context.database.select(fields).from('assets')
+            .where('asset_name', 'like', `%${keyword}%`).orWhere('asset_type_name', 'like', `%${keyword}%`);
+        return resultSets.then(results=> {
+            let customers = [];
+            results.forEach(customer=>customers.push(new Customer(customer)));
+            return Util.buildResponse({data: {items: customers}});
+        }).catch(err=> {
+            return Util.buildResponse({status: "fail", data: err}, 500);
         });
     }
 

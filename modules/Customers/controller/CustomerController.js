@@ -174,6 +174,37 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
+
+    /**
+     * @swagger
+     * /customers/search/{keyword}:
+     *   get:
+     *     summary: Search for a customer either by the account_no or meter_no
+     *     description: ''
+     *     tags: [Customer]
+     *     produces:
+     *     - application/json
+     *     operationId: searchCustomers
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getCustomerOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/customers/search/:keyword', urlencodedParser, (req, res)=> {
+        return API.customers().searchCustomers(req.params['keyword'])
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
     /**
      * @swagger
      * /customers/{id}:
