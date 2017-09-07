@@ -118,7 +118,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      * @swagger
      * /meter_readings/{id}:
      *   get:
-     *     summary: Gets List of meter_readings
+     *     summary: Get a Single Meter Reading
      *     description: ''
      *     tags: [MeterReading]
      *     produces:
@@ -131,8 +131,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getMeterReadingOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
      */
     app.get('/meter_readings/:id', urlencodedParser, (req, res)=> {
         return API.meter_readings().getMeterReadings(req.params['id'], "id")
@@ -147,7 +145,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
-     * /meter_readings/meter/{meter_no}:
+     * /meter_readings/meter/{meter_no}/last:
      *   get:
      *     summary: Get the last meter reading
      *     description: ''
@@ -163,8 +161,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
      */
-    app.get('/meter_readings/meter/:meter_no', urlencodedParser, (req, res)=> {
-        return API.meter_readings().getLastMeterReading(req.params['id'], "id")
+    app.get('/meter_readings/meter/:meter_no/last', urlencodedParser, (req, res)=> {
+        return API.meter_readings().getLastMeterReading(req.params['meter_no'], req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -175,7 +173,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
-     * /meter_readings/meter/{meterNo}:
+     * /meter_readings/meter/{meterNo}/last:
      *   get:
      *     summary: Gets List of meter_readings by the meter no
      *     description: ''

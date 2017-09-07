@@ -2,30 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="53a16bf2-2b98-4e6d-a057-762294e430a6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/core/Utility/DateUtils.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/core/Utility/Utils.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/test/workorder.service.test.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/core/model/links/Relationships.js" afterPath="$PROJECT_DIR$/core/model/links/Relationships.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Assets/controller/AssetController.js" afterPath="$PROJECT_DIR$/modules/Assets/controller/AssetController.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Assets/model/services/AssetService.js" afterPath="$PROJECT_DIR$/modules/Assets/model/services/AssetService.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Customers/controller/CustomerController.js" afterPath="$PROJECT_DIR$/modules/Customers/controller/CustomerController.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Customers/model/domain-objects/map.json" afterPath="$PROJECT_DIR$/modules/Customers/model/domain-objects/map.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Customers/model/services/CustomerService.js" afterPath="$PROJECT_DIR$/modules/Customers/model/services/CustomerService.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Faults/controller/FaultController.js" afterPath="$PROJECT_DIR$/modules/Faults/controller/FaultController.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Faults/model/services/FaultService.js" afterPath="$PROJECT_DIR$/modules/Faults/model/services/FaultService.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Notifications/controller/NotificationController.js" afterPath="$PROJECT_DIR$/modules/Notifications/controller/NotificationController.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js" afterPath="$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/core/model/DomainObject.js" afterPath="$PROJECT_DIR$/core/model/DomainObject.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/SpotBilling/controller/MeterReadingController.js" afterPath="$PROJECT_DIR$/modules/SpotBilling/controller/MeterReadingController.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/MeterReading.js" afterPath="$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/MeterReading.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/map.json" afterPath="$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/map.json" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/SpotBilling/model/services/MeterReadingService.js" afterPath="$PROJECT_DIR$/modules/SpotBilling/model/services/MeterReadingService.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Users/controller/UserController.js" afterPath="$PROJECT_DIR$/modules/Users/controller/UserController.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/WorkOrders/controller/WorkOrderController.js" afterPath="$PROJECT_DIR$/modules/WorkOrders/controller/WorkOrderController.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/WorkOrders/model/domain-objects/WorkOrder.js" afterPath="$PROJECT_DIR$/modules/WorkOrders/model/domain-objects/WorkOrder.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/WorkOrders/model/domain-objects/map.json" afterPath="$PROJECT_DIR$/modules/WorkOrders/model/domain-objects/map.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/WorkOrders/model/services/WorkOrderService.js" afterPath="$PROJECT_DIR$/modules/WorkOrders/model/services/WorkOrderService.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/recognition.service.test.js" afterPath="$PROJECT_DIR$/test/recognition.service.test.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/user.service.test.js" afterPath="$PROJECT_DIR$/test/user.service.test.js" />
     </list>
     <ignored path="travels.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -54,11 +34,31 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="MeterReadingService.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="MeterReadingService.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modules/SpotBilling/model/services/MeterReadingService.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="302">
-              <caret line="86" column="8" selection-start-line="86" selection-start-column="8" selection-end-line="86" selection-end-column="8" />
+            <state relative-caret-position="329">
+              <caret line="209" column="39" selection-start-line="209" selection-start-column="39" selection-end-line="209" selection-end-column="39" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DomainObject.js" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/core/model/DomainObject.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="414">
+              <caret line="53" column="35" selection-start-line="53" selection-start-column="35" selection-end-line="53" selection-end-column="35" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="map.json" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/map.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="324">
+              <caret line="18" column="27" selection-start-line="18" selection-start-column="17" selection-end-line="18" selection-end-column="27" />
               <folding />
             </state>
           </provider>
@@ -77,8 +77,8 @@
       <file leaf-file-name="MeterReadingController.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modules/SpotBilling/controller/MeterReadingController.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="536">
-              <caret line="167" column="36" selection-start-line="167" selection-start-column="36" selection-end-line="167" selection-end-column="36" />
+            <state relative-caret-position="410">
+              <caret line="169" column="39" selection-start-line="169" selection-start-column="39" selection-end-line="169" selection-end-column="39" />
               <folding />
             </state>
           </provider>
@@ -107,6 +107,21 @@
             <state relative-caret-position="457">
               <caret line="97" column="0" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="mr_working.meter_readings" pinned="false" current-in-tab="false">
+        <entry file="dbDummy://dbtable:/219f5a5b/4a3537b1-11b7-4616-a344-07f0a4c5a740/mr_working.meter_readings">
+          <provider editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+          <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+            <state>
+              <filtering enabled="true" />
             </state>
           </provider>
         </entry>
@@ -148,7 +163,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/4a3537b1-11b7-4616-a344-07f0a4c5a740/console_4.sql" />
         <option value="$PROJECT_DIR$/core/logger.js" />
         <option value="$PROJECT_DIR$/modules/SpotBilling/model/mappers/MeterReadingMapper.js" />
         <option value="$APPLICATION_CONFIG_DIR$/consoles/db/4a3537b1-11b7-4616-a344-07f0a4c5a740/console_5.sql" />
@@ -158,7 +172,6 @@
         <option value="$PROJECT_DIR$/modules/Attachments/controller/AttachmentController.js" />
         <option value="$PROJECT_DIR$/modules/Attachments/model/services/AttachmentService.js" />
         <option value="$APPLICATION_CONFIG_DIR$/consoles/db/4a3537b1-11b7-4616-a344-07f0a4c5a740/console_7.sql" />
-        <option value="$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/map.json" />
         <option value="$APPLICATION_CONFIG_DIR$/consoles/db/4a3537b1-11b7-4616-a344-07f0a4c5a740/console_8.sql" />
         <option value="$PROJECT_DIR$/modules/Notification/model/mappers/FaultMapper.js" />
         <option value="$PROJECT_DIR$/modules/Notification/model/domain-objects/map.json" />
@@ -197,8 +210,10 @@
         <option value="$PROJECT_DIR$/modules/Notifications/controller/NotificationController.js" />
         <option value="$PROJECT_DIR$/modules/Users/controller/UserController.js" />
         <option value="$PROJECT_DIR$/modules/Assets/controller/AssetController.js" />
+        <option value="$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/map.json" />
         <option value="$PROJECT_DIR$/modules/SpotBilling/controller/MeterReadingController.js" />
         <option value="$PROJECT_DIR$/modules/SpotBilling/model/services/MeterReadingService.js" />
+        <option value="$PROJECT_DIR$/core/model/DomainObject.js" />
       </list>
     </option>
   </component>
@@ -284,19 +299,7 @@
               <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="SpotBilling" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="model" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="services" />
+              <option name="myItemId" value="core" />
               <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
             </PATH_ELEMENT>
           </PATH>
@@ -310,37 +313,11 @@
               <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="SpotBilling" />
+              <option name="myItemId" value="core" />
               <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="model" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mrworking" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mrworking" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="modules" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="SpotBilling" />
-              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="controller" />
               <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
             </PATH_ELEMENT>
           </PATH>
@@ -459,16 +436,16 @@
       <workItem from="1504438981506" duration="91000" />
       <workItem from="1504511751433" duration="56632000" />
       <workItem from="1504604279207" duration="43986000" />
-      <workItem from="1504686566213" duration="20236000" />
+      <workItem from="1504686566213" duration="25476000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="636715000" />
+    <option name="totallyTimeSpent" value="641955000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="-37" width="1366" height="805" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19347496" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -476,7 +453,7 @@
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20713201" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3298351" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3429395" sideWeight="0.4969651" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30691642" sideWeight="0.4969651" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -528,20 +505,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/4a3537b1-11b7-4616-a344-07f0a4c5a740/console_8.sql">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="58" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="68" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Notifications/model/mappers/NotificationMapper.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="16" column="36" selection-start-line="16" selection-start-column="36" selection-end-line="16" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Notifications/model/domain-objects/map.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="54">
@@ -653,6 +616,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
           <caret line="4" column="75" selection-start-line="4" selection-start-column="75" selection-end-line="4" selection-end-column="75" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -767,13 +731,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/map.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="13" column="39" selection-start-line="13" selection-start-column="39" selection-end-line="13" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/WorkOrders/model/services/WorkOrderService.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1401">
@@ -814,19 +771,6 @@
         <state relative-caret-position="-1004">
           <caret line="172" column="0" selection-start-line="172" selection-start-column="0" selection-end-line="172" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="dbDummy://dbtable:/219f5a5b/4a3537b1-11b7-4616-a344-07f0a4c5a740/mr_working.meter_readings">
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
         </state>
       </provider>
     </entry>
@@ -892,14 +836,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/MeterReading.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="356">
-          <caret line="42" column="39" selection-start-line="42" selection-start-column="39" selection-end-line="42" selection-end-column="39" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Customers/controller/CustomerController.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="414">
@@ -937,18 +873,63 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/package.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="419">
+          <caret line="29" column="31" selection-start-line="29" selection-start-column="31" selection-end-line="29" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/MeterReading.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="356">
+          <caret line="42" column="39" selection-start-line="42" selection-start-column="39" selection-end-line="42" selection-end-column="39" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/SpotBilling/model/domain-objects/map.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="324">
+          <caret line="18" column="27" selection-start-line="18" selection-start-column="17" selection-end-line="18" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="dbDummy://dbtable:/219f5a5b/4a3537b1-11b7-4616-a344-07f0a4c5a740/mr_working.meter_readings">
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/modules/SpotBilling/controller/MeterReadingController.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="536">
-          <caret line="167" column="36" selection-start-line="167" selection-start-column="36" selection-end-line="167" selection-end-column="36" />
+        <state relative-caret-position="410">
+          <caret line="169" column="39" selection-start-line="169" selection-start-column="39" selection-end-line="169" selection-end-column="39" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/modules/SpotBilling/model/services/MeterReadingService.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="302">
-          <caret line="86" column="8" selection-start-line="86" selection-start-column="8" selection-end-line="86" selection-end-column="8" />
+        <state relative-caret-position="329">
+          <caret line="209" column="39" selection-start-line="209" selection-start-column="39" selection-end-line="209" selection-end-column="39" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/model/DomainObject.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="414">
+          <caret line="53" column="35" selection-start-line="53" selection-start-column="35" selection-end-line="53" selection-end-column="35" />
           <folding />
         </state>
       </provider>

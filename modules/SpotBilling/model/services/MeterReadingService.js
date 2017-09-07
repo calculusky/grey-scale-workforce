@@ -84,7 +84,7 @@ class MeterReadingService {
             file_path: file.path,
             file_type: file.mimetype
         }));
-        
+
         //Get Mapper
         const MeterReadingMapper = MapperFactory.build(MapperFactory.METER_READING);
         return MeterReadingMapper.createDomainRecord(meterReading).then(meterReading=> {
@@ -128,7 +128,6 @@ class MeterReadingService {
             'current_opening_bal',
             'current_closing_bal',
             'current_payment',
-            'current_closing_bal',
             'vat_charge',
             'current_bill'
         ];
@@ -138,7 +137,14 @@ class MeterReadingService {
 
 
         return resultSets.then(results=> {
-            if (!results.length) return; //TODO return something sensible
+            if (!results.length) {
+                //Just in-case there was no previous reading
+                results.push({
+                    current_reading: 0.0, previous_reading: 0.0,
+                    current_opening_bal: 0.0, current_closing_bal: 0.0,
+                    current_payment: 0.0, vat_charge: 0.0, current_bill: 0.0
+                });
+            }
             //check that the current meter reading is greater than or equals to the previous
             let previousMeterReading = new MeterReading(results.shift());
 
@@ -155,7 +161,7 @@ class MeterReadingService {
             const closingBal = (todayOpeningBal - currentPayment) + billAmount;
 
             let newMeterReading = {
-                'meter_no':meterNo,
+                'meter_no': meterNo,
                 'previous_reading': previousMeterReading['current_reading'],
                 'current_reading': currentReading,
                 'current_opening_bal': todayOpeningBal,
@@ -166,13 +172,51 @@ class MeterReadingService {
                 'vat_charge': (previousMeterReading['vat_charge'] / previousMeterReading['current_bill']) * billAmount,
                 'read_date': Utils.date().dateToMysql(new Date())
             };
-            
+
             return this.createMeterReading(newMeterReading, who, files, API);
         });
     }
 
-    getLastMeterReading(meterNo, who){
-        
+    /**
+     *
+     * @param meterNo
+     * @param who
+     * @returns {Promise.<MeterReading>}
+     */
+    getLastMeterReading(meterNo, who = {}) {
+        let fields = [
+            'tariff',
+            'current_reading',
+            'previous_reading',
+            'current_opening_bal',
+            'current_closing_bal',
+            'current_payment',
+            'current_closing_bal',
+            'vat_charge',
+            'current_bill'
+        ];
+        let resultSets = this.context.database.select(fields).from('meter_readings')
+            .where('meter_no', meterNo).orderBy('id', 'desc').limit(1);
+        const MeterReading = DomainFactory.build(DomainFactory.METER_READING);
+
+        return resultSets.then(results=> {
+            console.log(results);
+            if (!results.length) {
+                console.log("nothing");
+                //Just in-case there was no previous reading
+                results.push({
+                    current_reading: 0.0, previous_reading: 0.0,
+                    current_opening_bal: 0.0, current_closing_bal: 0.0,
+                    current_payment: 0.0, vat_charge: 0.0, current_bill: 0.0
+                });
+            }
+            console.log(results);
+            let previousMeterReading = new MeterReading(results.shift());
+            return Promise.resolve(Util.buildResponse({data: previousMeterReading}));
+        }).catch(err=> {
+            console.log(err);
+            return Promise.reject(err)
+        })
     }
 
     /**

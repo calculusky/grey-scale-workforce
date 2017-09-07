@@ -25,7 +25,8 @@ class DomainObject {
         if (hasData) {
             let mapKeys = Object.keys(map);
             mapKeys.forEach(key=> {
-                if (data[key]) this[key] = data[key];
+                if (data[key] !== null
+                    && data[key] !== undefined && data[key]!=='') this[key] = data[key];
             });
         }
         this._(this).relations = new RelationShips(this);

@@ -1,6 +1,7 @@
 {
   "id": "id",
   "meter_no": "meter_no",
+  "tariff": "tariff",
   "current_reading": "current_reading",
   "previous_reading": "previous_reading",
   "current_bill": "current_bill",
