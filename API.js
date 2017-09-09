@@ -37,6 +37,12 @@ class API {
                     });
             }
         });
+        
+        
+        // //We should load all mappers here into memory
+        // fs.readdir(modulesPath).forEach(dir=>{
+        //    
+        // })
     }
 
     /**

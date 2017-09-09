@@ -41,7 +41,7 @@ class MeterReading extends DomainObject {
         return {
             meter_no: '*',
             current_reading: 'numeric',
-            'current_bill?': 'int'
+            'current_bill?': 'numeric'
         };
     }
     

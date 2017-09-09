@@ -61,7 +61,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/sessionId'
      */
     app.get('/logout', (req, res)=> {
-        API.recognitions().logout(req.header('travel-session-id'))
+        API.recognitions().logout(req.who)
             .then(msg=> {
                 return res.send(msg);
             })

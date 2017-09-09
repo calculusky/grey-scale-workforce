@@ -12,10 +12,10 @@ const express = require("express");
 var cors = require('cors');
 
 module.exports = function route(context) {
-    
+
     //Initialize the API
     API = new API(context);
-    
+
     /**
      * Configure Express
      */
@@ -58,7 +58,16 @@ module.exports = function route(context) {
      */
     var controllerPath = './modules';
     var swaggerAPIs = ['./route*.js', './api.yml'];
-    let multiPart = multer({dest: "uploads/"});
+
+    //configure multer storage
+
+    const storage = multer.diskStorage({
+        destination:(req, file, cb)=>{
+            cb(null, context.storage.path);
+        }
+    });
+
+    let multiPart = multer({storage: storage});
     fs.readdirSync(controllerPath).forEach(dir=> {
         if (fs.statSync(`${controllerPath}/${dir}`).isDirectory()) {
             var filePath = `${controllerPath}/${dir}/controller`;

@@ -1,0 +1,11 @@
+{
+  "database": {
+    "host": "127.0.0.1",
+    "user": "root",
+    "password": "Nigeriasns$1",
+    "database": "mr_working"
+  },
+  "storage":{
+    "path":"/var/www/html/fsm/storage/app/public"
+  }
+}

@@ -8,8 +8,8 @@ const Util = require('../../../../core/Utility/MapperUtil');
  */
 class AttachmentService {
 
-    constructor() {
-        
+    constructor(context) {
+        this.context = context;
     }
 
     getName() {
@@ -32,7 +32,7 @@ class AttachmentService {
             value = who.api;
             by = "api_instance_id";
         } else if (value) {
-            value = {[by]:value, 'module':module, 'api_instance_id':who.api};
+            value = {[by]: value, 'module': module, 'api_instance_id': who.api};
             by = "*_and";
         }
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
@@ -63,9 +63,11 @@ class AttachmentService {
     /**
      *
      * @param body
+     * @param files
      * @param who
+     * @param API
      */
-    createAttachment(body = {}, who = {}) {
+    createAttachment(body = {}, who = {}, files = [], API) {
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
         body['api_instance_id'] = who.api;
         let attachment = new Attachment(body);
@@ -76,6 +78,65 @@ class AttachmentService {
             if (!attachment) return Promise.reject();
             return Util.buildResponse({data: attachment});
         });
+    }
+
+    /**
+     *
+     * @param body
+     * @param who
+     * @param files
+     * @param API
+     */
+    addIncomingAttachments(body = {}, who = {}, files = [], API) {
+        const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
+        console.log(body);
+        //for incoming request , the module name and request-id is required and there must be a file
+        if (!body.module || !body['request_id'] || files.length == 0) {
+            return Promise.reject(Util.buildResponse({
+                status: "fail",
+                data: {message: 'Nothing to do'}
+            }, 400));
+            
+        }
+        let requestId = body['request_id'];
+
+        if (!this.context.getIncoming(requestId)) {
+            console.log("Not REquest ID found")
+            return Promise.reject(Util.buildResponse({
+                status: "fail",
+                data: {message: 'Request ID Not Found'}
+            }, 404));
+        }
+
+        let attachments = [];
+
+        if (files.length) files.forEach(file=>attachments.push(new Attachment({
+            module: `${body.module}`,
+            relation_id: `${this.context.getIncoming(requestId)}`,
+            file_name: file.filename,
+            file_size: file.size,
+            file_path: file.path,
+            file_type: file.mimetype
+        })));
+
+        let executor = (resolve, reject) => {
+            let processed = 0;
+            let rowLen = attachments.length;
+            let attachmentIds = [];
+            attachments.forEach(attachment=> {
+                this.createAttachment(attachment, who).then(response=> {
+                    if (++processed == rowLen) {
+                        attachmentIds.push(response.data.data.id);
+                        this.context.deleteIncoming(requestId);
+                        return resolve(Util.buildResponse({data: true}));
+                    }
+                }).catch(err=> {
+                    console.log(err);
+                    return reject(err);
+                });
+            });
+        };
+        return new Promise(executor);
     }
 
     /**

@@ -68,6 +68,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postMeterReadingInput'
      */
     app.post('/meter_readings/spot_bill', multiPart.array('files', 4), (req, res)=> {
+        console.log(req.body);
         API.meter_readings().generateBill(req.body, req.who, req.files, API)
             .then(({data, code})=> {
                 console.log(data);
@@ -173,7 +174,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
-     * /meter_readings/meter/{meterNo}/last:
+     * /meter_readings/meter/{meterNo}:
      *   get:
      *     summary: Gets List of meter_readings by the meter no
      *     description: ''

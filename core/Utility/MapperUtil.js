@@ -7,13 +7,13 @@ module.exports = function MapperUtil() {
 
 };
 
-module.exports.loadMapper = function (store = {}, path) {
+module.exports.loadMapper = function (store = {}, path, context=null) {
     if (store[path]) {
         return store[path];
     }
     let mapper = require(path);
     if (mapper) {
-        store[path] = new mapper();
+        store[path] = new mapper(context);
     }
     return store[path];
 };
@@ -119,6 +119,18 @@ module.exports.getMysqlError = function (err) {
     }
 };
 
+/**
+ * @deprecated
+ * @param status
+ * @param data
+ * @param msg
+ * @param type
+ * @param code
+ * @param desc
+ * @param isRoute
+ * @param statusCode
+ * @returns {{}}
+ */
 module.exports.buildResponse = function ({status="success", data, msg, type, code, desc, isRoute=true}, statusCode = 200) {
     let responseBody = {};
     responseBody.status = status;

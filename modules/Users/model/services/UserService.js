@@ -9,8 +9,8 @@ const validate = require('validate-fields')();
 
 class UserService {
 
-    constructor() {
-
+    constructor(context) {
+        this.context = context;
     }
 
     getName() {

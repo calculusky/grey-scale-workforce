@@ -19,28 +19,29 @@ class MapperFactory {
     /**
      *
      * @param mapperName
+     * @param context
      * @returns {UserMapper|AssetMapper}
      */
-    static build(mapperName = "") {
+    static build(mapperName = "", context = null) {
         switch (mapperName) {
             case MapperFactory.USER:
-                return Utils.loadMapper(mapperStore, "../../modules/Users/model/mappers/UserMapper");
+                return Utils.loadMapper(mapperStore, "../../modules/Users/model/mappers/UserMapper", context);
             case MapperFactory.WORK_ORDER:
-                return Utils.loadMapper(mapperStore, "../../modules/WorkOrders/model/mappers/WorkOrderMapper");
+                return Utils.loadMapper(mapperStore, "../../modules/WorkOrders/model/mappers/WorkOrderMapper", context);
             case MapperFactory.FAULT:
-                return Utils.loadMapper(mapperStore, "../../modules/Faults/model/mappers/FaultMapper");
+                return Utils.loadMapper(mapperStore, "../../modules/Faults/model/mappers/FaultMapper", context);
             case MapperFactory.ASSET:
-                return Utils.loadMapper(mapperStore, "../../modules/Assets/model/mappers/AssetMapper");
+                return Utils.loadMapper(mapperStore, "../../modules/Assets/model/mappers/AssetMapper", context);
             case MapperFactory.NOTE:
-                return Utils.loadMapper(mapperStore, "../../modules/Notes/model/mappers/NoteMapper");
+                return Utils.loadMapper(mapperStore, "../../modules/Notes/model/mappers/NoteMapper", context);
             case MapperFactory.ATTACHMENT:
-                return Utils.loadMapper(mapperStore, "../../modules/Attachments/model/mappers/AttachmentMapper");
+                return Utils.loadMapper(mapperStore, "../../modules/Attachments/model/mappers/AttachmentMapper", context);
             case MapperFactory.CUSTOMER:
-                return Utils.loadMapper(mapperStore, "../../modules/Customers/model/mappers/CustomerMapper");
+                return Utils.loadMapper(mapperStore, "../../modules/Customers/model/mappers/CustomerMapper", context);
             case MapperFactory.METER_READING:
-                return Utils.loadMapper(mapperStore, "../../modules/SpotBilling/model/mappers/MeterReadingMapper");
+                return Utils.loadMapper(mapperStore, "../../modules/SpotBilling/model/mappers/MeterReadingMapper",context);
             case MapperFactory.NOTIFICATION:
-                return Utils.loadMapper(mapperStore, "../../modules/Notifications/model/mappers/NotificationMapper");
+                return Utils.loadMapper(mapperStore, "../../modules/Notifications/model/mappers/NotificationMapper", context);
         }
     }
 }

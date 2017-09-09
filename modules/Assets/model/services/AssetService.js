@@ -1,7 +1,8 @@
 const DomainFactory = require('../../../DomainFactory');
 const MapperFactory = require('../../../MapperFactory');
 const Password = require('../../../../core/Utility/Password');
-const Util = require('../../../../core/Utility/MapperUtil');
+// const Util = require('../../../../core/Utility/MapperUtil');
+const Utils = require('../../../../core/Utility/Utils');
 /**
  * @name AssetService
  * Created by paulex on 8/22/17.
@@ -17,17 +18,17 @@ class AssetService {
     }
 
     getAssets(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
-        if (!value || "" + value + "".trim() == '') {
-            //Its important that all queries are streamlined to majorly for each business
-            value = who.api;
-            by = "api_instance_id";
-        } else if (value) {
-            const temp = value;
-            value = {};
-            value[by] = temp;
-            value['api_instance_id'] = who.api;
-            by = "*_and";
-        }
+        // if (!value || "" + value + "".trim() == '') {
+        //     //Its important that all queries are streamlined to majorly for each business
+        //     value = who.api;
+        //     by = "api_instance_id";
+        // } else if (value) {
+        //     const temp = value;
+        //     value = {};
+        //     value[by] = temp;
+        //     value['api_instance_id'] = who.api;
+        //     by = "*_and";
+        // }
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
         var executor = (resolve, reject)=> {
             AssetMapper.findDomainRecord({by, value}, offset, limit)
@@ -40,7 +41,7 @@ class AssetService {
                         asset.user().then(res=> {
                             asset.user = res.records.shift();
                             if (++processed == rowLen)
-                                return resolve(Util.buildResponse({data: {items: result.records}}));
+                                return resolve(Utils.buildResponse({data: {items: result.records}}));
                         }).catch(err=> {
                             return reject(err)
                         })
@@ -68,7 +69,7 @@ class AssetService {
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
         return AssetMapper.createDomainRecord(staff).then(staff=> {
             if (!staff) return Promise.reject();
-            return Util.buildResponse({data: staff});
+            return Utils.buildResponse({data: staff});
         });
     }
 
@@ -79,16 +80,24 @@ class AssetService {
      * @returns {Promise.<Customer>}
      */
     searchAssets(keyword) {
-        const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
-        let fields = ['id', 'asset_type', 'asset_name', 'status', 'serial_no'];
+        const Customer = DomainFactory.build(DomainFactory.ASSET);
+        let fields = [
+            'id',
+            'asset_type',
+            'asset_type_name',
+            'asset_name',
+            'status',
+            'group_id',
+            'serial_no'
+        ];
         let resultSets = this.context.database.select(fields).from('assets')
             .where('asset_name', 'like', `%${keyword}%`).orWhere('asset_type_name', 'like', `%${keyword}%`);
         return resultSets.then(results=> {
             let customers = [];
             results.forEach(customer=>customers.push(new Customer(customer)));
-            return Util.buildResponse({data: {items: customers}});
+            return Utils.buildResponse({data: {items: customers}});
         }).catch(err=> {
-            return Util.buildResponse({status: "fail", data: err}, 500);
+            return Utils.buildResponse({status: "fail", data: err}, 500);
         });
     }
 
@@ -102,9 +111,9 @@ class AssetService {
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
         return AssetMapper.deleteDomainRecord({by, value}).then(count=> {
             if (!count) {
-                return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
+                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Util.buildResponse({data: {by, message: "Asset deleted"}});
+            return Utils.buildResponse({data: {by, message: "Asset deleted"}});
         });
     }
 }

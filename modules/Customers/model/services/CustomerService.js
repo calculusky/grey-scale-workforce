@@ -15,18 +15,20 @@ class CustomerService {
         return "customerService";
     }
 
-    getCustomers(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
-        if (!value || "" + value + "".trim() == '') {
-            //Its important that all queries are streamlined to majorly for each business
-            value = who.api;
-            by = "api_instance_id";
-        } else if (value) {
-            const temp = value;
-            value = {};
-            value[by] = temp;
-            value['api_instance_id'] = who.api;
-            by = "*_and";
-        }
+    getCustomers(value, by = "account_no", who = {api: -1}, offset = 0, limit = 10) {
+        // if (!value || "" + value + "".trim() == '') {
+        //     //Its important that all queries are streamlined to majorly for each business
+        //     value = who.api;
+        //     by = "api_instance_id";
+        // } else if (value) {
+        //     const temp = value;
+        //     value = {};
+        //     value[by] = temp;
+        //     value['api_instance_id'] = who.api;
+        //     by = "*_and";
+        // }
+        
+
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         var executor = (resolve, reject)=> {
             CustomerMapper.findDomainRecord({by, value}, offset, limit)

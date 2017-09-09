@@ -44,6 +44,42 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
+
+    /**
+     * @swagger
+     * /attachments:
+     *   post:
+     *     summary: Creates incoming attachments
+     *     description: ''
+     *     tags: [Attachment]
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: createAttachment
+     *     responses:
+     *       '200':
+     *         description: Successfully Added
+     *     parameters:
+     *      - $ref: '#/parameters/sessionId'
+     *      - in: body
+     *        name: 'fault'
+     *        required: true
+     *        schema:
+     *          $ref: '#/definitions/postAttachmentInput'
+     */
+    app.post('/attachments/incoming', multiPart.array('files', 8), (req, res)=> {
+        API.attachments().addIncomingAttachments(req.body, req.who, req.files, API)
+            .then(({data, code})=> {
+                console.log(data);
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                console.log(code, err);
+                return res.status(code).send(err);
+            });
+    });
+
     /**
      * @swagger
      * /attachments:

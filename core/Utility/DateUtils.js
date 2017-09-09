@@ -1,6 +1,7 @@
 /**
  * Created by paulex on 9/6/17.
  */
+const moment = require("moment");
 module.exports = function DateUtils(){
 
 };
@@ -11,7 +12,7 @@ module.exports = function DateUtils(){
  * @returns {string}
  */
 module.exports.dateToMysql = function(jsDate){
-    return jsDate.toISOString().slice(0, 19).replace('T', ' ');
+    return moment(jsDate).format("YYYY-MM-DD");
 };
 
 module.exports.elapsedTime = function(jsDate){

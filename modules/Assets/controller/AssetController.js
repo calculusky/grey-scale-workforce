@@ -79,7 +79,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
-    
+
     /**
      * @swagger
      * /assets/user/{user_id}/{offset}/{limit}:
@@ -114,35 +114,36 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
     });
 
 
-    // /**
-    //  * @swagger
-    //  * /assets/{offset}/{limit}:
-    //  *   get:
-    //  *     summary: Gets List of assets
-    //  *     description: ''
-    //  *     tags: [Asset]
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: getAssets
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successful
-    //  *         schema:
-    //  *           $ref: '#/definitions/getAssetOutput'
-    //  *     parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  */
-    // app.get('/assets/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.assets().getAssets(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
-    //         .then(({data, code})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status(code).send(err);
-    //         });
-    // });
+    /**
+     * @swagger
+     * /assets/{offset}/{limit}:
+     *   get:
+     *     summary: Gets List of assets
+     *     description: ''
+     *     tags: [Asset]
+     *     produces:
+     *     - application/json
+     *     operationId: getAssets
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getAssetOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/assets', urlencodedParser, (req, res)=> {
+        console.log('/assets/offset/limit');
+        return API.assets().getAssets({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
 
     /**
      * @swagger
@@ -165,6 +166,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/limit'
      */
     app.get('/assets/search/:keyword', urlencodedParser, (req, res)=> {
+        console.log('/assets/search/keyword');
         return API.assets().searchAssets(req.params['keyword'])
             .then(({data, code})=> {
                 return res.status(code).send(data);

@@ -15,8 +15,8 @@ const Util = require('../../../../core/Utility/MapperUtil');
  */
 class RecognitionService {
 
-    constructor() {
-
+    constructor(context) {
+        this.context = context;
     }
 
     login(username, password) {
@@ -68,8 +68,8 @@ class RecognitionService {
         return new Promise(executor);
     }
 
-    logout() {
-
+    logout(who) {
+        this.context.database.update()
     }
 
     /**
