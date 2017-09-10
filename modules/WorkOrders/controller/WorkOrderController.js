@@ -28,14 +28,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        $ref: '#/definitions/postWorkOrderInput'
      */
     app.post('/work_orders', jsonParser, (req, res)=> {
-        console.log(req.body);
         API.workOrders().createWorkOrder(req.body, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
             .catch(({err, code})=> {
                 return res.status(code).send(err);
-            });
+            })  ;
     });
 
 

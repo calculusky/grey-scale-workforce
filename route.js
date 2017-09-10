@@ -59,22 +59,25 @@ module.exports = function route(context) {
     var controllerPath = './modules';
     var swaggerAPIs = ['./route*.js', './api.yml'];
 
-    //configure multer storage
-
+    //configure multer
     const storage = multer.diskStorage({
         destination: (req, file, cb)=> {
             let path = req.path.substring(1, req.path.length);
             path = (path.includes("/")) ? path.substr(0, path.indexOf('/')) : path;
             let parentPath = context.config.storage.path;
-            let routePaths = context.config.storage.routeStorage;
-
+            let routePaths = context.config.storage['routeStorage'];
             let saveAt = parentPath;
 
             let routePath = routePaths[path];
             if (routePath) {
-                saveAt = (routePath.use_parent) ? `${saveAt}/${routePath.path}` : routePath.path;
+                saveAt = (routePath.use_parent) ? `${saveAt}${routePath.path}` : routePath.path;
+            } else {
+                if (path == "attachments") {
+                    const body = req.body;
+                    saveAt = `${saveAt}/attachments/${body.module}`
+                }
             }
-            cb(null, `${saveAt}`);
+            cb(null, saveAt);
         }
     });
 

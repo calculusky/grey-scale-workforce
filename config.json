@@ -9,7 +9,7 @@
     "path": "/var/www/html/fsm/storage/app/public",
     "routeStorage": {
       "meter_readings": {
-        "path": "attachments/meter_readings",
+        "path": "/attachments/meter_readings",
         "use_parent": true
       },
       "faults": {
