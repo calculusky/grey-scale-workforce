@@ -5,7 +5,17 @@
     "password": "Nigeriasns$1",
     "database": "mr_working"
   },
-  "storage":{
-    "path":"../fsm/storage/app/public/"
+  "storage": {
+    "path": "/var/www/html/mrworking-web/storage/app/public",
+    "routeStorage": {
+      "meter_readings": {
+        "path": "attachments/meter_readings",
+        "use_parent": true
+      },
+      "faults": {
+        "path": "faults",
+        "use_parent": true
+      }
+    }
   }
 }

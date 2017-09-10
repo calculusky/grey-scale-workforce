@@ -62,8 +62,19 @@ module.exports = function route(context) {
     //configure multer storage
 
     const storage = multer.diskStorage({
-        destination:(req, file, cb)=>{
-            cb(null, context.storage.path);
+        destination: (req, file, cb)=> {
+            let path = req.path.substring(1, req.path.length);
+            path = (path.includes("/")) ? path.substr(0, path.indexOf('/')) : path;
+            let parentPath = context.config.storage.path;
+            let routePaths = context.config.storage.routeStorage;
+
+            let saveAt = parentPath;
+
+            let routePath = routePaths[path];
+            if (routePath) {
+                saveAt = (routePath.use_parent) ? `${saveAt}/${routePath.path}` : routePath.path;
+            }
+            cb(null, `${saveAt}`);
         }
     });
 
