@@ -128,6 +128,14 @@ class API {
     }
 
     /**
+     * 
+     * @returns {UploadService|*}
+     */
+    uploads(){
+        return API._(this)['services']['uploadService'];
+    }
+
+    /**
      * This method theoretically can be accessed outside this class
      * however conventionally its should be private.
      * Notwithstanding this method can't be used outside of this class

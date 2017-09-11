@@ -28,7 +28,7 @@ class MeterReadingService {
             value = {};
             value[by] = temp;
             value['api_instance_id'] = who.api;
-            by = "*_and";4532.00
+            by = "*_and";
         }
         const MeterReadingMapper = MapperFactory.build(MapperFactory.METER_READING);
         var executor = (resolve, reject)=> {
@@ -37,7 +37,7 @@ class MeterReadingService {
                     let meterReadings = result.records;
                     let processed = 0;
                     let rowLen = meterReadings.length;
-                    return resolve(Util.buildResponse({data: {items: result.records}}));
+                    return resolve(Utils.buildResponse({data: {items: result.records}}));
                     // meterReadings.forEach(meterReading=> {
                     //     meterReading.customer().then(res=> {
                     //         meterReading.customer = res.records.shift();
@@ -72,7 +72,7 @@ class MeterReadingService {
 
         let isValid = validate(meterReading.rules(), meterReading);
         if (!isValid) {
-            return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
         
         //If there are files along with this requ192.168.124.1est lets get it ready for upload
@@ -97,7 +97,7 @@ class MeterReadingService {
             if(meterReading['request_id']){
                 this.context.setIncoming(meterReading['request_id'], meterReading.id);
             }
-            return Util.buildResponse({data: meterReading});
+            return Utils.buildResponse({data: meterReading});
         }).catch(err=> {
             console.log(err);
             //TODO remove the attachments already added if this fails
@@ -115,7 +115,7 @@ class MeterReadingService {
     generateBill(body = {}, who = {}, files = [], API) {
         //check that the user has supplied the current_reading and the meter no
         if (!body['meter_no'] || !body['current_reading'])
-            return Promise.reject(Util.buildResponse({
+            return Promise.reject(Utils.buildResponse({
                 status: "fail",
                 data: {message: 'Specify the meter_no and the current reading'}
             }, 400));
@@ -167,7 +167,7 @@ class MeterReadingService {
             if (pastMeterReading > currentReading) {
                 //TODO notify an admin that something is wrong
                 console.log("Reading:", pastMeterReading, currentReading);
-                return Promise.reject(Util.buildResponse({status: "fail", data: {message: 'Invalid Reading'}}, 400))
+                return Promise.reject(Utils.buildResponse({status: "fail", data: {message: 'Invalid Reading'}}, 400))
             }
             //else lets calculate the current bill
             const billAmount = ((currentReading - pastMeterReading) * tariff);
@@ -190,7 +190,7 @@ class MeterReadingService {
                 'energy': energy.toFixed(2),
                 'tariff': previousMeterReading['tariff'],
                 'vat_charge': vatCharge.toFixed(2),
-                'read_date': Utils.date().dateToMysql(new Date())
+                'read_date': Utils.date.dateToMysql(new Date())
             };
             console.log(newMeterReading);
             //for request with pending attachment
@@ -234,7 +234,7 @@ class MeterReadingService {
                 });
             }
             let previousMeterReading = new MeterReading(results.shift());
-            return Promise.resolve(Util.buildResponse({data: previousMeterReading}));
+            return Promise.resolve(Utils.buildResponse({data: previousMeterReading}));
         }).catch(err=> {
             console.log(err);
             return Promise.reject(err)
@@ -251,9 +251,9 @@ class MeterReadingService {
         const MeterReadingMapper = MapperFactory.build(MapperFactory.METER_READING);
         return MeterReadingMapper.deleteDomainRecord({by, value}).then(count=> {
             if (!count) {
-                return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
+                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Util.buildResponse({data: {by, message: "MeterReading deleted"}});
+            return Utils.buildResponse({data: {by, message: "MeterReading deleted"}});
         });
     }
 }

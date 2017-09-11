@@ -13,7 +13,7 @@
         "use_parent": true
       },
       "faults": {
-        "path": "faults",
+        "path": "/faults",
         "use_parent": true
       }
     }

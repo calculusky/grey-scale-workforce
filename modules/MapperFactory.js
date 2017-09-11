@@ -39,9 +39,13 @@ class MapperFactory {
             case MapperFactory.CUSTOMER:
                 return Utils.loadMapper(mapperStore, "../../modules/Customers/model/mappers/CustomerMapper", context);
             case MapperFactory.METER_READING:
-                return Utils.loadMapper(mapperStore, "../../modules/SpotBilling/model/mappers/MeterReadingMapper",context);
+                return Utils.loadMapper(mapperStore, "../../modules/SpotBilling/model/mappers/MeterReadingMapper", context);
             case MapperFactory.NOTIFICATION:
                 return Utils.loadMapper(mapperStore, "../../modules/Notifications/model/mappers/NotificationMapper", context);
+            case MapperFactory.UPLOAD:
+                return Utils.loadMapper(mapperStore, "../../modules/Uploads/model/mappers/UploadMapper", context);
+
+
         }
     }
 }
@@ -55,6 +59,7 @@ MapperFactory.ATTACHMENT = "Attachment";
 MapperFactory.CUSTOMER = "Customer";
 MapperFactory.METER_READING = "MeterReading";
 MapperFactory.NOTIFICATION = "Notification";
+MapperFactory.UPLOAD = "Upload";
 
 
 module.exports = MapperFactory;

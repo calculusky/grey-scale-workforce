@@ -40,6 +40,9 @@ class DomainFactory {
                     return require('./SpotBilling/model/domain-objects/MeterReading');
                 case DomainFactory.NOTIFICATION:
                     return require('./Notifications/model/domain-objects/Notification');
+                case DomainFactory.UPLOAD:
+                    return require('./Uploads/model/domain-objects/Upload');
+                
             }
         }catch (e){
             if(e.code=="MODULE_NOT_FOUND"){
@@ -60,5 +63,6 @@ DomainFactory.ATTACHMENT = "Attachment";
 DomainFactory.CUSTOMER = "Customer";
 DomainFactory.METER_READING = "MeterReading";
 DomainFactory.NOTIFICATION = "Notification";
+DomainFactory.UPLOAD = "Upload";
 
 module.exports = DomainFactory;

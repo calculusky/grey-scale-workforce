@@ -10,8 +10,8 @@ class NoteMapper extends ModelMapper{
     constructor(context) {
         super(context);
         this.primaryKey = "id";
-        this.tableName = "notes";
-        this.domainName = "Note";
+        this.tableName = "uploads";
+        this.domainName = "Upload";
     }
 }
 

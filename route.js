@@ -59,7 +59,7 @@ module.exports = function route(context) {
     var controllerPath = './modules';
     var swaggerAPIs = ['./route*.js', './api.yml'];
 
-    //configure multer
+    //configure multer for dynamic storage
     const storage = multer.diskStorage({
         destination: (req, file, cb)=> {
             let path = req.path.substring(1, req.path.length);
@@ -75,6 +75,9 @@ module.exports = function route(context) {
                 if (path == "attachments") {
                     const body = req.body;
                     saveAt = `${saveAt}/attachments/${body.module}`
+                } else if (path == 'uploads') {
+                    //for uploads the upload type is important
+                    saveAt = `${saveAt}/uploads/${req.body['upload_type']}`
                 }
             }
             cb(null, saveAt);

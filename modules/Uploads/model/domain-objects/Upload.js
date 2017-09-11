@@ -8,7 +8,7 @@ const map = require('./map.json');
  * Created by paulex on 8/22/17.
  * @name Note
  */
-class Note extends DomainObject {
+class Upload extends DomainObject {
 
     constructor(data) {
         super(data, map);
@@ -17,10 +17,11 @@ class Note extends DomainObject {
 
     required() {
         return [
-            'relation_id',
-            'module',
-            'note',
-            'note_by'
+            'file_name',
+            'file_size',
+            'file_path',
+            'status',
+            'upload_type'
         ];
     }
 
@@ -41,18 +42,14 @@ class Note extends DomainObject {
 
     rules() {
         return {
-            relation_id: Number,
-            module: String,
-            note: String,
-            note_by: Number
+            file_name: String,
+            file_size: Number,
+            file_path: String,
+            status: Number,
+            upload_type: String
         };
-    }
-
-
-    user() {
-        return this.relations().belongsTo("User", "note_by");
     }
 }
 
 //noinspection JSUnresolvedVariable
-module.exports = Note;
+module.exports = Upload;

@@ -40,8 +40,6 @@ jspm_packages
 
 .idea/*
 
-.idea/workspace.xml
-
 uploads
 
 config.json

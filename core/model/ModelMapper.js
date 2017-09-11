@@ -126,6 +126,7 @@ class ModelMapper {
 
 
     /**
+     * TODO handle multiple inserts
      * Inserts a new record to {@link DomainObject.tableName}
      * @param domainObject - An instance of DomainObject
      * @returns {Promise.<DomainObject>|boolean}
@@ -158,7 +159,7 @@ class ModelMapper {
             return Promise.reject(error);
         }
         dbData = filteredDomain.serialize(filteredDomain);
-
+        
         let resultSets = KNEX.insert(dbData).into(this.tableName);
         return resultSets.then(result => {
             domainObject.serialize(dbData, "client");
