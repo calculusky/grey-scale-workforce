@@ -145,6 +145,38 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
+
+    /**
+     * @swagger
+     * /assets/{id}:
+     *   get:
+     *     summary: Gets a single asset
+     *     description: ''
+     *     tags: [Asset]
+     *     produces:
+     *     - application/json
+     *     operationId: getAssets
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getAssetOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/assets/:id', urlencodedParser, (req, res)=> {
+        console.log('/assets/offset/limit');
+        return API.assets().getAssets(req.params['id'], undefined, req.who)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
     /**
      * @swagger
      * /assets/search/{keyword}:

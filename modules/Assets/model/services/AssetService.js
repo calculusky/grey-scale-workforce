@@ -18,17 +18,6 @@ class AssetService {
     }
 
     getAssets(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
-        // if (!value || "" + value + "".trim() == '') {
-        //     //Its important that all queries are streamlined to majorly for each business
-        //     value = who.api;
-        //     by = "api_instance_id";
-        // } else if (value) {
-        //     const temp = value;
-        //     value = {};
-        //     value[by] = temp;
-        //     value['api_instance_id'] = who.api;
-        //     by = "*_and";
-        // }
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
         var executor = (resolve, reject)=> {
             AssetMapper.findDomainRecord({by, value}, offset, limit)
