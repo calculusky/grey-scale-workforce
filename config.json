@@ -16,6 +16,9 @@
         "path": "/faults",
         "use_parent": true
       }
+    },
+    "persistence":{
+      "path":"./_persistence/storage"
     }
   }
 }
