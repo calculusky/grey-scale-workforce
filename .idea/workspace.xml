@@ -48,6 +48,16 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="DateUtils.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/core/Utility/DateUtils.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="306">
+              <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="WorkOrderService.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modules/WorkOrders/model/services/WorkOrderService.js">
           <provider selected="true" editor-type-id="text-editor">
@@ -71,15 +81,15 @@
       <file leaf-file-name="main.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/schedulers/main.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-195">
-              <caret line="220" column="81" selection-start-line="220" selection-start-column="81" selection-end-line="220" selection-end-column="81" />
+            <state relative-caret-position="360">
+              <caret line="254" column="41" selection-start-line="254" selection-start-column="41" selection-end-line="254" selection-end-column="41" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="mr_working.users" pinned="false" current-in-tab="false">
-        <entry file="dbDummy://dbtable:/219f5a5b/4a3537b1-11b7-4616-a344-07f0a4c5a740/mr_working.users">
+      <file leaf-file-name="mr_working.meter_readings" pinned="false" current-in-tab="false">
+        <entry file="dbDummy://dbtable:/219f5a5b/4a3537b1-11b7-4616-a344-07f0a4c5a740/mr_working.meter_readings">
           <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
             <state>
               <filtering enabled="true" />
@@ -178,7 +188,6 @@
         <option value="$PROJECT_DIR$/API.js" />
         <option value="$PROJECT_DIR$/modules/DomainFactory.js" />
         <option value="$PROJECT_DIR$/modules/Uploads/model/domain-objects/Upload.js" />
-        <option value="$PROJECT_DIR$/core/Utility/DateUtils.js" />
         <option value="$PROJECT_DIR$/core/Utility/Utils.js" />
         <option value="$PROJECT_DIR$/modules/Uploads/controller/UploadController.js" />
         <option value="$PROJECT_DIR$/modules/Faults/controller/FaultController.js" />
@@ -210,6 +219,7 @@
         <option value="$PROJECT_DIR$/modules/WorkOrders/model/services/WorkOrderService.js" />
         <option value="$PROJECT_DIR$/modules/Uploads/model/services/UploadService.js" />
         <option value="$PROJECT_DIR$/route.js" />
+        <option value="$PROJECT_DIR$/core/Utility/DateUtils.js" />
         <option value="$PROJECT_DIR$/schedulers/main.js" />
       </list>
     </option>
@@ -426,12 +436,12 @@
       <workItem from="1505232065537" duration="52721000" />
       <workItem from="1505380316549" duration="2781000" />
       <workItem from="1505387182010" duration="33796000" />
-      <workItem from="1505481861460" duration="7892000" />
+      <workItem from="1505481861460" duration="8843000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="852917000" />
+    <option name="totallyTimeSpent" value="853868000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="-37" width="1366" height="805" extended-state="6" />
@@ -495,13 +505,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/node_modules/node-persist/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/node_modules/node-persist/package.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -796,14 +799,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/core/Utility/DateUtils.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="14" column="63" selection-start-line="14" selection-start-column="54" selection-end-line="14" selection-end-column="63" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/WorkOrders/model/services/WorkOrderService.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="596">
@@ -907,10 +902,31 @@
         </state>
       </provider>
     </entry>
+    <entry file="dbDummy://dbtable:/219f5a5b/4a3537b1-11b7-4616-a344-07f0a4c5a740/mr_working.meter_readings">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/Utility/DateUtils.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/schedulers/main.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-195">
-          <caret line="220" column="81" selection-start-line="220" selection-start-column="81" selection-end-line="220" selection-end-column="81" />
+        <state relative-caret-position="360">
+          <caret line="254" column="41" selection-start-line="254" selection-start-column="41" selection-end-line="254" selection-end-column="41" />
           <folding />
         </state>
       </provider>
