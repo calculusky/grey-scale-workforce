@@ -12,12 +12,11 @@ module.exports = function main(context) {
     this.lock = {d: false};
     //all cron jobs
     console.log('* * * * * * Registered CronJobs');
-
     //schedule job for running createDelinquencyList
-    cron.scheduleJob('*/15 * * * *', main.createDelinquencyList.bind(this));
+    cron.scheduleJob('*/1 * * * *', main.createDelinquencyList.bind(this));
 
     //schedule job for creating meter readings
-    // cron.scheduleJob('*/1 * * * *', main.createMeterReadings.bind(this));
+    cron.scheduleJob('*/1 * * * *', main.createMeterReadings.bind(this));
 
     // schedule job for creating meter readings
     cron.scheduleJob('*/30 * * * *', main.createCustomers.bind(this));
@@ -48,10 +47,12 @@ module.exports.createDelinquencyList = function () {
                 //the first row returned is the column header so lets skip
                 if (rn == 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
                 else if (rn > 1) {
+                    
                     const currentBill = row.getCell(colHeaderIndex['current_bill']).value;
                     const netArrears = row.getCell(colHeaderIndex['net_arrears']).value;
                     const minAmount = (0.25 * netArrears) + currentBill;
                     const total = minAmount + 2000.00;
+
                     console.log(currentBill);
                     let delinquency = {
                         "account_no": row.getCell(colHeaderIndex['account_no']).value,
@@ -214,7 +215,26 @@ module.exports.createMeterReadings = function () {
                 else if (rn > 1) {
                     //so we should basically know the columns we are expecting since we provided the template
                     //lets build the customer data
-                    let meter_reading = {};
+                    let meter_reading = {
+                        'meter_no': row.getCell(colHeaderIndex['meter_no']).value,
+                        // 'tariff': row.getCell(colHeaderIndex['tariff']).value,
+                        'account_no': row.getCell(colHeaderIndex['account_no']).value,
+                        // 'set_up_date': row.getCell(colHeaderIndex['set_up_date']).value,
+                        'reading_code': row.getCell(colHeaderIndex['meter_reading_code']).value,
+                        'demand': row.getCell(colHeaderIndex['demand']).value,
+                        'current_reading': row.getCell(colHeaderIndex['current_reading']).value,
+                        'previous_reading': row.getCell(colHeaderIndex['previous_reading']).value,
+                        'current_bill': row.getCell(colHeaderIndex['current_bill']).value,
+                        'current_opening_bal': row.getCell(colHeaderIndex['current_opening_bal']).value,
+                        'current_closing_bal': row.getCell(colHeaderIndex['current_closing_bal']).value,
+                        'current_payment': row.getCell(colHeaderIndex['current_payment']).value,
+                        'last_payment': row.getCell(colHeaderIndex['last_payment_amount']).value,
+                        'last_payment_date': row.getCell(colHeaderIndex['last_payment_date']).value,
+                        'read_date': row.getCell(colHeaderIndex['read_date']).value,
+                        'vat_charge': row.getCell(colHeaderIndex['vat_charge']).value,
+                        'fixed_charge': row.getCell(colHeaderIndex['fixed_charge']).value,
+                        'energy': row.getCell(colHeaderIndex['energy']).value
+                    };
 
                     //get it ready for batch insert
                     meter_readings.push(meter_reading);
@@ -269,7 +289,8 @@ function _updateUploadStatus(ctx, fileName, status) {
 function getColumnsByNameIndex(row, colLen) {
     const colHeaderIndex = {};
     for (let i = 0; i < colLen; i++) {
-        let colName = row.getCell(i + 1).value.replace(/ /g, "_").toLowerCase();
+        let colName = row.getCell(i + 1).value;
+        colName = (colName) ? colName.replace(/ /g, "_").toLowerCase() : colName;
         colHeaderIndex[colName] = i + 1;
     }
     return colHeaderIndex;
