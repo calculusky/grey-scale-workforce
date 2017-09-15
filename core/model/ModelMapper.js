@@ -12,6 +12,7 @@ const KNEX = require('knex')({
 
 const DomainObject = require('./DomainObject');
 const Util = require('../Utility/MapperUtil');
+const Utils = require('../Utility/Utils');
 const Log = require('../logger.js');
 const DomainFactory = require('../../modules/DomainFactory');
 
@@ -92,8 +93,10 @@ class ModelMapper {
      * @param fields
      * @param offset
      * @param limit
+     * @param orderBy
+     * @param order
      */
-    findDomainRecord({by=this.primaryKey, value, fields=["*"]}, offset = 0, limit = 10) {
+    findDomainRecord({by=this.primaryKey, value, fields=["*"]}, offset = 0, limit = 10, orderBy="created_at", order="asc") {
         if (!by) throw new ReferenceError(`${this.constructor.name} must override the primary key field.`);
         if (by !== "*_all" && !value) throw new TypeError("The parameter value must be set for this operation");
         if (!this.tableName) throw new ReferenceError(`${this.constructor.name} must override the tableName field.`);
@@ -102,7 +105,8 @@ class ModelMapper {
         const DomainObject = DomainFactory.build(this.domainName);
         let domainObject = new DomainObject();
 
-        let resultSets = KNEX.select(fields).from(this.tableName).limit(parseInt(limit)).offset(parseInt(offset));
+        let resultSets = KNEX.select(fields).from(this.tableName).limit(parseInt(limit)).offset(parseInt(offset))
+            .orderBy(orderBy, order);
         //if this query is based on a condition:e.g where clause
         resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
 
@@ -159,7 +163,12 @@ class ModelMapper {
             return Promise.reject(error);
         }
         dbData = filteredDomain.serialize(filteredDomain);
-        
+
+        //lets  just add created_at and updated_at here - TODO we should check that this model supports timestamps
+        let date = new Date();
+        dbData['created_at'] = Utils.date.dateToMysql(date, "YYYY-MM-DD H:m:s");
+        dbData['updated_at'] = Utils.date.dateToMysql(date, "YYYY-MM-DD H:m:s");
+
         let resultSets = KNEX.insert(dbData).into(this.tableName);
         return resultSets.then(result => {
             domainObject.serialize(dbData, "client");

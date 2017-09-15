@@ -46,7 +46,7 @@ class Context {
                 delete group['parent_group_id'];
                 groups[group.id] = group;
             });
-            storage.setItem("groups", groups);
+            this.persistence.setItem("groups", groups);
         });
 
         //Now lets get work order types
@@ -56,7 +56,7 @@ class Context {
             results.forEach(type=> {
                 workTypes[type.id] = type;
             });
-            storage.setItem("work_types", workTypes);
+            this.persistence.setItem("work_types", workTypes);
         });
 
         //Lets load all assets types
@@ -66,7 +66,7 @@ class Context {
             results.forEach(type=> {
                 assetTypes[type.id] = type;
             });
-            storage.setItem("asset_types", assetTypes);
+            this.persistence.setItem("asset_types", assetTypes);
         });
     }
 

@@ -16,19 +16,6 @@ class CustomerService {
     }
 
     getCustomers(value, by = "account_no", who = {api: -1}, offset = 0, limit = 10) {
-        // if (!value || "" + value + "".trim() == '') {
-        //     //Its important that all queries are streamlined to majorly for each business
-        //     value = who.api;
-        //     by = "api_instance_id";
-        // } else if (value) {
-        //     const temp = value;
-        //     value = {};
-        //     value[by] = temp;
-        //     value['api_instance_id'] = who.api;
-        //     by = "*_and";
-        // }
-        
-
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         var executor = (resolve, reject)=> {
             CustomerMapper.findDomainRecord({by, value}, offset, limit)
@@ -36,16 +23,16 @@ class CustomerService {
                     let customers = result.records;
                     let processed = 0;
                     let rowLen = customers.length;
-
-                    customers.forEach(customer=> {
-                        customer.user().then(res=> {
-                            customer.user = res.records.shift();
-                            if (++processed == rowLen)
-                                return resolve(Util.buildResponse({data: {items: result.records}}));
-                        }).catch(err=> {
-                            return reject(err)
-                        })
-                    })
+                    return resolve(Util.buildResponse({data: {items: customers}}));
+                    // customers.forEach(customer=> {
+                    //     customer.user().then(res=> {
+                    //         customer.user = res.records.shift();
+                    //         if (++processed == rowLen)
+                    //             return resolve(Util.buildResponse({data: {items: result.records}}));
+                    //     }).catch(err=> {
+                    //         return reject(err)
+                    //     })
+                    // })
                 })
                 .catch(err=> {
                     return reject(err);
@@ -80,7 +67,7 @@ class CustomerService {
      */
     searchCustomers(keyword) {
         const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
-        let fields = ['first_name', 'last_name', 'customer_type', 'meter_no', 'plain_address',
+        let fields = ['first_name', 'last_name', 'status', 'customer_type', 'meter_no', 'plain_address',
             'account_no', 'old_account_no'];
         let resultSets = this.context.database.select(fields).from('customers')
             .where('account_no', 'like', `%${keyword}%`).orWhere('meter_no', 'like', `%${keyword}%`);

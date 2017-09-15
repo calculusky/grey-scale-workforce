@@ -135,7 +135,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/limit'
      */
     app.get('/customers/:account_no', urlencodedParser, (req, res)=> {
-        return API.customers().getCustomers(req.params['account_no'], "id")
+        return API.customers().getCustomers(req.params['account_no'])
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

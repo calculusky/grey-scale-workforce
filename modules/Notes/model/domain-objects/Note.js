@@ -41,7 +41,7 @@ class Note extends DomainObject {
 
     rules() {
         return {
-            relation_id: Number,
+            relation_id: 'numeric',
             module: String,
             note: String,
             note_by: Number

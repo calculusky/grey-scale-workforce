@@ -5,7 +5,7 @@
 const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
-module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
+module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
     app.use('/notes', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
@@ -31,7 +31,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        schema:
      *          $ref: '#/definitions/postNoteInput'
      */
-    app.post('/notes', jsonParser, (req, res)=> {
+    app.post('/notes', multiPart.array("files", 5), (req, res)=> {
         console.log(req.body);
         API.notes().createNote(req.body, req.who)
             .then(({data, code})=> {

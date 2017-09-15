@@ -163,7 +163,7 @@ class NotificationService {
                                 NetworkUtils.exponentialBackOff(this.push({
                                     notification: payload.notification,
                                     to: (payload.registration_ids) ? payload.registration_ids[index] : payload.to
-                                }, true), 20, 0);
+                                }, API, true), 20, 0);
                             } else {
                                 return reject(false);
                             }

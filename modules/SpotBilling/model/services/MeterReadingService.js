@@ -32,7 +32,7 @@ class MeterReadingService {
         }
         const MeterReadingMapper = MapperFactory.build(MapperFactory.METER_READING);
         var executor = (resolve, reject)=> {
-            MeterReadingMapper.findDomainRecord({by, value}, offset, limit)
+            MeterReadingMapper.findDomainRecord({by, value}, offset, limit, 'read_date', "desc")
                 .then(result=> {
                     let meterReadings = result.records;
                     let processed = 0;

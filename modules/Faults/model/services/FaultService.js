@@ -2,6 +2,7 @@ const DomainFactory = require('../../../DomainFactory');
 const MapperFactory = require('../../../MapperFactory');
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
+const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validate-fields')();
 
 /**
@@ -56,10 +57,9 @@ class FaultService {
                         //its compulsory that we check that a record exist
                         let relatedModel = values.shift().records.shift();
                         if (relatedModel && isAsset) {
-                            fault['asset_name'] = relatedModel.asset_name;
+                            fault['relation_name'] = relatedModel.asset_name;
                         } else if (relatedModel) {
-                            fault['customer_name'] = `${relatedModel.first_name} ${relatedModel.last_name}`;
-                            fault['account_no'] = relatedModel.account_no;
+                            fault['relation_name'] = `${relatedModel.first_name} ${relatedModel.last_name}`;
                         }
                         if (++processed == rowLen)
                             return resolve(Util.buildResponse({data: {items: result.records}}));
@@ -86,7 +86,9 @@ class FaultService {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         body['api_instance_id'] = who.api;
         let fault = new Fault(body);
-
+        //if the issue date isn't set we are going to set it ourselves
+        if(!fault.issue_date) fault.issue_date = Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s");
+        
         let isValid = validate(fault.rules(), fault);
         if (!isValid) {
             return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));

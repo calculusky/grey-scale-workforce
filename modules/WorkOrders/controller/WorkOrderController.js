@@ -148,14 +148,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
     /**
      * @swagger
      * /work_orders/{id}/status/{statusId}:
-     *  get:
+     *  put:
      *    summary: "Update a Work Order status"
      *    description: "This can be used to retrieve work order based on their status conditions"
      *
      *    tags: ['Work Order']
      *    produces:
      *    - application/json
-     *    operationId: "getRequestByStatus"
+     *    operationId: "updateWorkOrderStatus"
      *    responses:
      *      '200':
      *        description: A list of Work Order
@@ -205,13 +205,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.get('/work_orders/user/:userId/status/:statusId', urlencodedParser, (req, res)=> {
         return res.send("Not yet implemented");
-        // API.workOrders().getTravelRequests({user_id:req.param("userId"), status:req.param("statusId")}, undefined, req.who)
-        //     .then(({data, code})=>{
-        //         return res.status(code).send(data);
-        //     })
-        //     .catch(({err, code})=>{
-        //         return res.status(code).send(err);
-        //     });
     });
 
 
@@ -248,6 +241,40 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
+
+    /**
+     * @swagger
+     * /work_orders/{id}/notes/{offset}/{limit}:
+     *   get:
+     *     summary: Gets Notes for a Work Order
+     *     description: ''
+     *     tags: [Work Order]
+     *     produces:
+     *     - application/json
+     *     operationId: getWorkOrderNotes
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getNoteOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - in: path
+     *       name: id
+     *       required: true
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/work_orders/:id/notes/:offset?/:limit?', urlencodedParser, (req, res)=> {
+        console.log("Fetch note");
+        return API.notes().getNotes(req.params['id'], "work_orders", "relation_id", req.who, req.params.offset||0, req.params.limit||10)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
 
     /**
      * @swagger

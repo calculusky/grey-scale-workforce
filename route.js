@@ -76,8 +76,9 @@ module.exports = function route(context) {
                     const body = req.body;
                     saveAt = `${saveAt}/attachments/${body.module}`
                 } else if (path == 'uploads') {
+                    console.log(req.body);
                     //for uploads the upload type is important
-                    saveAt = `${saveAt}/uploads/${req.body['upload_type']}`
+                    saveAt = `${saveAt}/uploads/${req.body['upload_type']}`;
                 }
             }
             cb(null, saveAt);

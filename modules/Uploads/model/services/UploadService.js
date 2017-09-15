@@ -51,6 +51,7 @@ class UploadService {
      * @param API
      */
     uploadFile(body = {}, who = {}, files = [], API) {
+        console.log(body);
         const Upload = DomainFactory.build(DomainFactory.UPLOAD);
         // let upload = new Upload(body);
         const upload_type = body.upload_type;

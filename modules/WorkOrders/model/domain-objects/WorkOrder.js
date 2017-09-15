@@ -48,6 +48,22 @@ class WorkOrder extends DomainObject {
         }
     }
 
+    /**
+     * Returns the associated Asset for this Work Order
+     * @returns {Promise}
+     */
+    asset() {
+        return this.relations().belongsTo("Asset", 'relation_id');
+    }
+
+
+    /**
+     * Returns the customer this Work Order was created for
+     * @returns {*}
+     */
+    customer() {
+        return this.relations().belongsTo("Customer", 'relation_id', 'account_no');
+    }
 }
 
 module.exports = WorkOrder;

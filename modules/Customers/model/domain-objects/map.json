@@ -6,6 +6,7 @@
   "first_name": "first_name",
   "last_name": "last_name",
   "email": "email",
+  "group_id": "group_id",
   "customer_name": "customer_name",
   "status": "status",
   "address_id": "address_id",

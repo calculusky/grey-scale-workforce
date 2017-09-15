@@ -104,7 +104,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.get('/faults/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
         // let assignedTo = {id: req.params['user_id']};
-        return API.faults().getFaults(`{"id":${req.params['user_id']}}`, "assigned_to->[]", req.who, req.params.offset, req.params.limit)
+        return API.faults().getFaults(`{"id":${req.params['user_id']}}`, "assigned_to->[]", req.who, req.params.offset||0, req.params.limit||10)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

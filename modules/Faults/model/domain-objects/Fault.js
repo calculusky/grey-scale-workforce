@@ -19,7 +19,6 @@ class Fault extends DomainObject {
         return [
             'summary',
             'issue_date',
-            'status',
             'priority',
             'related_to',
             'relation_id',
@@ -48,7 +47,7 @@ class Fault extends DomainObject {
             related_to: String,
             relation_id: String,
             category_id: 'numeric',
-            status: 'numeric'
+            'status?': 'numeric'
         };
     }
 
