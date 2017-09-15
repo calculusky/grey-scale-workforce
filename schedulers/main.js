@@ -14,13 +14,13 @@ module.exports = function main(context) {
     console.log('* * * * * * Registered CronJobs');
 
     //schedule job for running createDelinquencyList
-    cron.scheduleJob('*/1 * * * *', main.createDelinquencyList.bind(this));
+    cron.scheduleJob('*/15 * * * *', main.createDelinquencyList.bind(this));
 
     //schedule job for creating meter readings
     // cron.scheduleJob('*/1 * * * *', main.createMeterReadings.bind(this));
 
     // schedule job for creating meter readings
-    cron.scheduleJob('*/1 * * * *', main.createCustomers.bind(this));
+    cron.scheduleJob('*/30 * * * *', main.createCustomers.bind(this));
 };
 
 /**
