@@ -12,16 +12,17 @@ beforeAll(()=> {
         relation_id: "2",
         labels: '["work"]',
         summary: "Fix it",
-        status: 1,
+        status: '1',
         'issue_date':'2017/10/5'
     }).then(data=> {
         workOrder = data.data.data;
+        console.log(data);
     }).catch(err=>{
         console.log(err);
     });
 });
 
-it('Should resolve getWorkOrders to be defined', ()=> {
+test('Should resolve getWorkOrders to be defined', ()=> {
     return expect(API.workOrders().getWorkOrders()).resolves.toBeDefined();
 });
 
@@ -32,5 +33,5 @@ it('Should resolve getWorkOrders to be defined', ()=> {
 
 
 afterAll(()=> {
-    // return API.workOrders().deleteWorkOrder("relation_id", "2");
+    return API.workOrders().deleteWorkOrder("relation_id", "2");
 });
