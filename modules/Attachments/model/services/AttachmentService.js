@@ -63,14 +63,26 @@ class AttachmentService {
      */
     createAttachment(body = {}, who = {}, files = [], API) {
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
-        body['api_instance_id'] = who.api;
-        let attachment = new Attachment(body);
-
+        let attachments = [];
+        if (files.length) {
+            files.forEach(file=>attachments.push(new Attachment({
+                module: `${body.module}`,
+                relation_id: `${body.relation_id}`,
+                file_name: file.filename,
+                file_size: file.size,
+                file_path: file.path,
+                file_type: file.mimetype,
+                created_by: who.sub
+            })));
+        } else {
+            body['created_by'] = who.sub;
+            attachments.push(new Attachment(body));
+        }
         //Get Mapper
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        return AttachmentMapper.createDomainRecord(attachment).then(attachment=> {
+        return AttachmentMapper.createDomainRecord(null, attachments).then(attachment=> {
             if (!attachment) return Promise.reject();
-            return Util.buildResponse({data: attachment});
+            return Util.buildResponse({data: Array.isArray(attachment) ? attachment.pop() : attachment});
         });
     }
 
@@ -83,7 +95,6 @@ class AttachmentService {
      */
     addIncomingAttachments(body = {}, who = {}, files = [], API) {
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
-        console.log(body);
         //for incoming request , the module name and request-id is required and there must be a file
         if (!body.module || !body['request_id'] || files.length == 0) {
             return Promise.reject(Util.buildResponse({
@@ -95,7 +106,7 @@ class AttachmentService {
         let requestId = body['request_id'];
 
         if (!this.context.getIncoming(requestId)) {
-            console.log("Not REquest ID found");
+            console.log("Not Request ID found");
             return Promise.reject(Util.buildResponse({
                 status: "fail",
                 data: {message: 'Request ID Not Found'}
@@ -114,9 +125,10 @@ class AttachmentService {
         })));
 
         let executor = (resolve, reject) => {
-            let processed = 0;
+            let processed = 0;files
             let rowLen = attachments.length;
             let attachmentIds = [];
+            //TODO do a multiple insert here rather than call a for-loop
             attachments.forEach(attachment=> {
                 this.createAttachment(attachment, who).then(response=> {
                     if (++processed == rowLen) {

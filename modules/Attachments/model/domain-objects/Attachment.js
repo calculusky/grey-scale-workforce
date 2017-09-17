@@ -19,6 +19,7 @@ class Attachment extends DomainObject {
         return [
             'relation_id',
             'module',
+            'created_by',
             'file_name',
             'file_size',
             'file_path',
@@ -44,6 +45,7 @@ class Attachment extends DomainObject {
     rules() {
         return {
             relation_id: Number,
+            attachment_by: 'numeric',
             module: String,
             file_path: String,
             file_type: String
@@ -52,7 +54,7 @@ class Attachment extends DomainObject {
 
 
     user() {
-        return this.relations().belongsTo("User", "attachment_by");
+        return this.relations().belongsTo("User", "created_by");
     }
 }
 
