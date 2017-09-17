@@ -59,10 +59,8 @@ class NoteService {
      */
     createNote(body = {}, who = {}) {
         const Note = DomainFactory.build(DomainFactory.NOTE);
-        body['api_instance_id'] = who.api;
-        console.log(who);
         let note = new Note(body);
-        note.note_by = who.sub;
+        note.created_by = who.sub;
         let isValid = validate(note.rules(), note);
         if (!isValid) {
             return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));

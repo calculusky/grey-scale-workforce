@@ -20,7 +20,7 @@ class Note extends DomainObject {
             'relation_id',
             'module',
             'note',
-            'note_by'
+            'created_by'
         ];
     }
 
@@ -44,13 +44,13 @@ class Note extends DomainObject {
             relation_id: 'numeric',
             module: String,
             note: String,
-            note_by: Number
+            created_by: Number
         };
     }
 
 
     user() {
-        return this.relations().belongsTo("User", "note_by");
+        return this.relations().belongsTo("User", "created_by");
     }
 }
 

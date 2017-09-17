@@ -36,7 +36,7 @@ class ModelMapper {
                 if (column.includes(keyName)) {
                     column = column.replace(keyName, '');
                     let colName = domainObject.getTableColumn(column);
-                    if(!colName) break;
+                    if (!colName) break;
                     switch (this.jsonFunction[keyName]) {
                         case 'JSON_CONTAINS':
                             console.log(typeof value);
@@ -62,7 +62,7 @@ class ModelMapper {
                     //support for json columns
                     if (col.includes('->')) {
                         //check if its sent as a json quoted string or not
-                        let isQuoted = val.substring(0, 1).indexOf("'")+1;
+                        let isQuoted = val.substring(0, 1).indexOf("'") + 1;
                         val = (isQuoted) ? val : `'${val}'`;
                         resultSets = this._(this).whereJson(col, val, resultSets, domainObject);
                     } else {
@@ -74,7 +74,7 @@ class ModelMapper {
             } else {
                 //if there are json expression in this column
                 if (column.includes('->')) {
-                    let isQuoted = value.substring(0, 1).indexOf("'")+1;
+                    let isQuoted = value.substring(0, 1).indexOf("'") + 1;
                     value = (isQuoted) ? value : `'${value}'`;
                     //we need to look for the json function that matches this query
                     resultSets = this._(this).whereJson(column, value, resultSets, domainObject);
@@ -96,7 +96,7 @@ class ModelMapper {
      * @param orderBy
      * @param order
      */
-    findDomainRecord({by=this.primaryKey, value, fields=["*"]}, offset = 0, limit = 10, orderBy="created_at", order="asc") {
+    findDomainRecord({by=this.primaryKey, value, fields=["*"]}, offset = 0, limit = 10, orderBy = "created_at", order = "asc") {
         if (!by) throw new ReferenceError(`${this.constructor.name} must override the primary key field.`);
         if (by !== "*_all" && !value) throw new TypeError("The parameter value must be set for this operation");
         if (!this.tableName) throw new ReferenceError(`${this.constructor.name} must override the tableName field.`);
@@ -133,46 +133,57 @@ class ModelMapper {
      * TODO handle multiple inserts
      * Inserts a new record to {@link DomainObject.tableName}
      * @param domainObject - An instance of DomainObject
+     * @param domainObjects
      * @returns {Promise.<DomainObject>|boolean}
      */
-    createDomainRecord(domainObject = {}) {
-        if (!(domainObject instanceof DomainObject)) throw new TypeError("The parameter domainObject must be " +
-            "an instance of DomainObject.");
+    createDomainRecord(domainObject = {}, domainObjects = []) {
+        if (domainObject) domainObjects.push(domainObject);
 
-        let dbData = domainObject.serialize();
+        //so there has to be a domain object
+        if (!domainObjects.length && !(domainObjects[0] instanceof DomainObject))
+            throw new TypeError("The parameter domainObject must be " + "an instance of DomainObject.");
 
-        //First check that the required fields are specified
-        var [valid, , cMsg] = Util.validatePayLoad(domainObject, domainObject.required());
+        let validateErrors = [];
+        let guardedErrors = [];
 
-
-        if (!valid) {
-            const error = Util.buildResponse({status: "fail", data: cMsg}, 400);
+        let dbData = domainObjects.map(domain => {
+            var [valid, , cMsg] = Util.validatePayLoad(domain, domain.required());
+            if (!valid) validateErrors.push(cMsg);
+            var [filteredDomain, guardedKeys] = Util.validateGuarded(domain, domain.guard());
+            if (Object.keys(filteredDomain).length == 0) {
+                guardedErrors.push(guardedKeys);
+            } else {
+                let date = new Date();
+                filteredDomain['created_at'] = Utils.date.dateToMysql(date, "YYYY-MM-DD H:m:s");
+                filteredDomain['updated_at'] = Utils.date.dateToMysql(date, "YYYY-MM-DD H:m:s");
+            }
+            return filteredDomain.serialize(filteredDomain);
+        });
+        //Stoppers
+        if (validateErrors.length) {
+            const error = Util.buildResponse({status: "fail", data: validateErrors}, 400);
             return Promise.reject(error);
         }
-
-        var [filteredDomain, guardedKeys] = Util.validateGuarded(domainObject, domainObject.guard());
-
-        //Added on 21st august 2017 - Paul
-        if (Object.keys(filteredDomain).length == 0) {
-            const error = Util.buildResponse({
-                status: "fail", data: {
-                    message: "Nothing to update. Some included fields are not allowed for update.",
-                    guarded: guardedKeys
-                }
-            }, 400);
-            return Promise.reject(error);
+        if (guardedErrors.length) {
+            //TODO return error
         }
-        dbData = filteredDomain.serialize(filteredDomain);
-
-        //lets  just add created_at and updated_at here - TODO we should check that this model supports timestamps
-        let date = new Date();
-        dbData['created_at'] = Utils.date.dateToMysql(date, "YYYY-MM-DD H:m:s");
-        dbData['updated_at'] = Utils.date.dateToMysql(date, "YYYY-MM-DD H:m:s");
-
+        // console.log(dbData);
         let resultSets = KNEX.insert(dbData).into(this.tableName);
         return resultSets.then(result => {
-            domainObject.serialize(dbData, "client");
-            domainObject.id = result[0];
+            //if this is a single insert lets return only the single object
+            //to avoid problems from other services expecting just a single domainObject as a return value
+            //services inserting multiples should however treat the result as an array
+            let id = result.shift();
+            if (domainObjects.length == 1) {
+                domainObject = domainObjects.shift().serialize(dbData.shift(), 'client');
+                domainObject.id = id;
+            } else {
+                domainObject = domainObjects.map(domain=> {
+                    domain = domain.serialize(dbData.shift(), 'client');
+                    domain.id = id++;
+                    return domain;
+                });
+            }
             return Promise.resolve(domainObject);
         }).catch(err=> {
             Log.e('createDomainRecord', err);

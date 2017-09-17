@@ -3,7 +3,7 @@
   "module": "module",
   "relation_id": "relation_id",
   "note": "note",
-  "note_by": "note_by",
+  "created_by": "created_by",
   "source": "source",
   "source_id": "source_id",
   "source_name": "source_name",
