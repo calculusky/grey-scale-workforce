@@ -33,7 +33,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.post('/attachments', multiPart.array('files', 8), (req, res)=> {
         console.log(req.body);
-        API.attachments().createAttachment(req.body, req.who)
+        API.attachments().createAttachment(req.body, req.who, req.files, API)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);
@@ -79,75 +79,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 return res.status(code).send(err);
             });
     });
-
-    // /**
-    //  * @swagger
-    //  * /attachments:
-    //  *   put:
-    //  *     summary: Updates a Attachment
-    //  *     description: ''
-    //  *     tags: [Attachment]
-    //  *     consumes:
-    //  *     - application/json
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: updateAttachment
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successfully Added
-    //  *     parameters:
-    //  *      - $ref: '#/parameters/sessionId'
-    //  *      - in: body
-    //  *        name: 'fault'
-    //  *        required: true
-    //  *        schema:
-    //  *          $ref: '#/definitions/postAttachmentInput'
-    //  */
-    // app.put('/attachments', jsonParser, (req, res)=> {
-    //     API.attachments().updateAttachment(req.body, req.who)
-    //         .then(({data, code})=> {
-    //             console.log(data);
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             console.log(code, err);
-    //             return res.status(code).send(err);
-    //         });
-    // });
-
-    //
-    // /**
-    //  * @swagger
-    //  * /attachments/user/{user_id}/{offset}/{limit}:
-    //  *   get:
-    //  *     summary: Gets attachments assigned to a user
-    //  *     description: ''
-    //  *     tags: [Attachment]
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: getAttachments
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successful
-    //  *         schema:
-    //  *           $ref: '#/definitions/getAttachmentOutput'
-    //  *     parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - in: path
-    //  *       name: user_id
-    //  *       required: true
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  */
-    // app.get('/attachments/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.attachments().getAttachments(req.params['user_id'], "note_by", req.who, req.params.offset, req.params.limit)
-    //         .then(({data, code})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status(code).send(err);
-    //         });
-    // });
+    
 
 
     /**
@@ -211,44 +143,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 return res.status(code).send(err);
             });
     });
-
-
-    // /**
-    //  * @swagger
-    //  * /attachments/{offset}/{limit}:
-    //  *   get:
-    //  *     summary: Gets List of attachments
-    //  *     description: ''
-    //  *     tags: [Attachment]
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: getAttachments
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successful
-    //  *         schema:
-    //  *           $ref: '#/definitions/getAttachmentOutput'
-    //  *     parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  */
-    // app.get('/attachments/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.attachments().getAttachments(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
-    //         .then(({data, code})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status(code).send(err);
-    //         });
-    // });
+    
 
     /**
      * @swagger
-     * /attachments/{id}:
+     * /attachments/{module}/{id}:
      *  delete:
-     *    summary: Deletes a Attachment
-     *    description: "Deletes a Attachment"
+     *    summary: Deletes an Attachment
+     *    description: "Deletes an Attachment"
      *    tags: [Attachment]
      *    produces:
      *    - application/json
@@ -260,8 +162,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/fault_id'
      */
-    app.delete('/attachments/:id', urlencodedParser, (req, res)=> {
-        API.attachments().deleteAttachment("id", req.params.id)
+    app.delete('/attachments/:module/:id', urlencodedParser, (req, res)=> {
+        API.attachments().deleteAttachment("id", req.params.id, req.params.module)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

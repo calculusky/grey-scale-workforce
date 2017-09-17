@@ -30,15 +30,24 @@ class AttachmentService {
         value = {[by]: value, "module": module};
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         var executor = (resolve, reject)=> {
-            AttachmentMapper.findDomainRecord({by, value}, offset, limit)
+            AttachmentMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
                 .then(result=> {
                     let attachments = result.records;
                     let processed = 0;
                     let rowLen = attachments.length;
                     attachments.forEach(attachment=> {
                         attachment.user().then(res=> {
-                            attachment.user = res.records.shift();
-                            delete attachment.user.password;
+                            attachment.user = res.records.shift() || {};
+                            if (attachment.user) {
+                                delete attachment.user.password;
+                                delete attachment.user.permissions;
+                                delete attachment.user.firebase_token;
+                                delete attachment.user.location;
+                                delete attachment.user.middle_name;
+                                delete attachment.user.email;
+                                delete attachment.user.created_at;
+                                delete attachment.user.updated_at;
+                            }
                             if (++processed == rowLen)
                                 return resolve(Util.buildResponse({data: {items: result.records}}));
                         }).catch(err=> {
@@ -125,7 +134,8 @@ class AttachmentService {
         })));
 
         let executor = (resolve, reject) => {
-            let processed = 0;files
+            let processed = 0;
+            files
             let rowLen = attachments.length;
             let attachmentIds = [];
             //TODO do a multiple insert here rather than call a for-loop
@@ -153,7 +163,6 @@ class AttachmentService {
      * @param res
      */
     fetchAttachedFile(module, fileName, who, res) {
-        console.log("module");
         let rootPath = this.context.config.storage;
         let modulePath = rootPath.routeStorage[module];
         if (!modulePath) {
@@ -163,7 +172,6 @@ class AttachmentService {
         if (modulePath.use_parent) {
             storagePath = `${modulePath.path}`;
         }
-        console.log(`${storagePath}/${fileName}`);
         return res.sendFile(`${storagePath}/${fileName}`, {root: rootPath.path});
     }
 
@@ -171,15 +179,17 @@ class AttachmentService {
      *
      * @param by
      * @param value
+     * @param module
      * @returns {*}
      */
-    deleteAttachment(by = "id", value) {
+    deleteAttachment(by = "id", value, module) {
+        value = {[by]: value, module};
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        return AttachmentMapper.deleteDomainRecord({by, value}).then(count=> {
+        return AttachmentMapper.deleteDomainRecord({value}).then(count=> {
             if (!count) {
-                return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
+                return Promise.reject(Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}}));
             }
-            return Util.buildResponse({data: {by, message: "Attachment deleted"}});
+            return Util.buildResponse({data: {[by]: value, message: "Attachment deleted"}});
         });
     }
 }
