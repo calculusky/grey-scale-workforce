@@ -135,7 +135,6 @@ class AttachmentService {
 
         let executor = (resolve, reject) => {
             let processed = 0;
-            files
             let rowLen = attachments.length;
             let attachmentIds = [];
             //TODO do a multiple insert here rather than call a for-loop
