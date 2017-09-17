@@ -47,7 +47,7 @@ module.exports.createDelinquencyList = function () {
                 //the first row returned is the column header so lets skip
                 if (rn == 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
                 else if (rn > 1) {
-                    
+
                     const currentBill = row.getCell(colHeaderIndex['current_bill']).value;
                     const netArrears = row.getCell(colHeaderIndex['net_arrears']).value;
                     const minAmount = (0.25 * netArrears) + currentBill;
@@ -56,6 +56,7 @@ module.exports.createDelinquencyList = function () {
                     console.log(currentBill);
                     let delinquency = {
                         "account_no": row.getCell(colHeaderIndex['account_no']).value,
+                        "old_account_no": row.getCell(colHeaderIndex['account_no']).value,
                         "customer_name": row.getCell(colHeaderIndex['customer_name']).value,
                         "current_bill": currentBill,
                         "arrears": row.getCell(colHeaderIndex['net_arrears']).value,
@@ -133,22 +134,24 @@ module.exports.createCustomers = function () {
                 else if (rn > 1) {
                     //so we should basically know the columns we are expecting since we provided the template
                     //lets build the customer data
-                    let status = (row.getCell(colHeaderIndex['status']).value.trim() == 'Active') ? 1 : 0;
+                    let status = (getRowValueOrEmpty(row, colHeaderIndex, 'status') == 'Active') ? 1 : 0;
                     let customer = {
-                        "account_no": row.getCell(colHeaderIndex['account_no']).value,
-                        "old_account_no": row.getCell(colHeaderIndex['old_account_no']).value,
-                        "meter_no": row.getCell(colHeaderIndex['meter_no']).value,
-                        "first_name": row.getCell(colHeaderIndex['first_name']).value,
-                        "last_name": row.getCell(colHeaderIndex['last_name']).value,
+                        "account_no": getRowValueOrEmpty(row, colHeaderIndex, 'account_no'),
+                        "old_account_no": getRowValueOrEmpty(row, colHeaderIndex, 'old_account_no'),
+                        "meter_no": getRowValueOrEmpty(row, colHeaderIndex, 'meter_no'),
+                        "first_name": getRowValueOrEmpty(row, colHeaderIndex, 'first_name'),
+                        "last_name": getRowValueOrEmpty(row, colHeaderIndex, 'last_name'),
                         "email": row.getCell(colHeaderIndex['email']).value.text,
-                        "customer_name": row.getCell(colHeaderIndex['customer_name']).value,
+                        "customer_name": getRowValueOrEmpty(row, colHeaderIndex, 'customer_name'),
                         status,
-                        "plain_address": row.getCell(colHeaderIndex['address']).value,
-                        "customer_type": row.getCell(colHeaderIndex['type']).value,
-                        "tariff": row.getCell(colHeaderIndex['tariff']).value,
+                        "plain_address": getRowValueOrEmpty(row, colHeaderIndex, 'address'),
+                        "customer_type": getRowValueOrEmpty(row, colHeaderIndex, 'customer_type'),
+                        "tariff": getRowValueOrEmpty(row, colHeaderIndex, 'tariff'),
                         "created_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
                         "updated_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
                     };
+
+                    //ORGANIZE THE BUSINESS UNIT HERE AND DT
 
                     //get it ready for batch insert
                     customers.push(customer);
@@ -286,11 +289,18 @@ function _updateUploadStatus(ctx, fileName, status) {
         }).then(r=>console.log());
 }
 
+
+//Helper functions
+function getRowValueOrEmpty(row, headers, key) {
+    let _row = row.getCell(headers[key]);
+    return (_row) ? _row.value : "";
+}
+
 function getColumnsByNameIndex(row, colLen) {
     const colHeaderIndex = {};
     for (let i = 0; i < colLen; i++) {
         let colName = row.getCell(i + 1).value;
-        colName = (colName) ? colName.replace(/ /g, "_").toLowerCase() : colName;
+        colName = (colName) ? colName.replace(/ /g, "_").toLowerCase() : "";
         colHeaderIndex[colName] = i + 1;
     }
     return colHeaderIndex;
