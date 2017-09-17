@@ -29,11 +29,13 @@ class NoteService {
                     notes.forEach(note=> {
                         note.user().then(res=> {
                             note.user = res.records.shift();
-                            delete note.user.password;
-                            delete note.user.permissions;
-                            delete note.user.firebase_token;
-                            delete note.user.location;
-                            delete note.user.middle_name;
+                            if(note.user) {
+                                delete note.user.password;
+                                delete note.user.permissions;
+                                delete note.user.firebase_token;
+                                delete note.user.location;
+                                delete note.user.middle_name;
+                            }
                             delete note.source;
                             delete note.source_id;
                             delete note.source_name;
