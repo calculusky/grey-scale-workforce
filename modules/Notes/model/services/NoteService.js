@@ -19,7 +19,6 @@ class NoteService {
 
     getNotes(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         value = {[by]: value, "module": module};
-        console.log(value);
         const NoteMapper = MapperFactory.build(MapperFactory.NOTE);
         var executor = (resolve, reject)=> {
             NoteMapper.findDomainRecord({by, value}, offset, limit)

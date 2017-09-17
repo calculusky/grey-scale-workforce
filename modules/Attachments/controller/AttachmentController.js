@@ -80,47 +80,81 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-    /**
-     * @swagger
-     * /attachments:
-     *   put:
-     *     summary: Updates a Attachment
-     *     description: ''
-     *     tags: [Attachment]
-     *     consumes:
-     *     - application/json
-     *     produces:
-     *     - application/json
-     *     operationId: updateAttachment
-     *     responses:
-     *       '200':
-     *         description: Successfully Added
-     *     parameters:
-     *      - $ref: '#/parameters/sessionId'
-     *      - in: body
-     *        name: 'fault'
-     *        required: true
-     *        schema:
-     *          $ref: '#/definitions/postAttachmentInput'
-     */
-    app.put('/attachments', jsonParser, (req, res)=> {
-        API.attachments().updateAttachment(req.body, req.who)
-            .then(({data, code})=> {
-                console.log(data);
-                return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
-                console.log(code, err);
-                return res.status(code).send(err);
-            });
-    });
+    // /**
+    //  * @swagger
+    //  * /attachments:
+    //  *   put:
+    //  *     summary: Updates a Attachment
+    //  *     description: ''
+    //  *     tags: [Attachment]
+    //  *     consumes:
+    //  *     - application/json
+    //  *     produces:
+    //  *     - application/json
+    //  *     operationId: updateAttachment
+    //  *     responses:
+    //  *       '200':
+    //  *         description: Successfully Added
+    //  *     parameters:
+    //  *      - $ref: '#/parameters/sessionId'
+    //  *      - in: body
+    //  *        name: 'fault'
+    //  *        required: true
+    //  *        schema:
+    //  *          $ref: '#/definitions/postAttachmentInput'
+    //  */
+    // app.put('/attachments', jsonParser, (req, res)=> {
+    //     API.attachments().updateAttachment(req.body, req.who)
+    //         .then(({data, code})=> {
+    //             console.log(data);
+    //             return res.status(code).send(data);
+    //         })
+    //         .catch(({err, code})=> {
+    //             console.log(code, err);
+    //             return res.status(code).send(err);
+    //         });
+    // });
 
-    
+    //
+    // /**
+    //  * @swagger
+    //  * /attachments/user/{user_id}/{offset}/{limit}:
+    //  *   get:
+    //  *     summary: Gets attachments assigned to a user
+    //  *     description: ''
+    //  *     tags: [Attachment]
+    //  *     produces:
+    //  *     - application/json
+    //  *     operationId: getAttachments
+    //  *     responses:
+    //  *       '200':
+    //  *         description: Successful
+    //  *         schema:
+    //  *           $ref: '#/definitions/getAttachmentOutput'
+    //  *     parameters:
+    //  *     - $ref: '#/parameters/sessionId'
+    //  *     - in: path
+    //  *       name: user_id
+    //  *       required: true
+    //  *     - $ref: '#/parameters/offset'
+    //  *     - $ref: '#/parameters/limit'
+    //  */
+    // app.get('/attachments/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
+    //     return API.attachments().getAttachments(req.params['user_id'], "note_by", req.who, req.params.offset, req.params.limit)
+    //         .then(({data, code})=> {
+    //             return res.status(code).send(data);
+    //         })
+    //         .catch(({err, code})=> {
+    //             return res.status(code).send(err);
+    //         });
+    // });
+
+
     /**
      * @swagger
-     * /attachments/user/{user_id}/{offset}/{limit}:
+     * /attachment/{module}/download/{fileName}:
      *   get:
-     *     summary: Gets attachments assigned to a user
+     *     summary: Gets attachments of a module record
      *     description: ''
      *     tags: [Attachment]
      *     produces:
@@ -139,8 +173,37 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/attachments/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        return API.attachments().getAttachments(req.params['user_id'], "note_by", req.who, req.params.offset, req.params.limit)
+    app.get('/attachment/:module/download/:fileName', urlencodedParser, (req, res)=> {
+        return API.attachments().fetchAttachedFile(req.params['module'], req.params['fileName'], req.who, res);
+    });
+
+
+    /**
+     * @swagger
+     * /attachments/{module}/{relation_id}/{offset}/{limit}:
+     *   get:
+     *     summary: Gets attachments of a module record
+     *     description: ''
+     *     tags: [Attachment]
+     *     produces:
+     *     - application/json
+     *     operationId: getAttachments
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getAttachmentOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - in: path
+     *       name: user_id
+     *       required: true
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/attachments/:module/:relation_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
+        return API.attachments().getAttachments(req.params['relation_id'], req.params['module'],
+            'relation_id', req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

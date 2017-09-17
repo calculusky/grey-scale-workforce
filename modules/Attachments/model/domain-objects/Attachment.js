@@ -52,7 +52,7 @@ class Attachment extends DomainObject {
 
 
     user() {
-        return this.relations().belongsTo("User", "note_by");
+        return this.relations().belongsTo("User", "attachment_by");
     }
 }
 

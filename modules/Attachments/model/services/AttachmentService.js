@@ -27,14 +27,7 @@ class AttachmentService {
      * @returns {Promise}
      */
     getAttachments(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
-        if (!value || "" + value + "".trim() == '') {
-            //Its important that all queries are streamlined to majorly for each business
-            value = who.api;
-            by = "api_instance_id";
-        } else if (value) {
-            value = {[by]: value, 'module': module, 'api_instance_id': who.api};
-            by = "*_and";
-        }
+        value = {[by]: value, "module": module};
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         var executor = (resolve, reject)=> {
             AttachmentMapper.findDomainRecord({by, value}, offset, limit)
@@ -51,7 +44,8 @@ class AttachmentService {
                         }).catch(err=> {
                             return reject(err)
                         })
-                    })
+                    });
+                    if (!rowLen) return resolve(Util.buildResponse({data: {items: attachments}}));
                 })
                 .catch(err=> {
                     return reject(err);
@@ -96,12 +90,12 @@ class AttachmentService {
                 status: "fail",
                 data: {message: 'Nothing to do'}
             }, 400));
-            
+
         }
         let requestId = body['request_id'];
 
         if (!this.context.getIncoming(requestId)) {
-            console.log("Not REquest ID found")
+            console.log("Not REquest ID found");
             return Promise.reject(Util.buildResponse({
                 status: "fail",
                 data: {message: 'Request ID Not Found'}
@@ -137,6 +131,28 @@ class AttachmentService {
             });
         };
         return new Promise(executor);
+    }
+
+    /**
+     * Used for downloading the attachment file
+     * @param module
+     * @param fileName
+     * @param who
+     * @param res
+     */
+    fetchAttachedFile(module, fileName, who, res) {
+        console.log("module");
+        let rootPath = this.context.config.storage;
+        let modulePath = rootPath.routeStorage[module];
+        if (!modulePath) {
+            return res.sendStatus(404);//return an error
+        }
+        let storagePath = "";
+        if (modulePath.use_parent) {
+            storagePath = `${modulePath.path}`;
+        }
+        console.log(`${storagePath}/${fileName}`);
+        return res.sendFile(`${storagePath}/${fileName}`, {root: rootPath.path});
     }
 
     /**
