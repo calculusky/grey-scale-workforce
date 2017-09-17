@@ -167,7 +167,6 @@ class ModelMapper {
         if (guardedErrors.length) {
             //TODO return error
         }
-        // console.log(dbData);
         let resultSets = KNEX.insert(dbData).into(this.tableName);
         return resultSets.then(result => {
             //if this is a single insert lets return only the single object
@@ -256,19 +255,14 @@ class ModelMapper {
 
         if (typeof softDelete === 'boolean' && softDelete) {
             domainObject[updateCol] = 1;
-            domainObject[dateDeletedCol] = Date.now();//TODO parse date to mysql date
+            domainObject[dateDeletedCol] = Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s");
             return this.updateDomainRecord({by, value, domainObject});
         }
 
         let resultSets = KNEX.table(this.tableName).delete();
 
-        if (by !== ModelMapper._all && by !== ModelMapper._andWhere) {
-            resultSets = resultSets.where(domainObject.getTableColumn(by), value);
-        } else if (by === ModelMapper._andWhere) {
-            //TODO test that value is an object
-            resultSets = resultSets.where(domainObject.serialize(value));
-        }
-
+        resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
+ 
         return resultSets
             .then(itemsDeleted=> {
                 return Promise.resolve(itemsDeleted);
@@ -280,10 +274,7 @@ class ModelMapper {
             });
     }
 
-
-    whereJsonHasAny(column, value, moreWhere) {
-
-    }
+    
 
     /**
      * Sub-classes MUST override this method and return
