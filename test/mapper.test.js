@@ -96,7 +96,7 @@ it("should reject if the required fields for this domain isn't complete.", ()=> 
     expect.assertions(1);
     return expect(modelMapper.createDomainRecord(user)).rejects.toBeDefined();
 });
-
+//-----------------
 // it("should reject if the required fields for this domain isn't complete.", ()=> {
 //     const User = require('../modules/Users/model/domain-objects/User');
 //     let user = new User({
@@ -113,7 +113,7 @@ it("should reject if the required fields for this domain isn't complete.", ()=> 
 //     return expect(modelMapper.createDomainRecord(user)).rejects.toBeDefined();
 // });
 
-///----
+///----------------------------------------------
 it("updateDomainRecord:Should throw error if the by is undefined", ()=> {
     modelMapper.primaryKey = undefined;
     expect(()=> {
@@ -168,7 +168,7 @@ it("updateDomainRecord:should Resolve and update the resource", ()=> {
 //---------------------------------------------------------------------------------------------------//
 it("deleteDomainRecord:should throw error if the primaryKey or the tableName isn't defined", ()=> {
     modelMapper.primaryKey = undefined;
-    modelMapper.tableName = "users";
+    modelMapper.tableName = "attachments";
     expect(()=> {
         modelMapper.deleteDomainRecord({});
     }).toThrow(/primary key/);
@@ -183,6 +183,6 @@ it("deleteDomainRecord:should throw error if the primaryKey or the tableName isn
 
 it("deleteDomainRecord:should delete a record from the DB", ()=> {
     modelMapper.primaryKey = "id";
-    modelMapper.tableName = "users";
-    expect(modelMapper.deleteDomainRecord({value: 3})).resolves.toEqual(1);
+    modelMapper.tableName = "attachments";
+    return expect(modelMapper.deleteDomainRecord({value: 26})).resolves.toEqual(1);
 });
