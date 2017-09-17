@@ -17,18 +17,18 @@ class UserService {
         return "userService";
     }
 
-    getUsers(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
-        if (!value || value.trim() == '') {
-            //Its important that all queries are streamlined majorly for each business
-            value = who.api;
-            by = "api_instance_id";
-        } else if (value) {
-            const temp = value;
-            value = {};
-            value[by] = temp;
-            value['api_instance_id'] = who.api;
-            by = "*_and";
-        }
+    getUsers(value='?', by = "id", who = {api: -1}, offset = 0, limit = 10) {
+        // if (!value || value.trim() == '') {
+        //     //Its important that all queries are streamlined majorly for each business
+        //     value = who.api;
+        //     by = "api_instance_id";
+        // } else if (value) {
+        //     const temp = value;
+        //     value = {};
+        //     value[by] = temp;
+        //     value['api_instance_id'] = who.api;
+        //     by = "*_and";
+        // }
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         return UserMapper.findDomainRecord({by, value})
             .then(result=> {
