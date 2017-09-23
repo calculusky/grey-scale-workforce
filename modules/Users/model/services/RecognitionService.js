@@ -68,8 +68,8 @@ class RecognitionService {
         return new Promise(executor);
     }
 
-    logout(who) {
-        this.context.database.update()
+    logout(body, who, API) {
+        // API.users().unRegisterFcmToken();
     }
 
     /**

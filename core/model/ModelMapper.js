@@ -25,7 +25,8 @@ class ModelMapper {
     constructor(context) {
         this.context = context;
         this.jsonFunction = {
-            '->[]': 'JSON_CONTAINS'//check mysql implementation
+            '->[]': 'JSON_CONTAINS',//check mysql implementation
+            '->[+]': 'JSON_ARRAY_APPEND'
         };
 
         this._(this).whereJson = (column, value, resultSets, domainObject)=> {
@@ -44,6 +45,11 @@ class ModelMapper {
                                 KNEX.raw(`${this.jsonFunction[keyName]}(${colName}, ${value})`)
                             );
                             break;
+                        case 'JSON_ARRAY_APPEND':
+                            // resultSets = resultSets.where(
+                            //     KNEX.raw(`${this.jsonFunction[keyName]}(${colName}, '$' ,${value})`)
+                            // );
+                            break;
                         default:
                     }
                     break;
@@ -51,7 +57,7 @@ class ModelMapper {
             }
             return resultSets;
         };
-
+        
         this._(this).buildWhere = (column, value = null, resultSets, domainObject)=> {
             if (!value) return resultSets;
             if (value && typeof value == 'object') {
@@ -109,7 +115,6 @@ class ModelMapper {
             .orderBy(orderBy, order);
         //if this query is based on a condition:e.g where clause
         resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
-
         let executor = (resolve, reject)=> {
             resultSets
                 .then(rows=> {
@@ -262,7 +267,7 @@ class ModelMapper {
         let resultSets = KNEX.table(this.tableName).delete();
 
         resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
- 
+
         return resultSets
             .then(itemsDeleted=> {
                 return Promise.resolve(itemsDeleted);
@@ -274,7 +279,6 @@ class ModelMapper {
             });
     }
 
-    
 
     /**
      * Sub-classes MUST override this method and return

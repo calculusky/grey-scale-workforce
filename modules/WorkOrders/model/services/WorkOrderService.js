@@ -39,9 +39,13 @@ class WorkOrderService {
                     let processed = 0;
                     let workTypes = this.context.persistence.getItemSync("work_types");
                     workOrders.forEach(workOrder=> {
-                        workOrder['type_name'] = workTypes[workOrder.type_id].name;
+                        let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
                         let promises = [];
                         let isAsset = workOrder['related_to'] == 'assets';
+                        
+                        promises.push((workType.toLowerCase() == "disconnection")
+                            ? workOrder.disconnection() : workOrder.reconnection());
+                        
                         promises.push((isAsset) ? workOrder.asset() : workOrder.customer());
 
                         Promise.all(promises).then(values=> {

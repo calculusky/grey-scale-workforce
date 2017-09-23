@@ -60,7 +60,6 @@ class NotificationService {
     sendNotification(body = {}, who = {}, API) {
         const Notification = DomainFactory.build(DomainFactory.NOTIFICATION);
         let notification = new Notification(body);
-
         let isValid = validate(notification.rules(), notification);
 
         if (!isValid) {
@@ -85,9 +84,13 @@ class NotificationService {
             resultSet = (i == 0) ? resultSet.where('id', id) : resultSet.orWhere('id', id);
             if (++processed == userIds.length) {
                 resultSet.then(results=> {
-                    fcmTokens = results.map(tokens=> {
-                        let token = tokens['fire_base_token'];
-                        if (token) return token;
+                    // fcmTokens = results.map(tokens=> {
+                    //     let token = tokens['fire_base_token'];
+                    //     if (token) return token;
+                    // });
+                    fcmTokens = results.reduce((accumulator, cVal)=> {
+                        //we should however check if the value is an array to avoid un wanted errors
+                        return accumulator['fire_base_token'].concat(cVal['fire_base_token']);
                     });
                     //Now lets do the actual notification
                     let payload = {
@@ -96,15 +99,18 @@ class NotificationService {
                             body: notification.message
                         },
                         data: {
-                            type:notification.type
+                            type: notification.type
                         },
                         registration_ids: fcmTokens
                     };
+                    console.log(payload);
                     this.push(payload, API);
                 });
             }
         });
-
+        if (userIds.length == 0) {
+            return Promise.resolve(Util.buildResponse({data: {message: "Nothing to do"}}));
+        }
         // Get Mapper
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
         return NotificationMapper.createDomainRecord(notification).then(n => Util.buildResponse({data: {items: n}}));
@@ -153,7 +159,8 @@ class NotificationService {
                             //update the old registration id
                             let oldReg = (payload.registration_ids) ? payload.registration_ids[index] : payload.to;
                             //Update the Old Token
-                            API.users().updateUser('firebase_token', oldReg, {'firebase_token': err['registration_id']});
+                            // API.users().updateUser('firebase_token', oldReg, {'firebase_token': err['registration_id']});
+                            API.users().unRegisterFcmToken(oldReg, err['registration_id']);
                             if (retrying) return resolve();
                         }
                     } else {
@@ -173,7 +180,8 @@ class NotificationService {
                             if (retrying) return resolve();
                         } else if (err.error === "NotRegistered") {
                             let oldReg = (payload.registration_ids) ? payload.registration_ids[index] : payload.to;
-                            API.users().updateUser('firebase_token', oldReg, {'firebase_token': ''});
+                            // API.users().updateUser('firebase_token', oldReg, {'firebase_token': ''});
+                            API.users().unRegisterFcmToken(oldReg);
                             if (retrying) return resolve();
                         }
                     }

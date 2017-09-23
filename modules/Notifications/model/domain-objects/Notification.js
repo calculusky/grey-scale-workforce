@@ -44,7 +44,7 @@ class Notification extends DomainObject {
             type: String,
             message: String,
             'status?': 'numeric',
-            from: String,
+            from: Number,
             to: '*'
         };
     }

@@ -42,6 +42,8 @@ class DomainFactory {
                     return require('./Notifications/model/domain-objects/Notification');
                 case DomainFactory.UPLOAD:
                     return require('./Uploads/model/domain-objects/Upload');
+                case DomainFactory.DISCONNECTION_ORDER:
+                    return require('./DisconnectionOrders/model/domain-objects/DisconnectionOrder');
                 
             }
         }catch (e){
@@ -64,5 +66,6 @@ DomainFactory.CUSTOMER = "Customer";
 DomainFactory.METER_READING = "MeterReading";
 DomainFactory.NOTIFICATION = "Notification";
 DomainFactory.UPLOAD = "Upload";
+DomainFactory.DISCONNECTION_ORDER = "DisconnectionOrder";
 
 module.exports = DomainFactory;

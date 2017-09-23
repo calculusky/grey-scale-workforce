@@ -70,7 +70,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.get('/notifications/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
         let assignedTo = {id: req.params['user_id']};
-        return API.notifications().getNotifications(`{"id":${req.params['user_id']}}`, "assigned_to->[]", req.who, req.params.offset, req.params.limit)
+        return API.notifications().getNotifications(`{"id":${req.params['user_id']}}`, "to->[]", req.who, req.params.offset, req.params.limit)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -78,38 +78,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 return res.status(code).send(err);
             });
     });
-    
 
-
-    // /**
-    //  * @swagger
-    //  * /notifications/{offset}/{limit}:
-    //  *   get:
-    //  *     summary: Gets List of notifications
-    //  *     description: ''
-    //  *     tags: [Notification]
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: getNotifications
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successful
-    //  *         schema:
-    //  *           $ref: '#/definitions/getNotificationOutput'
-    //  *     parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  */
-    // app.get('/notifications/:id', urlencodedParser, (req, res)=> {
-    //     return API.notifications().getNotifications(req.params['id'], "id")
-    //         .then(({data, code})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status((code) ? code : 500).send((err) ? err : "Internal Server Error")
-    //         });
-    // });
 
     /**
      * @swagger

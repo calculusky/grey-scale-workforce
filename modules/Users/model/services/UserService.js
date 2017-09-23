@@ -85,10 +85,48 @@ class UserService {
                 if (result.changedRows > 0) return Util.buildResponse({data: user});
                 //lets return error if nothing happened
                 return Promise.reject(Util.buildResponse({status: "fail", data: user}, 404));
-            }).catch(err=>{
+            }).catch(err=> {
                 const error = Util.buildResponse(Util.getMysqlError(err), 400);
                 return Promise.reject(error)
             });
+    }
+
+    //don't expose
+    unRegisterFcmToken(fcmToken, newFcmToken) {
+        const executor = (resolve, reject)=> {
+            let column = "fire_base_token";
+            this.context.database.raw(`select id, username, fire_base_token from users where 
+            JSON_CONTAINS(fire_base_token, '["${fcmToken}"]')`)
+                .then(results=> {
+                    let users = results.shift();
+                    users.forEach(user=> {
+                        const tokens = user['fire_base_token'];
+                        const index = tokens.indexOf(fcmToken);
+                        //if the newFcmToken is supplied we are do a replace else a remove
+                        if (newFcmToken) {
+                            const updateValue = `JSON_REPLACE(${column}, '$[${index}]', ?) where users.id = ?`;
+                            this.context.database.raw(`update users set ${column} = ${updateValue}`, [newFcmToken, user.id])
+                                .then(result=> {
+                                    console.log(`Replace an FCMToken of user with id ${user.id}`);
+                                    return resolve(Util.buildResponse({data: user}));
+                                }).catch(err=> {
+                                return reject(err);
+                            });
+                        } else {
+                            const updateValue = `JSON_REMOVE(${column}, '$[${index}]') where users.id = ?`;
+                            this.context.database.raw(`update users set ${column} = ${updateValue}`, [user.id])
+                                .then(result=> {
+                                    console.log(`Remove an FCMToken from user with id ${user.id}`);
+                                    return resolve(Util.buildResponse({data: user}));
+                                }).catch(err=> {
+                                return reject(err);
+                            });
+                        }
+                    });
+                    if (users && users.length == 0) return resolve();
+                })
+        };
+        return new Promise(executor);
     }
 
     /**

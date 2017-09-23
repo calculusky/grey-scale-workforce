@@ -44,8 +44,9 @@ class MapperFactory {
                 return Utils.loadMapper(mapperStore, "../../modules/Notifications/model/mappers/NotificationMapper", context);
             case MapperFactory.UPLOAD:
                 return Utils.loadMapper(mapperStore, "../../modules/Uploads/model/mappers/UploadMapper", context);
-
-
+            case MapperFactory.DISCONNECTION_ORDER:
+                return Utils.loadMapper(mapperStore, "../../modules/DisconnectionOrders/model/mappers/DisconnectionOrderMapper", context);
+            
         }
     }
 }
@@ -60,6 +61,7 @@ MapperFactory.CUSTOMER = "Customer";
 MapperFactory.METER_READING = "MeterReading";
 MapperFactory.NOTIFICATION = "Notification";
 MapperFactory.UPLOAD = "Upload";
+MapperFactory.DISCONNECTION_ORDER = "DisconnectionOrder";
 
 
 module.exports = MapperFactory;
