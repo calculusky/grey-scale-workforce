@@ -61,8 +61,10 @@ class FaultService {
                         } else if (relatedModel) {
                             fault['relation_name'] = `${relatedModel.first_name} ${relatedModel.last_name}`;
                         }
-                        if (++processed == rowLen)
+                        if (++processed == rowLen){
+                            console.log(faults);
                             return resolve(Util.buildResponse({data: {items: result.records}}));
+                        }
                     }).catch(err=> {
                         return reject(err);
                     });
@@ -83,6 +85,7 @@ class FaultService {
      * @param API
      */
     createFault(body = {}, who = {}, files = [], API) {
+        console.log(body);
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         body['api_instance_id'] = who.api;
         let fault = new Fault(body);
@@ -110,6 +113,7 @@ class FaultService {
             if (!fault) return Promise.reject();
             attachments.forEach(attachment =>{ attachment['relation_id'] = fault.id; API.attachments().createAttachment(attachment)});
             if (fault.labels) fault.labels = JSON.parse(fault.labels);
+            if (fault.assigned_to) fault.assigned_to = JSON.parse(fault.assigned_to);
             return Util.buildResponse({data: fault});
         }).catch(err=>{
             return Promise.reject(err);
