@@ -17,7 +17,7 @@ class UserService {
         return "userService";
     }
 
-    getUsers(value='?', by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    getUsers(value = '?', by = "id", who = {api: -1}, offset = 0, limit = 10) {
         // if (!value || value.trim() == '') {
         //     //Its important that all queries are streamlined majorly for each business
         //     value = who.api;
@@ -76,16 +76,19 @@ class UserService {
         const User = DomainFactory.build(DomainFactory.USER);
         let user = new User();
         user.firebase_token = fcmToken;
-        const UserMapper = MapperFactory.build(MapperFactory.USER);
         //since only a user can register his/her own device then its compulsory to
         //take the user id from the decoded token
-        return UserMapper.updateDomainRecord({value: who.sub, domain: user}).then(result=> {
-            if (result.pop()) {
-                return Util.buildResponse({data: result.shift()});
-            } else {
-                return Promise.reject(Util.buildResponse({status: "fail", data: result.shift()}, 404));
-            }
-        });
+        return this.context.database.raw(`update users set fire_base_token = 
+        JSON_ARRAY_APPEND(fire_base_token, '$', ?) where users.id = ?`, [fcmToken, who.sub])
+            .then(results=> {
+                const result = results.shift();
+                if (result.changedRows > 0) return Util.buildResponse({data: user});
+                //lets return error if nothing happened
+                return Promise.reject(Util.buildResponse({status: "fail", data: user}, 404));
+            }).catch(err=>{
+                const error = Util.buildResponse(Util.getMysqlError(err), 400);
+                return Promise.reject(error)
+            });
     }
 
     /**
