@@ -232,7 +232,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.get('/work_orders/user/:userId/:offset?/:limit?', urlencodedParser, (req, res)=> {
         console.log(req.params);
-        API.workOrders().getWorkOrders(`{"id":${req.params['userId']}}`, "assigned_to->[]", req.who, req.params.offset, req.params.limit)
+        API.workOrders().getWorkOrders(`{"id":${req.params['userId']}}`, "assigned_to->[]", req.who, req.params.offset||0, req.params.limit||10)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

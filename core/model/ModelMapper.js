@@ -25,8 +25,7 @@ class ModelMapper {
     constructor(context) {
         this.context = context;
         this.jsonFunction = {
-            '->[]': 'JSON_CONTAINS',//check mysql implementation
-            '->[+]': 'JSON_ARRAY_APPEND'
+            '->[]': 'JSON_CONTAINS'//check mysql implementation
         };
 
         this._(this).whereJson = (column, value, resultSets, domainObject)=> {

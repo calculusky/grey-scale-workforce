@@ -38,6 +38,7 @@ class WorkOrderService {
                     let rowLen = workOrders.length;
                     let processed = 0;
                     let workTypes = this.context.persistence.getItemSync("work_types");
+                    console.log(results);
                     workOrders.forEach(workOrder=> {
                         let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
                         let promises = [];
@@ -59,6 +60,7 @@ class WorkOrderService {
                             if (++processed == rowLen)
                                 return resolve(Util.buildResponse({data: {items: workOrders}}));
                         }).catch(err=> {
+                            console.log(err);
                             return reject(err);
                         });
                     });
