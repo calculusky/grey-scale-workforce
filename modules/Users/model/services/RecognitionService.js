@@ -5,7 +5,7 @@
 
 
 "use strict";
-const MapperFactory = require('../../../MapperFactory');
+let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
 const jwt = require("jsonwebtoken");
 const Util = require('../../../../core/Utility/MapperUtil');
@@ -17,6 +17,7 @@ class RecognitionService {
 
     constructor(context) {
         this.context = context;
+        MapperFactory = this.context.modelMappers;
     }
 
     login(username, password) {

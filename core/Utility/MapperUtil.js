@@ -7,15 +7,15 @@ module.exports = function MapperUtil() {
 
 };
 
-module.exports.loadMapper = function (store = {}, path, context=null) {
-    if (store[path]) {
-        return store[path];
+module.exports.loadMapper = function (store = {}, path, key, context=null) {
+    if (store[key]) {
+        return store[key];
     }
     let mapper = require(path);
     if (mapper) {
-        store[path] = new mapper(context);
+        store[key] = new mapper(context);
     }
-    return store[path];
+    return store[key];
 };
 
 

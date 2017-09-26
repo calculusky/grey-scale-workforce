@@ -5,8 +5,11 @@
 
 const UserMapper = require('../modules/Users/model/mappers/UserMapper');
 const FaultMapper = require('../modules/Faults/model/mappers/FaultMapper');
-const modelMapper = new UserMapper();
-const faultMapper = new FaultMapper();
+const Context = require('../core/Context');
+const config = require("../config.json");
+const context = new Context(config);
+const modelMapper = new UserMapper(context);
+const faultMapper = new FaultMapper(context);
 
 
 it('Test that findDomainRecord is defined', ()=> {

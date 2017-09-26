@@ -1,5 +1,5 @@
 const DomainFactory = require('../../../DomainFactory');
-const MapperFactory = require('../../../MapperFactory');
+let MapperFactory = null;
 const Util = require('../../../../core/Utility/MapperUtil');
 const validate = require('validate-fields')();
 const Utils = require('../../../../core/Utility/Utils');
@@ -12,6 +12,7 @@ class MeterReadingService {
 
     constructor(context) {
         this.context = context;
+        MapperFactory = this.context.modelMappers;
     }
 
     getName() {

@@ -1,5 +1,5 @@
 const DomainFactory = require('../../../DomainFactory');
-const MapperFactory = require('../../../MapperFactory');
+let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
 const Utils = require('../../../../core/Utility/Utils');
@@ -13,10 +13,11 @@ const validate = require('validate-fields')();
 class FaultService {
     /**
      *
-     * @param api API
+     * @param context
      */
-    constructor(api) {
-        this.api = api;
+    constructor(context) {
+        this.context = context;
+        MapperFactory = this.context.modelMappers;
     }
 
     getName() {
@@ -61,7 +62,7 @@ class FaultService {
                         } else if (relatedModel) {
                             fault['relation_name'] = `${relatedModel.first_name} ${relatedModel.last_name}`;
                         }
-                        if (++processed == rowLen){
+                        if (++processed == rowLen) {
                             console.log(faults);
                             return resolve(Util.buildResponse({data: {items: result.records}}));
                         }
@@ -90,8 +91,8 @@ class FaultService {
         body['api_instance_id'] = who.api;
         let fault = new Fault(body);
         //if the issue date isn't set we are going to set it ourselves
-        if(!fault.issue_date) fault.issue_date = Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s");
-        
+        if (!fault.issue_date) fault.issue_date = Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s");
+
         let isValid = validate(fault.rules(), fault);
         if (!isValid) {
             return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
@@ -111,11 +112,14 @@ class FaultService {
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
         return FaultMapper.createDomainRecord(fault).then(fault=> {
             if (!fault) return Promise.reject();
-            attachments.forEach(attachment =>{ attachment['relation_id'] = fault.id; API.attachments().createAttachment(attachment)});
+            attachments.forEach(attachment => {
+                attachment['relation_id'] = fault.id;
+                API.attachments().createAttachment(attachment)
+            });
             if (fault.labels) fault.labels = JSON.parse(fault.labels);
             if (fault.assigned_to) fault.assigned_to = JSON.parse(fault.assigned_to);
             return Util.buildResponse({data: fault});
-        }).catch(err=>{
+        }).catch(err=> {
             return Promise.reject(err);
         });
     }

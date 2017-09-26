@@ -1,5 +1,5 @@
 const DomainFactory = require('../../../DomainFactory');
-const MapperFactory = require('../../../MapperFactory');
+let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
 const validate = require('validate-fields')();
@@ -9,8 +9,9 @@ const validate = require('validate-fields')();
  */
 class NoteService {
 
-    constructor() {
-
+    constructor(context) {
+        this.context = context;
+        MapperFactory = this.context.modelMappers;
     }
 
     getName() {

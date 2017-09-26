@@ -1,8 +1,8 @@
 /**
  * Created by paulex on 7/4/17.
  */
+let MapperFactory = null;
 const DomainFactory = require('../../../DomainFactory');
-const MapperFactory = require('../../../MapperFactory');
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
 const validate = require('validate-fields')();
@@ -14,6 +14,7 @@ class WorkOrderService {
 
     constructor(context) {
         this.context = context;
+        MapperFactory = this.context.modelMappers;
     }
 
     getName() {

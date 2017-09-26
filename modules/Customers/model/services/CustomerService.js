@@ -1,5 +1,5 @@
 const DomainFactory = require('../../../DomainFactory');
-const MapperFactory = require('../../../MapperFactory');
+let MapperFactory = null;
 const Util = require('../../../../core/Utility/MapperUtil');
 /**
  * @name CustomerService
@@ -9,6 +9,7 @@ class CustomerService {
 
     constructor(context) {
         this.context = context;
+        MapperFactory = this.context.modelMappers;
     }
 
     getName() {

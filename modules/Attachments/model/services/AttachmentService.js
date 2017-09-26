@@ -1,5 +1,5 @@
 const DomainFactory = require('../../../DomainFactory');
-const MapperFactory = require('../../../MapperFactory');
+let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
 /**
@@ -10,6 +10,7 @@ class AttachmentService {
 
     constructor(context) {
         this.context = context;
+        MapperFactory = this.context.modelMappers;
     }
 
     getName() {

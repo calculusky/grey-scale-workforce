@@ -1,15 +1,6 @@
 /**
  * Created by paulex on 7/7/17.
  */
-const KNEX = require('knex')({
-    client: "mysql2", connection: {
-        host: '127.0.0.1',
-        user: 'root',
-        password: 'Nigeriasns$1',
-        database: 'mr_working'
-    }
-});
-
 const DomainObject = require('./DomainObject');
 const Util = require('../Utility/MapperUtil');
 const Utils = require('../Utility/Utils');
@@ -41,7 +32,7 @@ class ModelMapper {
                         case 'JSON_CONTAINS':
                             console.log(typeof value);
                             resultSets = resultSets.where(
-                                KNEX.raw(`${this.jsonFunction[keyName]}(${colName}, ${value})`)
+                                this.context.database.raw(`${this.jsonFunction[keyName]}(${colName}, ${value})`)
                             );
                             break;
                         case 'JSON_ARRAY_APPEND':
@@ -110,7 +101,8 @@ class ModelMapper {
         const DomainObject = DomainFactory.build(this.domainName);
         let domainObject = new DomainObject();
 
-        let resultSets = KNEX.select(fields).from(this.tableName).limit(parseInt(limit)).offset(parseInt(offset))
+        let resultSets = this.context.database
+            .select(fields).from(this.tableName).limit(parseInt(limit)).offset(parseInt(offset))
             .orderBy(orderBy, order);
         //if this query is based on a condition:e.g where clause
         resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
@@ -171,7 +163,7 @@ class ModelMapper {
         if (guardedErrors.length) {
             //TODO return error
         }
-        let resultSets = KNEX.insert(dbData).into(this.tableName);
+        let resultSets = this.context.database.insert(dbData).into(this.tableName);
         return resultSets.then(result => {
             //if this is a single insert lets return only the single object
             //to avoid problems from other services expecting just a single domainObject as a return value
@@ -221,7 +213,7 @@ class ModelMapper {
         }
         let updateData = filteredDomain.serialize(filteredDomain);
 
-        let resultSets = KNEX.table(this.tableName).update(updateData);
+        let resultSets = this.context.database.table(this.tableName).update(updateData);
 
         if (by !== ModelMapper._all && by !== ModelMapper._andWhere) {
             resultSets = resultSets.where(domain.getTableColumn(by), value);
@@ -263,7 +255,7 @@ class ModelMapper {
             return this.updateDomainRecord({by, value, domainObject});
         }
 
-        let resultSets = KNEX.table(this.tableName).delete();
+        let resultSets = this.context.database.table(this.tableName).delete();
 
         resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
 

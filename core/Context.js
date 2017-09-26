@@ -3,6 +3,7 @@
  */
 const KNEX = require('knex');
 const storage = require('node-persist');
+const MapperFactory = require('./factory/MapperFactory');
 
 //Private Fields
 let _privateStore = new WeakMap();
@@ -20,6 +21,20 @@ class Context {
         });
         this.persistence.init({dir: this.config.storage.persistence.path}).then(i=>this.loadStaticData(i));
         this._(this).incoming_store = {};
+
+        //load the modelMappers here into memory
+        this._(this).buildModelMappers = ()=> {
+            let mappers = this.config['mappers'];
+            if (mappers) {
+                mappers.forEach(mapper=> {
+                    let mapperName = mapper.substring(0, mapper.indexOf(":"));
+                    let mapperPath = mapper.substring(mapper.indexOf(":") + 1, mapper.length);
+                    MapperFactory.build(mapperName, mapperPath, this);
+                });
+            }
+        };
+        this._(this).buildModelMappers();
+        this.modelMappers = MapperFactory;
     }
 
     //we are going load certain static data into memory

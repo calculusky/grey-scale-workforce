@@ -21,8 +21,21 @@
         "use_parent": true
       }
     },
-    "persistence":{
-      "path":"./_persistence/storage"
+    "persistence": {
+      "path": "./_persistence/storage"
     }
-  }
+  },
+  "mappers": [
+    "User:../../modules/Users/model/mappers/UserMapper",
+    "WorkOrder:../../modules/WorkOrders/model/mappers/WorkOrderMapper",
+    "Fault:../../modules/Faults/model/mappers/FaultMapper",
+    "Asset:../../modules/Assets/model/mappers/AssetMapper",
+    "Note:../../modules/Notes/model/mappers/NoteMapper",
+    "Attachment:../../modules/Attachments/model/mappers/AttachmentMapper",
+    "Customer:../../modules/Customers/model/mappers/CustomerMapper",
+    "MeterReading:../../modules/SpotBilling/model/mappers/MeterReadingMapper",
+    "Notification:../../modules/Notifications/model/mappers/NotificationMapper",
+    "Upload:../../modules/Uploads/model/mappers/UploadMapper",
+    "DisconnectionOrder:../../modules/DisconnectionOrders/model/mappers/DisconnectionOrderMapper"
+  ]
 }
