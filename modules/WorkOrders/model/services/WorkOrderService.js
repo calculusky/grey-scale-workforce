@@ -38,28 +38,45 @@ class WorkOrderService {
                     const workOrders = results.records;
                     let rowLen = workOrders.length;
                     let processed = 0;
-                    let workTypes = this.context.persistence.getItemSync("work_types");
-                    console.log(results);
+                    const workTypes = this.context.persistence.getItemSync("work_types");
+                    const groups = this.context.persistence.getItemSync("groups");
                     workOrders.forEach(workOrder=> {
-                        let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
                         let promises = [];
+                        let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
                         let isAsset = workOrder['related_to'] == 'assets';
+                        workOrder['group'] = groups[workOrder['group_id']];
                         
-                        promises.push((workType.toLowerCase() == "disconnection")
-                            ? workOrder.disconnection() : workOrder.reconnection());
+                        //remove the request_id its irrelevant
+                        delete workOrder['request_id'];
                         
+                        //lets get all the related records
+                        promises.push((workType.toLowerCase() == "disconnection") ? workOrder.disconnection() : null);
                         promises.push((isAsset) ? workOrder.asset() : workOrder.customer());
 
                         Promise.all(promises).then(values=> {
                             //its compulsory that we check that a record exist
-                            let relatedModel = values.shift().records.shift();
-                            if (relatedModel && isAsset) {
-                                workOrder['relation_name'] = relatedModel.asset_name;
-                            } else if (relatedModel) {
-                                workOrder['relation_name'] = `${relatedModel.first_name} ${relatedModel.last_name}`;
+                            let type = values[0];
+                            if (type) {
+                                let disconnection = type.records.shift();
+                                delete disconnection['id'];
+                                delete disconnection['created_at'];
+                                delete disconnection['updated_at'];
+                                workOrder['disconnection'] = disconnection;
                             }
-                            if (++processed == rowLen)
-                                return resolve(Util.buildResponse({data: {items: workOrders}}));
+                            let relatedTo = values[1];
+                            if (relatedTo) {
+                                let relation = relatedTo.records.shift();
+                                if (isAsset) {
+                                    workOrder['relation_name'] = relation.asset_name;
+                                } else {
+                                    workOrder['relation_name'] = `${relation.first_name} ${relation.last_name}`;
+                                    //if the address line is empty and is related to a customer we should use the customer address
+                                    workOrder['address_line'] = (!workOrder['address_line'] || workOrder['address_line'].length == 0)
+                                        ? relation.plain_address : workOrder['address_line'];
+                                }
+                            }
+                            //end of outer loop
+                            if (++processed == rowLen) return resolve(Util.buildResponse({data: {items: workOrders}}));
                         }).catch(err=> {
                             console.log(err);
                             return reject(err);
@@ -67,6 +84,7 @@ class WorkOrderService {
                     });
                     if (!rowLen) return resolve(Util.buildResponse({data: {items: results.records}}));
                 }).catch(err=> {
+                console.log(err);
                 return reject(err);
             });
         };

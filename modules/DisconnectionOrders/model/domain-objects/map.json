@@ -1,3 +1,11 @@
 {
-
+  "id": "id",
+  "work_order_id": "work_order_id",
+  "current_bill": "current_bill",
+  "arrears": "arrears",
+  "min_amount_payable": "min_amount_payable",
+  "total_amount_payable": "total_amount_payable",
+  "reconnection_fee": "reconnection_fee",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
 }

@@ -70,7 +70,7 @@ class WorkOrder extends DomainObject {
      * @returns {*}
      */
     disconnection(){
-        return this.relations().belongsTo("DisconnectionOrder", "work_order_id", "id");
+        return this.relations().belongsTo("DisconnectionOrder", "id", "work_order_id");
     }
 }
 

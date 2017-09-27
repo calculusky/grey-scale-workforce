@@ -1,8 +1,10 @@
 {
   "id": "id",
   "type": "type",
+  "title": "title",
   "message": "message",
   "status": "status",
+  "level": "level",
   "from": "from",
   "to": "to",
   "deleted_at": "deleted_at",

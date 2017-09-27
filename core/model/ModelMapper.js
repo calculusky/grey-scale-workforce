@@ -1,13 +1,15 @@
 /**
  * Created by paulex on 7/7/17.
  */
+const DomainFactory = require('../../modules/DomainFactory');
 const DomainObject = require('./DomainObject');
 const Util = require('../Utility/MapperUtil');
 const Utils = require('../Utility/Utils');
 const Log = require('../logger.js');
-const DomainFactory = require('../../modules/DomainFactory');
+
 
 /**
+ * @author Paul Okeke
  * @name ModelMapper
  * This class should only be extended and not used directly
  */
@@ -166,7 +168,7 @@ class ModelMapper {
         let resultSets = this.context.database.insert(dbData).into(this.tableName);
         return resultSets.then(result => {
             //if this is a single insert lets return only the single object
-            //to avoid problems from other services expecting just a single domainObject as a return value
+            //to avoid problems from other services expecting just a single domainObject as a return value.
             //services inserting multiples should however treat the result as an array
             let id = result.shift();
             if (domainObjects.length == 1) {

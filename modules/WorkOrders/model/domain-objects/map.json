@@ -16,6 +16,7 @@
   "source":"source",
   "source_id":"source_id",
   "assigned_to":"assigned_to",
+  "group_id":"group_id",
   "issue_date":"issue_date",
   "start_date":"start_date",
   "completed_date":"completed_date",

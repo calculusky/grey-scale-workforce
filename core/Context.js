@@ -1,4 +1,5 @@
 /**
+ * @author Paul Okeke
  * Created by paulex on 7/5/17.
  */
 const KNEX = require('knex');
@@ -48,7 +49,7 @@ class Context {
             });
         };
         //First lets load all groups and sub groups
-        let groupSubs = this.database.select(['id', 'name', 'parent_group_id'])
+        let groupSubs = this.database.select(['id', 'name', 'type', 'parent_group_id'])
             .from("groups")
             .leftJoin('group_subs', 'groups.id', 'group_subs.child_group_id');
 

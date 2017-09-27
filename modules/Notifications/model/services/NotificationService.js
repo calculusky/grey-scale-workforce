@@ -85,19 +85,16 @@ class NotificationService {
             resultSet = (i == 0) ? resultSet.where('id', id) : resultSet.orWhere('id', id);
             if (++processed == userIds.length) {
                 resultSet.then(results=> {
-                    // fcmTokens = results.map(tokens=> {
-                    //     let token = tokens['fire_base_token'];
-                    //     if (token) return token;
-                    // });
                     fcmTokens = results.reduce((accumulator, cVal)=> {
                         //we should however check if the value is an array to avoid un wanted errors
                         return accumulator['fire_base_token'].concat(cVal['fire_base_token']);
-                    });
+                    }, {"fire_base_token": []});
                     //Now lets do the actual notification
                     let payload = {
                         notification: {
                             'title': 'MrWorking',
-                            body: notification.message
+                            body: notification.message,
+                            click_action:"com.mrworking.workorder.MAIN"
                         },
                         data: {
                             type: notification.type

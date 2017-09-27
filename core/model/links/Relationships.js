@@ -122,10 +122,12 @@ class Relationships {
 
         
         if(!this.domainObject[foreignKey] || this.domainObject[foreignKey]==""){
+            console.log("no foreign key");
             return Promise.resolve({records:[{}]});
         }
 
         let resultSets = KNEX.select(['*']).from(foreignTable).where(parentKey, this.domainObject[foreignKey]);
+        console.log(resultSets.toString());
 
         var executor = (resolve, reject)=> {
             resultSets.then(res => {

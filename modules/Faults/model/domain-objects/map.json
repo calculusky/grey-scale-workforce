@@ -9,10 +9,11 @@
   "summary": "summary",
   "issue_date": "issue_date",
   "completed_date": "completed_date",
-  "assigned_to": "assigned_to",
   "source": "source",
   "source_id": "source_id",
   "request_id": "request_id",
+  "assigned_to": "assigned_to",
+  "group_id": "group_id",
   "deleted_at": "deleted_at",
   "created_at": "created_at",
   "updated_at": "updated_at"
