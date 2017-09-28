@@ -61,6 +61,7 @@ class NotificationService {
     sendNotification(body = {}, who = {}, API) {
         const Notification = DomainFactory.build(DomainFactory.NOTIFICATION);
         let notification = new Notification(body);
+        console.log(notification);
         let isValid = validate(notification.rules(), notification);
 
         if (!isValid) {

@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="53a16bf2-2b98-4e6d-a057-762294e430a6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Attachments/model/domain-objects/Attachment.js" afterPath="$PROJECT_DIR$/modules/Attachments/model/domain-objects/Attachment.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js" afterPath="$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js" />
     </list>
     <ignored path="travels.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -65,8 +65,8 @@
       <file leaf-file-name="Attachment.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modules/Attachments/model/domain-objects/Attachment.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="437">
-              <caret line="56" column="38" selection-start-line="56" selection-start-column="38" selection-end-line="56" selection-end-column="38" />
+            <state relative-caret-position="41">
+              <caret line="56" column="62" selection-start-line="56" selection-start-column="62" selection-end-line="56" selection-end-column="62" />
               <folding />
             </state>
           </provider>
@@ -110,8 +110,8 @@
       <file leaf-file-name="NotificationService.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="461">
-              <caret line="96" column="70" selection-start-line="96" selection-start-column="42" selection-end-line="96" selection-end-column="70" />
+            <state relative-caret-position="378">
+              <caret line="69" column="0" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -195,7 +195,6 @@
         <option value="$PROJECT_DIR$/core/Context.js" />
         <option value="$PROJECT_DIR$/modules/Assets/model/domain-objects/map.json" />
         <option value="$PROJECT_DIR$/modules/Users/model/domain-objects/map.json" />
-        <option value="$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js" />
         <option value="$PROJECT_DIR$/modules/Notifications/model/domain-objects/map.json" />
         <option value="$PROJECT_DIR$/modules/WorkOrders/model/domain-objects/map.json" />
         <option value="$PROJECT_DIR$/modules/WorkOrders/model/services/WorkOrderService.js" />
@@ -210,6 +209,7 @@
         <option value="$PROJECT_DIR$/config.json" />
         <option value="$PROJECT_DIR$/modules/Notifications/controller/NotificationController.js" />
         <option value="$PROJECT_DIR$/modules/Attachments/model/domain-objects/Attachment.js" />
+        <option value="$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js" />
       </list>
     </option>
   </component>
@@ -476,12 +476,12 @@
       <workItem from="1506090904272" duration="27637000" />
       <workItem from="1506374428403" duration="57152000" />
       <workItem from="1506549991426" duration="6106000" />
-      <workItem from="1506593699156" duration="4375000" />
+      <workItem from="1506593699156" duration="5743000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="1038462000" />
+    <option name="totallyTimeSpent" value="1039830000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="-37" width="1366" height="805" extended-state="6" />
@@ -907,14 +907,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Attachments/model/domain-objects/Attachment.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="437">
-          <caret line="56" column="38" selection-start-line="56" selection-start-column="38" selection-end-line="56" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Attachments/model/domain-objects/map.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
@@ -939,10 +931,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Attachments/model/domain-objects/Attachment.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="41">
+          <caret line="56" column="62" selection-start-line="56" selection-start-column="62" selection-end-line="56" selection-end-column="62" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="461">
-          <caret line="96" column="70" selection-start-line="96" selection-start-column="42" selection-end-line="96" selection-end-column="70" />
+        <state relative-caret-position="378">
+          <caret line="69" column="0" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
           <folding />
         </state>
       </provider>
