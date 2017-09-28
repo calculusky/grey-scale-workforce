@@ -28,23 +28,16 @@ class NoteService {
                     let processed = 0;
                     let rowLen = notes.length;
                     notes.forEach(note=> {
-                        note.user().then(res=> {
-                            note.user = res.records.shift();
-                            if(note.user) {
-                                delete note.user.password;
-                                delete note.user.permissions;
-                                delete note.user.firebase_token;
-                                delete note.user.location;
-                                delete note.user.middle_name;
-                            }
-                            delete note.source;
-                            delete note.source_id;
-                            delete note.source_name;
-                            if (++processed == rowLen)
-                                return resolve(Util.buildResponse({data: {items: notes}}));
+                        const promises = [];
+                        promises.push(note.user(), note.attachments());
+                        Promise.all(promises).then(values=> {
+                            note.user = values.shift().records.shift();
+                            note.attachments = values.shift().records;
+                            sweepNoteResponsePayload(note);
+                            if (++processed == rowLen) return resolve(Util.buildResponse({data: {items: notes}}));
                         }).catch(err=> {
-                            return reject(err)
-                        })
+                            return reject(err);
+                        });
                     });
                     if (!rowLen) return resolve(Util.buildResponse({data: {items: notes}}));
                 })
@@ -91,6 +84,35 @@ class NoteService {
             return Util.buildResponse({data: {by, message: "Note deleted"}});
         });
     }
+}
+
+function sweepNoteResponsePayload(note) {
+    note.attachments.forEach(attachment=> {
+        delete attachment.created_by;
+        delete attachment.deleted_at;
+        delete attachment.updated_at;
+        delete attachment.created_at;
+        delete attachment.details;
+        delete attachment.module;
+        delete attachment.relation_id;
+    });
+    if (note.user) {
+        delete note.user.password;
+        delete note.user.permissions;
+        delete note.user.group_id;
+        delete note.user.assigned_to;
+        delete note.user.created_by;
+        delete note.user.address_id;
+        delete note.user.last_login;
+        delete note.user.firebase_token;
+        delete note.user.location;
+        delete note.user.middle_name;
+        delete note.user.created_at;
+        delete note.user.updated_at;
+    }
+    delete note.source;
+    delete note.source_id;
+    delete note.source_name;
 }
 
 module.exports = NoteService;

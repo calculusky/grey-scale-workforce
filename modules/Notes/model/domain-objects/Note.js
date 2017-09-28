@@ -52,6 +52,14 @@ class Note extends DomainObject {
     user() {
         return this.relations().belongsTo("User", "created_by");
     }
+
+    /**
+     * Returns all the attachment on the note if any
+     * @returns {Promise}
+     */
+    attachments(){
+        return this.relations().morphMany("Attachment", "module", "relation_id");
+    }
 }
 
 //noinspection JSUnresolvedVariable

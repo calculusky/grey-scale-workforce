@@ -174,7 +174,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
-     * /meter_readings/meter/{meterNo}:
+     * /meter_readings/meter/{meterNo}/{offset?}/{limit?}:
      *   get:
      *     summary: Gets List of meter_readings by the meter no
      *     description: ''
@@ -192,8 +192,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/meter_readings/meter/:meterNo', urlencodedParser, (req, res)=> {
-        return API.meter_readings().getMeterReadings(req.params['meterNo'], "meter_no")
+    app.get('/meter_readings/meter/:meterNo/:offset/:limit', urlencodedParser, (req, res)=> {
+        return API.meter_readings().getMeterReadings(req.params['meterNo'], "meter_no", req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

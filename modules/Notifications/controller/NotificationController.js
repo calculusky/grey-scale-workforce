@@ -70,7 +70,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.get('/notifications/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
         let assignedTo = {id: req.params['user_id']};
-        return API.notifications().getNotifications(`{"id":${req.params['user_id']}}`, "to->[]", req.who, req.params.offset, req.params.limit)
+        return API.notifications().getNotifications(`${req.params['user_id']}`, "to->[]", req.who, req.params.offset, req.params.limit)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

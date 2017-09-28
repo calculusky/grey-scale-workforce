@@ -7,6 +7,7 @@
   "priority": "priority",
   "status": "status",
   "summary": "summary",
+  "resolution": "resolution",
   "issue_date": "issue_date",
   "completed_date": "completed_date",
   "source": "source",
