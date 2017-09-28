@@ -134,7 +134,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/assets', urlencodedParser, (req, res)=> {
+    app.get('/assets/:offset?/:limit?', urlencodedParser, (req, res)=> {
         console.log('/assets/offset/limit');
         return API.assets().getAssets({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {

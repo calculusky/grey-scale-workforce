@@ -79,7 +79,7 @@ class AttachmentService {
                 module: `${body.module}`,
                 relation_id: `${body.relation_id}`,
                 file_name: file.filename,
-                file_size: file.size,
+                file_size: file.size||1,
                 file_path: file.path,
                 file_type: file.mimetype,
                 created_by: who.sub
