@@ -92,7 +92,7 @@ class NotificationService {
                     //Now lets do the actual notification
                     let payload = {
                         notification: {
-                            'title': 'MrWorking',
+                            'title': 'IE Force',
                             body: notification.message,
                             click_action:"com.mrworking.workorder.MAIN"
                         },
