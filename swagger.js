@@ -12,7 +12,7 @@ Swagger.prototype.config = function (app, config) {
     // function config(app, routePath){
     const swaggerDoc = require("swagger-jsdoc");
     const path = require("path");
-    app.use('/swagger', config['express'].static(path.join(__dirname, config['swaggerUI']), {
+    app.use('/api', config['express'].static(path.join(__dirname, config['swaggerUI']), {
         etag: false
     }));
     var swaggerDefinition = {
@@ -42,6 +42,6 @@ Swagger.prototype.config = function (app, config) {
         res.send(swaggerSpec);
     });
 
-    console.log(`Access Swagger API at : ${config.host}/swagger`);
+    console.log(`Access Swagger API at : ${config.host}/api`);
     console.log(`Swagger Json file can be accessed at : ${config.host}/api-docs.json`);
 };
