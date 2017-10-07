@@ -36,6 +36,7 @@ class WorkOrderService {
         //check if it is a work order number that is supplied
         if (by == 'id' && (value && value.substring(0, 1).toUpperCase() == 'W')) {
             by = "work_order_no";
+            value = value.replace(/-/g, "");
         }
         var executor = (resolve, reject)=> {
             WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
