@@ -9,12 +9,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     app.use('/notes', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
-     * @swagger
+     * @swag
      * /notes:
      *   post:
      *     summary: Creates a Note
      *     description: ''
-     *     tags: [Note]
+     *     tags: [Notes]
      *     consumes:
      *     - application/json
      *     produces:
@@ -45,12 +45,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     });
 
     /**
-     * @swagger
+     * @swag
      * /notes:
      *   put:
      *     summary: Updates a Note
      *     description: ''
-     *     tags: [Note]
+     *     tags: [Notes]
      *     consumes:
      *     - application/json
      *     produces:
@@ -81,12 +81,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     
     /**
-     * @swagger
+     * @swag
      * /notes/user/{user_id}/{offset}/{limit}:
      *   get:
      *     summary: Gets notes assigned to a user
      *     description: ''
-     *     tags: [Note]
+     *     tags: [Notes]
      *     produces:
      *     - application/json
      *     operationId: getNotes
@@ -115,7 +115,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
 
     // /**
-    //  * @swagger
+    //  * @swag
     //  * /notes/{offset}/{limit}:
     //  *   get:
     //  *     summary: Gets List of notes
@@ -145,12 +145,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     // });
 
     /**
-     * @swagger
+     * @swag
      * /notes/{id}:
      *  delete:
      *    summary: Deletes a Note
      *    description: "Deletes a Note"
-     *    tags: [Note]
+     *    tags: [Notes]
      *    produces:
      *    - application/json
      *    operationId: deleteNote

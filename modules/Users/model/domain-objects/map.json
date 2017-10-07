@@ -9,7 +9,7 @@
   "gender": "gender",
   "user_type": "user_type",
   "permissions": "permissions",
-  "last_login": "usr_last_login",
+  "last_login": "last_login",
   "firebase_token": "fire_base_token",
   "location": "location",
   "avatar": "avatar",

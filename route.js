@@ -128,9 +128,10 @@ module.exports = function route(context) {
         swaggerUI: "swagger-ui/dist",
         apis: swaggerAPIs,
         info: {
-            title: "Mr.Working API.",
+            title: "IForce API.",
             version: "1.0",
-            description: "Mr.Working Documentation",
+            author: "Paul Okeke",
+            description: "IForce API Documentation",
             "x-ibm-name": "mr.working-api"
         },
         schemes: ['http']

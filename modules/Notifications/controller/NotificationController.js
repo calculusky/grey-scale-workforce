@@ -9,7 +9,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     app.use('/notifications*', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
-     * @swagger
+     * @swag
      * /notifications:
      *   post:
      *     summary: Send Notification
@@ -46,7 +46,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
 
     /**
-     * @swagger
+     * @swag
      * /notifications/user/{user_id}/{offset}/{limit}:
      *   get:
      *     summary: Gets notifications assigned to a user
@@ -81,7 +81,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
 
     /**
-     * @swagger
+     * @swag
      * /notifications/{id}:
      *  delete:
      *    summary: Deletes a Notification

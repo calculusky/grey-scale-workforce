@@ -1,7 +1,7 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
-const Util = require('../../../../core/Utility/MapperUtil');
+const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validate-fields')();
 /**
  * Created by paulex on 7/4/17.
@@ -19,22 +19,24 @@ class UserService {
     }
 
     getUsers(value = '?', by = "id", who = {api: -1}, offset = 0, limit = 10) {
-        // if (!value || value.trim() == '') {
-        //     //Its important that all queries are streamlined majorly for each business
-        //     value = who.api;
-        //     by = "api_instance_id";
-        // } else if (value) {
-        //     const temp = value;
-        //     value = {};
-        //     value[by] = temp;
-        //     value['api_instance_id'] = who.api;
-        //     by = "*_and";
-        // }
         const UserMapper = MapperFactory.build(MapperFactory.USER);
-        return UserMapper.findDomainRecord({by, value})
-            .then(result=> {
-                return (Util.buildResponse({data: {items: result.records}}));
+        const executor = (resolve, reject)=> {
+            UserMapper.findDomainRecord({by, value})
+                .then(result=> {
+                    //remove the password
+                    let users = result.records;
+                    let rowLen = users.length;
+                    let processed = 0;
+                    users.forEach(user=> {
+                        user.password = "";
+                        if (++processed == rowLen) return resolve(Utils.buildResponse({data: {items: users}}));
+                    });
+                    if (rowLen == 0) return resolve(Utils.buildResponse({data: {items: users}}));
+                }).catch(err=> {
+                return reject(err)
             });
+        };
+        return new Promise(executor)
     }
 
     /**
@@ -50,7 +52,7 @@ class UserService {
         //enforce the validation
         let isValid = validate(user.rules(), user);
         if (!isValid) {
-            return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
 
         //Get Mapper
@@ -63,7 +65,7 @@ class UserService {
         return UserMapper.createDomainRecord(user).then(user=> {
             if (!user) return Promise.reject();
             delete user.password;
-            return Util.buildResponse({data: user});
+            return Utils.buildResponse({data: user});
         });
     }
 
@@ -83,11 +85,11 @@ class UserService {
         JSON_ARRAY_APPEND(fire_base_token, '$', ?) where users.id = ?`, [fcmToken, who.sub])
             .then(results=> {
                 const result = results.shift();
-                if (result.changedRows > 0) return Util.buildResponse({data: user});
+                if (result.changedRows > 0) return Utils.buildResponse({data: user});
                 //lets return error if nothing happened
-                return Promise.reject(Util.buildResponse({status: "fail", data: user}, 404));
+                return Promise.reject(Utils.buildResponse({status: "fail", data: user}, 404));
             }).catch(err=> {
-                const error = Util.buildResponse(Util.getMysqlError(err), 400);
+                const error = Utils.buildResponse(Utils.getMysqlError(err), 400);
                 return Promise.reject(error)
             });
     }
@@ -109,7 +111,7 @@ class UserService {
                             this.context.database.raw(`update users set ${column} = ${updateValue}`, [newFcmToken, user.id])
                                 .then(result=> {
                                     console.log(`Replace an FCMToken of user with id ${user.id}`);
-                                    return resolve(Util.buildResponse({data: user}));
+                                    return resolve(Utils.buildResponse({data: user}));
                                 }).catch(err=> {
                                 return reject(err);
                             });
@@ -118,7 +120,7 @@ class UserService {
                             this.context.database.raw(`update users set ${column} = ${updateValue}`, [user.id])
                                 .then(result=> {
                                     console.log(`Remove an FCMToken from user with id ${user.id}`);
-                                    return resolve(Util.buildResponse({data: user}));
+                                    return resolve(Utils.buildResponse({data: user}));
                                 }).catch(err=> {
                                 return reject(err);
                             });
@@ -144,9 +146,9 @@ class UserService {
 
         return UserMapper.updateDomainRecord({value, domain: user}).then(result=> {
             if (result.pop()) {
-                return Util.buildResponse({data: result.shift()});
+                return Utils.buildResponse({data: result.shift()});
             } else {
-                return Promise.reject(Util.buildResponse({status: "fail", data: result.shift()}, 404));
+                return Promise.reject(Utils.buildResponse({status: "fail", data: result.shift()}, 404));
             }
         });
     }
@@ -161,9 +163,9 @@ class UserService {
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         return UserMapper.deleteDomainRecord({by, value}).then(count=> {
             if (!count) {
-                return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
+                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Util.buildResponse({data: {message: "User deleted"}});
+            return Utils.buildResponse({data: {message: "User deleted"}});
         });
     }
 }

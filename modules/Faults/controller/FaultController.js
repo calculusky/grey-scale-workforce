@@ -14,7 +14,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   post:
      *     summary: Creates a Fault
      *     description: ''
-     *     tags: [Fault]
+     *     tags: [Faults]
      *     consumes:
      *     - application/json
      *     produces:
@@ -49,7 +49,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   put:
      *     summary: Updates a Fault
      *     description: ''
-     *     tags: [Fault]
+     *     tags: [Faults]
      *     consumes:
      *     - application/json
      *     produces:
@@ -85,7 +85,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   get:
      *     summary: Gets faults assigned to a user
      *     description: ''
-     *     tags: [Fault]
+     *     tags: [Faults]
      *     produces:
      *     - application/json
      *     operationId: getFaults
@@ -120,7 +120,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   get:
      *     summary: Gets Notes for a Fault
      *     description: ''
-     *     tags: [Fault]
+     *     tags: [Faults]
      *     produces:
      *     - application/json
      *     operationId: getFaultNotes
@@ -155,7 +155,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   get:
      *     summary: Gets Attachments for a Fault
      *     description: ''
-     *     tags: [Fault]
+     *     tags: [Faults]
      *     produces:
      *     - application/json
      *     operationId: getFaultAttachments
@@ -190,7 +190,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   get:
      *     summary: Gets List of faults
      *     description: ''
-     *     tags: [Fault]
+     *     tags: [Faults]
      *     produces:
      *     - application/json
      *     operationId: getFaults
@@ -220,7 +220,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *  delete:
      *    summary: Deletes a Fault
      *    description: "Deletes a Fault"
-     *    tags: [Fault]
+     *    tags: [Faults]
      *    produces:
      *    - application/json
      *    operationId: deleteFault

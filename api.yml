@@ -24,23 +24,19 @@ parameters:
     format: int32
     maximum: 20
 
-  req_id:
-    name: id
-    type: integer
-    in: path
+  keyword:
+    name: keyword
+    type: string
     required: true
-    description: "The travel request id"
+    in: path
+    description: The search word that likely matches an item of this domain
 
-  req_status:
+  statusId:
     name: statusId
-    in: path
-    type: integer
-    format: int32
-    maximum: 2
+    type: string
     required: true
-    enum: [0, 1, 2]
-    description: "The status of the travel request. 0 = for Pending Approval,
-     1 = Approved, 2 = Rejected"
+    in: path
+    description: Status ID
 
   user_id:
     name: userId
@@ -48,18 +44,48 @@ parameters:
     required: true
     in: path
     description: The user id
+
   fault_id:
-    name: faultId
+    name: fault_id
     type: integer
     required: true
     in: path
-    description: The Fault ID
-  staffId:
-    name: staffId
+    description: "The Fault ID/Number"
+
+  meter_reading_id:
+    name: id
     type: integer
     required: true
     in: path
-    description: The Staff id
+    description: "The Meter Reading ID"
+
+  account_no:
+    name: account_no
+    type: string
+    required: true
+    in: path
+    description: The Customer account no
+
+  meter_no:
+    name: meter_no
+    type: string
+    required: true
+    in: path
+    description: The Customer Meter No
+
+  work_order_id:
+    name: id
+    type: string
+    required: true
+    in: path
+    description: "The work order number/id"
+
+  asset_id:
+    name: assetId
+    type: integer
+    required: true
+    in: path
+    description: The Asset ID
 
 #----------------------Definitions-------------------------------
 definitions:
@@ -83,10 +109,10 @@ definitions:
       data:
         type: object
         properties:
-          user:
-            $ref: '#/definitions/User'
           token:
             type: string
+          user:
+            $ref: '#/definitions/User'
     required:
       - status
       - data
@@ -99,7 +125,7 @@ definitions:
       - password
       - first_name
       - last_name
-      - middle_name
+      - user_type
       - gender
     properties:
       email:
@@ -155,14 +181,16 @@ definitions:
   User:
     required:
       - id
+      - email
       - username
       - first_name
       - last_name
-      - email
       - created_at
       - updated_at
     properties:
       id:
+        type: string
+      email:
         type: string
       username:
         type: string
@@ -170,9 +198,24 @@ definitions:
         type: string
       last_name:
         type: string
-      email:
+      middle_name:
         type: string
       gender:
+        type: string
+        enum: ['M', 'F', 'O']
+      user_type:
+        type: string
+      last_login:
+        type: string
+        format: date
+      location:
+        type: object
+        $ref: '#/definitions/Location'
+      group_id:
+        type: number
+      avatar:
+        type: string
+      permissions:
         type: string
       created_at:
         type: string
@@ -267,13 +310,60 @@ definitions:
       id:
         type: integer
         description: The department id
-      name:
+      related_to:
         type: string
-        description: The department name
+        description: "The entity this work order is related to. This can be either an Asset or a Customer"
+      relation_id:
+        type: string
+        description: "The ID(Primary Key) of the entity this work order is related to"
+      labels:
+        type: array
+      status:
+        type: integer
+        description: "The status value of a work order actually varies and its dependent on the work order type."
+      priority:
+        type: integer
+        description: "The severity level of the work order. 0: Low, 1: Medium, 2: High, 3: Urgent.
+        Also Note that SLA's are attached to each priority level."
+      summary:
+        type: string
+      address_line:
+        type: string
+        description: "The address that this work order is to be executed.
+        This will be the customer address if the related_to is a customer"
+      contact_name:
+        type: string
+        description: "The name of the person to contact at the work location"
+      contact_phone:
+        type: string
+        description: "The phone number of the person to contact at the work location"
+      contact_email:
+        type: string
+        format: email
+      group_id:
+        type: integer
+      group:
+        type: object
+        $ref: '#/definitions/Group'
+      assigned_to:
+        type: array
+        description: "A list of users this work order is assigned to"
+      issue_date:
+        type: string
+        format: date
+        description: "The date this work order was issued, defaults to the created_at date"
+      start_date:
+        type: string
+        format: date
+        description: "The required start date of the work order"
+      completed_date:
+        type: string
+        format: date
+        description: "The date this work order was completed"
       created_at:
         type: string
         format: date-time
-        description: The date this department was created
+        description: The date this work order was created
       updated_at:
         type: string
         format: date-time
@@ -324,3 +414,487 @@ definitions:
           type: string
           format: date
 
+  Asset:
+    properties:
+      id:
+        type: integer
+        description: The Asset id
+      asset_name:
+        type: string
+        description: The name of the asset
+      asset_type:
+        type: integer
+        description: The id specifying the asset type it is related to
+      asset_type_name:
+        type: string
+        description: The type of asset
+      status:
+        type: integer
+        description: "The status of this asset. e.g 1: Online, 2: Offline"
+      serial_no:
+        type: string
+        description: The Serial No of this asset
+      date_installed:
+        type: string
+        format: date
+      group_id:
+        type: integer
+        description: The group id this asset belongs to
+      group:
+        type: object
+        $ref: '#/definitions/Group'
+      location:
+        type: object
+        $ref: '#/definitions/Location'
+      created_at:
+        type: string
+        format: date
+      updated_at:
+        type: string
+        format: date
+
+  postAssetInput:
+    type: object
+    required:
+      - asset_name
+      - group_id
+      - status
+      - serial_no
+    properties:
+      asset_name:
+        type: string
+      status:
+        type: string
+      serial_no:
+        type: string
+      group_id:
+        type: integer
+      description:
+        type: string
+      location:
+        type: object
+        $ref: '#/definitions/Location'
+
+  postAssetOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Asset'
+    required:
+    - status
+    - data
+
+  getAssetOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Asset'
+    required:
+    - status
+    - data
+
+  Customer:
+    type: object
+    properties:
+      account_no:
+        type: string
+      old_account_no:
+        type: string
+      meter_no:
+        type: string
+      customer_name:
+        type: string
+      status:
+        type: integer
+      plain_address:
+        type: string
+      customer_type:
+        type: string
+      tariff:
+        type: string
+      group_id:
+        type: integer
+      group:
+        type: object
+        $ref: '#/definitions/Group'
+      location:
+        type: object
+        $ref: '#/definitions/Location'
+
+  postCustomerInput:
+    type: object
+    required:
+      - account_no
+      - old_account_no
+      - meter_no
+      - customer_name
+      - plain_address
+    properties:
+      account_no:
+        type: string
+      old_account_no:
+        type: string
+      meter_no:
+        type: string
+      customer_name:
+        type: string
+      status:
+        type: integer
+      plain_address:
+        type: string
+      customer_type:
+        type: string
+      tariff:
+        type: string
+      group_id:
+        type: integer
+      location:
+        type: object
+        $ref: '#/definitions/Location'
+
+  getCustomerOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Customer'
+    required:
+    - status
+    - data
+
+  postCustomerOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Customer'
+    required:
+    - status
+    - data
+
+  MeterReading:
+    type: object
+    properties:
+      id:
+        type: integer
+      meter_no:
+        type: string
+      current_reading:
+        type: number
+        format: decimal
+      previous_reading:
+        type: number
+        format: decimal
+      current_bill:
+        type: number
+        format: decimal
+      current_opening_bal:
+        type: number
+        format: decimal
+      current_closing_bal:
+        type: number
+        format: decimal
+      current_billing_adjustment:
+        type: number
+        format: decimal
+      current_payment:
+        type: number
+        format: decimal
+      last_payment:
+        type: number
+        format: decimal
+      last_payment_date:
+        type: number
+        format: decimal
+      reading_code:
+        type: number
+        format: decimal
+      reading_section:
+        type: string
+      demand:
+        type: string
+      energy:
+        type: number
+        format: decimal
+      fix_charge:
+        type: number
+        format: decimal
+      vat_charge:
+        type: number
+        format: decimal
+      group_id:
+        type: integer
+      group:
+        type: object
+        $ref: '#/definitions/Group'
+      read_date:
+        type: string
+        format: date
+      location:
+        type: object
+        $ref: '#/definitions/Location'
+        description: 'The location this meter reading occurred'
+      created_at:
+        type: string
+        format: date
+      updated_at:
+        type: string
+        format: date
+
+  postMeterReadingInput:
+    type: object
+    required:
+    - meter_no
+    - current_reading
+    - previous_reading
+    - current_bill
+    - read_date
+    properties:
+      meter_no:
+        type: string
+      current_reading:
+        type: number
+      previous_reading:
+        type: number
+      current_bill:
+        type: number
+      current_opening_bal:
+        type: number
+      current_closing_bal:
+        type: number
+      current_billing_adjustment:
+        type: number
+      current_payment:
+        type: number
+      last_payment:
+        type: number
+      last_payment_date:
+        type: number
+      reading_code:
+        type: number
+      reading_section:
+        type: string
+      demand:
+        type: string
+      energy:
+        type: number
+      fix_charge:
+        type: number
+      vat_charge:
+        type: number
+      group_id:
+        type: integer
+      read_date:
+        type: string
+        format: date
+
+  getMeterReadingOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/MeterReading'
+    required:
+    - status
+
+  lastMeterReading:
+    type: object
+    properties:
+      current_reading:
+        type: number
+        format: float
+      previous_reading:
+        type: number
+        format: float
+      current_bill:
+        type: number
+        format: float
+      current_opening_bal:
+        type: number
+        format: float
+      current_closing_bal:
+        type: number
+        format: float
+      current_payment:
+        type: number
+        format: float
+      vat_charge:
+        type: number
+        format: float
+
+  getLastMeterReadingOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/lastMeterReading'
+    required:
+    - status
+
+  postSpotBillingInput:
+    type: object
+    required:
+    - meter_no
+    - current_reading
+    properties:
+      meter_no:
+        type: string
+      current_reading:
+        type: number
+        format: decimal
+
+  Note:
+    type: object
+    properties:
+      id:
+        type: integer
+      relation_id:
+        type: string
+      module:
+        type: string
+      note:
+        type: string
+      source:
+        type: string
+        description: The source from which this note was entered
+      source_id:
+        type: string
+        description: The ID of the related entity from the source
+      source_name:
+        type: string
+      created_at:
+        type: string
+        format: date
+      updated_at:
+        type: string
+        format: date
+
+  getNoteOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Note'
+    required:
+    - status
+
+  Attachment:
+    type: object
+    properties:
+      id:
+        type: integer
+      relation_id:
+        type: string
+        description: The ...
+      module:
+        type: string
+        description: ""
+      file_name:
+        type: string
+      file_size:
+        type: string
+      file_path:
+        type: string
+      file_type:
+        type: string
+      details:
+        type: string
+      group_id:
+        type: integer
+      group:
+        type: object
+        $ref: '#/definitions/Group'
+      created_at:
+        type: string
+        format: date
+      updated_at:
+        type: string
+        format: date
+
+  getAttachmentOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Attachment'
+    required:
+    - status
+
+  Group:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: The Group ID
+      name:
+        type: string
+      type:
+        type: string
+        description: The type of group this is e.g A Business Group, Technical Group etc
+      description:
+        type: string
+      group_id:
+        type: integer
+        description: The parent Group ID
+      parent:
+        type: object
+        $ref: '#/definitions/Group'
+
+
+  Location:
+    type: object
+    properties:
+      x:
+        type: number
+      y:
+        type: number

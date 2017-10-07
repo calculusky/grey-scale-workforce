@@ -67,9 +67,11 @@ class AssetService {
     /**
      * We are majorly searching for asset by name
      * @param keyword
+     * @param offset
+     * @param limit
      * @returns {Promise.<Customer>}
      */
-    searchAssets(keyword) {
+    searchAssets(keyword, offset = 0, limit = 10) {
         const Customer = DomainFactory.build(DomainFactory.ASSET);
         let fields = [
             'id',
@@ -82,6 +84,8 @@ class AssetService {
         ];
         let resultSets = this.context.database.select(fields).from('assets')
             .where('asset_name', 'like', `%${keyword}%`).orWhere('asset_type_name', 'like', `%${keyword}%`);
+        resultSets = resultSets.limit(parseInt(limit)).offset(parseInt(offset)).orderBy('asset_name', 'asc');
+        
         return resultSets.then(results=> {
             let customers = [];
             results.forEach(customer=>customers.push(new Customer(customer)));

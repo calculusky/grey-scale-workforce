@@ -9,7 +9,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     app.use('/uploads*', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
-     * @swagger
+     * @swag
      * /uploads:
      *   post:
      *     summary: Upload a file
@@ -44,7 +44,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     });
 
     /**
-     * @swagger
+     * @swag
      * /uploads/{id}:
      *  delete:
      *    summary: Deletes a Upload

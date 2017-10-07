@@ -11,9 +11,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /login:
      *   post:
-     *     description: "Authenticates a user to the service"
-     *     summary: "Login User"
-     *     tags: [User]
+     *     description: "Authenticates an authorized user to the service"
+     *     summary: "Authenticates an authorized user to the service"
+     *     tags: [Users]
      *     consumes:
      *     - application/json
      *     produces:
@@ -50,7 +50,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *  get:
      *    description: "Logout a user"
      *    summary: "Logout a User"
-     *    tags: [User]
+     *    tags: [Users]
      *    produces:
      *    - application/json
      *    operationId: logoutUser
@@ -77,7 +77,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *  post:
      *    description: 'Creates a new User'
      *    summary: "Creates a new User"
-     *    tags: [User]
+     *    tags: [Users]
      *    produces:
      *    - application/json
      *    operationId: "postUser"
@@ -116,7 +116,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   description: "To get a user details for a particular user by supplying the id.
      *                    Use when the ID is known"
      *   summary: "Retrieves a user details by the given ID"
-     *   tags: [User]
+     *   tags: [Users]
      *   produces:
      *   - application/json
      *   operationId: "getUser"
@@ -136,49 +136,50 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
     app.get("/users/:id", urlencodedParser, (req, res)=> {
         Log.info('/users/:id', `/users/:${req.params.id}`);
         API.users().getUsers(req.params.id)
-            .then(({data, code=200})=> {
+            .then(({data, code})=> {
+                console.log('RES', data);
                 return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
-                return res.status(code).send(err);
+            }).catch((err)=> {
+            console.log(err);
+                // return res.status(code).send(err);
             });
     });
 
 
-    /**
-     * @swagger
-     * /users/{offset}/{limit}:
-     *  get:
-     *   description: "Retrieves a list of users by a given offset and limit.
-     *                    A very good use-case is when implementing a pagination."
-     *   summary: "Retrieves a list of users"
-     *   tags: [User]
-     *   produces:
-     *   - application/json
-     *   operationId: getUsers
-     *   responses:
-     *     '200':
-     *       description: "A List of users"
-     *       schema:
-     *         type: array
-     *         items:
-     *           $ref: '#/definitions/getUserOutput'
-     *   parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
-     *
-     */
-    app.get("/users/:offset?/:limit?", urlencodedParser, (req, res)=> {
-        Log.info(req.params);
-        API.users().getUsers(req.params.id, undefined, req.who)
-            .then(({data, code=200})=> {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
-                return res.status(code).send(err);
-            });
-    });
+    // /**
+    //  * @swagger
+    //  * /users/{offset}/{limit}:
+    //  *  get:
+    //  *   description: "Retrieves a list of users by a given offset and limit.
+    //  *                    A very good use-case is when implementing a pagination."
+    //  *   summary: "Retrieves a list of users"
+    //  *   tags: [Users]
+    //  *   produces:
+    //  *   - application/json
+    //  *   operationId: getUsers
+    //  *   responses:
+    //  *     '200':
+    //  *       description: "A List of users"
+    //  *       schema:
+    //  *         type: array
+    //  *         items:
+    //  *           $ref: '#/definitions/getUserOutput'
+    //  *   parameters:
+    //  *     - $ref: '#/parameters/sessionId'
+    //  *     - $ref: '#/parameters/offset'
+    //  *     - $ref: '#/parameters/limit'
+    //  *
+    //  */
+    // app.get("/users/:offset?/:limit?", urlencodedParser, (req, res)=> {
+    //     Log.info(req.params);
+    //     API.users().getUsers(req.params.id, undefined, req.who)
+    //         .then(({data, code=200})=> {
+    //             return res.status(code).send(data);
+    //         })
+    //         .catch(({err, code})=> {
+    //             return res.status(code).send(err);
+    //         });
+    // });
 
     /**
      * @swagger
@@ -186,7 +187,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *  put:
      *   description: "Update User Details"
      *   summary: "Update a User"
-     *   tags: [User]
+     *   tags: [Users]
      *   produces:
      *   - application/json
      *   operationId: updateUser
@@ -199,6 +200,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getUserOutput'
      *   parameters:
      *     - $ref: '#/parameters/sessionId'
+     *     - name: body
+     *       in: body
+     *       required: true
+     *       schema:
+     *         $ref: '#/definitions/postUserInput'
      */
     app.put("/users/:id", jsonParser, (req, res)=> {
         Log.info("updateUser:", req.body);
@@ -214,12 +220,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
     });
 
     /**
-     * @swagger
+     *
+     * @swag
      * /users/{id}/register/fcm/{token}:
      *  get:
      *   description: "Register a mobile user fire-base token"
      *   summary: "Register Fire-base token"
-     *   tags: [User]
+     *   tags: [Users]
      *   produces:
      *   - application/json
      *   operationId: registerToken

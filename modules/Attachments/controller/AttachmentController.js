@@ -9,7 +9,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     app.use('/attachments*', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
-     * @swagger
+     * @swag
      * /attachments:
      *   post:
      *     summary: Creates a Attachment
@@ -46,7 +46,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
 
     /**
-     * @swagger
+     * @swag
      * /attachments:
      *   post:
      *     summary: Creates incoming attachments
@@ -83,7 +83,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
 
     /**
-     * @swagger
+     * @swag
      * /attachment/{module}/download/{fileName}:
      *   get:
      *     summary: Gets attachments of a module record
@@ -111,7 +111,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
 
     /**
-     * @swagger
+     * @swag
      * /attachments/{module}/{relation_id}/{offset}/{limit}:
      *   get:
      *     summary: Gets attachments of a module record
@@ -146,7 +146,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     
 
     /**
-     * @swagger
+     * @swag
      * /attachments/{module}/{id}:
      *  delete:
      *    summary: Deletes an Attachment

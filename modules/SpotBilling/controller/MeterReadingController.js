@@ -14,7 +14,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   post:
      *     summary: Creates a MeterReading
      *     description: ''
-     *     tags: [MeterReading]
+     *     tags: [Meter Readings]
      *     consumes:
      *     - application/json
      *     produces:
@@ -50,22 +50,22 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   post:
      *     summary: Generates Bill for a customer
      *     description: 'Generates bill for a customer based on the current meter reading'
-     *     tags: [MeterReading]
+     *     tags: [Meter Readings]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: createMeterReading
+     *     operationId: generateBill
      *     responses:
      *       '200':
-     *         description: Successfully Added
+     *         description: Bill Generated Successfully
      *     parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - in: body
-     *        name: 'fault'
+     *        name: 'meter_reading'
      *        required: true
      *        schema:
-     *          $ref: '#/definitions/postMeterReadingInput'
+     *          $ref: '#/definitions/postSpotBillingInput'
      */
     app.post('/meter_readings/spot_bill', multiPart.array('files', 4), (req, res)=> {
         console.log(req.body);
@@ -86,7 +86,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   put:
      *     summary: Updates a MeterReading
      *     description: ''
-     *     tags: [MeterReading]
+     *     tags: [Meter Readings]
      *     consumes:
      *     - application/json
      *     produces:
@@ -121,7 +121,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   get:
      *     summary: Get a Single Meter Reading
      *     description: ''
-     *     tags: [MeterReading]
+     *     tags: [Meter Readings]
      *     produces:
      *     - application/json
      *     operationId: getMeterReadings
@@ -132,6 +132,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getMeterReadingOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/meter_reading_id'
      */
     app.get('/meter_readings/:id', urlencodedParser, (req, res)=> {
         return API.meter_readings().getMeterReadings(req.params['id'], "id")
@@ -150,7 +151,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   get:
      *     summary: Get the last meter reading
      *     description: ''
-     *     tags: [MeterReading]
+     *     tags: [Meter Readings]
      *     produces:
      *     - application/json
      *     operationId: getMeterReadings
@@ -158,9 +159,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *       '200':
      *         description: Successful
      *         schema:
-     *           $ref: '#/definitions/getMeterReadingOutput'
+     *           $ref: '#/definitions/getLastMeterReadingOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/meter_no'
      */
     app.get('/meter_readings/meter/:meter_no/last', urlencodedParser, (req, res)=> {
         return API.meter_readings().getLastMeterReading(req.params['meter_no'], req.who)
@@ -174,11 +176,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
-     * /meter_readings/meter/{meterNo}/{offset?}/{limit?}:
+     * /meter_readings/meter/{meter_no}/{offset}/{limit}:
      *   get:
      *     summary: Gets List of meter_readings by the meter no
      *     description: ''
-     *     tags: [MeterReading]
+     *     tags: [Meter Readings]
      *     produces:
      *     - application/json
      *     operationId: getMeterReadings
@@ -189,10 +191,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getMeterReadingOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/meter_no'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/meter_readings/meter/:meterNo/:offset/:limit', urlencodedParser, (req, res)=> {
+    app.get('/meter_readings/meter/:meterNo/:offset?/:limit?', urlencodedParser, (req, res)=> {
         return API.meter_readings().getMeterReadings(req.params['meterNo'], "meter_no", req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {
                 return res.status(code).send(data);
@@ -208,7 +211,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *  delete:
      *    summary: Deletes a MeterReading
      *    description: "Deletes a MeterReading"
-     *    tags: [MeterReading]
+     *    tags: [Meter Readings]
      *    produces:
      *    - application/json
      *    operationId: deleteMeterReading
@@ -217,7 +220,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        description: Returns true with the id of the request deleted
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/fault_id'
+     *    - $ref: '#/parameters/meter_reading_id'
      */
     app.delete('/meter_readings/:id', urlencodedParser, (req, res)=> {
         API.meter_readings().deleteMeterReading("id", req.params.id)

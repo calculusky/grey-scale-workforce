@@ -10,7 +10,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *  post:
      *    description: "Creates a new Work Order"
      *    summary: "Create a new Work Order"
-     *    tags: ['Work Order']
+     *    tags: ['Work Orders']
      *    produces:
      *    - application/json
      *    operationId: postRequest
@@ -34,7 +34,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             })
             .catch(({err, code})=> {
                 return res.status(code).send(err);
-            })  ;
+            });
     });
 
 
@@ -44,7 +44,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   put:
      *     summary: "Update an existing work_order."
      *     description: "Update an already existing work_order"
-     *     tags: ['Work Order']
+     *     tags: ['Work Orders']
      *     produces:
      *     - application/json
      *     operationId: "updateWorkOrder"
@@ -55,7 +55,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/postWorkOrderOutput'
      *     parameters:
      *       - $ref: '#/parameters/sessionId'
-     *       - $ref : '#/parameters/req_id'
+     *       - $ref : '#/parameters/work_order_id'
      *       - name: 'work_order'
      *         in: body
      *         required: true
@@ -80,7 +80,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   get:
      *     description: "Returns a Specific Work Order by the given ID"
      *     summary: "Finds a Work Order by the given ID"
-     *     tags: ['Work Order']
+     *     tags: ['Work Orders']
      *     consumes:
      *     - application/json
      *     produces:
@@ -93,11 +93,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getWorkOrderOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - name: id
-     *       description: Work Order ID
-     *       in: path
-     *       required: true
-     *       type: integer
+     *     - $ref: '#/parameters/work_order_id'
      */
     app.get('/work_orders/:id', urlencodedParser, (req, res)=> {
         API.workOrders().getWorkOrders(req.params.id, undefined, req.who)
@@ -117,7 +113,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    summary: "Retrieves a Work Order by status"
      *    description: "This can be used to retrieve work order based on their status conditions"
      *
-     *    tags: ['Work Order']
+     *    tags: ['Work Orders']
      *    produces:
      *    - application/json
      *    operationId: "getRequestByStatus"
@@ -130,11 +126,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *            $ref: '#/definitions/getWorkOrderOutput'
      *    parameters:
      *      - $ref: '#/parameters/sessionId'
-     *      - $ref: '#/parameters/req_status'
+     *      - $ref: '#/parameters/statusId'
      *      - $ref: '#/parameters/offset'
      *      - $ref: '#/parameters/limit'
      */
-    app.get('/work_orders/status/:statusId', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/status/:statusId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
         API.workOrders().getWorkOrders(req.params['statusId'], "status", req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
@@ -152,7 +148,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    summary: "Update a Work Order status"
      *    description: "This can be used to retrieve work order based on their status conditions"
      *
-     *    tags: ['Work Order']
+     *    tags: ['Work Orders']
      *    produces:
      *    - application/json
      *    operationId: "updateWorkOrderStatus"
@@ -165,7 +161,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *            $ref: '#/definitions/getWorkOrderOutput'
      *    parameters:
      *      - $ref: '#/parameters/sessionId'
-     *      - $ref: '#/parameters/req_status'
+     *      - $ref: '#/parameters/statusId'
      *      - $ref: '#/parameters/offset'
      *      - $ref: '#/parameters/limit'
      */
@@ -185,9 +181,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *  get:
      *    summary: "Retrieves Work Order that belongs to a user by a work_order status id"
      *    description: "Retrieves Work Order by specifying the user id and the status id. e.g Say we want to
-     *                    retrieve a work_order that belongs to UserA and is Pending, this route a perfect fit
+     *                    retrieve all work_order that belongs to UserA that is currently Disconnected, this route a perfect fit
      *                    for such."
-     *    tags: ['Work Order']
+     *    tags: ['Work Orders']
      *    produces:
      *    - application/json
      *    operationId: "getRequestByUserAndStatus"
@@ -201,7 +197,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - $ref: '#/parameters/user_id'
-     *      - $ref: '#/parameters/req_status'
+     *      - $ref: '#/parameters/statusId'
      */
     app.get('/work_orders/user/:userId/status/:statusId', urlencodedParser, (req, res)=> {
         return res.send("Not yet implemented");
@@ -215,7 +211,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    description: 'Retrieves a list of Work Order that belongs to a particular
      *          User as specified by the userId path parameter'
      *    summary: 'Retrieves Work Order Assigned to a User'
-     *    tags: ['Work Order']
+     *    tags: ['Work Orders']
      *    produces:
      *    - application/json
      *    operationId: "getWorkOrderByUser"
@@ -230,13 +226,43 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/offset'
      *    - $ref: '#/parameters/limit'
      */
-    app.get('/work_orders/user/:userId/:offset?/:limit?', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/user/:userId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
         console.log(req.params);
-        API.workOrders().getWorkOrders(`{"id":${req.params['userId']}}`, "assigned_to->[]", req.who, req.params.offset||0, req.params.limit||10)
+        API.workOrders().getWorkOrders(`{"id":${req.params['userId']}}`, "assigned_to->[]", req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
             .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
+     * /work_orders/user/{userId}/{fromDate}/{toDate}/{offset}/{limit}:
+     *   get:
+     *     description: "Returns a Specific Work Order by the given ID"
+     *     summary: "Finds a Work Order by the given ID"
+     *     tags: ['Work Orders']
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: "getWorkOrder"
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getWorkOrderOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get('/work_orders/user/:userId/:fromDate/:toDate/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
+        API.workOrders().getWorkOrdersBetweenDates(req.params['userId'], undefined, req.params['fromDate'],
+            req.params['toDate'], req.params.offset || 0, req.params.limit || 10, req.who)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            }).catch(({err, code})=> {
                 return res.status(code).send(err);
             });
     });
@@ -248,7 +274,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   get:
      *     summary: Gets Notes for a Work Order
      *     description: ''
-     *     tags: [Work Order]
+     *     tags: [Work Orders]
      *     produces:
      *     - application/json
      *     operationId: getWorkOrderNotes
@@ -259,15 +285,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getNoteOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - in: path
-     *       name: id
-     *       required: true
+     *     - $ref: '#/parameters/work_order_id'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
     app.get('/work_orders/:id/notes/:offset?/:limit?', urlencodedParser, (req, res)=> {
         console.log("Fetch note");
-        return API.notes().getNotes(req.params['id'], "work_orders", "relation_id", req.who, req.params.offset||0, req.params.limit||10)
+        return API.notes().getNotes(req.params['id'], "work_orders", "relation_id", req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -283,7 +307,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    summary: "Updates the status of a Work Order"
      *    description: "This can be used to update a  work_order to either of the following :
      *                    Approved, Pending or Rejected"
-     *    tags: ['Work Order']
+     *    tags: ['Work Orders']
      *    produces:
      *    - application/json
      *    operationId: "updateRequestStatus"
@@ -294,8 +318,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *          $ref: '#/definitions/getWorkOrderOutput'
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/req_id'
-     *    - $ref: '#/parameters/req_status'
+     *    - $ref: '#/parameters/work_order_id'
+     *    - $ref: '#/parameters/statusId'
      */
     app.put('/work_orders/:id/status/:statusId', urlencodedParser, (req, res)=> {
         res.send("Not yet implemented");
@@ -307,7 +331,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *  delete:
      *    summary: Deletes a Work Order
      *    description: "Deletes a Work Order by the specified Work Order {id}"
-     *    tags: ['Work Order']
+     *    tags: ['Work Orders']
      *    produces:
      *    - application/json
      *    operationId: deleteWorkOrder
@@ -316,14 +340,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        description: Returns true with the id of the Work Order deleted
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/req_id'
+     *    - $ref: '#/parameters/work_order_id'
      */
     app.delete('/work_orders/:id', (req, res)=> {
         API.workOrders().deleteWorkOrder("id", req.params.id, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
+            }).catch(({err, code})=> {
                 return res.status(code).send(err);
             });
     });

@@ -14,7 +14,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   post:
      *     summary: Creates a Customer
      *     description: ''
-     *     tags: [Customer]
+     *     tags: [Customers]
      *     consumes:
      *     - application/json
      *     produces:
@@ -26,7 +26,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - in: body
-     *        name: 'fault'
+     *        name: 'customer'
      *        required: true
      *        schema:
      *          $ref: '#/definitions/postCustomerInput'
@@ -50,7 +50,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   put:
      *     summary: Updates a Customer
      *     description: ''
-     *     tags: [Customer]
+     *     tags: [Customers]
      *     consumes:
      *     - application/json
      *     produces:
@@ -62,7 +62,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - in: body
-     *        name: 'fault'
+     *        name: 'customer'
      *        required: true
      *        schema:
      *          $ref: '#/definitions/postCustomerInput'
@@ -79,7 +79,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
-    
+
     // /**
     //  * @swagger
     //  * /customers/user/{user_id}/{offset}/{limit}:
@@ -120,7 +120,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   get:
      *     summary: Gets List of customers By the account no
      *     description: ''
-     *     tags: [Customer]
+     *     tags: [Customers]
      *     produces:
      *     - application/json
      *     operationId: getCustomers
@@ -131,8 +131,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getCustomerOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
+     *     - $ref: '#/parameters/account_no'
      */
     app.get('/customers/:account_no', urlencodedParser, (req, res)=> {
         return API.customers().getCustomers(req.params['account_no'])
@@ -146,11 +145,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /customers/meter/{meterNo}:
+     * /customers/meter/{meter_no}:
      *   get:
      *     summary: Gets List of customers by meter
      *     description: ''
-     *     tags: [Customer]
+     *     tags: [Customers]
      *     produces:
      *     - application/json
      *     operationId: getCustomersByMeterNo
@@ -161,8 +160,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getCustomerOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
+     *     - $ref: '#/parameters/meter_no'
      */
     app.get('/customers/meter/:meterNo', urlencodedParser, (req, res)=> {
         return API.customers().getCustomers(req.params['meterNo'], "meter_no")
@@ -177,11 +175,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /customers/search/{keyword}:
+     * /customers/search/{keyword}/{offset}/{limit}:
      *   get:
      *     summary: Search for a customer either by the account_no or meter_no
      *     description: ''
-     *     tags: [Customer]
+     *     tags: [Customers]
      *     produces:
      *     - application/json
      *     operationId: searchCustomers
@@ -192,11 +190,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getCustomerOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/keyword'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/customers/search/:keyword', urlencodedParser, (req, res)=> {
-        return API.customers().searchCustomers(req.params['keyword'])
+    app.get('/customers/search/:keyword/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
+        return API.customers().searchCustomers(req.params['keyword'], req.params['offset'], req.params['limit'])
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -211,7 +210,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *  delete:
      *    summary: Deletes a Customer
      *    description: "Deletes a Customer"
-     *    tags: [Customer]
+     *    tags: [Customers]
      *    produces:
      *    - application/json
      *    operationId: deleteCustomer
@@ -220,7 +219,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        description: Returns true with the id of the request deleted
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/fault_id'
+     *    - $ref: '#/parameters/account_no'
      */
     app.delete('/customers/:id', urlencodedParser, (req, res)=> {
         API.customers().deleteCustomer("id", req.params.id)

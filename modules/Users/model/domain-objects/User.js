@@ -28,16 +28,13 @@ class User extends DomainObject {
             'first_name',
             'last_name',
             'middle_name',
-            'gender',
-            'api_instance_id'
+            'gender'
         ];
     }
 
     guard() {
         return [
-            'id',
-            'password',
-            'email'
+            'id'
         ];
     }
 

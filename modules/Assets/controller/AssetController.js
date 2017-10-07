@@ -14,7 +14,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   post:
      *     summary: Creates an Asset
      *     description: ''
-     *     tags: [Asset]
+     *     tags: [Assets]
      *     consumes:
      *     - application/json
      *     produces:
@@ -26,7 +26,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - in: body
-     *        name: 'fault'
+     *        name: 'asset'
      *        required: true
      *        schema:
      *          $ref: '#/definitions/postAssetInput'
@@ -50,7 +50,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   put:
      *     summary: Updates a Asset
      *     description: ''
-     *     tags: [Asset]
+     *     tags: [Assets]
      *     consumes:
      *     - application/json
      *     produces:
@@ -62,7 +62,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - in: body
-     *        name: 'fault'
+     *        name: 'asset'
      *        required: true
      *        schema:
      *          $ref: '#/definitions/postAssetInput'
@@ -86,7 +86,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   get:
      *     summary: Gets assets assigned to a user
      *     description: ''
-     *     tags: [Asset]
+     *     tags: [Assets]
      *     produces:
      *     - application/json
      *     operationId: getAssets
@@ -118,9 +118,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /assets/{offset}/{limit}:
      *   get:
-     *     summary: Gets List of assets
+     *     summary: Retrieves a List of assets
      *     description: ''
-     *     tags: [Asset]
+     *     tags: [Assets]
      *     produces:
      *     - application/json
      *     operationId: getAssets
@@ -150,9 +150,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /assets/{id}:
      *   get:
-     *     summary: Gets a single asset
+     *     summary: Retrieves a Single Asset
      *     description: ''
-     *     tags: [Asset]
+     *     tags: [Assets]
      *     produces:
      *     - application/json
      *     operationId: getAssets
@@ -165,6 +165,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
+     *     - $ref: '#/parameters/asset_id'
      */
     app.get('/assets/:id', urlencodedParser, (req, res)=> {
         console.log('/assets/offset/limit');
@@ -179,11 +180,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /assets/search/{keyword}:
+     * /assets/search/{keyword}/{offset}/{limit}:
      *   get:
      *     summary: Search for a asset either by the Asset Name or by an Asset Type
      *     description: ''
-     *     tags: [Asset]
+     *     tags: [Assets]
      *     produces:
      *     - application/json
      *     operationId: searchAssets
@@ -194,10 +195,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getCustomerOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/keyword'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/assets/search/:keyword', urlencodedParser, (req, res)=> {
+    app.get('/assets/search/:keyword/:offset?/:limit?', urlencodedParser, (req, res)=> {
         console.log('/assets/search/keyword');
         return API.assets().searchAssets(req.params['keyword'])
             .then(({data, code})=> {
@@ -214,7 +216,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *  delete:
      *    summary: Deletes a Asset
      *    description: "Deletes a Asset"
-     *    tags: [Asset]
+     *    tags: [Assets]
      *    produces:
      *    - application/json
      *    operationId: deleteAsset
@@ -223,7 +225,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        description: Returns true with the id of the request deleted
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/fault_id'
+     *    - $ref: '#/parameters/asset_id'
      */
     app.delete('/assets/:id', urlencodedParser, (req, res)=> {
         API.assets().deleteAsset("id", req.params.id)
