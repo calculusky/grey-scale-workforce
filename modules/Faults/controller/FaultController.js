@@ -96,9 +96,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getFaultOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - in: path
-     *       name: user_id
-     *       required: true
+     *     - $ref: '#/parameters/user_id'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
@@ -131,9 +129,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getNoteOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - in: path
-     *       name: id
-     *       required: true
+     *     - $ref: '#/parameters/fault_id'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
@@ -166,9 +162,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getAttachmentOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - in: path
-     *       name: id
-     *       required: true
+     *     - $ref: '#/parameters/fault_id'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */

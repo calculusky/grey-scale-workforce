@@ -97,9 +97,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getAssetOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - in: path
-     *       name: user_id
-     *       required: true
+     *     - $ref: '#/parameters/user_id'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */

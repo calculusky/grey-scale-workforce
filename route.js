@@ -130,7 +130,6 @@ module.exports = function route(context) {
         info: {
             title: "IForce API.",
             version: "1.0",
-            author: "Paul Okeke",
             description: "IForce API Documentation",
             "x-ibm-name": "mr.working-api"
         },
