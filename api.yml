@@ -397,22 +397,37 @@ definitions:
     - data
 
   postWorkOrderInput:
-      type: object
-      required:
-        - user_id
-        - emp_no
-        - birth_date
-      properties:
-        user_id:
-          type: integer
-        emp_no:
-          type: string
-        birth_date:
-          type: string
-          format: date
-        employment_date:
-          type: string
-          format: date
+    type: object
+    required:
+    - related_to
+    - relation_id
+    - summary
+    properties:
+      related_to:
+        type: integer
+      relation_id:
+        type: string
+      labels:
+        type: array
+      status:
+        type: integer
+      priority:
+        type: string
+      summary:
+        type: string
+      address_line:
+        type: string
+      contact_name:
+        type: string
+      issue_date:
+        type: string
+        format: date
+      start_date:
+        type: string
+        format: date
+      completed_date:
+        type: string
+        format: date
 
   Asset:
     properties:
