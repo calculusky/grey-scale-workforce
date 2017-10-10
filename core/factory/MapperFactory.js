@@ -47,6 +47,8 @@ class MapperFactory {
                 return Utils.loadMapper(mapperStore, path, mapperName, context);
             case MapperFactory.DISCONNECTION_ORDER:
                 return Utils.loadMapper(mapperStore, path, mapperName, context);
+            case MapperFactory.PAYMENT:
+                return Utils.loadMapper(mapperStore, path, mapperName, context);
         }
     }
 }
@@ -62,6 +64,7 @@ MapperFactory.METER_READING = "MeterReading";
 MapperFactory.NOTIFICATION = "Notification";
 MapperFactory.UPLOAD = "Upload";
 MapperFactory.DISCONNECTION_ORDER = "DisconnectionOrder";
+MapperFactory.PAYMENT = "Payment";
 
 
 module.exports = MapperFactory;

@@ -1,0 +1,15 @@
+{
+  "id": "id",
+  "system": "system",
+  "system_id": "system_id",
+  "amount": "amount",
+  "transaction_id": "transaction_id",
+  "payer": "payer",
+  "channel": "channel",
+  "status": "status",
+  "details": "details",
+  "payment_date": "payment_date",
+  "deleted_at": "deleted_at",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}

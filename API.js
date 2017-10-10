@@ -134,6 +134,14 @@ class API {
     uploads(){
         return API._(this)['services']['uploadService'];
     }
+    
+    /**
+     * 
+     * @returns {PaymentService|*}
+     */
+    payments(){
+        return API._(this)['services']['paymentService'];
+    }
 
     /**
      * This method theoretically can be accessed outside this class

@@ -40,6 +40,7 @@
     "MeterReading:../../modules/SpotBilling/model/mappers/MeterReadingMapper",
     "Notification:../../modules/Notifications/model/mappers/NotificationMapper",
     "Upload:../../modules/Uploads/model/mappers/UploadMapper",
-    "DisconnectionOrder:../../modules/DisconnectionOrders/model/mappers/DisconnectionOrderMapper"
+    "DisconnectionOrder:../../modules/DisconnectionOrders/model/mappers/DisconnectionOrderMapper",
+    "Payment:../../modules/Payments/model/mappers/PaymentMapper"
   ]
 }

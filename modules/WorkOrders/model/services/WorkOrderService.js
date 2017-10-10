@@ -3,7 +3,6 @@
  */
 let MapperFactory = null;
 const DomainFactory = require('../../../DomainFactory');
-const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
 const validate = require('validate-fields')();
 
@@ -190,16 +189,17 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
         //if we loading for a list view let's get the counts or related models
         if (!isSingle) {
             let countNotes = context.database.count('note as notes_count').from("notes")
-                .where("module", moduleName)
-                .where("relation_id", workOrder.id);
+                .where("module", moduleName).where("relation_id", workOrder.id);
 
-            let countAttachments = context.database.count('id as attachments_count')
-                .from("attachments")
-                .where("module", moduleName)
-                .where("relation_id", workOrder.id);
+            let countAttachments = context.database.count('id as attachments_count').from("attachments")
+                .where("module", moduleName).where("relation_id", workOrder.id);
             promises.push(countNotes, countAttachments)
         }
-
+        //Promises in order of arrangement
+        //0: Disconnection Order
+        //1: Asset or Customer
+        //2: Notes Count
+        //3: Attachments Count
         Promise.all(promises).then(values=> {
             //its compulsory that we check that a record exist
             let type = values[0];

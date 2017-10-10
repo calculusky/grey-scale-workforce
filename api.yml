@@ -87,6 +87,13 @@ parameters:
     in: path
     description: The Asset ID
 
+  payment_id:
+    name: id
+    type: integer
+    required: true
+    in: path
+    description: The Payment ID
+
 #----------------------Definitions-------------------------------
 definitions:
   loginInput:
@@ -622,47 +629,47 @@ definitions:
         type: string
       current_reading:
         type: number
-        format: decimal
+        format: float
       previous_reading:
         type: number
-        format: decimal
+        format: float
       current_bill:
         type: number
-        format: decimal
+        format: float
       current_opening_bal:
         type: number
-        format: decimal
+        format: float
       current_closing_bal:
         type: number
-        format: decimal
+        format: float
       current_billing_adjustment:
         type: number
-        format: decimal
+        format: float
       current_payment:
         type: number
-        format: decimal
+        format: float
       last_payment:
         type: number
-        format: decimal
+        format: float
       last_payment_date:
         type: number
-        format: decimal
+        format: float
       reading_code:
         type: number
-        format: decimal
+        format: float
       reading_section:
         type: string
       demand:
         type: string
       energy:
         type: number
-        format: decimal
+        format: float
       fix_charge:
         type: number
-        format: decimal
+        format: float
       vat_charge:
         type: number
-        format: decimal
+        format: float
       group_id:
         type: integer
       group:
@@ -794,7 +801,7 @@ definitions:
         type: string
       current_reading:
         type: number
-        format: decimal
+        format: float
 
   Note:
     type: object
@@ -913,3 +920,82 @@ definitions:
         type: number
       y:
         type: number
+
+
+  Payment:
+    type: object
+    properties:
+      id:
+        type: integer
+      system:
+        type: string
+      relation_id:
+        type: string
+      amount:
+        type: number
+        format: float
+      transaction_id:
+        type: string
+      payer:
+        type: string
+      channel:
+        type: string
+      status:
+        type: integer
+      details:
+        type: string
+      payment_date:
+        type: string
+        format: date
+      created_at:
+        type: string
+        format: date
+      updated_at:
+        type: string
+        format: date
+
+  postPaymentInput:
+    type: object
+    required:
+    - system
+    - system_id
+    - amount
+    - transaction_id
+    - payer
+    - channel
+    - payment_date
+    properties:
+      system:
+        type: string
+        description: "The system this payment is meant for e.g work_order"
+      system_id:
+        type: string
+        description: "The Key or Unique ID supplied by the Payer for this payment"
+      amount:
+        type: number
+        format: float
+      transaction_id:
+        type: string
+      payer:
+        type: string
+      channel:
+        type: string
+      payment_date:
+        type: string
+        format: date-time
+
+
+  getPaymentOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Payment'
+    required:
+    - status

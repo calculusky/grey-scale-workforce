@@ -22,8 +22,6 @@ class DomainFactory {
             switch (domainName) {
                 case DomainFactory.USER:
                     return require('./Users/model/domain-objects/User');
-                case DomainFactory.TRAVEL_REQUEST:
-                    return require('./TravelRequests/model/domain-objects/TravelRequest');
                 case DomainFactory.WORK_ORDER:
                     return require('./WorkOrders/model/domain-objects/WorkOrder');
                 case DomainFactory.FAULT:
@@ -44,6 +42,8 @@ class DomainFactory {
                     return require('./Uploads/model/domain-objects/Upload');
                 case DomainFactory.DISCONNECTION_ORDER:
                     return require('./DisconnectionOrders/model/domain-objects/DisconnectionOrder');
+                case DomainFactory.PAYMENT:
+                    return require('./Payments/model/domain-objects/Payment');
                 
             }
         }catch (e){
@@ -67,5 +67,6 @@ DomainFactory.METER_READING = "MeterReading";
 DomainFactory.NOTIFICATION = "Notification";
 DomainFactory.UPLOAD = "Upload";
 DomainFactory.DISCONNECTION_ORDER = "DisconnectionOrder";
+DomainFactory.PAYMENT = "Payment";
 
 module.exports = DomainFactory;

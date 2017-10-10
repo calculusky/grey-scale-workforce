@@ -8,7 +8,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /work_orders:
      *  post:
-     *    description: "Creates a new Work Order"
+     *    description: "Create Work Order"
      *    summary: "Create a new Work Order"
      *    tags: ['Work Orders']
      *    produces:
@@ -42,7 +42,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /work_orders/{id}:
      *   put:
-     *     summary: "Update an existing work_order."
+     *     summary: "Update Work Order"
      *     description: "Update an already existing work_order"
      *     tags: ['Work Orders']
      *     produces:
@@ -79,7 +79,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * /work_orders/{id}:
      *   get:
      *     description: "Returns a Specific Work Order by the given ID"
-     *     summary: "Finds a Work Order by the given ID"
+     *     summary: "Fetch Work Order"
      *     tags: ['Work Orders']
      *     consumes:
      *     - application/json
@@ -110,7 +110,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /work_orders/status/{statusId}/{offset}/{limit}:
      *  get:
-     *    summary: "Retrieves a Work Order by status"
+     *    summary: "List Work Orders by status"
      *    description: "This can be used to retrieve work order based on their status conditions"
      *
      *    tags: ['Work Orders']
@@ -145,7 +145,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /work_orders/{id}/status/{statusId}:
      *  put:
-     *    summary: "Update a Work Order status"
+     *    summary: "Update Work Order Status"
      *    description: "This can be used to retrieve work order based on their status conditions"
      *
      *    tags: ['Work Orders']
@@ -179,7 +179,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /work_orders/user/{userId}/status/{statusId}:
      *  get:
-     *    summary: "Retrieves Work Order that belongs to a user by a work_order status id"
+     *    summary: "List Work Orders by User and Status"
      *    description: "Retrieves Work Order by specifying the user id and the status id. e.g Say we want to
      *                    retrieve all work_order that belongs to UserA that is currently Disconnected, this route a perfect fit
      *                    for such."
@@ -210,7 +210,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *  get:
      *    description: 'Retrieves a list of Work Order that belongs to a particular
      *          User as specified by the userId path parameter'
-     *    summary: 'Retrieves Work Order Assigned to a User'
+     *    summary: 'List Work Order of User'
      *    tags: ['Work Orders']
      *    produces:
      *    - application/json
@@ -242,13 +242,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * /work_orders/user/{userId}/{fromDate}/{toDate}/{offset}/{limit}:
      *   get:
      *     description: "Returns a Specific Work Order by the given ID"
-     *     summary: "Finds a Work Order by the given ID"
+     *     summary: "List Work Order of a User within a date range"
      *     tags: ['Work Orders']
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: "getWorkOrder"
+     *     operationId: "getWorkOrdersBetweenDates"
      *     responses:
      *       '200':
      *         description: Successful
@@ -272,7 +272,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /work_orders/{id}/notes/{offset}/{limit}:
      *   get:
-     *     summary: Gets Notes for a Work Order
+     *     summary: "List Work Order Notes"
      *     description: ''
      *     tags: [Work Orders]
      *     produces:
