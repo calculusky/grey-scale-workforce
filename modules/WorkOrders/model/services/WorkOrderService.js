@@ -3,7 +3,7 @@
  */
 let MapperFactory = null;
 const DomainFactory = require('../../../DomainFactory');
-const Util = require('../../../../core/Utility/MapperUtil');
+const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validate-fields')();
 
 /**
@@ -42,7 +42,7 @@ class WorkOrderService {
                 .then(results=> {
                     const workOrders = results.records;
                     _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, by == 'id');
-                    if (!workOrders.length) return resolve(Util.buildResponse({data: {items: results.records}}));
+                    if (!workOrders.length) return resolve(Utils.buildResponse({data: {items: results.records}}));
                 }).catch(err=> {
                 console.log(err);
                 return reject(err);
@@ -52,7 +52,7 @@ class WorkOrderService {
     }
 
     /**
-     * Gets list of work orders by date. However this can be used to get workorders regardless of supplying
+     * Gets list of work orders by date. However this can be used to get work-orders regardless of supplying
      * the dates.
      * @param userId
      * @param status
@@ -80,9 +80,9 @@ class WorkOrderService {
                     workOrders.push(domain);
                 });
                 _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, false);
-                if (!records.length) return resolve(Util.buildResponse({data: {items: workOrders}}));
+                if (!records.length) return resolve(Utils.buildResponse({data: {items: workOrders}}));
             }).catch(err=> {
-                const error = Util.buildResponse(Util.getMysqlError(err), 400);
+                const error = Utils.buildResponse(Utils.getMysqlError(err), 400);
                 return Promise.reject(error);
             });
         };
@@ -103,7 +103,7 @@ class WorkOrderService {
         //enforce the validation
         let isValid = validate(workOrder.rules(), workOrder);
         if (!isValid) {
-            return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
 
         //Get Mapper
@@ -111,7 +111,7 @@ class WorkOrderService {
         // console.log(workOrder);
         return WorkOrderMapper.createDomainRecord(workOrder).then(workOrder=> {
             if (!workOrder) return Promise.reject();
-            return Util.buildResponse({data: workOrder});
+            return Utils.buildResponse({data: workOrder});
         });
     }
 
@@ -130,7 +130,7 @@ class WorkOrderService {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         return WorkOrderMapper.updateDomainRecord({value: orderId, domain: workOrder}).then(result=> {
             if (result.pop()) {
-                return Util.buildResponse({data: result.shift()});
+                return Utils.buildResponse({data: result.shift()});
             } else {
                 return Promise.reject(Util.buildResponse({status: "fail", data: result.shift()}, 404));
             }
@@ -141,9 +141,9 @@ class WorkOrderService {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         return WorkOrderMapper.deleteDomainRecord({by, value}).then(count=> {
             if (!count) {
-                return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
+                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Util.buildResponse({data: {message: "Work Order deleted"}});
+            return Utils.buildResponse({data: {message: "Work Order deleted"}});
         });
     }
 
@@ -229,7 +229,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                 workOrder['attachments_count'] = values[3].shift()['attachments_count'];
             }
             //end of outer loop
-            if (++processed == rowLen) return resolve(Util.buildResponse({data: {items: workOrders}}));
+            if (++processed == rowLen) return resolve(Utils.buildResponse({data: {items: workOrders}}));
         }).catch(err=> {
             console.log(err);
             return reject(err);
