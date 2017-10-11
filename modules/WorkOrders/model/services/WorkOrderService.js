@@ -132,7 +132,7 @@ class WorkOrderService {
             if (result.pop()) {
                 return Utils.buildResponse({data: result.shift()});
             } else {
-                return Promise.reject(Util.buildResponse({status: "fail", data: result.shift()}, 404));
+                return Promise.reject(Utils.buildResponse({status: "fail", data: result.shift()}, 404));
             }
         });
     }
@@ -178,6 +178,8 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
         let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
         let isAsset = workOrder['related_to'] == 'assets';
         workOrder['group'] = groups[workOrder['group_id']];
+        
+        workOrder['work_order_no'] = Utils.humanizeUniqueSystemNumber(workOrder['work_order_no']);
 
         //remove the request_id its irrelevant
         delete workOrder['request_id'];

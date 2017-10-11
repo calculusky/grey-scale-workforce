@@ -5,14 +5,14 @@ const DateUtils = require('./DateUtils');
 const MapperUtils = require('./MapperUtil');
 
 
-module.exports = function Utils(){
-    
+module.exports = function Utils() {
+
 };
 
 module.exports.date = DateUtils;
 
-module.exports.mapper = function(){
-  return MapperUtils;
+module.exports.mapper = function () {
+    return MapperUtils;
 };
 
 module.exports.validatePayLoad = function (payLoad, checks) {
@@ -59,9 +59,7 @@ module.exports.getMysqlError = function (err) {
                 "another entity of which the related entity doesn't exist"
             };
         case 1062:
-            return {
-
-            };
+            return {};
         case 1586:
             return {
                 status: "error",
@@ -105,7 +103,7 @@ module.exports.getMysqlError = function (err) {
                 desc: "You maybe need to delete its related entity before trying to delete this record"
             };
         default:
-            return{
+            return {
                 status: "error",
                 msg: "You are doing something wrong",
                 type: "Database",
@@ -124,7 +122,7 @@ module.exports.buildResponse = function ({status="success", data, msg, type, cod
     if (msg) responseBody.message = msg;
     if (type) responseBody.type = type;
     if (code) responseBody.code = code;
-    if(desc) responseBody.description = desc;
+    if (desc) responseBody.description = desc;
     if (isRoute) {
         let response = {};
         if (status == "success") {
@@ -165,4 +163,16 @@ module.exports.authFailData = function (code) {
                 description: "The username or password is incorrect"
             };
     }
+};
+
+module.exports.humanizeUniqueSystemNumber = function (systemUniqueNo) {
+    let formattedNo = "";
+    let stringItems = systemUniqueNo.split("");
+    for (let i = 0; i < stringItems.length; i++) {
+        formattedNo += stringItems[i];
+        if (i == 3 || i == 9 || i == 12) {
+            formattedNo += "-";
+        }
+    }
+    return formattedNo;
 };
