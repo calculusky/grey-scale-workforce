@@ -22,7 +22,7 @@ class Payment extends DomainObject {
             'amount',
             'transaction_id',
             'payer',
-            'vendor',
+            'channel',
             'payment_date'
         ];
     }
@@ -49,7 +49,7 @@ class Payment extends DomainObject {
             amount: Number,
             transaction_id: String,
             payer: String,
-            vendor: String,
+            channel: String,
             payment_date: Date
         };
     }

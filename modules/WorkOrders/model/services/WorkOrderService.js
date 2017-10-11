@@ -216,7 +216,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                 if (isAsset) {
                     workOrder['relation_name'] = relation.asset_name;
                 } else {
-                    workOrder['relation_name'] = `${relation.first_name} ${relation.last_name}`;
+                    workOrder['relation_name'] = relation.customer_name;
                     //if the address line is empty and is related to a customer we should use the
                     //customer address
                     workOrder['address_line'] =
