@@ -32,9 +32,8 @@ class ModelMapper {
                     if (!colName) break;
                     switch (this.jsonFunction[keyName]) {
                         case 'JSON_CONTAINS':
-                            console.log(typeof value);
                             resultSets = resultSets.where(
-                                this.context.database.raw(`${this.jsonFunction[keyName]}(${colName}, ${value})`)
+                                this.context.database.raw(`${this.jsonFunction[keyName]}(${this.tableName}.${colName}, ${value})`)
                             );
                             break;
                         case 'JSON_ARRAY_APPEND':
