@@ -67,7 +67,7 @@ class WorkOrderService {
         limit = parseInt(limit);
         var executor = (resolve, reject)=> {
             let resultSet = this.context.database.select(['*']).from("work_orders");
-            if (fromDate && toDate) resultSet = resultSet.whereBetween('issue_date', [fromDate, toDate]);
+            if (fromDate && toDate) resultSet = resultSet.whereBetween('start_date', [fromDate, toDate]);
             if (userId) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${userId}}')`);
             if (status) resultSet = resultSet.where('status', status);
             resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
