@@ -28,7 +28,7 @@ module.exports = function main(context) {
  */
 module.exports.createDelinquencyList = function () {
     //lets retrieve the path where delinquency list is saved
-    const directory = `${this.context.config.storage.path}/uploads/work`;
+    const directory = `${this.context.config.storage.path}/uploads/delinquencies`;
     const workbook = new Excel.Workbook();
     let currentFile = null;
 

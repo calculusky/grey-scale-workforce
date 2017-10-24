@@ -9,6 +9,7 @@ var API = require('./API.js');
 const fs = require('fs');
 const swagger = require('./swagger');
 const express = require("express");
+const events = require('./events/events.js');
 var cors = require('cors');
 
 module.exports = function route(context) {
@@ -18,8 +19,15 @@ module.exports = function route(context) {
 
     /**
      * Configure Express
+     * Configure SocketIO
      */
     var app = express();
+    //initialize socket.io
+    const http = require('http').Server(app);
+    const io = require('socket.io')(http);
+
+    events.init(io, API);
+
     app.set('port', process.env.PORT || 3000);
     // app.use(cors());
     app.use(function (req, res, next) {
@@ -53,7 +61,7 @@ module.exports = function route(context) {
 
 
     /**
-     * Add all Application Controller to the system
+     * Configure the storage options
      * @type {string}
      */
     var controllerPath = './modules';
@@ -86,6 +94,10 @@ module.exports = function route(context) {
     });
 
     let multiPart = multer({storage: storage});
+    /**
+     * Add all Application Controller to the system
+     * @type {string}
+     */
     fs.readdirSync(controllerPath).forEach(dir=> {
         if (fs.statSync(`${controllerPath}/${dir}`).isDirectory()) {
             var filePath = `${controllerPath}/${dir}/controller`;
@@ -136,5 +148,5 @@ module.exports = function route(context) {
         schemes: ['http']
     });
 
-    app.listen(9003, ()=>console.log("Started MrWorking API"));
+    http.listen(9003, ()=>console.log("Started MrWorking API"));
 };
