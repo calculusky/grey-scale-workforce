@@ -110,8 +110,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /work_orders/customer/{account_no}:
      *   get:
-     *     description: "Returns a Specific Work Order by the given ID"
-     *     summary: "Fetch Work Order"
+     *     description: "Returns a Work Orders of a customer"
+     *     summary: "Fetch Customer Work Orders"
      *     tags: ['Work Orders']
      *     consumes:
      *     - application/json
