@@ -4,7 +4,7 @@ const Password = require('../../../../core/Utility/Password');
 const Log = require('../../../../core/logger');
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validate-fields')();
-const TAG =  "PaymentService:";
+const TAG = "PaymentService:";
 
 /**
  * @name PaymentService
@@ -134,7 +134,7 @@ class PaymentService {
                             return resolve(Utils.buildResponse({data: payment}));
                         });
 
-                        let resUpdate = this.context.database.table('work_orders').update({status:5})
+                        let resUpdate = this.context.database.table('work_orders').update({status: 5})
                             .where(systemType.key, payment.system_id);
 
                         //can we also update the status of the work order at the background and also create a

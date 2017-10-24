@@ -95,15 +95,19 @@ class NotificationService {
                         notification: {
                             'title': 'IE Force',
                             body: notification.message,
-                            click_action:"com.mrworking.workorder.MAIN"
+                            click_action: "com.mrworking.workorder.MAIN"
                         },
                         data: {
                             type: notification.type
                         },
                         registration_ids: fcmTokens
                     };
-                    console.log(payload);
-                    this.push(payload, API);
+                    if (payload.registration_ids.length) return this.push(payload, API);
+                    else
+                        return Promise.reject(Util.buildResponse({
+                            status: "fail",
+                            data: {message: "Device not registered"}
+                        }, 400));
                 });
             }
         });
