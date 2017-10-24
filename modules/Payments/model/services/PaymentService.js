@@ -1,9 +1,10 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
-// const Util = require('../../../../core/Utility/MapperUtil');
+const Log = require('../../../../core/logger');
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validate-fields')();
+const TAG =  "PaymentService:";
 
 /**
  * @name PaymentService
@@ -126,7 +127,6 @@ class PaymentService {
                                 desc: `The work order has previously been acknowledged.`
                             }, 403));
                         }
-
                         //Now that everything is fine... lets now create the payment
                         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
                         PaymentMapper.createDomainRecord(payment).then(payment=> {
@@ -134,8 +134,14 @@ class PaymentService {
                             return resolve(Utils.buildResponse({data: payment}));
                         });
 
+                        let resUpdate = this.context.database.table('work_orders').update({status:5})
+                            .where(systemType.key, payment.system_id);
+
                         //can we also update the status of the work order at the background and also create a
+                        resUpdate.then(r=>console.log()).catch(err=> Log.e(TAG, JSON.stringify(err)));
+
                         //reconnection order
+                        //TODO get the logic to create a reconnection order
                     })
                 });
             });
