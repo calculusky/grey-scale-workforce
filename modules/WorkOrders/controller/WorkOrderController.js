@@ -108,6 +108,39 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
+     * /work_orders/customer/{account_no}:
+     *   get:
+     *     description: "Returns a Specific Work Order by the given ID"
+     *     summary: "Fetch Work Order"
+     *     tags: ['Work Orders']
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: "getCustomerWorkOrder"
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getWorkOrderOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/account_no'
+     */
+    app.get('/work_orders/customer/:account_no', urlencodedParser, (req, res)=> {
+        API.workOrders().getWorkOrders(req.params.account_no, 'relation_id', req.who)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+
+
+    /**
+     * @swagger
      * /work_orders/status/{statusId}/{offset}/{limit}:
      *  get:
      *    summary: "List Work Orders by status"
