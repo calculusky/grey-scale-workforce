@@ -89,7 +89,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     tags: [Assets]
      *     produces:
      *     - application/json
-     *     operationId: getAssets
+     *     operationId: getAssetsByUser
      *     responses:
      *       '200':
      *         description: Successful
@@ -153,7 +153,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     tags: [Assets]
      *     produces:
      *     - application/json
-     *     operationId: getAssets
+     *     operationId: getAsset
      *     responses:
      *       '200':
      *         description: Successful
@@ -161,12 +161,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getAssetOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
      *     - $ref: '#/parameters/asset_id'
      */
     app.get('/assets/:id', urlencodedParser, (req, res)=> {
-        console.log('/assets/offset/limit');
         return API.assets().getAssets(req.params['id'], undefined, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);

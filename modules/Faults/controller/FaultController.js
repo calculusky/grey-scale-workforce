@@ -88,7 +88,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     tags: [Faults]
      *     produces:
      *     - application/json
-     *     operationId: getFaults
+     *     operationId: getFaultsByUser
      *     responses:
      *       '200':
      *         description: Successful
@@ -129,7 +129,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getNoteOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/fault_id'
+     *     - $ref: '#/parameters/id'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
@@ -162,7 +162,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getAttachmentOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/fault_id'
+     *     - $ref: '#/parameters/id'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
@@ -223,7 +223,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        description: Returns true with the id of the request deleted
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/fault_id'
+     *    - $ref: '#/parameters/id'
      */
     app.delete('/faults/:id', urlencodedParser, (req, res)=> {
         API.faults().deleteFault("id", req.params.id)

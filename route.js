@@ -117,18 +117,27 @@ module.exports = function route(context) {
     /**
      * @swagger
      * tags:
-     *  - name: Travel Request
-     *    description: Travel Requests
      *
-     *  - name: User
+     *  - name: Users
      *    description: Users
      *
-     *  - name: Staff
-     *    description: Staffs
+     *  - name: Customers
+     *    description: Customers
      *
-     *  - name: Departments
-     *    description: Departments
+     *  - name: Assets
+     *    description: Assets
      *
+     *  - name: Faults
+     *    description: Faults
+     *
+     *  - name: Meter Readings
+     *    description: SpotBilling
+     *
+     *  - name: Work Orders
+     *    description: Work Order/Disconnection Order etc.
+     *
+     *  - name: Payments
+     *    description: Payments
      */
 
     /**
@@ -147,6 +156,9 @@ module.exports = function route(context) {
         },
         schemes: ['http']
     });
+
+    //Register Plugins
+    app.use(express.static('public'));
 
     http.listen(9003, ()=>console.log("Started MrWorking API"));
 };

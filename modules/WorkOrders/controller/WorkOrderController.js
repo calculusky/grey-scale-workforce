@@ -210,7 +210,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /work_orders/user/{userId}/status/{statusId}:
+     * /work_orders/user/{user_id}/status/{statusId}:
      *  get:
      *    summary: "List Work Orders by User and Status"
      *    description: "Retrieves Work Order by specifying the user id and the status id. e.g Say we want to
@@ -239,7 +239,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /work_orders/user/{userId}/{offset}/{limit}:
+     * /work_orders/user/{user_id}/{offset}/{limit}:
      *  get:
      *    description: 'Retrieves a list of Work Order that belongs to a particular
      *          User as specified by the userId path parameter'
@@ -272,7 +272,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /work_orders/user/{userId}/{fromDate}/{toDate}/{offset}/{limit}:
+     * /work_orders/user/{user_id}/{fromDate}/{toDate}/{offset}/{limit}:
      *   get:
      *     description: "Returns a Specific Work Order by the given ID"
      *     summary: "List Work Order of a User within a date range"
@@ -289,6 +289,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getWorkOrderOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/user_id'
+     *     - $ref: '#/parameters/fromDate'
+     *     - $ref: '#/parameters/toDate'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
      */
     app.get('/work_orders/user/:userId/:fromDate/:toDate/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
         API.workOrders().getWorkOrdersBetweenDates(req.params['userId'], undefined, req.params['fromDate'],

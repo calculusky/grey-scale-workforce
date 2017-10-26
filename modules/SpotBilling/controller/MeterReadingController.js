@@ -124,7 +124,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     tags: [Meter Readings]
      *     produces:
      *     - application/json
-     *     operationId: getMeterReadings
+     *     operationId: getMeterReading
      *     responses:
      *       '200':
      *         description: Successful
@@ -154,7 +154,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     tags: [Meter Readings]
      *     produces:
      *     - application/json
-     *     operationId: getMeterReadings
+     *     operationId: getLastMeterReadings
      *     responses:
      *       '200':
      *         description: Successful

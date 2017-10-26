@@ -206,7 +206,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /customers/{id}:
+     * /customers/{account_no}:
      *  delete:
      *    summary: Deletes a Customer
      *    description: "Deletes a Customer"
@@ -221,8 +221,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/account_no'
      */
-    app.delete('/customers/:id', urlencodedParser, (req, res)=> {
-        API.customers().deleteCustomer("id", req.params.id)
+    app.delete('/customers/:account_no', urlencodedParser, (req, res)=> {
+        API.customers().deleteCustomer("id", req.params.account_no)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

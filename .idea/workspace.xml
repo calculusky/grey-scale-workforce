@@ -2,8 +2,21 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="53a16bf2-2b98-4e6d-a057-762294e430a6" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/buttons.colVis.min.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/buttons.dataTables.min.css" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/dataTables.bootstrap4.min.css" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/dataTables.bootstrap4.min.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/dataTables.buttons.min.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/dataTables.checkboxes.css" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/dataTables.checkboxes.min.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/dataTables.responsive.min.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/jquery.dataTables.min.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/ext_plugin/datatables/responsive.dataTables.min.css" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/plugins/crm/crm.plugin.css" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/plugins/crm/crm.plugin.html" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/public/plugins/crm/crm.plugin.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modules/WorkOrders/controller/WorkOrderController.js" afterPath="$PROJECT_DIR$/modules/WorkOrders/controller/WorkOrderController.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/route.js" afterPath="$PROJECT_DIR$/route.js" />
     </list>
     <ignored path="travels.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -32,21 +45,76 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="PaymentService.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/modules/Payments/model/services/PaymentService.js">
+      <file leaf-file-name="route.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/route.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="372">
-              <caret line="140" column="101" selection-start-line="140" selection-start-column="101" selection-end-line="140" selection-end-column="101" />
+            <state relative-caret-position="414">
+              <caret line="147" column="25" selection-start-line="147" selection-start-column="25" selection-end-line="147" selection-end-column="25" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="WorkOrderController.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="swagger.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/swagger.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="450">
+              <caret line="25" column="45" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="WorkOrderController.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modules/WorkOrders/controller/WorkOrderController.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="320">
-              <caret line="85" column="20" selection-start-line="85" selection-start-column="20" selection-end-line="85" selection-end-column="20" />
+            <state relative-caret-position="288">
+              <caret line="16" column="20" selection-start-line="16" selection-start-column="20" selection-end-line="16" selection-end-column="20" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="crm.plugin.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/public/plugins/crm/crm.plugin.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="356">
+              <caret line="98" column="43" selection-start-line="98" selection-start-column="43" selection-end-line="98" selection-end-column="43" />
+              <folding>
+                <element signature="e#0#41#0" expanded="false" />
+                <marker date="1508950607299" expanded="true" signature="1005:1010" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="crm.plugin.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/public/plugins/crm/crm.plugin.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="275">
+              <caret line="69" column="93" selection-start-line="69" selection-start-column="71" selection-end-line="69" selection-end-column="93" />
+              <folding>
+                <element signature="n#style#0;n#div#0;n#!!top" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="PaymentService.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/Payments/model/services/PaymentService.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="426">
+              <caret line="107" column="50" selection-start-line="107" selection-start-column="50" selection-end-line="107" selection-end-column="50" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="crm.plugin.css" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/public/plugins/crm/crm.plugin.css">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="117">
+              <caret line="6728" column="22" selection-start-line="6728" selection-start-column="22" selection-end-line="6728" selection-end-column="22" />
               <folding />
             </state>
           </provider>
@@ -58,41 +126,6 @@
             <state relative-caret-position="486">
               <caret line="133" column="44" selection-start-line="133" selection-start-column="10" selection-end-line="133" selection-end-column="44" />
               <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NotificationService.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="309">
-              <caret line="96" column="55" selection-start-line="96" selection-start-column="55" selection-end-line="96" selection-end-column="55" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="map.json" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/modules/Notifications/model/domain-objects/map.json">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="108">
-              <caret line="6" column="19" selection-start-line="6" selection-start-column="19" selection-end-line="6" selection-end-column="19" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="mr_working.notifications" pinned="false" current-in-tab="false">
-        <entry file="dbDummy://dbtable:/219f5a5b/4a3537b1-11b7-4616-a344-07f0a4c5a740/mr_working.notifications">
-          <provider editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-          <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-            <state>
-              <filtering enabled="true" />
             </state>
           </provider>
         </entry>
@@ -112,36 +145,6 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="logger.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/core/logger.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ModelMapper.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/core/model/ModelMapper.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="194">
-              <caret line="205" column="0" selection-start-line="205" selection-start-column="0" selection-end-line="205" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="WorkOrderService.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/modules/WorkOrders/model/services/WorkOrderService.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3510">
-              <caret line="195" column="57" selection-start-line="195" selection-start-column="52" selection-end-line="195" selection-end-column="57" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
     </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
@@ -150,6 +153,7 @@
         <option value="config" />
         <option value="tsconfig.json" />
         <option value="JavaScript File" />
+        <option value="HTML File" />
       </list>
     </option>
   </component>
@@ -159,13 +163,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/modules/Notifications/model/domain-objects/map.json" />
-        <option value="$PROJECT_DIR$/modules/Faults/model/domain-objects/map.json" />
-        <option value="$PROJECT_DIR$/modules/Customers/model/domain-objects/map.json" />
-        <option value="$APPLICATION_CONFIG_DIR$/consoles/db/4a3537b1-11b7-4616-a344-07f0a4c5a740/console_14.sql" />
-        <option value="$PROJECT_DIR$/modules/Notes/model/domain-objects/Note.js" />
-        <option value="$PROJECT_DIR$/modules/Notes/model/services/NoteService.js" />
-        <option value="$PROJECT_DIR$/modules/Attachments/model/domain-objects/Attachment.js" />
         <option value="$PROJECT_DIR$/modules/Attachments/model/services/AttachmentService.js" />
         <option value="$APPLICATION_CONFIG_DIR$/consoles/db/4a3537b1-11b7-4616-a344-07f0a4c5a740/console_15.sql" />
         <option value="$APPLICATION_CONFIG_DIR$/consoles/db/4a3537b1-11b7-4616-a344-07f0a4c5a740/console_16.sql" />
@@ -204,12 +201,19 @@
         <option value="$APPLICATION_CONFIG_DIR$/consoles/db/4a3537b1-11b7-4616-a344-07f0a4c5a740/console_18.sql" />
         <option value="$PROJECT_DIR$/core/model/ModelMapper.js" />
         <option value="$PROJECT_DIR$/modules/WorkOrders/model/services/WorkOrderService.js" />
-        <option value="$PROJECT_DIR$/route.js" />
         <option value="$PROJECT_DIR$/events/events.js" />
         <option value="$PROJECT_DIR$/schedulers/main.js" />
         <option value="$PROJECT_DIR$/modules/Payments/model/services/PaymentService.js" />
         <option value="$PROJECT_DIR$/modules/Notifications/model/services/NotificationService.js" />
         <option value="$PROJECT_DIR$/modules/WorkOrders/controller/WorkOrderController.js" />
+        <option value="$PROJECT_DIR$/static/plugins/crm.plugin.js" />
+        <option value="$PROJECT_DIR$/static/plugins/crm.plugin.html" />
+        <option value="$PROJECT_DIR$/static/plugins/crm/crm.plugin.html" />
+        <option value="$PROJECT_DIR$/static/plugins/crm/crm.plugin.js" />
+        <option value="$PROJECT_DIR$/route.js" />
+        <option value="$PROJECT_DIR$/public/plugins/crm/crm.plugin.js" />
+        <option value="$PROJECT_DIR$/public/plugins/crm/crm.plugin.html" />
+        <option value="$PROJECT_DIR$/public/plugins/crm/crm.plugin.css" />
       </list>
     </option>
   </component>
@@ -272,6 +276,42 @@
               <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="mrworking" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="mrworking" />
+              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="public" />
+              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="plugins" />
+              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="crm" />
+              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="mrworking" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="mrworking" />
+              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="public" />
+              <option name="myItemType" value="com.jetbrains.php.projectView.PhpTreeStructureProvider$1" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
       <pane id="Scratches" />
@@ -289,19 +329,21 @@
     <property name="prop_add_unversioned_files" value="true" />
     <property name="SearchEverywhereHistoryKey" value="Rel&#9;FILE&#9;file:///home/paulex/PhpstormProjects/mrworking/core/model/links/Relationships.js&#10;Mapp&#9;FILE&#9;file:///home/paulex/PhpstormProjects/mrworking/modules/MapperFactory.js&#10;Mapper&#9;FILE&#9;file:///home/paulex/PhpstormProjects/mrworking/core/factory/MapperFactory.js&#10;API&#9;FILE&#9;file:///home/paulex/PhpstormProjects/travels/node_modules/handle-thing/test/api-test.js" />
     <property name="com.intellij.database.dataSource.DataSourceTemplate" value="MySQL" />
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/core" />
-      <recent name="$PROJECT_DIR$/modules/Users/model/domain-objects" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/public/assets" />
+      <recent name="$PROJECT_DIR$/static/plugins/crm" />
       <recent name="$PROJECT_DIR$/modules/Payments/model/services" />
       <recent name="$PROJECT_DIR$/modules/Payments/model/mappers" />
       <recent name="$PROJECT_DIR$/modules/Payments/model/domain-objects" />
-      <recent name="$PROJECT_DIR$/modules/Payments/controller" />
-      <recent name="$PROJECT_DIR$/swagger-ui/src/plugins/topbar" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/static/plugins/crm" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/core" />
+      <recent name="$PROJECT_DIR$/modules/Users/model/domain-objects" />
     </key>
   </component>
   <component name="RunManager">
@@ -420,12 +462,12 @@
       <workItem from="1508231518803" duration="16232000" />
       <workItem from="1508445516123" duration="7007000" />
       <workItem from="1508745421513" duration="15729000" />
-      <workItem from="1508838699076" duration="14391000" />
+      <workItem from="1508838699076" duration="42975000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="1219711000" />
+    <option name="totallyTimeSpent" value="1248295000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="-37" width="1366" height="805" extended-state="6" />
@@ -489,58 +531,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/swagger.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="792">
-          <caret line="44" column="59" selection-start-line="44" selection-start-column="59" selection-end-line="44" selection-end-column="59" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/swagger-ui/src/plugins/topbar/topbar.jsx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2304">
-          <caret line="129" column="16" selection-start-line="129" selection-start-column="16" selection-end-line="129" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/swagger-ui/package.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Faults/controller/FaultController.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4104">
-          <caret line="228" column="17" selection-start-line="228" selection-start-column="17" selection-end-line="228" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="dbDummy://dbtable:/219f5a5b/4a3537b1-11b7-4616-a344-07f0a4c5a740/mr_working.customers">
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="dbDummy://dbtable:/219f5a5b/4a3537b1-11b7-4616-a344-07f0a4c5a740/mr_working.customers">
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Customers/model/services/CustomerService.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1422">
@@ -771,14 +761,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/route.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2376">
-          <caret line="132" column="0" selection-start-line="132" selection-start-column="0" selection-end-line="132" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/events/events.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="216">
@@ -844,14 +826,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modules/Payments/model/services/PaymentService.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="372">
-          <caret line="140" column="101" selection-start-line="140" selection-start-column="101" selection-end-line="140" selection-end-column="101" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/Notifications/model/domain-objects/map.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="108">
@@ -904,8 +878,77 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/modules/WorkOrders/controller/WorkOrderController.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="320">
-          <caret line="85" column="20" selection-start-line="85" selection-start-column="20" selection-end-line="85" selection-end-column="20" />
+        <state relative-caret-position="288">
+          <caret line="16" column="20" selection-start-line="16" selection-start-column="20" selection-end-line="16" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/swagger.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="450">
+          <caret line="25" column="45" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/Payments/model/services/PaymentService.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="426">
+          <caret line="107" column="50" selection-start-line="107" selection-start-column="50" selection-end-line="107" selection-end-column="50" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/route.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="414">
+          <caret line="147" column="25" selection-start-line="147" selection-start-column="25" selection-end-line="147" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/public/ext_plugin/datatables/buttons.colVis.min.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="5" column="58" selection-start-line="5" selection-start-column="58" selection-end-line="5" selection-end-column="58" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/swagger-ui/node_modules/webpack-dev-server/client/web_modules/jquery/jquery-1.8.1.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="220">
+          <caret line="8961" column="4" selection-start-line="8961" selection-start-column="4" selection-end-line="8961" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/public/plugins/crm/crm.plugin.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="356">
+          <caret line="98" column="43" selection-start-line="98" selection-start-column="43" selection-end-line="98" selection-end-column="43" />
+          <folding>
+            <element signature="e#0#41#0" expanded="false" />
+            <marker date="1508950607299" expanded="true" signature="1005:1010" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/public/plugins/crm/crm.plugin.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="275">
+          <caret line="69" column="93" selection-start-line="69" selection-start-column="71" selection-end-line="69" selection-end-column="93" />
+          <folding>
+            <element signature="n#style#0;n#div#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/public/plugins/crm/crm.plugin.css">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="117">
+          <caret line="6728" column="22" selection-start-line="6728" selection-start-column="22" selection-end-line="6728" selection-end-column="22" />
           <folding />
         </state>
       </provider>

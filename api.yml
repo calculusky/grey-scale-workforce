@@ -6,23 +6,26 @@ parameters:
     required: true
     type: string
 
+  id:
+    name: id
+    description: The id of this model
+    in: path
+    required: true
+    type: integer
+
   offset:
     name: offset
-    description: The starting position to query from or the amount of records(rows) to skip. Default is 0.
+    description: "The starting position to query from or the amount of records(rows) to skip. Default is 0."
     in: path
-    required: false
+    required: true
     type: integer
-    format: int32
-    minimum: 0
 
   limit:
     name: limit
-    description: The total amount of records to retrieve. Default is 10.
+    description: "The total amount of records to retrieve. Default is 10."
     in: path
-    required: false
+    required: true
     type: integer
-    format: int32
-    maximum: 20
 
   keyword:
     name: keyword
@@ -39,7 +42,7 @@ parameters:
     description: Status ID
 
   user_id:
-    name: userId
+    name: user_id
     type: integer
     required: true
     in: path
@@ -81,7 +84,7 @@ parameters:
     description: "The work order number/id"
 
   asset_id:
-    name: assetId
+    name: id
     type: integer
     required: true
     in: path
@@ -93,6 +96,22 @@ parameters:
     required: true
     in: path
     description: The Payment ID
+
+  fromDate:
+    name: fromDate
+    type: string
+    format: date
+    required: true
+    in: path
+    description: The date to start from
+
+  toDate:
+    name: toDate
+    type: string
+    format: date
+    required: true
+    in: path
+    description: The date to end
 
 #----------------------Definitions-------------------------------
 definitions:
