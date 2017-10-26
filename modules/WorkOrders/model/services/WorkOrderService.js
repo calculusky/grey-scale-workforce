@@ -207,9 +207,11 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
             let type = values[0];
             if (type) {
                 let disconnection = type.records.shift();
-                delete disconnection['id'];
-                delete disconnection['created_at'];
-                delete disconnection['updated_at'];
+                if(disconnection) {
+                    delete disconnection['id'];
+                    delete disconnection['created_at'];
+                    delete disconnection['updated_at'];
+                }
                 workOrder['disconnection'] = disconnection;
             }
             let relatedTo = values[1];
