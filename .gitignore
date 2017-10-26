@@ -48,3 +48,5 @@ config.json
 
 _persistence
 
+public/ext_plugin
+
