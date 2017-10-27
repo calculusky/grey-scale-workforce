@@ -6,7 +6,6 @@ const MapperUtils = require('./MapperUtil');
 
 
 module.exports = function Utils() {
-
 };
 
 module.exports.date = DateUtils;
@@ -163,6 +162,54 @@ module.exports.authFailData = function (code) {
                 description: "The username or password is incorrect"
             };
     }
+};
+
+module.exports.getGroupParent = function (group, type = 'business_unit') {
+    if (group == null) return null;
+    if (!type) return group.parent;
+    if (group.type == type) return group;
+
+    let tGroup = null;
+    let parentGroup = group.parent;
+
+    do {
+        if (!parentGroup) continue;
+        if (parentGroup.type == type) {
+            tGroup = parentGroup;
+            break;
+        }
+        parentGroup = group.parent;
+    } while (parentGroup != null && parentGroup.type != type);
+
+    return tGroup;
+};
+
+module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleName, context) {
+
+    let generated = `${prefix}${unitName}`;
+
+    const executor = (resolve, reject)=> {
+        let resultSets = context.database.select([moduleName]).from('unit_counters')
+            .where('unit_name', unitName);
+
+        console.log(resultSets.toString());
+
+        resultSets.then(results=> {
+            //if the result is empty we need to add the new counter
+            let count = results.shift()[moduleName];
+            if (!count) context.database.table('unit_counters').insert({"unit_name": unitName});
+
+            //Lets add this up
+            context.database.table('unit_counters').update({[moduleName]: count + 1})
+                .where('unit_name', unitName).then();
+            
+            count = `${count + 1}`;
+            let randomNo = Math.round(Math.random() * (999 - 100) + 100);
+            generated = `${generated}${count.padStart(6, '0')}${randomNo}${new Date().getMonth() + 1}`;
+            return resolve(generated);
+        })
+    };
+    return new Promise(executor);
 };
 
 module.exports.humanizeUniqueSystemNumber = function (systemUniqueNo) {

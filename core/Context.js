@@ -6,6 +6,7 @@ const KNEX = require('knex');
 const storage = require('node-persist');
 const MapperFactory = require('./factory/MapperFactory');
 
+
 //Private Fields
 let _privateStore = new WeakMap();
 /**
@@ -49,7 +50,7 @@ class Context {
             });
         };
         //First lets load all groups and sub groups
-        let groupSubs = this.database.select(['id', 'name', 'type', 'parent_group_id'])
+        let groupSubs = this.database.select(['id', 'name', 'type', 'short_name', 'parent_group_id'])
             .from("groups")
             .leftJoin('group_subs', 'groups.id', 'group_subs.child_group_id');
 
@@ -112,6 +113,23 @@ class Context {
         }
         return api;
     }
+}
+
+if (!String.prototype.padStart) {
+    String.prototype.padStart = function padStart(targetLength,padString) {
+        targetLength = targetLength>>0; //floor if number or convert non-number to 0;
+        padString = String(padString || ' ');
+        if (this.length > targetLength) {
+            return String(this);
+        }
+        else {
+            targetLength = targetLength-this.length;
+            if (targetLength > padString.length) {
+                padString += padString.repeat(targetLength/padString.length); //append to original to ensure we are longer than needed
+            }
+            return padString.slice(0,targetLength) + String(this);
+        }
+    };
 }
 
 module.exports = Context;

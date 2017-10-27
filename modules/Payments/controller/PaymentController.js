@@ -33,7 +33,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *         $ref: '#/definitions/postPaymentInput'
      */
     app.post('/payments', jsonParser, (req, res)=> {
-        return API.payments().createPayment(req.body, req.who)
+        return API.payments().createPayment(req.body, req.who, API)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

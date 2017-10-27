@@ -7,6 +7,7 @@ const validate = require('validate-fields')();
 const TAG = "PaymentService:";
 
 /**
+ * @author Paul Okeke
  * @name PaymentService
  * Created by paulex on 10/09/17.
  */
@@ -21,6 +22,15 @@ class PaymentService {
         return "paymentService";
     }
 
+    /**
+     * Retrieve Payment Acknowledgements
+     * @param value
+     * @param by
+     * @param who
+     * @param offset
+     * @param limit
+     * @returns {Promise}
+     */
     getPayments(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
         var executor = (resolve, reject)=> {
@@ -39,11 +49,12 @@ class PaymentService {
     }
 
     /**
-     *
+     *  Acknowledge a Payments
      * @param body
      * @param who
+     * @param API {API}
      */
-    createPayment(body = {}, who = {}) {
+    createPayment(body = {}, who = {}, API) {
         const Payment = DomainFactory.build(DomainFactory.PAYMENT);
         let payment = new Payment(body);
         //enforce the validation
@@ -65,7 +76,8 @@ class PaymentService {
         var executor = (resolve, reject)=> {
 
             let resultSet = this.context.database.table(systemType.table)
-                .select(['id', 'status', 'work_order_no', 'type_id']).where(systemType.key, payment.system_id);
+                .select(['id', 'status', 'work_order_no', 'group_id', 'type_id', 'address_line'])
+                .where(systemType.key, payment.system_id);
 
             resultSet.then(result=> {
                 if (!result.length) {
@@ -77,6 +89,7 @@ class PaymentService {
                     }, 400));
                 }
                 const workTypes = this.context.persistence.getItemSync("work_types");
+
                 //get the domain
                 const Domain = systemType.domain;
                 const domain = new Domain(result.shift());
@@ -113,7 +126,7 @@ class PaymentService {
                             desc: `The amount must be equal or above the minimum amount payable ${minAmountAccepted}`
                         }, 400));
                     }
-                    //now check that this transaction id hasn't been processed yet
+                    //Now check that this transaction id hasn't been processed yet
                     let res = this.context.database.count('id as transactions').from("payments")
                         .where("transaction_id", payment.transaction_id).orWhere('system_id', payment.system_id);
 
@@ -134,15 +147,58 @@ class PaymentService {
                             return resolve(Utils.buildResponse({data: payment}));
                         });
 
-                        let resUpdate = this.context.database.table('work_orders').update({status: 5})
-                            .where(systemType.key, payment.system_id);
+                        //Update work order status to payment received
+                        this.context.database.table('work_orders').update({status: 5})
+                            .where(systemType.key, payment.system_id)
+                            .then(r=>console.log()).catch(err=> Log.e(TAG, JSON.stringify(err)));
 
-                        //can we also update the status of the work order at the background and also create a
-                        resUpdate.then(r=>console.log()).catch(err=> Log.e(TAG, JSON.stringify(err)));
+                        /*
+                         * Generate Re-connection Order
+                         * We need to generate a new work order number
+                         **/
+                        const groups = this.context.persistence.getItemSync("groups");
+                        //lets get the business unit name
+                        let businessUnit = Utils.getGroupParent(groups[domain.group_id], 'business_unit');
 
-                        //reconnection order
-                        //TODO get the logic to create a reconnection order
-                    })
+                        const createReconnectionOrder = (result)=> {
+                            //if it exist don't create a reconnection order
+                            if (result.shift()['id']) return;
+                             /*
+                             * Generate a unique number for this work order
+                             **/
+                            Utils.generateUniqueSystemNumber('W', businessUnit['short_name'], 'work_orders', this.context)
+                                .then(uniqueNo=> {
+                                    let reconnectionOrder = {
+                                        "work_order_no": uniqueNo,
+                                        "related_to": "work_orders",
+                                        "relation_id": payment.system_id,
+                                        "status": '1',
+                                        "priority": '3',
+                                        "summary": "Re-connect Customer",
+                                        "address_line": domain.address_line,
+                                        "type_id": 2,//2 means reconnection
+                                        "group_id": domain.group_id,
+                                        "issue_date": Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s')
+                                    };
+
+                                    API.workOrders().createWorkOrder(reconnectionOrder)
+                                        .then(r=>Log.info('PAYMENTS', `Reconnection Order Created`))
+                                        .catch(err=> Log.e('PAYMENTS', err));
+                                });
+                        };
+
+                        /*
+                         * @author Paul Okeke
+                         * Check if there already exist a reconnection order for this work-order
+                         * This is to avoid that we don't have duplicates
+                         **/
+                        this.context.database.count('id as id').from('work_orders').where({
+                            related_to: 'work_orders',
+                            relation_id: payment.system_id,
+                            type_id: 2
+                        }).then(createReconnectionOrder);
+
+                    });
                 });
             });
         };
