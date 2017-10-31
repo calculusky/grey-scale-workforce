@@ -3,9 +3,9 @@
  */
 module.exports.init = function (io, API) {
     io.on("connection", socket=> {
-
+        io.emit('update_location', {key:'Balo'});
         socket.on("update_location", data=> {
-            console.log(data);
+            io.emit('update_location', {key:'Balo'});
         });
 
         socket.on("notes_added", data => {

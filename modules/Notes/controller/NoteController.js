@@ -89,7 +89,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     tags: [Notes]
      *     produces:
      *     - application/json
-     *     operationId: getNotes
+     *     operationId: getNotesByUser
      *     responses:
      *       '200':
      *         description: Successful
@@ -97,11 +97,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getNoteOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - in: path
-     *       name: user_id
-     *       required: true
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
+     *     - $ref: '#/parameters/user_id'
      */
     app.get('/notes/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
         return API.notes().getNotes(req.params['user_id'], "note_by", req.who, req.params.offset, req.params.limit)
@@ -115,7 +113,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
 
     // /**
-    //  * @swag
+    //  * @swagger
     //  * /notes/{offset}/{limit}:
     //  *   get:
     //  *     summary: Gets List of notes

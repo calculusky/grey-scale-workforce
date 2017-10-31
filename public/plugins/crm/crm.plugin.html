@@ -1,29 +1,30 @@
-<div class="mrworking-crm-container" style="position: absolute;top:0; right:50%;z-index: 99999">
-    <button class="agetron btn btn-primary min-width-125 js-click-ripple-enabled">Kiss Me Beautiful</button>
+<div class="mrworking-crm-container" style="visibility: hidden;position: absolute;top:0; right:50%;z-index: 99999">
+    <!--<button class="agetron btn btn-primary min-width-125 js-click-ripple-enabled">Kiss Me Beautiful</button>-->
     <div class="modal fade show" id="modal-top" tabindex="-1" role="dialog" aria-labelledby="modal-top">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="block block-themed block-transparent mb-0">
                     <div class="block-header bg-primary-dark" style="background-color: #c02428 !important;">
-                        <h3 id="mrworking-relation-title" class="block-title">
-                            Difficult to Bend
-                        </h3>
+                        <h6 id="mrworking-relation-title" class="block-title">
+                            ...
+                        </h6>
                         <div class="block-options">
                             <button type="button" class="btn-block-option" data-dismiss="modal"
                                     aria-label="Close">
-                                <i class="si si-close"></i>
+                                <i class="si si-close">x</i>
                             </button>
                         </div>
                     </div>
                     <div class="block-content">
                         <p id="mrworking-crm-loading">Loading Work Orders, Please Wait...</p>
                         <div class="mrworking-crm-list">
-                            <table class="table mrworking-datatable table-bordered table-striped table-vcenter js-dataTable-full">
+                            <table style="width:100%"
+                                   class="table mrworking-datatable table-bordered table-striped table-vcenter js-dataTable-full">
                                 <thead>
                                 <tr>
                                     <th class="">Work Order No.</th>
                                     <th class="">Undertaking</th>
-                                    <th class="">Priority</th>
+                                    <th class="">Type</th>
                                     <th class="">Status</th>
                                     <th class="currency-column-header">Amount Due</th>
                                     <th class="">Assigned To</th>
@@ -32,34 +33,6 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr>
-                                    <td><a href="javascript:;" class="mrworking-work-order-no">WOJD-000001-175-10</a>
-                                    </td>
-                                    <td>Oshodi UT</td>
-                                    <td>High</td>
-                                    <td><span class="badge badge-primary">New</span></td>
-                                    <td>20,000</td>
-                                    <td>Sodiq Godwin</td>
-                                    <td>10-09-2017</td>
-                                </tr>
-                                <tr>
-                                    <td><a href="javascript:;">WOJD-000001-175-10</a></td>
-                                    <td>OJODU UT</td>
-                                    <td>Low</td>
-                                    <td><span class="badge badge-success">New</span></td>
-                                    <td>120,000</td>
-                                    <td>Chukwuemeka</td>
-                                    <td>10-09-2017</td>
-                                </tr>
-                                <tr>
-                                    <td><a href="javascript:;">WOJD-000001-175-10</a></td>
-                                    <td>Shomolu UT</td>
-                                    <td>Medium</td>
-                                    <td><span class="badge badge-warning">Assigned</span></td>
-                                    <td>5,000</td>
-                                    <td>Bolaji Okeke</td>
-                                    <td>10-09-2017</td>
-                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -74,14 +47,15 @@
                             <section id="mrworking-first-group" class="mrworking-crm-tabgroup">
                                 <div id="mrworking-item-details" class="mrworking-tab-item">
                                     <div style="display: inline-block;">
-                                        <h5 class="font-w400" style="margin-bottom: 0">
-                                            Disconnection Order Details - 3433434343434343
+                                        <h5 class="font-w400" style="padding-left:0;margin-bottom: 0"
+                                            id="mrworking-details-w-no">
+                                            Disconnection Order Details - ...
                                         </h5>
                                     </div>
                                     <div class="block">
                                         <div class="block-content no-padding">
                                             <div class="col-xl-12 no-padding">
-                                                <div style="font-size: 12px;color: #BDBDBD;">
+                                                <div style="font-size: 12px;color: #BDBDBD;padding-top: 2px">
                                                     Disconnection Order Details
                                                 </div>
                                                 <div class="col-6 col-md-3 no-padding flex-display-center">
@@ -102,8 +76,8 @@
                                                     <div class="block-title title-style">
                                                         Account Number
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        ddddd
+                                                    <p style="padding: 0 5px;" id="mrworking-details-cust-no">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -114,8 +88,8 @@
                                                     <div class="block-title title-style">
                                                         Account Name
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        Ade Ggdfdfd
+                                                    <p style="padding: 0 5px;" id="mrworking-details-cust-name">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -126,8 +100,8 @@
                                                     <div class="block-title title-style">
                                                         Priority
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        High
+                                                    <p style="padding: 0 5px;" id="mrworking-details-priority">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -138,7 +112,7 @@
                                                     <div class="block-title title-style">
                                                         Status
                                                     </div>
-                                                    <p style="padding: 0 5px;">
+                                                    <p style="padding: 0 5px;" id="mrworking-details-status">
                                                         Closed
                                                     </p>
                                                 </div>
@@ -154,8 +128,8 @@
                                                     <div class="block-title title-style">
                                                         Issue Date
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        2017-10-10
+                                                    <p style="padding: 0 5px;" id="mrworking-details-issue-date">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -166,8 +140,8 @@
                                                     <div class="block-title title-style">
                                                         Start Date
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        2017-10-20 00:00:00
+                                                    <p style="padding: 0 5px;" id="mrworking-details-start-date">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -178,8 +152,8 @@
                                                     <div class="block-title title-style">
                                                         Completed Date
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        --
+                                                    <p style="padding: 0 5px;" id="mrworking-details-comp-date">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -190,8 +164,8 @@
                                                     <div class="block-title title-style">
                                                         Date Created
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        2017-10-10 11:26:05
+                                                    <p style="padding: 0 5px;" id="mrworking-details-date-created">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -205,8 +179,8 @@
                                                     <div class="block-title title-style">
                                                         Assigned To
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        Paul Okeke
+                                                    <p style="padding: 0 5px;" id="mrworking-details-assigned-to">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -217,8 +191,8 @@
                                                     <div class="block-title title-style">
                                                         Group
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        Technical Hub
+                                                    <p style="padding: 0 5px;" id="mrworking-details-group">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -229,8 +203,8 @@
                                                     <div class="block-title title-style">
                                                         Summary
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        dsfds
+                                                    <p style="padding: 0 5px;" id="mrworking-details-summary">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -251,8 +225,8 @@
                                                     >
                                                         Current Bill
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        3,000
+                                                    <p style="padding: 0 5px;" id="mrworking-details-current-bill">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -264,8 +238,8 @@
                                                     >
                                                         Net Arrears
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        5,000
+                                                    <p style="padding: 0 5px;" id="mrworking-details-net-arrears">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -276,8 +250,8 @@
                                                     <div class="block-title title-style">
                                                         Amount Due
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        9,000
+                                                    <p style="padding: 0 5px;" id="mrworking-details-min-amount">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -288,8 +262,8 @@
                                                     <div class="block-title title-style">
                                                         Reconnection Fee
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        9,000
+                                                    <p style="padding: 0 5px;" id="mrworking-details-reconnection-fee">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -300,8 +274,8 @@
                                                     <div class="block-title title-style">
                                                         Total Amount Due
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        9,000
+                                                    <p style="padding: 0 5px;" id="mrworking-details-total-amount">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -322,8 +296,8 @@
                                                     >
                                                         Contact Name
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        Name Name
+                                                    <p style="padding: 0 5px;" id="mrworking-details-contact-name">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -335,8 +309,8 @@
                                                     >
                                                         Phone
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        08139201337
+                                                    <p style="padding: 0 5px;" id="mrworking-details-contact-phone">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -348,8 +322,8 @@
                                                     >
                                                         Email
                                                     </div>
-                                                    <p style="padding: 0 5px;">
-                                                        pugochukwu@vas-consulting.com
+                                                    <p style="padding: 0 5px;" id="mrworking-details-contact-email">
+                                                        ...
                                                     </p>
                                                 </div>
                                             </div>
@@ -361,14 +335,15 @@
                                 <!---Beginning of Notes TAB-->
                                 <div id="mrworking-item-notes" class="mrworking-tab-item">
                                     <div style="display: inline-block;">
-                                        <h5 class="font-w400" style="margin-bottom: 0">
-                                            Notes- #WOJD00000117510
+                                        <h5 class="font-w400" style="padding-left:0;margin-bottom: 0"
+                                            id="mrworking-notes-order-no">
+                                            Notes- ..
                                         </h5>
                                     </div>
                                     <div class="block">
                                         <div class="block-content no-padding">
                                             <div class="col-xl-12 no-padding">
-                                                <div style="font-size: 12px;color: #BDBDBD;">
+                                                <div style="font-size: 12px;color: #BDBDBD;padding-top: 2px">
                                                     Disconnection Order Details
                                                 </div>
                                                 <div class="col-6 col-md-3 no-padding flex-display-center">
@@ -381,7 +356,26 @@
                                         <div class="block-content" style="padding: 0;">
                                             <table class="table table-borderless">
                                                 <tbody class="note-content">
-                                                @include('shared._note-content')
+                                                <!--<tr>-->
+                                                    <!--<td class="d-none d-sm-table-cell text-center"-->
+                                                        <!--style="width: 40px; padding: 14px 8px 14px 2px">-->
+                                                        <!--<div class="mb-10">-->
+                                                            <!--<a href="javascript:;">-->
+                                                                <!--<img class="img-avatar"-->
+                                                                     <!--src="http://85.25.103.81/mrworking-web/public/img/avatars/avatar0.jpg"-->
+                                                                     <!--alt="">-->
+                                                            <!--</a>-->
+                                                        <!--</div>-->
+                                                        <!--<small style="font-weight: bold">-->
+                                                            <!--O. Paul-->
+
+                                                        <!--</small>-->
+                                                    <!--</td>-->
+                                                    <!--<td>-->
+                                                        <!--<p style="margin-bottom: 0;">the work order seen</p>-->
+                                                        <!--<hr>-->
+                                                    <!--</td>-->
+                                                <!--</tr>-->
                                                 </tbody>
                                             </table>
                                             <table class="table table-borderless">
@@ -396,7 +390,7 @@
                                                                      alt="">
                                                             </a>
                                                         </div>
-                                                        <small>Paul Okeke<br>
+                                                        <small style="line-height:2.5">Paul Okeke<br>
                                                         </small>
                                                     </td>
                                                     <td>
