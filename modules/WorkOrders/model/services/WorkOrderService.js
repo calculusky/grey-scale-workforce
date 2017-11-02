@@ -155,6 +155,19 @@ function sweepWorkOrderResponsePayload(workOrder) {
         if (workOrder[key] == null) {
             delete workOrder[key]
         }
+        if (key == 'customer') {
+            delete workOrder['customer']['first_name'];
+            delete workOrder['customer']['last_name'];
+            delete workOrder['customer']['status'];
+            delete workOrder['customer']['deleted_at'];
+            delete workOrder['customer']['created_at'];
+            delete workOrder['customer']['updated_at'];
+            delete workOrder['customer']['meter_type'];
+            delete workOrder['customer']['meter_status'];
+            delete workOrder['customer']['tariff'];
+            delete workOrder['customer']['address_id'];
+            delete workOrder['customer']['group_id'];
+        }
     });
     if (workOrder['request_id']) {
         delete workOrder['request_id'];
@@ -192,6 +205,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                 promises.push(null);
                 break;
             default:
+                promises.push(null);
                 break;
         }
 
@@ -207,6 +221,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                 promises.push(workOrder.asset());
                 break;
             default:
+                promises.push(null);
                 break;
         }
 
@@ -232,48 +247,56 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
             const notesCount = values[2];
             const attachmentCount = values[3];
 
+            let wait = false;
+
             //First thing lets get the work order type details
             if (typeEntity) {
                 let typeDetails = typeEntity.records.shift();
-                if(typeDetails){
+                if (typeDetails) {
                     delete typeDetails['id'];
                     delete typeDetails['created_at'];
                     delete typeDetails['updated_at'];
                 }
                 workOrder[workType.toLowerCase()] = typeDetails;
             }
-
             //Secondly We need to get the relatedEntity Details
-            if(relatedEntity){
+            if (relatedEntity) {
                 let relatedEntityDetails = relatedEntity.records.shift();
-                switch (workOrder['related_to'].toLowerCase()){
+                switch (workOrder['related_to'].toLowerCase()) {
                     case "assets":
                         workOrder['relation_name'] = relatedEntityDetails.asset_name;
                         break;
                     case "customers":
-                        workOrder['relation_name'] = relatedEntityDetails.customer_name;
-                        workOrder['address_line'] =
-                            (!workOrder['address_line'] || workOrder['address_line'].length == 0)
-                                ? relatedEntityDetails.plain_address : workOrder['address_line'];
+                        workOrder['customer'] = relatedEntityDetails;
                         break;
                     case "work_orders":
+                        wait = true;
+                        relatedEntityDetails.customer().then(r=> {
+                            wait = false;
+                            workOrder['customer'] = r.records.shift();
+                            if (!wait) {
+                                sweepWorkOrderResponsePayload(workOrder);
+                                if (++processed == rowLen)
+                                    return resolve(Utils.buildResponse({data: {items: workOrders}}));
+                            }
+                        });
                         break;
                     default:
                         break;
                 }
             }
-            if(notesCount && attachmentCount){
+            if (notesCount && attachmentCount) {
                 workOrder['notes_count'] = notesCount.shift()['notes_count'];
                 workOrder['attachments_count'] = attachmentCount.shift()['attachments_count'];
             }
-            if (++processed == rowLen) return resolve(Utils.buildResponse({data: {items: workOrders}}));
+            if (!wait) sweepWorkOrderResponsePayload(workOrder);
+            if (!wait && (++processed == rowLen)) return resolve(Utils.buildResponse({data: {items: workOrders}}));
         }).catch(err=> {
-            console.log(err);
+            // console.log(err);
             return reject(err);
         });
         //remove the request_id its irrelevant
         workOrder['work_order_no'] = Utils.humanizeUniqueSystemNumber(workOrder['work_order_no']);
-        sweepWorkOrderResponsePayload(workOrder)
     });
 }
 
