@@ -1,19 +1,37 @@
 /**
  * Created by paulex on 10/18/17.
  */
-module.exports.init = function (io, API) {
+module.exports.init = function (context, io, API) {
+    this.eventListeners = [];
+    this.sharedData = {};
+
+    const register = (context, io, API, sharedData) => {
+        const eventListenersPath = [
+            './LocationEvent'
+        ];
+
+        eventListenersPath.forEach(listener => {
+            let EventListener = require(listener);
+            this.eventListeners.push(new EventListener(context, io, API, sharedData));
+        });
+    };
+
+    //Register all event listeners
+    register(context, io, API, this.sharedData);
+
+    //Listen for connections and emitted client events
     io.on("connection", socket=> {
-        io.emit('update_location', {key:'Balo'});
+
         socket.on("update_location", data=> {
-            io.emit('update_location', {key:'Balo'});
+            this.eventListeners.forEach(listener => listener.emit('update_location', data, this.sharedData))
         });
 
         socket.on("notes_added", data => {
             console.log(data);
         });
 
-        console.log("im connected as im");
+        console.log("I'm connected as i am");
     });
 };
 
-//TODO we should be able to register events here
+

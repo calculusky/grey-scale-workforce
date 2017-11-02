@@ -26,7 +26,7 @@ module.exports = function route(context) {
     const http = require('http').Server(app);
     const io = require('socket.io')(http);
 
-    events.init(io, API);
+    events.init(context, io, API);
 
     app.set('port', process.env.PORT || 3000);
     // app.use(cors());

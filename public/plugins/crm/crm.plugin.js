@@ -137,12 +137,11 @@ $(function () {
 
                 $('.mrworking-work-order-no').click(function () {
                     var $a = $(this);
+                    let workOrder = JSON.parse($a.attr('data-work-order'));
+                    fetchWorkOrderNotes(workOrder.id);
+                    fetchWorkOrderDetails(workOrder.work_order_no);
                     listPage.fadeOut('slow', function () {
-                        let workOrder = JSON.parse($a.attr('data-work-order'));
-                        fetchWorkOrderDetails(workOrder.work_order_no);
-                        fetchWorkOrderNotes(workOrder.id);
                         doDetailsPage(workOrder);
-                        //we should fetch an updated record here
                         detailsPage.fadeIn();
                     });
                 });
@@ -168,6 +167,7 @@ $(function () {
             $(target).show();
         });
 
+        //Fetch Work order details from server
         function fetchWorkOrderDetails(workOrderNo) {
             $.ajax(`${base_url}/work_orders/${workOrderNo}`)
                 .done(function (data) {
@@ -179,8 +179,9 @@ $(function () {
                 });
         }
 
-        function fetchWorkOrderNotes(workOrderNo) {
-            $.ajax(`${base_url}/work_orders/${workOrderNo}/notes/0/1000`)
+        //Fetch Work Order Notes from server
+        function fetchWorkOrderNotes(workOrderId) {
+            $.ajax(`${base_url}/work_orders/${workOrderId}/notes/0/1000`)
                 .done(function (data) {
                     if (data.status != 'success') return;
                     let notes = data.data.items;
@@ -191,6 +192,7 @@ $(function () {
                 });
         }
 
+        //Display the work order details
         function doDetailsPage(workOrder) {
             $('#mrworking-details-w-no').text(`Disconnection Order Details - ${workOrder.work_order_no}`);
             $('#mrworking-details-cust-no').text(workOrder.relation_id);
@@ -236,6 +238,7 @@ $(function () {
             $('#mrworking-notes-order-no').text(`Notes- ${workOrder.work_order_no}`);
         }
 
+        //Display the notes of the work order
         function doNotesPage(notes) {
             let noteContentDiv = $('.note-content');
             noteContentDiv.empty();

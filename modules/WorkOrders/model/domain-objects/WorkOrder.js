@@ -72,6 +72,13 @@ class WorkOrder extends DomainObject {
     disconnection(){
         return this.relations().belongsTo("DisconnectionOrder", "id", "work_order_id");
     }
+
+    /**
+     * 
+     */
+    workOrder(){
+        return this.relations().belongsTo("WorkOrder", "relation_id", "work_order_no");
+    }
 }
 
 module.exports = WorkOrder;

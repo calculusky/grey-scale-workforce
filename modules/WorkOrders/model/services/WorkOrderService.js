@@ -156,6 +156,9 @@ function sweepWorkOrderResponsePayload(workOrder) {
             delete workOrder[key]
         }
     });
+    if (workOrder['request_id']) {
+        delete workOrder['request_id'];
+    }
 }
 
 /**
@@ -175,69 +178,101 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
     const groups = context.persistence.getItemSync("groups");
     workOrders.forEach(workOrder=> {
         let promises = [];
+
         let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
-        let isAsset = workOrder['related_to'] == 'assets';
         workOrder['group'] = groups[workOrder['group_id']];
-        
-        workOrder['work_order_no'] = Utils.humanizeUniqueSystemNumber(workOrder['work_order_no']);
 
-        //remove the request_id its irrelevant
-        delete workOrder['request_id'];
 
-        //lets get all the related records
-        promises.push((workType.toLowerCase() == "disconnection") ? workOrder.disconnection() : null);
-        promises.push((isAsset) ? workOrder.asset() : workOrder.customer());
+        //Get the related work order type details
+        switch (workType.toLowerCase()) {
+            case "disconnection":
+                promises.push(workOrder.disconnection());
+                break;
+            case "re-connection":
+                promises.push(null);
+                break;
+            default:
+                break;
+        }
 
-        //if we loading for a list view let's get the counts or related models
+        //get the related entity details
+        switch (workOrder['related_to'].toLowerCase()) {
+            case "customers":
+                promises.push(workOrder.customer());
+                break;
+            case "work_orders":
+                promises.push(workOrder.workOrder());
+                break;
+            case "assets":
+                promises.push(workOrder.asset());
+                break;
+            default:
+                break;
+        }
+
+        //If we're loading for a list view let's get the counts or related models
         if (!isSingle) {
             let countNotes = context.database.count('note as notes_count').from("notes")
                 .where("module", moduleName).where("relation_id", workOrder.id);
 
             let countAttachments = context.database.count('id as attachments_count').from("attachments")
                 .where("module", moduleName).where("relation_id", workOrder.id);
+
             promises.push(countNotes, countAttachments)
         }
         //Promises in order of arrangement
-        //0: Disconnection Order
-        //1: Asset or Customer
+        //0: The work order type related details
+        //1: The related Entity e.g customer or assets
         //2: Notes Count
         //3: Attachments Count
         Promise.all(promises).then(values=> {
             //its compulsory that we check that a record exist
-            let type = values[0];
-            if (type) {
-                let disconnection = type.records.shift();
-                if(disconnection) {
-                    delete disconnection['id'];
-                    delete disconnection['created_at'];
-                    delete disconnection['updated_at'];
+            const typeEntity = values[0];
+            const relatedEntity = values[1];
+            const notesCount = values[2];
+            const attachmentCount = values[3];
+
+            //First thing lets get the work order type details
+            if (typeEntity) {
+                let typeDetails = typeEntity.records.shift();
+                if(typeDetails){
+                    delete typeDetails['id'];
+                    delete typeDetails['created_at'];
+                    delete typeDetails['updated_at'];
                 }
-                workOrder['disconnection'] = disconnection;
+                workOrder[workType.toLowerCase()] = typeDetails;
             }
-            let relatedTo = values[1];
-            if (relatedTo) {
-                let relation = relatedTo.records.shift();
-                if (isAsset) {
-                    workOrder['relation_name'] = relation.asset_name;
-                } else {
-                    workOrder['relation_name'] = relation.customer_name;
-                    //if the address line is empty and is related to a customer we should use the
-                    //customer address
-                    workOrder['address_line'] =
-                        (!workOrder['address_line'] || workOrder['address_line'].length == 0)
-                            ? relation.plain_address : workOrder['address_line'];
+
+            //Secondly We need to get the relatedEntity Details
+            if(relatedEntity){
+                let relatedEntityDetails = relatedEntity.records.shift();
+                switch (workOrder['related_to'].toLowerCase()){
+                    case "assets":
+                        workOrder['relation_name'] = relatedEntityDetails.asset_name;
+                        break;
+                    case "customers":
+                        workOrder['relation_name'] = relatedEntityDetails.customer_name;
+                        workOrder['address_line'] =
+                            (!workOrder['address_line'] || workOrder['address_line'].length == 0)
+                                ? relatedEntityDetails.plain_address : workOrder['address_line'];
+                        break;
+                    case "work_orders":
+                        break;
+                    default:
+                        break;
                 }
             }
-            if (values[2] && values[3]) {
-                workOrder['notes_count'] = values[2].shift()['notes_count'];
-                workOrder['attachments_count'] = values[3].shift()['attachments_count'];
+            if(notesCount && attachmentCount){
+                workOrder['notes_count'] = notesCount.shift()['notes_count'];
+                workOrder['attachments_count'] = attachmentCount.shift()['attachments_count'];
             }
-            //end of outer loop
             if (++processed == rowLen) return resolve(Utils.buildResponse({data: {items: workOrders}}));
         }).catch(err=> {
             console.log(err);
             return reject(err);
         });
+        //remove the request_id its irrelevant
+        workOrder['work_order_no'] = Utils.humanizeUniqueSystemNumber(workOrder['work_order_no']);
         sweepWorkOrderResponsePayload(workOrder)
     });
 }
