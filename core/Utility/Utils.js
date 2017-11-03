@@ -168,24 +168,21 @@ module.exports.getGroupParent = function (group, type = 'business_unit') {
     if (group == null) return null;
     if (!type) return group.parent;
     if (group.type == type) return group;
-
-    let tGroup = null;
-    let parentGroup = group.parent;
-
+    let tGroup;
+    let parentGroup = tGroup = group.parent;
     do {
         if (!parentGroup) continue;
         if (parentGroup.type == type) {
             tGroup = parentGroup;
             break;
         }
-        parentGroup = group.parent;
+        parentGroup = tGroup = parentGroup.parent;
     } while (parentGroup != null && parentGroup.type != type);
-
-    return tGroup;
+    return (tGroup && tGroup.type == type) ? tGroup : null;
 };
 
 module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleName, context) {
-
+    console.log(prefix, unitName);
     let generated = `${prefix}${unitName}`;
 
     const executor = (resolve, reject)=> {
@@ -195,6 +192,7 @@ module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleNa
         console.log(resultSets.toString());
 
         resultSets.then(results=> {
+            console.log(results);
             //if the result is empty we need to add the new counter
             let count = results.shift()[moduleName];
             if (!count) context.database.table('unit_counters').insert({"unit_name": unitName});
@@ -202,12 +200,14 @@ module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleNa
             //Lets add this up
             context.database.table('unit_counters').update({[moduleName]: count + 1})
                 .where('unit_name', unitName).then();
-            
+
             count = `${count + 1}`;
             let randomNo = Math.round(Math.random() * (999 - 100) + 100);
             generated = `${generated}${count.padStart(6, '0')}${randomNo}${new Date().getMonth() + 1}`;
             return resolve(generated);
-        })
+        }).catch(t=> {
+            console.log(t);
+        });
     };
     return new Promise(executor);
 };

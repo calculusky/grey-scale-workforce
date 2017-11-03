@@ -65,6 +65,7 @@ class PaymentService {
         payment.system_id = payment.system_id.replace(/-/g, "");
         //check if the system exist
         let systemType = PaymentService.getPaymentType(payment.system);
+
         if (systemType == null) {
             return Promise.reject(Utils.buildResponse({
                 status: "fail",
@@ -158,14 +159,15 @@ class PaymentService {
                          **/
                         const groups = this.context.persistence.getItemSync("groups");
                         //lets get the business unit name
-                        let businessUnit = Utils.getGroupParent(groups[domain.group_id], 'business_unit');
+                        let businessUnit = Utils.getGroupParent(groups[domain['group_id']], 'business_unit');
 
                         const createReconnectionOrder = (result)=> {
                             //if it exist don't create a reconnection order
                             if (result.shift()['id']) return;
-                             /*
+                            /*
                              * Generate a unique number for this work order
                              **/
+                            // console.log(result);
                             Utils.generateUniqueSystemNumber('W', businessUnit['short_name'], 'work_orders', this.context)
                                 .then(uniqueNo=> {
                                     let reconnectionOrder = {
@@ -198,6 +200,8 @@ class PaymentService {
                             type_id: 2
                         }).then(createReconnectionOrder);
 
+                    }).catch(err=> {
+                        console.log(err);
                     });
                 });
             });
