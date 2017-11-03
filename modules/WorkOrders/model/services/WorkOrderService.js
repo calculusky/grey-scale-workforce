@@ -269,13 +269,40 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                     case "customers":
                         workOrder['customer'] = relatedEntityDetails;
                         break;
+                    //Work-Order to Work Order is Peculiar to IE alone
                     case "work_orders":
                         wait = true;
-                        relatedEntityDetails.customer().then(r=> {
+                        workOrder['work_order'] = {
+                            id: relatedEntityDetails.id,
+                            work_order_no: relatedEntityDetails.work_order_no,
+                            type_id: relatedEntityDetails.type_id,
+                            type_name: "Disconnection",
+                            related_to: relatedEntityDetails.related_to,
+                            relation_id: relatedEntityDetails.relation_id,
+                            status: relatedEntityDetails.status,
+                            priority: relatedEntityDetails.priority
+                        };
+                        //Load all other necessary details
+                        Promise.all([
+                            relatedEntityDetails.customer(),
+                            relatedEntityDetails.disconnection(),
+                            relatedEntityDetails.payment()]
+                        ).then(pValues=> {
                             wait = false;
-                            workOrder['customer'] = r.records.shift();
+                            let thisCustomer = pValues[0].records.shift();
+                            let thisDisconnection = pValues[1].records.shift();
+                            let thisPayment = pValues[2].records.shift();
+                            workOrder['customer'] = thisCustomer;
+                            workOrder['disconnection'] = {
+                                current_bill: thisDisconnection.current_bill,
+                                arrears: thisDisconnection.arrears,
+                                min_amount_payable: thisDisconnection.min_amount_payable,
+                                total_amount_payable: thisDisconnection.total_amount_payable,
+                                amount_paid: (thisPayment) ? thisPayment.amount : 0.0
+                            };
                             if (!wait) {
                                 sweepWorkOrderResponsePayload(workOrder);
+                                // console.log(workOrder);
                                 if (++processed == rowLen)
                                     return resolve(Utils.buildResponse({data: {items: workOrders}}));
                             }
@@ -289,8 +316,13 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                 workOrder['notes_count'] = notesCount.shift()['notes_count'];
                 workOrder['attachments_count'] = attachmentCount.shift()['attachments_count'];
             }
-            if (!wait) sweepWorkOrderResponsePayload(workOrder);
-            if (!wait && (++processed == rowLen)) return resolve(Utils.buildResponse({data: {items: workOrders}}));
+            if (!wait) {
+                sweepWorkOrderResponsePayload(workOrder);
+                if (++processed == rowLen) {
+                    console.log(workOrders);
+                    return resolve(Utils.buildResponse({data: {items: workOrders}}));
+                }
+            }
         }).catch(err=> {
             // console.log(err);
             return reject(err);

@@ -5,7 +5,7 @@
 const KNEX = require('knex');
 const storage = require('node-persist');
 const MapperFactory = require('./factory/MapperFactory');
-
+let globalContext = null;
 
 //Private Fields
 let _privateStore = new WeakMap();
@@ -37,6 +37,8 @@ class Context {
         };
         this._(this).buildModelMappers();
         this.modelMappers = MapperFactory;
+        
+        Context.globalContext = this;
     }
 
     //we are going load certain static data into memory

@@ -1,5 +1,6 @@
 //noinspection JSUnresolvedFunction
 const RelationShips = require('./links/Relationships');
+const Context = require('../Context');
 
 const privateStore = new WeakMap();
 
@@ -19,7 +20,7 @@ class DomainObject {
         this._(this).data = data;
         this._(this).map = map;
 
-
+       
         //------Map data to Domain instances------//
         let hasData = (data && (Object.keys(data).length > 0));
         if (hasData) {

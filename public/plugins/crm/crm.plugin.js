@@ -196,7 +196,7 @@ $(function () {
         function doDetailsPage(workOrder) {
             $('#mrworking-details-w-no').text(`Disconnection Order Details - ${workOrder.work_order_no}`);
             $('#mrworking-details-cust-no').text(workOrder.relation_id);
-            $('#mrworking-details-cust-name').text(workOrder.relation_name);
+            $('#mrworking-details-cust-name').text(workOrder['customer']['customer_name']);
             $('#mrworking-details-priority').text(getPriority(workOrder.priority));
             $('#mrworking-details-status')
                 .html(`<span class="badge ${getStatusClass(workOrder.status)}">${getStatusName(workOrder.status)}</span>`);

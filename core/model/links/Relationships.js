@@ -1,16 +1,8 @@
-const MapperFactory = require('../../../modules/MapperFactory');
+let MapperFactory = null;//require('../../../modules/MapperFactory');
 const DomainFactory = require('../../../modules/DomainFactory');
 const Log = require('../../logger.js');
-
-//TODO we should remove this from here and make use of the context.database
-const KNEX = require('knex')({
-    client: "mysql2", connection: {
-        host: '127.0.0.1',
-        user: 'root',
-        password: 'Nigeriasns$1',
-        database: 'mr_working'
-    }
-});
+const Context = require('../../Context');
+let KNEX = null;
 
 /**
  * @author Paul Okeke
@@ -21,6 +13,8 @@ class Relationships {
 
     constructor(domain) {
         this.domainObject = domain;
+        KNEX = Context.globalContext.database;
+        MapperFactory = Context.globalContext.modelMappers;
     }
 
     /**
@@ -127,7 +121,7 @@ class Relationships {
         }
 
         let resultSets = KNEX.select(['*']).from(foreignTable).where(parentKey, this.domainObject[foreignKey]);
-        console.log(resultSets.toString());
+        // console.log(resultSets.toString());
 
         var executor = (resolve, reject)=> {
             resultSets.then(res => {
@@ -138,7 +132,7 @@ class Relationships {
                     records.push(domainObject);
                     if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
                 }
-                if (0 === rowLen) return resolve({records: records});
+                if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
             }).catch(err=> {
                 console.log(err);
                 return reject(err)
