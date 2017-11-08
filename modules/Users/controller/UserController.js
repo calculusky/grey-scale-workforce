@@ -64,8 +64,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.get('/logout', (req, res)=> {
         API.recognitions().logout(req.who, API, req)
-            .then(msg=> {
-                return res.send(msg);
+            .then(({data, code})=> {
+                return res.status(code).send(data);
             })
             .catch(err=> {
                 return res.status(503).send(err);
@@ -143,8 +143,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(data);
             }).catch((err)=> {
             console.log(err);
-                // return res.status(code).send(err);
-            });
+            // return res.status(code).send(err);
+        });
     });
 
 
