@@ -7,6 +7,7 @@ const RecognitionService = require('../model/services/RecognitionService');
 
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
     app.use('/users*', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/logout', (req, res, next)=>API.recognitions().auth(req, res, next));
     /**
      * @swagger
      * /login:
@@ -33,10 +34,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *
      */
     app.post('/login', jsonParser, urlencodedParser, (req, res)=> {
-        Log.info('/login', req.body);
-        API.recognitions().login(req.body.username, req.body.password)
+        // Log.info('/login', req.body);
+        API.recognitions().login(req.body.username, req.body.password, req)
             .then(({data, code})=> {
-                console.log(data);
+                // console.log(data);
                 res.status(code).send(data);
             }).catch(({err, code})=> {
             console.log(err);
@@ -59,9 +60,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        description: "Logout out successfully"
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
+     *    - $ref: '#/parameters/fireBaseToken'
      */
     app.get('/logout', (req, res)=> {
-        API.recognitions().logout(req.who)
+        API.recognitions().logout(req.who, API, req)
             .then(msg=> {
                 return res.send(msg);
             })

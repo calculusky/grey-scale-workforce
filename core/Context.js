@@ -3,8 +3,8 @@
  * Created by paulex on 7/5/17.
  */
 const KNEX = require('knex');
-const storage = require('node-persist');
 const MapperFactory = require('./factory/MapperFactory');
+var redis = require("redis"), client = redis.createClient();
 let globalContext = null;
 
 //Private Fields
@@ -16,12 +16,14 @@ class Context {
 
     constructor(config) {
         this.config = config;
-        this.persistence = storage;
+        this.persistence = client;
         this.database = KNEX({
             client: "mysql2",
             connection: config.database
         });
-        this.persistence.init({dir: this.config.storage.persistence.path}).then(i=>this.loadStaticData(i));
+
+        this.persistence.on('ready', ()=> this.loadStaticData());
+        // this.persistence.init({dir: this.config.storage.persistence.path}).then(i=>this.loadStaticData(i));
         this._(this).incoming_store = {};
 
         //load the modelMappers here into memory
@@ -65,7 +67,7 @@ class Context {
                 delete group['parent_group_id'];
                 groups[group.id] = group;
             });
-            this.persistence.setItem("groups", groups);
+            this.persistence.set("groups", JSON.stringify(groups));
         });
 
         //Now lets get work order types
@@ -75,7 +77,7 @@ class Context {
             results.forEach(type=> {
                 workTypes[type.id] = type;
             });
-            this.persistence.setItem("work_types", workTypes);
+            this.persistence.set("work:types", JSON.stringify(workTypes));
         });
 
         //Lets load all assets types
@@ -85,7 +87,7 @@ class Context {
             results.forEach(type=> {
                 assetTypes[type.id] = type;
             });
-            this.persistence.setItem("asset_types", assetTypes);
+            this.persistence.set("asset:types", JSON.stringify(assetTypes));
         });
     }
 

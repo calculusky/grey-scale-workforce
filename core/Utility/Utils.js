@@ -102,6 +102,7 @@ module.exports.getMysqlError = function (err) {
                 desc: "You maybe need to delete its related entity before trying to delete this record"
             };
         default:
+            console.log(err);
             return {
                 status: "error",
                 msg: "You are doing something wrong",
@@ -137,14 +138,44 @@ module.exports.buildResponse = function ({status="success", data, msg, type, cod
 };
 
 module.exports.jwtTokenErrorMsg = function (err) {
+    console.log(err);
     switch (err.name) {
         case "JsonWebTokenError":
-            return "Unauthorized. Invalid Token Format";
+            return {
+                message: "Unauthorized Access",
+                description: "Unauthorized. Invalid Token Format",
+                code: "INVALID_TOKEN"
+            };
         case "TokenExpiredError":
-            return "Unauthorized. Token Expired";
+            return {
+                message: "Unauthorized Access",
+                description: "Unauthorized. Token Expired",
+                code: "TOKEN_EXPIRED"
+            };
         default:
-            return "Unauthorized. Something went wrong with the token supplied";
+            return {
+                message: "Unauthorized Access",
+                description: "Unauthorized. Something went wrong with the token supplied",
+                code: "UNKNOWN_TOKEN_ERROR"
+            };
     }
+};
+
+module.exports.isMobile = function (userAgentFamily) {
+    const isMobile = userAgentFamily.match(/Okhttp|Android/);
+    return (isMobile) ? isMobile.length : false;
+};
+
+
+module.exports.getAndSet = function (redis, keys) {
+    let variables = [];
+    keys.forEach((key, i)=> {
+        redis.get(key, (err, v)=> {
+            console.log(v);
+            if (!err) variables.push(v);
+        });
+        if (i == keys.length - 1) return variables;
+    });
 };
 
 
@@ -182,17 +213,14 @@ module.exports.getGroupParent = function (group, type = 'business_unit') {
 };
 
 module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleName, context) {
-    console.log(prefix, unitName);
     let generated = `${prefix}${unitName}`;
 
     const executor = (resolve, reject)=> {
         let resultSets = context.database.select([moduleName]).from('unit_counters')
             .where('unit_name', unitName);
 
-        console.log(resultSets.toString());
 
         resultSets.then(results=> {
-            console.log(results);
             //if the result is empty we need to add the new counter
             let count = results.shift()[moduleName];
             if (!count) context.database.table('unit_counters').insert({"unit_name": unitName});

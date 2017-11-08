@@ -57,6 +57,17 @@ class PaymentService {
     createPayment(body = {}, who = {}, API) {
         const Payment = DomainFactory.build(DomainFactory.PAYMENT);
         let payment = new Payment(body);
+
+        //Prepare the static data from persistence storage
+        let {groups, workTypes} = [{}, {}];
+        this.context.persistence.get("groups", (err, grps)=>{
+            if(!err) groups = JSON.parse(grps);
+        });
+
+        this.context.persistence.get("work:types", (err, types)=>{
+            if(!err) workTypes = JSON.parse(types);
+        });
+
         //enforce the validation
         let isValid = validate(payment.rules(), payment);
         if (!isValid) {
@@ -89,7 +100,7 @@ class PaymentService {
                         desc: `The Work Order Number specified '${payment.system_id}' does not exist or it is invalid`
                     }, 400));
                 }
-                const workTypes = this.context.persistence.getItemSync("work_types");
+                // const workTypes = this.context.persistence.getItemSync("work_types");
 
                 //get the domain
                 const Domain = systemType.domain;
@@ -157,7 +168,7 @@ class PaymentService {
                          * Generate Re-connection Order
                          * We need to generate a new work order number
                          **/
-                        const groups = this.context.persistence.getItemSync("groups");
+                        // const groups = this.context.persistence.getItemSync("groups");
                         //lets get the business unit name
                         let businessUnit = Utils.getGroupParent(groups[domain['group_id']], 'business_unit');
 
@@ -167,7 +178,6 @@ class PaymentService {
                             /*
                              * Generate a unique number for this work order
                              **/
-                            // console.log(result);
                             Utils.generateUniqueSystemNumber('W', businessUnit['short_name'], 'work_orders', this.context)
                                 .then(uniqueNo=> {
                                     let reconnectionOrder = {
@@ -176,7 +186,7 @@ class PaymentService {
                                         "relation_id": payment.system_id,
                                         "status": '1',
                                         "priority": '3',
-                                        "summary": "Re-connect Customer",
+                                        "summary": "Re-connect this Customer",
                                         "address_line": domain.address_line,
                                         "type_id": 2,//2 means reconnection
                                         "group_id": domain.group_id,

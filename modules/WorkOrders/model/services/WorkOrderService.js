@@ -38,10 +38,20 @@ class WorkOrderService {
             value = value.replace(/-/g, "");
         }
         var executor = (resolve, reject)=> {
+            //Prepare the static data from persistence storage
+            let {groups, workTypes} = [{}, {}];
+            this.context.persistence.get("groups", (err, grps)=>{
+                if(!err) groups = JSON.parse(grps)
+            });
+
+            this.context.persistence.get("work:types", (err, types)=>{
+                if(!err) workTypes = JSON.parse(types);
+            });
+
             WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
                 .then(results=> {
                     const workOrders = results.records;
-                    _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, by == 'id');
+                    _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, by == 'id', groups, workTypes);
                     if (!workOrders.length) return resolve(Utils.buildResponse({data: {items: results.records}}));
                 }).catch(err=> {
                 console.log(err);
@@ -66,6 +76,16 @@ class WorkOrderService {
         offset = parseInt(offset);
         limit = parseInt(limit);
         var executor = (resolve, reject)=> {
+            //Prepare the static data from persistence storage
+            let {groups, workTypes} = [{}, {}];
+            this.context.persistence.get("groups", (err, grps)=>{
+                if(!err) groups = JSON.parse(grps)
+            });
+
+            this.context.persistence.get("work:types", (err, types)=>{
+                if(!err) workTypes = JSON.parse(types);
+            });
+            
             let resultSet = this.context.database.select(['*']).from("work_orders");
             if (fromDate && toDate) resultSet = resultSet.whereBetween('start_date', [fromDate, toDate]);
             if (userId) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${userId}}')`);
@@ -79,7 +99,7 @@ class WorkOrderService {
                     domain.serialize(undefined, "client");
                     workOrders.push(domain);
                 });
-                _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, false);
+                _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, false, groups, workTypes);
                 if (!records.length) return resolve(Utils.buildResponse({data: {items: workOrders}}));
             }).catch(err=> {
                 const error = Utils.buildResponse(Utils.getMysqlError(err), 400);
@@ -182,20 +202,20 @@ function sweepWorkOrderResponsePayload(workOrder) {
  * @param resolve
  * @param reject
  * @param isSingle
+ * @param groups
+ * @param workTypes
  * @private
  */
-function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSingle = false) {
+function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSingle = false, groups, workTypes) {
     let rowLen = workOrders.length;
     let processed = 0;
-    const workTypes = context.persistence.getItemSync("work_types");
-    const groups = context.persistence.getItemSync("groups");
+
     workOrders.forEach(workOrder=> {
         let promises = [];
 
         let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
         workOrder['group'] = groups[workOrder['group_id']];
-
-
+        
         //Get the related work order type details
         switch (workType.toLowerCase()) {
             case "disconnection":

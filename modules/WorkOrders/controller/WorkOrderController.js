@@ -3,7 +3,7 @@
  */
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
-    // app.use('/work_orders*', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/work_orders*', (req, res, next)=>API.recognitions().auth(req, res, next));
     /**
      * @swagger
      * /work_orders:
@@ -136,7 +136,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(err);
             });
     });
-
 
 
     /**
@@ -301,8 +300,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             .then(({data, code})=> {
                 return res.status(code).send(data);
             }).catch(({err, code})=> {
-                return res.status(code).send(err);
-            });
+            return res.status(code).send(err);
+        });
     });
 
 
@@ -385,8 +384,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             .then(({data, code})=> {
                 return res.status(code).send(data);
             }).catch(({err, code})=> {
-                return res.status(code).send(err);
-            });
+            return res.status(code).send(err);
+        });
     });
 
 };

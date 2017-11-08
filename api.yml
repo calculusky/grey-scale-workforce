@@ -6,6 +6,13 @@ parameters:
     required: true
     type: string
 
+  fireBaseToken:
+    name: x-firebase-token
+    description: The Firebase token of this user
+    in: header
+    required: false
+    type: string
+
   id:
     name: id
     description: The id of this model

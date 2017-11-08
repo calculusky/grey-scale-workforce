@@ -3,7 +3,6 @@
  */
 const EventEmitter = require('events').EventEmitter;
 const nUtils = require('util');
-// nUtils.inherits(LocationEvent, EventEmitter);
 
 class LocationEvent extends EventEmitter{
 
@@ -14,11 +13,19 @@ class LocationEvent extends EventEmitter{
         this.api = API;
         this.name = "Paul Okeke";
         
-        this.on('update_location', this.broadcastLocation)
+        this.on('update_location', this.broadcastLocation);
     }
     
     broadcastLocation(data){
-        console.log(this);
+        //get the user details
+        //get the total work orders assigned to this user
+        //get the total task handled by this user
+        //get the group the user belongs to
+        //get how many work order has been resolved today.. e.g FaultWorkOrder 2. Disconnection 3.
+        //How many work order has been scheduled for today?
+        //call geo-location service to the address of the user
+        //
+        console.log(data);
     }
     
 }
