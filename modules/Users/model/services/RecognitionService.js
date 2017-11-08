@@ -21,6 +21,10 @@ class RecognitionService {
         MapperFactory = this.context.modelMappers;
     }
 
+    getName() {
+        return "recognitionService";
+    }
+
     login(username, password, req) {
         const userAgent = useragent.parse(req.headers['user-agent']);
         //TODO make use of the device key sent along the request payload console.log(req.headers['device']);
@@ -145,10 +149,6 @@ class RecognitionService {
                 });
             });
         } else return res.status(401).send(Util.buildResponse(unAuthMsg));
-    }
-
-    getName() {
-        return "recognitionService";
     }
 }
 
