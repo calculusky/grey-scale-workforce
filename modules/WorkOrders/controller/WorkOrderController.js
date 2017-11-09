@@ -209,7 +209,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /work_orders/user/{user_id}/status/{statusId}:
+     * /work_orders/user/{user_id}/status/{statusId}/{offset}/{limit}:
      *  get:
      *    summary: "List Work Orders by User and Status"
      *    description: "Retrieves Work Order by specifying the user id and the status id. e.g Say we want to
@@ -230,15 +230,17 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      - $ref: '#/parameters/sessionId'
      *      - $ref: '#/parameters/user_id'
      *      - $ref: '#/parameters/statusId'
+     *      - $ref: '#/parameters/offset'
+     *      - $ref: '#/parameters/limit'
      */
-    app.get('/work_orders/user/:userId/status/:statusId', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/user/:userId/status/:statusId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
         console.log(req.params);
         const service = API.workOrders().getWorkOrders({
             'assigned_to->[]': `{"id":${req.params['userId']}}`,
             'status': req.params['statusId']
         }, undefined, req.who, req.params.offset || 0, req.params.limit || 10);
 
-        service.then(({data, code})=> {
+        return service.then(({data, code})=> {
             return res.status(code).send(data);
         }).catch(({err, code})=> {
             return res.status(code).send(err);
@@ -269,7 +271,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/limit'
      */
     app.get('/work_orders/user/:userId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
-        console.log(req.params);
+        // console.log(req.params);
         API.workOrders().getWorkOrders(`{"id":${req.params['userId']}}`, "assigned_to->[]", req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {
                 return res.status(code).send(data);

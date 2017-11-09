@@ -168,8 +168,6 @@ class PaymentService {
                          * Generate Re-connection Order
                          * We need to generate a new work order number
                          **/
-                        // const groups = this.context.persistence.getItemSync("groups");
-                        //lets get the business unit name
                         let businessUnit = Utils.getGroupParent(groups[domain['group_id']], 'business_unit');
 
                         const createReconnectionOrder = (result)=> {
