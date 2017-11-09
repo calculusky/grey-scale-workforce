@@ -33,23 +33,25 @@ class WorkOrderService {
     getWorkOrders(value = '?', by = "id", who = {api: -1}, offset, limit) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         //check if it is a work order number that is supplied
-        if (by == 'id' && (value && value.substring(0, 1).toUpperCase() == 'W')) {
+        if (by == 'id' && (typeof value != 'object' && value && value.substring(0, 1).toUpperCase() == 'W')) {
             by = "work_order_no";
             value = value.replace(/-/g, "");
         }
+        console.log(value);
         var executor = (resolve, reject)=> {
             //Prepare the static data from persistence storage
             let {groups, workTypes} = [{}, {}];
-            this.context.persistence.get("groups", (err, grps)=>{
-                if(!err) groups = JSON.parse(grps)
+            this.context.persistence.get("groups", (err, grps)=> {
+                if (!err) groups = JSON.parse(grps);
             });
 
-            this.context.persistence.get("work:types", (err, types)=>{
-                if(!err) workTypes = JSON.parse(types);
+            this.context.persistence.get("work:types", (err, types)=> {
+                if (!err) workTypes = JSON.parse(types);
             });
 
             WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
                 .then(results=> {
+                    console.log(results.query);
                     const workOrders = results.records;
                     _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, by == 'id', groups, workTypes);
                     if (!workOrders.length) return resolve(Utils.buildResponse({data: {items: results.records}}));
@@ -78,14 +80,14 @@ class WorkOrderService {
         var executor = (resolve, reject)=> {
             //Prepare the static data from persistence storage
             let {groups, workTypes} = [{}, {}];
-            this.context.persistence.get("groups", (err, grps)=>{
-                if(!err) groups = JSON.parse(grps)
+            this.context.persistence.get("groups", (err, grps)=> {
+                if (!err) groups = JSON.parse(grps)
             });
 
-            this.context.persistence.get("work:types", (err, types)=>{
-                if(!err) workTypes = JSON.parse(types);
+            this.context.persistence.get("work:types", (err, types)=> {
+                if (!err) workTypes = JSON.parse(types);
             });
-            
+
             let resultSet = this.context.database.select(['*']).from("work_orders");
             if (fromDate && toDate) resultSet = resultSet.whereBetween('start_date', [fromDate, toDate]);
             if (userId) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${userId}}')`);
@@ -215,7 +217,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
 
         let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
         workOrder['group'] = groups[workOrder['group_id']];
-        
+
         //Get the related work order type details
         switch (workType.toLowerCase()) {
             case "disconnection":
@@ -322,7 +324,6 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                             };
                             if (!wait) {
                                 sweepWorkOrderResponsePayload(workOrder);
-                                // console.log(workOrder);
                                 if (++processed == rowLen)
                                     return resolve(Utils.buildResponse({data: {items: workOrders}}));
                             }
@@ -339,7 +340,6 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
             if (!wait) {
                 sweepWorkOrderResponsePayload(workOrder);
                 if (++processed == rowLen) {
-                    console.log(workOrders);
                     return resolve(Utils.buildResponse({data: {items: workOrders}}));
                 }
             }

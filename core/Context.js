@@ -120,7 +120,7 @@ class Context {
 }
 
 if (!String.prototype.padStart) {
-    String.prototype.padStart = function padStart(targetLength,padString) {
+    String.prototype.padStart = function padStart(targetLength, padString) {
         targetLength = targetLength>>0; //floor if number or convert non-number to 0;
         padString = String(padString || ' ');
         if (this.length > targetLength) {
