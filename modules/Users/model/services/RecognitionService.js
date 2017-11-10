@@ -51,7 +51,6 @@ class RecognitionService {
                     if (!records.length) {
                         return reject(Util.buildResponse({status: "fail", data: Util.authFailData("AUTH_CRED")}, 401));
                     }
-                    //we expect that the user is only one so we pick the first
                     const user = records.shift();
                     //checks to see that the password supplied matches
                     if (!Password.equals(password, user.password)) {

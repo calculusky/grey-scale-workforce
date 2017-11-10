@@ -130,7 +130,6 @@ class WorkOrderService {
 
         //Get Mapper
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        // console.log(workOrder);
         return WorkOrderMapper.createDomainRecord(workOrder).then(workOrder=> {
             if (!workOrder) return Promise.reject();
             return Utils.buildResponse({data: workOrder});
@@ -344,7 +343,6 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                 }
             }
         }).catch(err=> {
-            // console.log(err);
             return reject(err);
         });
         //remove the request_id its irrelevant

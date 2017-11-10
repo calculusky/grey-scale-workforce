@@ -163,11 +163,7 @@ class PaymentService {
                         this.context.database.table('work_orders').update({status: 5})
                             .where(systemType.key, payment.system_id)
                             .then(r=>console.log()).catch(err=> Log.e(TAG, JSON.stringify(err)));
-
-                        /*
-                         * Generate Re-connection Order
-                         * We need to generate a new work order number
-                         **/
+                        
                         let businessUnit = Utils.getGroupParent(groups[domain['group_id']], 'business_unit');
 
                         const createReconnectionOrder = (result)=> {

@@ -4,6 +4,7 @@
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
     app.use('/work_orders*', (req, res, next)=>API.recognitions().auth(req, res, next));
+    
     /**
      * @swagger
      * /work_orders:
@@ -272,7 +273,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.get('/work_orders/user/:userId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
         // console.log(req.params);
-        API.workOrders().getWorkOrders(`{"id":${req.params['userId']}}`, "assigned_to->[]", req.who, req.params.offset || 0, req.params.limit || 10)
+        API.workOrders().getWorkOrders(`{"id":${req.params['userId']}}`, "assigned_to->[]", req.who,
+            req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

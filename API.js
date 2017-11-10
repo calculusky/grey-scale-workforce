@@ -37,8 +37,8 @@ class API {
                     });
             }
         });
-        
-        
+
+
         // //We should load all mappers here into memory
         // fs.readdir(modulesPath).forEach(dir=>{
         //    
@@ -56,16 +56,16 @@ class API {
      *
      * @returns {CustomerService|*}
      */
-    customers(){
+    customers() {
         return API._(this)['services']['customerService'];
     }
 
     /**const API = require('');
 
-     * 
+     *
      * @returns {MeterReadingService|*}
      */
-    meter_readings(){
+    meter_readings() {
         return API._(this)['services']['meterReadingService'];
     }
 
@@ -94,10 +94,10 @@ class API {
     }
 
     /**
-     * 
+     *
      * @returns {AssetService}
      */
-    assets(){
+    assets() {
         return API._(this)['services']['assetService'];
     }
 
@@ -106,7 +106,7 @@ class API {
      *
      * @returns {NoteService}
      */
-    notes(){
+    notes() {
         return API._(this)['services']['noteService'];
     }
 
@@ -115,32 +115,39 @@ class API {
      *
      * @returns {AttachmentService}
      */
-    attachments(){
+    attachments() {
         return API._(this)['services']['attachmentService'];
     }
 
     /**
-     * 
+     *
      * @returns {NotificationService|*}
      */
-    notifications(){
+    notifications() {
         return API._(this)['services']['notificationService'];
     }
 
     /**
-     * 
+     *
      * @returns {UploadService|*}
      */
-    uploads(){
+    uploads() {
         return API._(this)['services']['uploadService'];
     }
-    
+
     /**
-     * 
+     *
      * @returns {PaymentService|*}
      */
-    payments(){
+    payments() {
         return API._(this)['services']['paymentService'];
+    }
+
+    /**
+     * @returns {ReportService|*}
+     */
+    reports() {
+        return API._(this)['services']['reportService'];
     }
 
     /**
