@@ -251,3 +251,17 @@ module.exports.humanizeUniqueSystemNumber = function (systemUniqueNo) {
     }
     return formattedNo;
 };
+
+
+//Report functions
+module.exports.queryTimeType = function (time) {
+    time = time.trim().toUpperCase();
+    if (/^(\dW)|(\d{2}W)$/g.test(time) || /^([1-3])-([1-4])W$/g.test(time)) return 'W';
+    else if (/TODAY/g.test(time)) return 'TODAY';
+    else if (/MONTH/g.test(time)) return 'MONTH';
+    else if (/YEAR/g.test(time)) return 'YEAR';
+    else if (/^(\d{1,3}D)$/g.test(time) || /^(\d{1,2})-(\d{1,2})D$/g.test(time)) return 'D';
+    else if (/^\dM$/g.test(time) || /^([1-9]|1[01])-([1-9]|1[012])M$/g.test(time)) return 'M';
+    else if (/^\dY$/g.test(time) || /^(\d{4})-(\d{4})Y$/g.test(time)) return 'Y';
+    else return null;
+};

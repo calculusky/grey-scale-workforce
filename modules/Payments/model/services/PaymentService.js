@@ -135,7 +135,7 @@ class PaymentService {
                             status: "fail",
                             msg: "The amount is not acceptable",
                             code: "INVALID_AMOUNT",
-                            desc: `The amount must be equal or above the minimum amount payable ${minAmountAccepted}`
+                            desc: `The amount must be equal to or above the minimum amount payable ${minAmountAccepted}`
                         }, 400));
                     }
                     //Now check that this transaction id hasn't been processed yet

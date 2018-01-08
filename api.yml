@@ -120,6 +120,13 @@ parameters:
     in: path
     description: The date to end
 
+  report_time:
+    name: time
+    type: string
+    required: true
+    in: path
+    description: time of record to fetch
+
 #----------------------Definitions-------------------------------
 definitions:
   loginInput:
@@ -1025,3 +1032,17 @@ definitions:
               $ref: '#/definitions/Payment'
     required:
     - status
+
+
+  getModuleRecordCountOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: string
+        properties:
+          label:
+            type: array
+          data:
+            type: array
