@@ -116,6 +116,9 @@ $(function () {
                         }
                     }
                     return JSON.stringify(records);
+                },
+                error: function (err) {
+                    console.log(err);
                 }
             },
             "rowCallback": function (row, data, index) {
