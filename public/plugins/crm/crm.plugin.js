@@ -31,13 +31,13 @@ $(function () {
 
     if (!jQuery().DataTable) {
         //Import DataTables
-        addScripts(codeBase, [dataTables, bootstrapDataTables], ()=>validatePage())
+        addScripts(dataTables, [bootstrapDataTables], ()=>validatePage())
     } else {
         validatePage();
     }
 
     /*
-     * we'd need to check if the mrworking-data element is set
+     * We'd need to check if the mrworking-data element is set
      * Also checking for necessary attributes that are required
      * **/
     function validatePage() {
