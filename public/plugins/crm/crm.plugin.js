@@ -31,7 +31,7 @@ $(function () {
 
     if (!jQuery().DataTable) {
         //Import DataTables
-        addScripts(null, [dataTables, bootstrapDataTables], ()=>validatePage())
+        addScripts('', [dataTables, bootstrapDataTables], ()=>validatePage())
     } else {
         validatePage();
     }
