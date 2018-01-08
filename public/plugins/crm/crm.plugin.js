@@ -31,7 +31,7 @@ $(function () {
 
     if (!jQuery().DataTable) {
         //Import DataTables
-        addScripts('', [dataTables, bootstrapDataTables], ()=>validatePage())
+        addScripts(codeBase, [dataTables, bootstrapDataTables], ()=>validatePage())
     } else {
         validatePage();
     }
@@ -46,7 +46,7 @@ $(function () {
         });
         if (!crmDataEl.length) {
             //throw an error this page cannot continue
-            throw new ReferenceError("cannot find element with id: 'mrworking-crm-data'");
+            throw new ReferenceError("cannot find element with class: 'mrworking-crm-data'");
         } else {
             //check that the required attribute are init
             relationName = crmDataEl.attr('data-relation-name');
