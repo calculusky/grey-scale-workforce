@@ -42,7 +42,7 @@ $(function () {
      * **/
     function validatePage() {
         jQuery(function () {
-            Codebase.helpers(['ckeditor', 'content-filter']);
+            // Codebase.helpers(['ckeditor', 'content-filter']);
         });
         if (!crmDataEl.length) {
             //throw an error this page cannot continue
