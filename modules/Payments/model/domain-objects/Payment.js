@@ -46,7 +46,7 @@ class Payment extends DomainObject {
         return {
             system: String,
             system_id: String,
-            amount: Number,
+            amount: 'number(100, 1000000)', //1 <= 0 <= 1000000
             transaction_id: String,
             payer: String,
             channel: String,
