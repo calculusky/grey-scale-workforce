@@ -1,8 +1,15 @@
 /**
  * Created by paulex on 7/20/17.
  */
-const RelationShips = require('../core/model/links/Relationships');
+// const RelationShips = require('../core/model/links/Relationships');
 const Fault = require('../modules/Faults/model/domain-objects/Fault');
+const WorkOrder = require('../modules/WorkOrders/model/domain-objects/WorkOrder');
+
+let API = require('../API');
+
+const config = require('../config.json');
+const Context = require('../core/Context');
+API = new API(new Context(config));
 
 // test("belongsToMany Should be defined", ()=>{
 //     let relationship = new RelationShips();
@@ -54,19 +61,27 @@ const Fault = require('../modules/Faults/model/domain-objects/Fault');
 //     });
 // });
 
-test("belongsTo Relationship should return related  info", ()=>{
-    let fault = new Fault({id:1, assigned_to:3});
-    return fault.user().then(res=>{
-        expect(res.records).toBeDefined()
-    })
-});
+// test("belongsTo Relationship should return related  info", ()=>{
+//     let fault = new Fault({id:1, assigned_to:3});
+//     return fault.user().then(res=>{
+//         expect(res.records).toBeDefined()
+//     })
+// });
+//
+//
+// test("morphMany Relationship should resolve", ()=>{
+//     let fault = new Fault({id:1, assigned_to:3});
+//     return fault.notes().then(res=>{
+//         expect(res.records).toBeDefined();
+//     })
+// });
 
 
-test("morphMany Relationship should resolve", ()=>{
-    let fault = new Fault({id:1, assigned_to:3});
-    return fault.notes().then(res=>{
-        expect(res.records).toBeDefined();
-    })
+test("MorphTo Relationship should return the related entity", ()=> {
+    let workOrder = new WorkOrder({related_to: "disconnection_billings", relation_id: 444});
+    return workOrder.relatedTo().then(res=> {
+        expect(res.records.length).toBeGreaterThan(0);
+    });
 });
 
 

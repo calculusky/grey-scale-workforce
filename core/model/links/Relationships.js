@@ -2,6 +2,7 @@ let MapperFactory = null;//require('../../../modules/MapperFactory');
 const DomainFactory = require('../../../modules/DomainFactory');
 const Log = require('../../logger.js');
 const Context = require('../../Context');
+const lodash = require('lodash');
 let KNEX = null;
 
 /**
@@ -76,9 +77,9 @@ class Relationships {
     /**
      * One - to - One Relationship
      * @param domainMapperName
-     * @param foreignKey
+     * @param parentKey
      */
-    hasOne(domainMapperName, foreignKey = `${domainMapperName.toLowerCase()}_id`) {
+    hasOne(domainMapperName, parentKey = `${domainMapperName.toLowerCase()}_id`) {
         let DomainMapper = MapperFactory.build(domainMapperName);
         if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
 
@@ -100,24 +101,24 @@ class Relationships {
      */
     belongsTo(domainMapperName, foreignKey = `${domainMapperName.toLowerCase()}_id`, parentKey = "id") {
         let DomainMapper = MapperFactory.build(domainMapperName);
-        if (!DomainMapper){
-            Log.e(`${this.constructor.name}:`,`Domain Mapper for ${domainMapperName} cannot be found.`);
+        if (!DomainMapper) {
+            Log.e(`${this.constructor.name}:`, `Domain Mapper for ${domainMapperName} cannot be found.`);
             throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
         }
-        
+
         //Get the DomainObject for the domain we are retrieving.
         let DomainObject = DomainFactory.build(DomainMapper.domainName);
-        if (!DomainObject){
+        if (!DomainObject) {
             Log.e(`${this.constructor.name}:`, `Domain Object for ${DomainMapper.domainName} cannot be found.`);
             throw new ReferenceError(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
         }
 
         let foreignTable = DomainMapper.tableName;
 
-        
-        if(!this.domainObject[foreignKey] || this.domainObject[foreignKey]==""){
+
+        if (!this.domainObject[foreignKey] || this.domainObject[foreignKey] == "") {
             console.log("no foreign key");
-            return Promise.resolve({records:[{}]});
+            return Promise.resolve({records: [{}]});
         }
 
         let resultSets = KNEX.select(['*']).from(foreignTable).where(parentKey, this.domainObject[foreignKey]);
@@ -135,51 +136,44 @@ class Relationships {
                 if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
             }).catch(err=> {
                 console.log(err);
-                return reject(err)
+                return reject(err);
             })
         };
-        return new Promise(executor)
+        return new Promise(executor);
     }
 
 
-    morphTo(){
+    morphTo(modelNameColumn, modelIdColumn) {
+        //TODO test if the modelNameCol is not selected
+        //Because it is the table name that is saved, we have to convert it to
+        //camel case format such that it matches our internal model/domain naming convention
+        let relatedModelName = lodash.camelCase(this.domainObject[modelNameColumn]);
 
-    }
+        relatedModelName = relatedModelName.replace(
+            relatedModelName.substring(0, 1), relatedModelName.substring(0, 1).toUpperCase()
+        );
 
-    /**
-     * Polymorphic Relationship
-     * 
-     * @param domainMapperName
-     * @param relatedDomainKey
-     * @param foreignKey
-     * @param options
-     * @returns {Promise}
-     */
-    morphMany(domainMapperName, relatedDomainKey, foreignKey=`${relatedDomainKey}_id`, 
-              options={localDomain:`${this.domainObject.constructor.name}s`.toLocaleLowerCase(), localKey:"id"}){
-        
-        let DomainMapper = MapperFactory.build(domainMapperName);
-        if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
+        let DomainMapper = MapperFactory.build(relatedModelName);
+        //The table name can either have an S at the end or probably doesn't
 
-        //Get the DomainObject for the domain we are retrieving.
+        DomainMapper = (DomainMapper)
+            ? DomainMapper
+            : MapperFactory.build(relatedModelName.substring(0, relatedModelName.length - 1));
+
+        if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${relatedModelName} cannot be found.`);
+
         let DomainObject = DomainFactory.build(DomainMapper.domainName);
-        
-        if (!DomainObject){
-            console.log(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
+
+        if (!DomainObject) {
+            Log.e(`${this.constructor.name}:`, `Domain Object for ${DomainMapper.domainName} cannot be found.`);
             throw new ReferenceError(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
         }
 
-        if(!this.domainObject[options.localKey] || this.domainObject[options.localKey]==""){
-            return Promise.resolve({records:[{}]});
-        }
+        let resultSets = KNEX.select(['*']).from(DomainMapper.tableName)
+            .where(DomainMapper.primaryKey, this.domainObject[modelIdColumn]);
 
-        let foreignTable = DomainMapper.tableName;
-
-        let resultSets = KNEX.select(['*']).from(foreignTable)
-            .where(foreignKey, this.domainObject[options.localKey]).andWhere(relatedDomainKey, options.localDomain);
-
-        var executor = (resolve, reject)=>{
-            resultSets.then(res=>{
+        let executor = (resolve, reject)=> {
+            resultSets.then(res=> {
                 let records = [], rowLen = res.length, processed = 0;
                 for (let i = 0; i < rowLen; i++) {
                     let domainObject = new DomainObject();
@@ -188,14 +182,63 @@ class Relationships {
                     if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
                 }
                 if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
-            }).catch(err=>{
+            }).catch(err=> {
+                return reject(err);
+            });
+        };
+        return new Promise(executor);
+    }
+
+    /**
+     * Polymorphic Relationship
+     *
+     * @param domainMapperName
+     * @param relatedDomainKey
+     * @param foreignKey
+     * @param options
+     * @returns {Promise}
+     */
+    morphMany(domainMapperName, relatedDomainKey, foreignKey = `${relatedDomainKey}_id`,
+              options = {localDomain: `${this.domainObject.constructor.name}s`.toLocaleLowerCase(), localKey: "id"}) {
+
+        let DomainMapper = MapperFactory.build(domainMapperName);
+        if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
+
+        //Get the DomainObject for the domain we are retrieving.
+        let DomainObject = DomainFactory.build(DomainMapper.domainName);
+
+        if (!DomainObject) {
+            console.log(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
+            throw new ReferenceError(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
+        }
+
+        if (!this.domainObject[options.localKey] || this.domainObject[options.localKey] == "") {
+            return Promise.resolve({records: [{}]});
+        }
+
+        let foreignTable = DomainMapper.tableName;
+
+        let resultSets = KNEX.select(['*']).from(foreignTable)
+            .where(foreignKey, this.domainObject[options.localKey]).andWhere(relatedDomainKey, options.localDomain);
+
+        var executor = (resolve, reject)=> {
+            resultSets.then(res=> {
+                let records = [], rowLen = res.length, processed = 0;
+                for (let i = 0; i < rowLen; i++) {
+                    let domainObject = new DomainObject();
+                    domainObject.serialize(res[i], 'client');
+                    records.push(domainObject);
+                    if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
+                }
+                if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
+            }).catch(err=> {
                 return reject(err)
             });
         };
         return new Promise(executor);
     }
 
-    
+
     linkTable(relatedTable) {
         let domains = [
             relatedTable,
