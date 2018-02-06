@@ -29,6 +29,7 @@ class RecognitionService {
         const userAgent = useragent.parse(req.headers['user-agent']);
         //TODO make use of the device key sent along the request payload console.log(req.headers['device']);
         // const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        
         let isMobile = Util.isMobile(userAgent.family);
 
         let [valid, , cMsg] = Util.validatePayLoad({username, password}, ["username", "password"]);
@@ -143,7 +144,8 @@ class RecognitionService {
                      *
                      * There are probably more things we should be able to do here to make it more secured
                      **/
-                    if (userAgent.family !== decoded.aud) return res.status(401).send(Util.buildResponse(unAuthMsg));
+                    //TODO enable !!!!!!!!!!!!!!!!!!!!!!!!
+                    // if (userAgent.family !== decoded.aud) return res.status(401).send(Util.buildResponse(unAuthMsg));
                     req.who = decoded;
                     return next();
                 });
