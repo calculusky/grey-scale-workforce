@@ -79,13 +79,15 @@ class AttachmentService {
                 module: `${body.module}`,
                 relation_id: `${body.relation_id}`,
                 file_name: file.filename,
-                file_size: file.size||1,
+                file_size: file.size || 1,
                 file_path: file.path,
                 file_type: file.mimetype,
-                created_by: who.sub
+                created_by: who.sub,
+                group_id: who.group
             })));
         } else {
             body['created_by'] = who.sub;
+            body['group_id'] = who.group;
             attachments.push(new Attachment(body));
         }
         //Get Mapper
@@ -131,14 +133,16 @@ class AttachmentService {
             file_name: file.filename,
             file_size: file.size,
             file_path: file.path,
-            file_type: file.mimetype
+            file_type: file.mimetype,
+            created_by: who.sub,
+            group_id: who.group
         })));
 
         let executor = (resolve, reject) => {
             let processed = 0;
             let rowLen = attachments.length;
             let attachmentIds = [];
-            //TODO do a multiple insert here rather than call a for-loop
+            //TODO: Do a multiple insert here rather than call a for-loop
             attachments.forEach(attachment=> {
                 this.createAttachment(attachment, who).then(response=> {
                     if (++processed == rowLen) {
@@ -187,7 +191,10 @@ class AttachmentService {
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         return AttachmentMapper.deleteDomainRecord({value}).then(count=> {
             if (!count) {
-                return Promise.reject(Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}}));
+                return Promise.reject(Util.buildResponse({
+                    status: "fail",
+                    data: {message: "The specified record doesn't exist"}
+                }));
             }
             return Util.buildResponse({data: {[by]: value, message: "Attachment deleted"}});
         });

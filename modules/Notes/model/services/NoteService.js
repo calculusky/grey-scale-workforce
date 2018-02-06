@@ -34,7 +34,10 @@ class NoteService {
                             note.user = values.shift().records.shift();
                             note.attachments = values.shift().records;
                             sweepNoteResponsePayload(note);
-                            if (++processed == rowLen) return resolve(Util.buildResponse({data: {items: notes}}));
+                            if (++processed == rowLen) {
+                                console.log(notes[0]['attachments']);
+                                return resolve(Util.buildResponse({data: {items: notes}}));
+                            }
                         }).catch(err=> {
                             return reject(err);
                         });

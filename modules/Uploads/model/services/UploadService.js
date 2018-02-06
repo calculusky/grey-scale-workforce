@@ -60,7 +60,7 @@ class UploadService {
             status: "fail",
             data: {message: "Upload type missing."}
         }, 400));
-        if (!files.length)return Promise.reject(Utils.buildResponse({
+        if (!files.length) return Promise.reject(Utils.buildResponse({
             status: "fail",
             data: {message: "File missing."}
         }, 400));

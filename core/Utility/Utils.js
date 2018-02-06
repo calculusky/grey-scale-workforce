@@ -162,7 +162,7 @@ module.exports.jwtTokenErrorMsg = function (err) {
 };
 
 module.exports.isMobile = function (userAgentFamily) {
-    const isMobile = userAgentFamily.match(/Okhttp|Android/);
+    const isMobile = userAgentFamily.match(/Okhttp|okhttp|Android/);
     return (isMobile) ? isMobile.length : false;
 };
 

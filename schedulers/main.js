@@ -48,29 +48,18 @@ module.exports.createDelinquencyList = function () {
                 if (rn == 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
                 else if (rn > 1) {
 
-                    const currentBill = row.getCell(colHeaderIndex['current_bill']).value;
-                    const netArrears = row.getCell(colHeaderIndex['net_arrears']).value;
-                    const minAmount = (0.25 * netArrears) + currentBill;
-                    const total = minAmount + 2000.00;
-
-                    console.log(currentBill);
                     let delinquency = {
                         "account_no": row.getCell(colHeaderIndex['account_no']).value,
-                        "old_account_no": row.getCell(colHeaderIndex['account_no']).value,
-                        "customer_name": row.getCell(colHeaderIndex['customer_name']).value,
-                        "current_bill": currentBill,
+                        "current_bill": row.getCell(colHeaderIndex['current_bill']).value,
                         "arrears": row.getCell(colHeaderIndex['net_arrears']).value,
-                        "min_amount_payable": minAmount,
-                        "dt": row.getCell(colHeaderIndex['dt']).value,
-                        "feeders": row.getCell(colHeaderIndex['feeders']).value,
-                        "total_amount_payable": total,
                         "created_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
                         "updated_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
                     };
+
                     delinquencies.push(delinquency);
                     if (++processed == rowLen - 1) {
                         //we can release the lock here
-                        this.context.database.insert(delinquencies).into("delinquency_lists").catch(r=>console.log(r));
+                        this.context.database.insert(delinquencies).into("disconnection_billings").catch(r=>console.log(r));
                         deleteFile(file);
                         _updateUploadStatus(this, fileName, 4);
                         console.log("Lock has been released for delinquency processes");
@@ -281,7 +270,7 @@ module.exports.createMeterReadings = function () {
     console.log("Lock for Meter Reading transaction is held... i'll be waiting till it is released!!!")
 };
 
-function _updateUploadStatus(ctx, fileName, status) {
+function _updateUploadStatus(ctx, fileName, status, message) {
     ctx.context.database.table("uploads")
         .where("file_name", fileName)
         .update({
