@@ -145,6 +145,11 @@ class Relationships {
 
     morphTo(modelNameColumn, modelIdColumn) {
         //TODO test if the modelNameCol is not selected
+        if(!this.domainObject[modelNameColumn] || !this.domainObject[modelIdColumn]){
+            throw new ReferenceError(`The columns[${modelNameColumn},${modelIdColumn}] 
+            specified for morphTo relationship are not selected for 'this' domain object`);
+        }
+        
         //Because it is the table name that is saved, we have to convert it to
         //camel case format such that it matches our internal model/domain naming convention
         let relatedModelName = lodash.camelCase(this.domainObject[modelNameColumn]);
