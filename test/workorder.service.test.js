@@ -31,8 +31,21 @@ beforeAll(()=> {
 // });
 
 
-test('Should list work orders and its related to entity', ()=> {
+test('That we can retrieve a work order by a column', ()=> {
     return API.workOrders().getWorkOrders('DOSO00000135301', 'work_order_no').then(res=> {
+        console.dir(res.data.data);
+        expect(res).toEqual(
+            expect.objectContaining({
+                code: expect.any(Number),
+                data: expect.any(Object)
+            })
+        );
+    });
+});
+
+
+test("Retrieve list of work order", ()=>{
+    return API.workOrders().getWorkOrders(`{"id":1}`, "assigned_to->[]").then(res=> {
         console.dir(res.data.data);
         expect(res).toEqual(
             expect.objectContaining({

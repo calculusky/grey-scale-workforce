@@ -1,9 +1,11 @@
 /**
  * Created by paulex on 7/11/17.
  */
-
 let API = require('../API');
-API = new API();
+
+const config = require('../config.json');
+const Context = require('../core/Context');
+API = new API(new Context(config));
 
 beforeAll(()=> {
     return API.users().createUser({
@@ -14,7 +16,6 @@ beforeAll(()=> {
         last_name: "Odemu",
         middle_name: "Ugo",
         gender: "M",
-        api_instance_id: 1
     }, {api: 1})
         .then(data=> {
             user = data.data.data;
@@ -48,6 +49,13 @@ it("Should return a user object", ()=> {
         },
         code: 200
     });
+});
+
+test("That we can register an fcm_token", ()=>{
+    let token = 'ekY2r-BX0Mc:APA91bEiOWiXgFsSf_XIc2y3ACI-DvSZtFeG2M0485Azw4iGusX8tLlhK_Pou46a9_u03HAQSFQFN-5ZuC8qJmNTRxL3oeV7R0AoZg2iTNHGmhhipDhxgRc24FeEZn-bOdakRQ3x7WyW';
+    return expect(API.users().registerFcmToken(token, {sub:1})).resolves.toEqual({
+
+    })
 });
 
 

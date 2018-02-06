@@ -8,15 +8,9 @@ const config = require('../config.json');
 const Context = require('../core/Context');
 API = new API(new Context(config));
 
-let workOrder = null;
 
 
-// test('Should resolve getWorkOrders to be defined', ()=> {
-//     return expect(API.workOrders().getWorkOrders()).resolves.toBeDefined();
-// });
-
-
-test('test that createPayment is defined', ()=> {
+test('Test that createPayment without no input data rejects with a defined value', ()=> {
     return expect(API.payments().createPayment({}, {}, API)).rejects.toBeDefined();
 });
 
