@@ -37,7 +37,6 @@ class WorkOrderService {
             by = "work_order_no";
             value = value.replace(/-/g, "");
         }
-        console.log(value);
         var executor = (resolve, reject)=> {
             //Prepare the static data from persistence storage
             let {groups, workTypes} = [{}, {}];
@@ -51,7 +50,6 @@ class WorkOrderService {
 
             WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
                 .then(results=> {
-                    console.log(results.query);
                     const workOrders = results.records;
                     _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, by == 'id', groups, workTypes);
                     if (!workOrders.length) return resolve(Utils.buildResponse({data: {items: results.records}}));
@@ -127,13 +125,27 @@ class WorkOrderService {
         if (!isValid) {
             return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
+        //Depending on the type we need to generate a new work order no
+        const executor = (resolve, reject)=> {
+            this.context.persistence.get("groups", (err, groups)=> {
+                if (err) return;
+                groups = JSON.parse(groups);
+                let businessUnit = Utils.getGroupParent(groups[body.group_id || who.group], 'business_unit');
 
-        //Get Mapper
-        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.createDomainRecord(workOrder).then(workOrder=> {
-            if (!workOrder) return Promise.reject();
-            return Utils.buildResponse({data: workOrder});
-        });
+                Utils.generateUniqueSystemNumber(
+                    getNumberPrefix(workOrder.type_id), businessUnit['short_name'], 'work_orders', this.context
+                ).then(uniqueNo=> {
+                    //Get Mapper
+                    workOrder.work_order_no = uniqueNo;
+                    const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+                    WorkOrderMapper.createDomainRecord(workOrder).then(workOrder=> {
+                        if (!workOrder) return reject();
+                        return resolve(Utils.buildResponse({data: workOrder}));
+                    });
+                });
+            });
+        };
+        return new Promise(executor);
     }
 
     /**
@@ -168,6 +180,18 @@ class WorkOrderService {
         });
     }
 
+}
+
+function getNumberPrefix(typeId) {
+    switch (typeId) {
+        case 1:
+            return "D";
+        case 2:
+            return "R";
+        case 3:
+            return "F";
+    }
+    return "W";
 }
 
 function sweepWorkOrderResponsePayload(workOrder) {
@@ -217,34 +241,8 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
         let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
         workOrder['group'] = groups[workOrder['group_id']];
 
-        //Get the related work order type details
-        switch (workType.toLowerCase()) {
-            case "disconnection":
-                promises.push(workOrder.disconnection());
-                break;
-            case "re-connection":
-                promises.push(null);
-                break;
-            default:
-                promises.push(null);
-                break;
-        }
-
-        //get the related entity details
-        switch (workOrder['related_to'].toLowerCase()) {
-            case "customers":
-                promises.push(workOrder.customer());
-                break;
-            case "work_orders":
-                promises.push(workOrder.workOrder());
-                break;
-            case "assets":
-                promises.push(workOrder.asset());
-                break;
-            default:
-                promises.push(null);
-                break;
-        }
+        //Get the entity related to this work order
+        promises.push(workOrder.relatedTo());
 
         //If we're loading for a list view let's get the counts or related models
         if (!isSingle) {
@@ -254,73 +252,39 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
             let countAttachments = context.database.count('id as attachments_count').from("attachments")
                 .where("module", moduleName).where("relation_id", workOrder.id);
 
-            promises.push(countNotes, countAttachments)
+            promises.push(countNotes, countAttachments);
         }
         //Promises in order of arrangement
-        //0: The work order type related details
-        //1: The related Entity e.g customer or assets
-        //2: Notes Count
-        //3: Attachments Count
+        //0: The related Entity e.g faults, disconnection_billing
+        //1: Notes Count
+        //2: Attachments Count
         Promise.all(promises).then(values=> {
             //its compulsory that we check that a record exist
-            const typeEntity = values[0];
-            const relatedEntity = values[1];
-            const notesCount = values[2];
-            const attachmentCount = values[3];
+            const relatedToRecord = values[0];
+            const notesCount = values[1];
+            const attachmentCount = values[2];
 
             let wait = false;
 
             //First thing lets get the work order type details
-            if (typeEntity) {
-                let typeDetails = typeEntity.records.shift();
-                if (typeDetails) {
-                    delete typeDetails['id'];
-                    delete typeDetails['created_at'];
-                    delete typeDetails['updated_at'];
+            if (relatedToRecord) {
+                let relatedModel = relatedToRecord.records.shift();
+                if (relatedModel) {
+                    delete relatedModel['id'];
+                    delete relatedModel['created_at'];
+                    delete relatedModel['updated_at'];
                 }
-                workOrder[workType.toLowerCase()] = typeDetails;
-            }
-            //Secondly We need to get the relatedEntity Details
-            if (relatedEntity) {
-                let relatedEntityDetails = relatedEntity.records.shift();
-                switch (workOrder['related_to'].toLowerCase()) {
-                    case "assets":
-                        workOrder['relation_name'] = relatedEntityDetails.asset_name;
-                        break;
-                    case "customers":
-                        workOrder['customer'] = relatedEntityDetails;
-                        break;
-                    //Work-Order to Work Order is Peculiar to IE alone
-                    case "work_orders":
+
+                workOrder[workType.toLowerCase()] = relatedModel;
+
+                switch (workOrder.related_to.toLowerCase()) {
+                    case "disconnection_billings":
                         wait = true;
-                        workOrder['work_order'] = {
-                            id: relatedEntityDetails.id,
-                            work_order_no: relatedEntityDetails.work_order_no,
-                            type_id: relatedEntityDetails.type_id,
-                            type_name: "Disconnection",
-                            related_to: relatedEntityDetails.related_to,
-                            relation_id: relatedEntityDetails.relation_id,
-                            status: relatedEntityDetails.status,
-                            priority: relatedEntityDetails.priority
-                        };
-                        //Load all other necessary details
-                        Promise.all([
-                            relatedEntityDetails.customer(),
-                            relatedEntityDetails.disconnection(),
-                            relatedEntityDetails.payment()]
-                        ).then(pValues=> {
+                        //We know that a disconnection billing is related 
+                        //To a customer so we need to get the customer details.
+                        relatedModel.customer().then(customer=> {
                             wait = false;
-                            let thisCustomer = pValues[0].records.shift();
-                            let thisDisconnection = pValues[1].records.shift();
-                            let thisPayment = pValues[2].records.shift();
-                            workOrder['customer'] = thisCustomer;
-                            workOrder['disconnection'] = {
-                                current_bill: thisDisconnection.current_bill,
-                                arrears: thisDisconnection.arrears,
-                                min_amount_payable: thisDisconnection.min_amount_payable,
-                                total_amount_payable: thisDisconnection.total_amount_payable,
-                                amount_paid: (thisPayment) ? thisPayment.amount : 0.0
-                            };
+                            workOrder['customer'] = customer.records.shift();
                             if (!wait) {
                                 sweepWorkOrderResponsePayload(workOrder);
                                 if (++processed == rowLen)
@@ -328,10 +292,12 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                             }
                         });
                         break;
-                    default:
+                    case "faults":
+
                         break;
                 }
             }
+
             if (notesCount && attachmentCount) {
                 workOrder['notes_count'] = notesCount.shift()['notes_count'];
                 workOrder['attachments_count'] = attachmentCount.shift()['attachments_count'];

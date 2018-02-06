@@ -47,6 +47,10 @@ class WorkOrder extends DomainObject {
             issue_date: Date
         }
     }
+    
+    relatedTo(){
+        return this.relations().morphTo('related_to', 'relation_id');
+    }
 
     /**
      * Returns the associated Asset for this Work Order
