@@ -65,7 +65,7 @@ it("Should retrieve rows when search involves json column types", ()=> {
             'status': 1
         }
     }).then(({records, query})=> {
-        expect(query).toEqual("select * from `faults` where JSON_CONTAINS(assigned_to, '{\"id\":1}') and `status` = 1 order by `created_at` asc limit 10");
+        expect(query).toEqual("select * from `faults` where JSON_CONTAINS(faults.assigned_to, '{\"id\":1}') and `status` = 1 order by `created_at` asc limit 10");
     });
 });
 
@@ -132,7 +132,7 @@ it("updateDomainRecord:Should throw error if the tableName of this mapper isn't 
     }).toThrow(/override the tableName/);
 });
 //
-test("updateDomainRecord:That the value parameter is set", ()=> {
+test("updateDomainRecord:Test That the value parameter is set", ()=> {
     modelMapper.tableName = "there is a table name now";
     expect(()=> {
         modelMapper.updateDomainRecord({});
@@ -162,6 +162,7 @@ it("updateDomainRecord:should Resolve and update the resource", ()=> {
         first_name: "balo"
     });
     return expect(modelMapper.updateDomainRecord({value: 1, domain: user})).resolves.toEqual([{
+        email: "donpaul120@gmail.com",
         "first_name": "balo"
     }, expect.any(Number)]);
 });

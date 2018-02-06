@@ -44,7 +44,8 @@ class DomainFactory {
                     return require('./DisconnectionOrders/model/domain-objects/DisconnectionOrder');
                 case DomainFactory.PAYMENT:
                     return require('./Payments/model/domain-objects/Payment');
-                
+                case DomainFactory.PAYMENT_PLAN:
+                    return require('./PaymentPlans/model/domain-objects/PaymentPlan');
             }
         }catch (e){
             if(e.code=="MODULE_NOT_FOUND"){
@@ -68,5 +69,6 @@ DomainFactory.NOTIFICATION = "Notification";
 DomainFactory.UPLOAD = "Upload";
 DomainFactory.DISCONNECTION_ORDER = "DisconnectionOrder";
 DomainFactory.PAYMENT = "Payment";
+DomainFactory.PAYMENT_PLAN = "PaymentPlan";
 
 module.exports = DomainFactory;

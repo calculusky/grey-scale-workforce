@@ -1,11 +1,13 @@
 {
   "id": "id",
   "work_order_id": "work_order_id",
+  "account_no": "account_no",
   "current_bill": "current_bill",
   "arrears": "arrears",
   "min_amount_payable": "min_amount_payable",
   "total_amount_payable": "total_amount_payable",
   "reconnection_fee": "reconnection_fee",
+  "has_plan": "has_plan",
   "created_at": "created_at",
   "updated_at": "updated_at"
 }

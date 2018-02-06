@@ -8,7 +8,7 @@ class DisconnectionOrderMapper extends ModelMapper{
     constructor(context) {
         super(context);
         this.primaryKey = "id";
-        this.tableName = "disconnection_orders";
+        this.tableName = "disconnection_billings";
         this.domainName = "DisconnectionOrder";
     }
 }
