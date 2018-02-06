@@ -64,7 +64,8 @@ class RecognitionService {
                         sub: user.id,
                         aud: `${userAgent.family}`,
                         exp: Math.floor(Date.now() / 1000) + tokenExpiry,
-                        name: user.username
+                        name: user.username,
+                        group: user.group_id
                     };
 
                     let token = jwt.sign(tokenOpt, "mySecretKeyFile");
