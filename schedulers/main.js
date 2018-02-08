@@ -60,7 +60,10 @@ module.exports.createDelinquencyList = function () {
                     delinquencies.push(delinquency);
                     if (++processed == rowLen - 1) {
                         //we can release the lock here
-                        this.context.database.insert(delinquencies).into("disconnection_billings").catch(r=>console.log(r));
+                        this.context.database.raw(this.context.database.table('disconnection_billings')
+                            .insert(delinquencies).toString().replace(/^insert/i, 'insert ignore'))
+                            .catch(r=>console.log(r));
+                        // this.context.database.insert(delinquencies).into("disconnection_billings").catch(r=>console.log(r));
                         deleteFile(file);
                         _updateUploadStatus(this, fileName, 4);
                         console.log("Lock has been released for delinquency processes");
