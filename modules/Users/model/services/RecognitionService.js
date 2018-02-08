@@ -60,7 +60,7 @@ class RecognitionService {
                     user.setPassword();
                     //For Mobile we are giving 4months before token will expire
                     //but this token must be tied to the same user-agent and device
-                    const tokenExpiry = (isMobile) ? 3600 * 3600 : 15 * 60;
+                    const tokenExpiry = (isMobile) ? 3600 * 3600 : 3600 * 3600;//TODO limit the time
                     const tokenOpt = {
                         sub: user.id,
                         aud: `${userAgent.family}`,
