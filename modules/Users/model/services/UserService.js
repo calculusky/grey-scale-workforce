@@ -87,7 +87,7 @@ class UserService {
                 const result = results.shift();
                 if (result.changedRows > 0) return Utils.buildResponse({data: user});
                 //lets return error if nothing happened
-                return Promise.reject(Utils.buildResponse({status: "fail", data: user}, 404));
+                return Promise.reject(Utils.buildResponse({status: "fail", data: user}, 400));
             }).catch(err=> {
                 const error = Utils.buildResponse(Utils.getMysqlError(err), 400);
                 return Promise.reject(error)

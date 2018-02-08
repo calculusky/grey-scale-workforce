@@ -9,6 +9,7 @@ const Utils = require('../core/Utility/Utils');
 
 module.exports = function main(context) {
     this.context = context;
+    //lock.d for delinquency list, lock.c for customer
     this.lock = {d: false};
     //all cron jobs
     console.log('* * * * * * Registered CronJobs');
@@ -47,7 +48,7 @@ module.exports.createDelinquencyList = function () {
                 //the first row returned is the column header so lets skip
                 if (rn == 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
                 else if (rn > 1) {
-
+                    //TODO add the group and assigned_to
                     let delinquency = {
                         "account_no": row.getCell(colHeaderIndex['account_no']).value,
                         "current_bill": row.getCell(colHeaderIndex['current_bill']).value,
@@ -68,7 +69,7 @@ module.exports.createDelinquencyList = function () {
                 }
             });
             //if it is empty or just includes the column heads... lets delete the file and release lock
-            if (rowLen == 0 || rowLen == 1) {
+            if (rowLen <= 1) {
                 deleteFile(file);
                 _updateUploadStatus(this, fileName, 4);
                 //we can release the lock here
