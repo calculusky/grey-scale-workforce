@@ -30,26 +30,20 @@ class API {
                         let serviceObj = require(`${servicePath}/${service}`);
                         //Save all services into their own object
                         serviceObj = new serviceObj(context);
-                        if (!API._(this).services) {
-                            API._(this).services = {};
-                        }
-                        API._(this).services[serviceObj.getName()] = serviceObj;
+                        if (!API._(this).services) API._(this).services = {};
+
+                        API._(this).services[serviceObj.constructor.name] = serviceObj;
                     });
             }
         });
-
-
-        // //We should load all mappers here into memory
-        // fs.readdir(modulesPath).forEach(dir=>{
-        //    
-        // })
     }
 
+    //TODO on a second thought we can as well avoid declaring the below functions and automatically generate them
     /**
      * @returns {UserService|*}
      */
     users() {
-        return API._(this)['services']['userService'];
+        return API._(this)['services']['UserService'];
     }
 
     /**
@@ -57,7 +51,7 @@ class API {
      * @returns {CustomerService|*}
      */
     customers() {
-        return API._(this)['services']['customerService'];
+        return API._(this)['services']['CustomerService'];
     }
 
     /**const API = require('');
@@ -66,7 +60,7 @@ class API {
      * @returns {MeterReadingService|*}
      */
     meter_readings() {
-        return API._(this)['services']['meterReadingService'];
+        return API._(this)['services']['MeterReadingService'];
     }
 
     /**
@@ -74,7 +68,7 @@ class API {
      * @returns {RecognitionService|*}
      */
     recognitions() {
-        return API._(this)['services']['recognitionService']
+        return API._(this)['services']['RecognitionService']
     }
 
     /**
@@ -82,7 +76,7 @@ class API {
      * @returns {FaultService|*}
      */
     faults() {
-        return API._(this)['services']['faultService']
+        return API._(this)['services']['FaultService']
     }
 
     /**
@@ -90,7 +84,7 @@ class API {
      * @returns {WorkOrderService|*}
      */
     workOrders() {
-        return API._(this)['services']['workOrderService']
+        return API._(this)['services']['WorkOrderService']
     }
 
     /**
@@ -98,7 +92,7 @@ class API {
      * @returns {AssetService}
      */
     assets() {
-        return API._(this)['services']['assetService'];
+        return API._(this)['services']['AssetService'];
     }
 
 
@@ -107,7 +101,7 @@ class API {
      * @returns {NoteService}
      */
     notes() {
-        return API._(this)['services']['noteService'];
+        return API._(this)['services']['NoteService'];
     }
 
 
@@ -116,7 +110,7 @@ class API {
      * @returns {AttachmentService}
      */
     attachments() {
-        return API._(this)['services']['attachmentService'];
+        return API._(this)['services']['AttachmentService'];
     }
 
     /**
@@ -124,7 +118,7 @@ class API {
      * @returns {NotificationService|*}
      */
     notifications() {
-        return API._(this)['services']['notificationService'];
+        return API._(this)['services']['NotificationService'];
     }
 
     /**
@@ -132,7 +126,7 @@ class API {
      * @returns {UploadService|*}
      */
     uploads() {
-        return API._(this)['services']['uploadService'];
+        return API._(this)['services']['UploadService'];
     }
 
     /**
@@ -140,14 +134,22 @@ class API {
      * @returns {PaymentService|*}
      */
     payments() {
-        return API._(this)['services']['paymentService'];
+        return API._(this)['services']['PaymentService'];
+    }  
+    
+    /**
+     *
+     * @returns {PaymentPlanService|*}
+     */
+    paymentPlans() {
+        return API._(this)['services']['PaymentPlanService'];
     }
 
     /**
      * @returns {ReportService|*}
      */
     reports() {
-        return API._(this)['services']['reportService'];
+        return API._(this)['services']['ReportService'];
     }
 
     /**
