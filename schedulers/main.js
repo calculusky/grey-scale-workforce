@@ -104,9 +104,13 @@ module.exports.createDelinquencyList = function () {
         });
     };
     //if the lock is currently released we can start processing another file
+    console.log("CURRENT_LOCK_STATUS: ",this.lock.d);
     if (!this.lock.d) {
         return fs.readdir(directory, (err, files)=> {
-            if (err) return;
+            if (err) {
+                console.log(err);
+                return;
+            }
             //start processing the files.. we are processing one file at a time from a specific folder
             //TODO check that this files are indeed excel files e.g xlsx or csv
             const fileName = files.shift();
