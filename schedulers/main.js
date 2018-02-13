@@ -36,7 +36,14 @@ module.exports.createDelinquencyList = function () {
     //This function processes the excel document
     const startProcessor = (file/*.xlsx*/, fileName)=> {
         this.lock.d = true;
+
         currentFile = file;
+        let uploadData = {};
+
+        //Fetch the upload information
+        this.context.database.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to'])
+            .then(r => uploadData = r.shift());
+
         workbook.xlsx.readFile(file).then(()=> {
             console.log("PROCESSING:", currentFile);
             const workSheet = workbook.getWorksheet(1);
@@ -53,19 +60,28 @@ module.exports.createDelinquencyList = function () {
                         "account_no": row.getCell(colHeaderIndex['account_no']).value,
                         "current_bill": row.getCell(colHeaderIndex['current_bill']).value,
                         "arrears": row.getCell(colHeaderIndex['net_arrears']).value,
+                        "group_id": uploadData.group_id,
+                        "assigned_to": JSON.stringify(uploadData.assigned_to),
                         "created_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
                         "updated_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
                     };
 
                     delinquencies.push(delinquency);
+
                     if (++processed == rowLen - 1) {
                         //we can release the lock here
                         this.context.database.raw(this.context.database.table('disconnection_billings')
                             .insert(delinquencies).toString().replace(/^insert/i, 'insert ignore'))
-                            .catch(r=>console.log(r));
-                        // this.context.database.insert(delinquencies).into("disconnection_billings").catch(r=>console.log(r));
+                            .then(res=> {
+                                res = res.shift();
+                                if (res.affectedRows < rowLen - 1)
+                                    _updateUploadStatus(
+                                        this, fileName, 3,
+                                        `At about ${(rowLen - 1) - res.affectedRows} delinquent records were not imported.`
+                                    );
+                                else _updateUploadStatus(this, fileName, 3);
+                            }).catch(r=>console.log(r));
                         deleteFile(file);
-                        _updateUploadStatus(this, fileName, 4);
                         console.log("Lock has been released for delinquency processes");
                         this.lock.d = false;
                     }
@@ -81,7 +97,7 @@ module.exports.createDelinquencyList = function () {
             }
         }).catch(err=> {
             //should in-case an error occurs we can release the lock to allow a retry
-            _updateUploadStatus(this, fileName, 3);
+            _updateUploadStatus(this, fileName, 3, 'There was an error reading the file');
             deleteFile(file);
             this.lock.d = false;
             console.log(err);
@@ -274,11 +290,12 @@ module.exports.createMeterReadings = function () {
     console.log("Lock for Meter Reading transaction is held... i'll be waiting till it is released!!!")
 };
 
-function _updateUploadStatus(ctx, fileName, status, message) {
+function _updateUploadStatus(ctx, fileName, status, message = "") {
     ctx.context.database.table("uploads")
         .where("file_name", fileName)
         .update({
-            status: status, updated_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
+            status: status, updated_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
+            message: message
         }).then(r=>console.log());
 }
 
@@ -300,5 +317,5 @@ function getColumnsByNameIndex(row, colLen) {
 }
 
 function deleteFile(file) {
-    fs.unlink(file);
+    fs.unlink(file, e=> (e) ? console.log(`Error deleting file ${file}`) : `${file} DELETED`);
 }

@@ -37,6 +37,9 @@ class WorkOrderService {
             by = "work_order_no";
             value = value.replace(/-/g, "");
         }
+        //If the value is in type of an object we can say the request
+        //is not for fetching just a single work order
+        const isSingle = typeof value != 'object';
         var executor = (resolve, reject)=> {
             //Prepare the static data from persistence storage
             let {groups, workTypes} = [{}, {}];
@@ -51,7 +54,7 @@ class WorkOrderService {
             WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
                 .then(results=> {
                     const workOrders = results.records;
-                    _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, by == 'id', groups, workTypes);
+                    _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, isSingle, groups, workTypes);
                     if (!workOrders.length) return resolve(Utils.buildResponse({data: {items: results.records}}));
                 }).catch(err=> {
                 console.log(err);
@@ -117,7 +120,6 @@ class WorkOrderService {
      */
     createWorkOrder(body = {}, who = {}) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
-        body['api_instance_id'] = who.api;
         let workOrder = new WorkOrder(body);
 
         //enforce the validation
@@ -125,7 +127,7 @@ class WorkOrderService {
         if (!isValid) {
             return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
-        //Depending on the type we need to generate a new work order no
+
         const executor = (resolve, reject)=> {
             this.context.persistence.get("groups", (err, groups)=> {
                 if (err) return;
@@ -244,7 +246,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
         //Get the entity related to this work order
         promises.push(workOrder.relatedTo());
 
-        //If we're loading for a list view let's get the counts or related models
+        //If we're loading for a list view let's get the counts of notes, attachments etc.
         if (!isSingle) {
             let countNotes = context.database.count('note as notes_count').from("notes")
                 .where("module", moduleName).where("relation_id", workOrder.id);
@@ -254,7 +256,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
 
             promises.push(countNotes, countAttachments);
         }
-        //Promises in order of arrangement
+        //Promises in order of possible arrangement
         //0: The related Entity e.g faults, disconnection_billing
         //1: Notes Count
         //2: Attachments Count
@@ -263,6 +265,11 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
             const relatedToRecord = values[0];
             const notesCount = values[1];
             const attachmentCount = values[2];
+
+            if (notesCount && attachmentCount) {
+                workOrder['notes_count'] = notesCount.shift()['notes_count'];
+                workOrder['attachments_count'] = attachmentCount.shift()['attachments_count'];
+            }
 
             let wait = false;
 
@@ -280,15 +287,16 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                 switch (workOrder.related_to.toLowerCase()) {
                     case "disconnection_billings":
                         wait = true;
-                        //We know that a disconnection billing is related 
+                        //We know that a disconnection billing is related
                         //To a customer so we need to get the customer details.
                         relatedModel.customer().then(customer=> {
                             wait = false;
                             workOrder['customer'] = customer.records.shift();
                             if (!wait) {
                                 sweepWorkOrderResponsePayload(workOrder);
-                                if (++processed == rowLen)
+                                if (++processed == rowLen) {
                                     return resolve(Utils.buildResponse({data: {items: workOrders}}));
+                                }
                             }
                         });
                         break;
@@ -296,11 +304,6 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
 
                         break;
                 }
-            }
-
-            if (notesCount && attachmentCount) {
-                workOrder['notes_count'] = notesCount.shift()['notes_count'];
-                workOrder['attachments_count'] = attachmentCount.shift()['attachments_count'];
             }
             if (!wait) {
                 sweepWorkOrderResponsePayload(workOrder);

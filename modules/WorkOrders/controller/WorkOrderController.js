@@ -235,7 +235,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      - $ref: '#/parameters/limit'
      */
     app.get('/work_orders/user/:userId/status/:statusId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
-        console.log(req.params);
         const service = API.workOrders().getWorkOrders({
             'assigned_to->[]': `{"id":${req.params['userId']}}`,
             'status': req.params['statusId']
