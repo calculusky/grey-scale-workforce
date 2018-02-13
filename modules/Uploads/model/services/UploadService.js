@@ -2,7 +2,9 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
+const fs = require("fs");
 const Utils = require('../../../../core/Utility/Utils');
+const validate = require('validate-fields')();
 /**
  * @name UploadService
  * Created by paulex on 8/22/17.
@@ -54,16 +56,21 @@ class UploadService {
     uploadFile(body = {}, who = {}, files = [], API) {
         console.log(body);
         const Upload = DomainFactory.build(DomainFactory.UPLOAD);
-        // let upload = new Upload(body);
-        const upload_type = body.upload_type;
-        if (!upload_type) return Promise.reject(Utils.buildResponse({
-            status: "fail",
-            data: {message: "Upload type missing."}
-        }, 400));
+        const uploadObj = new Upload(body);
+
+        //Enforce validation
+        let isValid = validate(uploadObj.rules(), uploadObj);
+        if (!isValid) {
+            //immediately delete the uploaded file
+            files.forEach(file => fs.unlink(file.path));
+            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        }
+
         if (!files.length) return Promise.reject(Utils.buildResponse({
             status: "fail",
             data: {message: "File missing."}
         }, 400));
+
         const UploadMapper = MapperFactory.build(MapperFactory.UPLOAD);
         const executor = (resolve, reject)=> {
             let processed = 0;
@@ -76,7 +83,9 @@ class UploadService {
                     file_path: file.path,
                     file_type: file.mimetype,
                     status: 1,
-                    upload_type,
+                    upload_type: uploadObj.upload_type,
+                    group_id: uploadObj.group_id,
+                    assigned_to: `[{"id":${uploadObj.assigned_to}, "created_at":"${Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")}"}]`,
                     created_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
                     updated_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
                 });

@@ -34,7 +34,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     app.post('/uploads', multiPart.array('files', 2), (req, res)=> {
         API.uploads().uploadFile(req.body, req.who, req.files)
             .then(({data, code})=> {
-                console.log(data);
                 return res.status(code).send(data);
             })
             .catch(({err, code})=> {

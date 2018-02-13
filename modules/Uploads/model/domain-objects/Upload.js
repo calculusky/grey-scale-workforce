@@ -42,11 +42,13 @@ class Upload extends DomainObject {
 
     rules() {
         return {
-            file_name: String,
-            file_size: Number,
-            file_path: String,
-            status: Number,
-            upload_type: String
+            // file_name: String,
+            // file_size: Number,
+            // file_path: String,
+            // status: Number,
+            upload_type: String,
+            group_id: 'numeric',
+            assigned_to: 'numeric'
         };
     }
 }
