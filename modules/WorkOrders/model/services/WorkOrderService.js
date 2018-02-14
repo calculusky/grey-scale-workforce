@@ -132,7 +132,16 @@ class WorkOrderService {
             this.context.persistence.get("groups", (err, groups)=> {
                 if (err) return;
                 groups = JSON.parse(groups);
-                let businessUnit = Utils.getGroupParent(groups[body.group_id || who.group], 'business_unit');
+                let userGroup = groups[body.group_id || who.group];
+                console.log(userGroup);
+                // If the group actually doesn't exist then we can return this as a false request
+                if(!userGroup) return Promise.reject(Utils.buildResponse(
+                    {status: "fail", data: {message: "Group specified doesn't exist"}}, 400
+                ));
+
+                // If this current user group doesn't have business unit as parent
+                // then the user's current group or the specified group will be used.
+                let businessUnit = Utils.getGroupParent(userGroup, 'business_unit') || userGroup;
 
                 Utils.generateUniqueSystemNumber(
                     getNumberPrefix(workOrder.type_id), businessUnit['short_name'], 'work_orders', this.context
@@ -274,7 +283,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
             let wait = false;
 
             //First thing lets get the work order type details
-            if (relatedToRecord) {
+            if (relatedToRecord && relatedToRecord.records.length) {
                 let relatedModel = relatedToRecord.records.shift();
                 if (relatedModel) {
                     delete relatedModel['id'];
@@ -312,6 +321,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                 }
             }
         }).catch(err=> {
+            console.log(err);
             return reject(err);
         });
         //remove the request_id its irrelevant
