@@ -76,10 +76,10 @@ module.exports.createDelinquencyList = function () {
                                 res = res.shift();
                                 if (res.affectedRows < rowLen - 1)
                                     _updateUploadStatus(
-                                        this, fileName, 3,
+                                        this, fileName, 5,
                                         `At about ${(rowLen - 1) - res.affectedRows} delinquent records were not imported.`
                                     );
-                                else _updateUploadStatus(this, fileName, 3);
+                                else _updateUploadStatus(this, fileName, 4);
                             }).catch(r=>console.log(r));
                         deleteFile(file);
                         console.log("Lock has been released for delinquency processes");
@@ -104,7 +104,6 @@ module.exports.createDelinquencyList = function () {
         });
     };
     //if the lock is currently released we can start processing another file
-    console.log("CURRENT_LOCK_STATUS: ",this.lock.d);
     if (!this.lock.d) {
         return fs.readdir(directory, (err, files)=> {
             if (err) {
