@@ -222,7 +222,7 @@ module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleNa
 
         resultSets.then(results=> {
             //if the result is empty we need to add the new counter
-            let count = results.shift()[moduleName];
+            let count = (results.length) ? results.shift()[moduleName] : 0;
             if (!count) context.database.table('unit_counters').insert({"unit_name": unitName});
 
             //Lets add this up
