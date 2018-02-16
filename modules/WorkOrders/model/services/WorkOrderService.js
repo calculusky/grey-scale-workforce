@@ -15,6 +15,15 @@ class WorkOrderService {
         this.context = context;
         MapperFactory = this.context.modelMappers;
         this.moduleName = "work_orders";
+        // Note this is irrelevant but also relevant
+        // It is used only when redis fails in a split seconds to
+        // respond with the work order types
+        this.fallBackType = {
+            '1': {id: 1, name: 'Disconnections'},
+            '2': {id: 2, name: 'Re-connections'},
+            '3': {id: 3, name: 'Faults'}
+        };
+
     }
 
     getName() {
@@ -33,7 +42,7 @@ class WorkOrderService {
     getWorkOrders(value = '?', by = "id", who = {api: -1}, offset, limit) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         //check if it is a work order number that is supplied
-        if (by == 'id' && (typeof value != 'object' && value && value.substring(0, 1).toUpperCase() == 'W')) {
+        if (by == 'id' && (typeof value != 'object' && Utils.isWorkOrderNo(value))) {
             by = "work_order_no";
             value = value.replace(/-/g, "");
         }
@@ -54,10 +63,14 @@ class WorkOrderService {
             WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
                 .then(results=> {
                     const workOrders = results.records;
-                    _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, isSingle, groups, workTypes);
+                    _doWorkOrderList(workOrders,
+                        this.context, this.moduleName,
+                        resolve, reject,
+                        isSingle, groups,
+                        workTypes || this.fallBackType
+                    );
                     if (!workOrders.length) return resolve(Utils.buildResponse({data: {items: results.records}}));
                 }).catch(err=> {
-                console.log(err);
                 return reject(err);
             });
         };
@@ -102,7 +115,14 @@ class WorkOrderService {
                     domain.serialize(undefined, "client");
                     workOrders.push(domain);
                 });
-                _doWorkOrderList(workOrders, this.context, this.moduleName, resolve, reject, false, groups, workTypes);
+                // Process the work order list
+                _doWorkOrderList(workOrders,
+                    this.context, this.moduleName,
+                    resolve, reject, false,
+                    groups,
+                    workTypes || this.fallBackType
+                );
+                //
                 if (!records.length) return resolve(Utils.buildResponse({data: {items: workOrders}}));
             }).catch(err=> {
                 const error = Utils.buildResponse(Utils.getMysqlError(err), 400);
@@ -135,7 +155,7 @@ class WorkOrderService {
                 let userGroup = groups[body.group_id || who.group];
                 console.log(userGroup);
                 // If the group actually doesn't exist then we can return this as a false request
-                if(!userGroup) return Promise.reject(Utils.buildResponse(
+                if (!userGroup) return Promise.reject(Utils.buildResponse(
                     {status: "fail", data: {message: "Group specified doesn't exist"}}, 400
                 ));
 
