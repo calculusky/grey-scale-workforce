@@ -55,7 +55,7 @@ test("Test that we can't create a work order with an invalid group id", ()=> {
 });
 
 test('That we can retrieve a work order by a column', ()=> {
-    return API.workOrders().getWorkOrders('DOSO00000135301', 'work_order_no').then(res=> {
+    return API.workOrders().getWorkOrders('DROT00000317102', 'work_order_no').then(res=> {
         expect(res).toEqual(
             expect.objectContaining({
                 code: expect.any(Number),

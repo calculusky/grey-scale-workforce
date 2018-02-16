@@ -252,6 +252,12 @@ module.exports.humanizeUniqueSystemNumber = function (systemUniqueNo) {
     return formattedNo;
 };
 
+module.exports.isWorkOrderNo = function (workOrderNo) {
+    if (!workOrderNo) return false;
+    let firstChar = workOrderNo.substring(0, 1).toUpperCase();
+    return firstChar == 'W' || firstChar == 'D' || firstChar == 'R';
+};
+
 
 //Report functions
 module.exports.queryTimeType = function (time) {
