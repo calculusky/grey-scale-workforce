@@ -55,11 +55,15 @@ module.exports.createDelinquencyList = function () {
                 //the first row returned is the column header so lets skip
                 if (rn == 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
                 else if (rn > 1) {
+                    const cBill = row.getCell(colHeaderIndex['current_bill']).value;
+                    const arrears = row.getCell(colHeaderIndex['net_arrears']).value;
                     //TODO add the group and assigned_to
                     let delinquency = {
                         "account_no": row.getCell(colHeaderIndex['account_no']).value,
-                        "current_bill": row.getCell(colHeaderIndex['current_bill']).value,
-                        "arrears": row.getCell(colHeaderIndex['net_arrears']).value,
+                        "current_bill": cBill,
+                        "arrears": arrears,
+                        "min_amount_payable": cBill + arrears,
+                        "total_amount_payable": cBill + arrears + 2000,
                         "group_id": uploadData.group_id,
                         "assigned_to": JSON.stringify(uploadData.assigned_to),
                         "created_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
@@ -77,7 +81,8 @@ module.exports.createDelinquencyList = function () {
                                 if (res.affectedRows < rowLen - 1)
                                     _updateUploadStatus(
                                         this, fileName, 5,
-                                        `At about ${(rowLen - 1) - res.affectedRows} delinquent records were not imported.`
+                                        `At about ${(rowLen - 1) - res.affectedRows} of ${rowLen-1}`+
+                                            " delinquent records were not imported."
                                     );
                                 else _updateUploadStatus(this, fileName, 4);
                             }).catch(r=>console.log(r));
