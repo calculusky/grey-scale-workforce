@@ -9,6 +9,7 @@ const Context = require('../core/Context');
 API = new API(new Context(config));
 
 let workOrder = null;
+
 beforeAll(()=> {
     return API.workOrders().createWorkOrder({
         type_id: 1,
@@ -30,25 +31,26 @@ beforeAll(()=> {
 // test('Should resolve getWorkOrders to be defined', ()=> {
 //     return expect(API.workOrders().getWorkOrders()).resolves.toBeDefined();
 // });
-//
-// test("Test that we can't create a work order with an invalid group id", ()=> {
-//     return expect(API.workOrders().createWorkOrder({
-//         type_id: 1,
-//         related_to: "disconnection_billings",
-//         relation_id: "2",
-//         labels: '["work"]',
-//         summary: "Fix it",
-//         assigned_to: `[{"id": 1, "created_at": "18:02:14 12:0227"}]`,
-//         status: '1',
-//         'issue_date': '2017/10/5'
-//     }, {group: 10000})).rejects.toEqual({
-//         err: {
-//             status: 'fail',
-//             data: {message: 'Group specified doesn\'t exist'}
-//         },
-//         code: 400
-//     });
-// });
+
+
+test("Test that we can't create a work order with an invalid group id", ()=> {
+    return expect(API.workOrders().createWorkOrder({
+        type_id: 1,
+        related_to: "disconnection_billings",
+        relation_id: "2",
+        labels: '["work"]',
+        summary: "Fix it",
+        assigned_to: `[{"id": 1, "created_at": "18:02:14 12:0227"}]`,
+        status: '1',
+        'issue_date': '2017/10/5'
+    }, {group: 100000})).rejects.toThrow({
+        err: {
+            status: 'fail',
+            data: {message: 'Group specified doesn\'t exist'}
+        },
+        code: 400
+    });
+});
 
 test('That we can retrieve a work order by a column', ()=> {
     return API.workOrders().getWorkOrders('DROT-000004-468-02', 'work_order_no').then(res=> {
