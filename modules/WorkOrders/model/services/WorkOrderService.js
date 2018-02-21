@@ -42,14 +42,14 @@ class WorkOrderService {
     getWorkOrders(value = '?', by = "id", who = {api: -1}, offset, limit) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         //check if it is a work order number that is supplied
-        if (by == 'id' && (typeof value != 'object' && Utils.isWorkOrderNo(value))) {
+        if (by === 'id' && (typeof value !== 'object' && Utils.isWorkOrderNo(value))) {
             by = "work_order_no";
             value = value.replace(/-/g, "");
         }
         //If the value is in type of an object we can say the request
         //is not for fetching just a single work order
-        const isSingle = typeof value != 'object';
-        var executor = (resolve, reject)=> {
+        const isSingle = typeof value !== 'object';
+        let executor = (resolve, reject)=> {
             //Prepare the static data from persistence storage
             let {groups, workTypes} = [{}, {}];
             this.context.persistence.get("groups", (err, grps)=> {
@@ -91,7 +91,7 @@ class WorkOrderService {
     getWorkOrdersBetweenDates(userId, status, fromDate, toDate, offset = 0, limit = 10, who = {}) {
         offset = parseInt(offset);
         limit = parseInt(limit);
-        var executor = (resolve, reject)=> {
+        let executor = (resolve, reject)=> {
             //Prepare the static data from persistence storage
             let {groups, workTypes} = [{}, {}];
             this.context.persistence.get("groups", (err, grps)=> {
@@ -153,7 +153,6 @@ class WorkOrderService {
                 if (err) return;
                 groups = JSON.parse(groups);
                 let userGroup = groups[body.group_id || who.group];
-                console.log(userGroup);
                 // If the group actually doesn't exist then we can return this as a false request
                 if (!userGroup) return Promise.reject(Utils.buildResponse(
                     {status: "fail", data: {message: "Group specified doesn't exist"}}, 400
@@ -172,6 +171,8 @@ class WorkOrderService {
                     WorkOrderMapper.createDomainRecord(workOrder).then(workOrder=> {
                         if (!workOrder) return reject();
                         return resolve(Utils.buildResponse({data: workOrder}));
+                    }).catch(err=>{
+                        return reject(err);
                     });
                 });
             });
@@ -226,12 +227,12 @@ function getNumberPrefix(typeId) {
 }
 
 function sweepWorkOrderResponsePayload(workOrder) {
-    var keys = Object.keys(workOrder);
+    let keys = Object.keys(workOrder);
     keys.forEach(key => {
         if (workOrder[key] == null) {
             delete workOrder[key]
         }
-        if (key == 'customer') {
+        if (key === 'customer') {
             delete workOrder['customer']['first_name'];
             delete workOrder['customer']['last_name'];
             delete workOrder['customer']['status'];
@@ -323,7 +324,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                             workOrder['customer'] = customer.records.shift();
                             if (!wait) {
                                 sweepWorkOrderResponsePayload(workOrder);
-                                if (++processed == rowLen) {
+                                if (++processed === rowLen) {
                                     return resolve(Utils.buildResponse({data: {items: workOrders}}));
                                 }
                             }
@@ -336,7 +337,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
             }
             if (!wait) {
                 sweepWorkOrderResponsePayload(workOrder);
-                if (++processed == rowLen) {
+                if (++processed === rowLen) {
                     return resolve(Utils.buildResponse({data: {items: workOrders}}));
                 }
             }

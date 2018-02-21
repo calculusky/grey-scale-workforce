@@ -5,10 +5,14 @@ const fs = require("fs");
 const cron = require('node-schedule');
 const Excel = require('exceljs');
 const Utils = require('../core/Utility/Utils');
+let API = require('../API.js');
 
 
 module.exports = function main(context) {
     this.context = context;
+
+    API = new API(context);
+
     //lock.d for delinquency list, lock.c for customer
     this.lock = {d: false};
     //all cron jobs
@@ -34,83 +38,192 @@ module.exports.createDelinquencyList = function () {
     let currentFile = null;
 
     //This function processes the excel document
-    const startProcessor = (file/*.xlsx*/, fileName)=> {
+    const startProcessor = (file/*.xlsx*/, fileName) => {
         this.lock.d = true;
-
         currentFile = file;
         let uploadData = {};
+        let groups = {};
+        const currDate = new Date();
+        const logMessages = [];
 
-        //Fetch the upload information
-        this.context.database.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to'])
-            .then(r => uploadData = r.shift());
 
-        workbook.xlsx.readFile(file).then(()=> {
-            console.log("PROCESSING:", currentFile);
+        //Fetch Groups and the Uploaded record before hand
+        Promise.all([
+            Utils.getFromPersistent(this.context, "groups"),
+            this.context.database.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to']),
+            workbook.xlsx.readFile(file)
+        ]).then(values => {
+
+            groups = JSON.parse(values[0]);
+            uploadData = values[1].shift();
+
             const workSheet = workbook.getWorksheet(1);
-            let rowLen = workSheet.rowCount, processed = 0, columnLen = workSheet.actualColumnCount;
+            let rowLen = workSheet.rowCount,
+                columnLen = workSheet.actualColumnCount,
+                processed = 0,
+                processedDelinquencies = 0,
+                processedWorkOrders = 0;
+
             let colHeaderIndex = {};
-            let delinquencies = [];
-            //iterate through each row
-            workSheet.eachRow((row, rn)=> {
-                //the first row returned is the column header so lets skip
-                if (rn == 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
-                else if (rn > 1) {
+
+            //if it is empty or just includes the column heads... lets delete the file and release lock
+            if (rowLen <= 1) {
+                deleteFile(file);
+                logMessages.push("The uploaded file is empty. Nothing to do.");
+                this.lock.d = false;//release the lock here
+                return _updateUploadStatus(this, fileName, 4, logMessages);
+            }
+
+            const endProcess = (recordsProcessed) => {
+                if (recordsProcessed === rowLen - 1) {
+                    deleteFile(file);
+                    logMessages.push(`${processedDelinquencies} of ${rowLen - 1}` +
+                        " delinquent records imported successfully"
+                    );
+                    logMessages.push(`${processedWorkOrders} work orders was generated for a total of` +
+                        ` ${processedDelinquencies}` + " delinquencies imported.");
+
+                    let status = (processedDelinquencies === rowLen - 1) ? 4 : 5;
+                    _updateUploadStatus(this, fileName, status, JSON.stringify(logMessages));
+                    this.lock.d = false;
+                    console.log(logMessages);
+                }
+                return recordsProcessed === rowLen - 1;
+            };
+
+            const processDelinquentRows = (row, rn) => {
+                let rowNum = rn;
+                if (rowNum === 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
+                else if (rowNum > 1) {
+                    const accountNo = row.getCell(colHeaderIndex['account_no']).value;
                     const cBill = row.getCell(colHeaderIndex['current_bill']).value;
                     const arrears = row.getCell(colHeaderIndex['net_arrears']).value;
-                    //TODO add the group and assigned_to
+                    const undertaking = row.getCell(colHeaderIndex['undertaking']).value;
+                    const utIndex = row.getCell(colHeaderIndex['undertaking_index']).value;
+                    const generate = row.getCell(colHeaderIndex['auto_generate_do']).value;
+                    //We need to validate the rows.
+                    //If the current row is empty quickly move to the next and log the error for the client
+                    if (rn !== rowLen && (accountNo == null || !accountNo.length > 0
+                            || Number.isNaN(cBill)
+                            || Number.isNaN(arrears)
+                            || utIndex == null)) {
+                        //TODO make error messages
+                        return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
+                    }
+
+
+                    //Worst case scenario: if we can't find the hub an undertaking falls under
+                    //lets assign it to the UT group itself
+                    let hubGroup = {id: utIndex.result};
+                    let hubManagerId = null;
+
+                    //Get the technical hub that manages the Undertaking of the Delinquent customer
+                    //Only if we are to generate work order for this delinquent customer automatically
+                    if (generate.toUpperCase() === 'YES') {
+                        hubGroup = Utils.getGroupParent(groups[utIndex.result], "technical_hub") || hubGroup;
+
+                        //There is no need looking up for the hub manager if the UT doesn't belong to a hub
+                        if (hubGroup.id !== utIndex.result) {
+                            this.context.database.select(['users.id']).from("users")
+                                .innerJoin("role_users", "users.id", "role_users.user_id")
+                                .innerJoin("roles", "role_users.role_id", "roles.id")
+                                .where("users.group_id", hubGroup.id)
+                                .where("roles.slug", "technical_hub")
+                                .then(userId => {
+                                    hubManagerId = (userId.length) ? userId.shift().id : null;
+                                });
+                        } else {
+                            logMessages.push(`The undertaking(${undertaking}) specified in row(${rowNum})` +
+                                " doesn't belong to any Hub.");
+                        }
+                    } else logMessages.push("Work order was not auto-generated for row(" + rowNum + ")");
+
+                    let assignedTo = uploadData.assigned_to[0];
+                    assignedTo.created_at = Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s");
+
                     let delinquency = {
-                        "account_no": row.getCell(colHeaderIndex['account_no']).value,
+                        "account_no": accountNo,
                         "current_bill": cBill,
                         "arrears": arrears,
                         "min_amount_payable": cBill + arrears,
                         "total_amount_payable": cBill + arrears + 2000,
                         "group_id": uploadData.group_id,
-                        "assigned_to": JSON.stringify(uploadData.assigned_to),
-                        "created_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
-                        "updated_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
+                        "created_by": assignedTo.id,
+                        "assigned_to": JSON.stringify([assignedTo]),
+                        "created_at": Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s"),
+                        "updated_at": Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s")
                     };
 
-                    delinquencies.push(delinquency);
+                    // Insert record to Database
+                    this.context.database.table("disconnection_billings").insert(delinquency)
+                        .then(res => {
+                            const discId = res.shift();
+                            ++processedDelinquencies;
 
-                    if (++processed == rowLen - 1) {
-                        //we can release the lock here
-                        this.context.database.raw(this.context.database.table('disconnection_billings')
-                            .insert(delinquencies).toString().replace(/^insert/i, 'insert ignore'))
-                            .then(res=> {
-                                res = res.shift();
-                                if (res.affectedRows < rowLen - 1)
-                                    _updateUploadStatus(
-                                        this, fileName, 5,
-                                        `At about ${(rowLen - 1) - res.affectedRows} of ${rowLen-1}`+
-                                            " delinquent records were not imported."
-                                    );
-                                else _updateUploadStatus(this, fileName, 4);
-                            }).catch(r=>console.log(r));
-                        deleteFile(file);
-                        console.log("Lock has been released for delinquency processes");
-                        this.lock.d = false;
-                    }
+                            // We need to only call endProcess only when we are sure that all processes are completed
+                            // thus if we are creating a work order we can only call endProcess when it either passes
+                            // or fail. If we aren't creating a work-order then we can test endProcess
+                            let doWorkOrder = generate.toUpperCase() === 'YES';
+
+                            if (doWorkOrder) {
+                                //We now need to create a work order only if it has a hub and a hub mgr
+                                if (hubGroup.id !== utIndex.result) {
+                                    API.workOrders().createWorkOrder({
+                                        type_id: 1,
+                                        related_to: "disconnection_billings",
+                                        relation_id: `${discId}`,
+                                        labels: '["work"]',
+                                        summary: "Disconnect Customer!!!",
+                                        status: '1',
+                                        group_id: hubGroup.id,
+                                        assigned_to: `[{"id": ${hubManagerId}, "created_at": "${Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s")}"}]`,
+                                        issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
+                                        created_at: Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s"),
+                                        updated_at: Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s")
+                                    }).then(res => {
+                                        //We need to get the work order id and relate it with the disconnection billing
+                                        //Not necessary to wait for the return
+                                        this.context.database.table('disconnection_billings')
+                                            .where('id', '=', discId)
+                                            .update({work_order_id: res.data.data.work_order_no}).then();
+
+                                        ++processedWorkOrders;
+                                        endProcess(++processed);
+                                    }).catch(err => {
+                                        console.log('CREATE_ERR', err);
+                                        endProcess(++processed);
+                                    });
+                                } else {
+                                    logMessages.push(`Couldn't create a work order for row(${rowNum})`
+                                        + " because the undertaking doesn't belong to a hub; " +
+                                        "however a delinquent record was created.");
+                                    endProcess(++processed);
+                                }
+                            }
+                            if (!doWorkOrder) endProcess(++processed);
+                        })
+                        .catch(err => {
+                            logMessages.push(`An error occurred while processing row(${rowNum})` + "." +
+                                " It could be that the account number doesn't exist.");
+                            endProcess(++processed);
+                        });
                 }
-            });
-            //if it is empty or just includes the column heads... lets delete the file and release lock
-            if (rowLen <= 1) {
-                deleteFile(file);
-                _updateUploadStatus(this, fileName, 4);
-                //we can release the lock here
-                console.log("Lock has been released for work orders processes.. there was nothing to do");
-                this.lock.d = false;
-            }
-        }).catch(err=> {
-            //should in-case an error occurs we can release the lock to allow a retry
-            _updateUploadStatus(this, fileName, 3, 'There was an error reading the file');
-            deleteFile(file);
-            this.lock.d = false;
+                if (rn !== rowLen) return setTimeout(() => processDelinquentRows(workSheet.getRow(++rn), rn), 20);
+            };
+
+            processDelinquentRows(workSheet.getRow(1), 1);
+
+        }).catch(err => {
             console.log(err);
+            deleteFile(file);
+            this.lock.d = false;//should in-case an error occurs we can release the lock to allow a retry
+            logMessages.push("There was an error reading the file");
+            return _updateUploadStatus(this, fileName, 3, logMessages);
         });
     };
     //if the lock is currently released we can start processing another file
     if (!this.lock.d) {
-        return fs.readdir(directory, (err, files)=> {
+        return fs.readdir(directory, (err, files) => {
             if (err) {
                 console.log(err);
                 return;
@@ -133,17 +246,17 @@ module.exports.createCustomers = function () {
     const workbook = new Excel.Workbook();
     let currentFile = null;
 
-    const startProcessor = (file/*.xlsx*/, fileName)=> {
+    const startProcessor = (file/*.xlsx*/, fileName) => {
         this.lock.c = true;
         _updateUploadStatus(this, fileName, 2);
         currentFile = file;
-        workbook.xlsx.readFile(file).then(()=> {
+        workbook.xlsx.readFile(file).then(() => {
             const workSheet = workbook.getWorksheet(1);
             let rowLen = workSheet.rowCount, processed = 0, columnLen = workSheet.actualColumnCount;
             let colHeaderIndex = {};
             let customers = [];
             //iterate through each row
-            workSheet.eachRow((row, rn)=> {
+            workSheet.eachRow((row, rn) => {
                 //the first row returned is the column header so lets skip
                 //for the first row we need to get all the column head
                 //TODO we should be able to validate the columns supplied
@@ -174,7 +287,7 @@ module.exports.createCustomers = function () {
                     customers.push(customer);
                     if (++processed == rowLen - 1) {
                         //for now lets ignore duplicates... TODO handle duplicates
-                        this.context.database.insert(customers).into("customers").catch(r=>console.log());
+                        this.context.database.insert(customers).into("customers").catch(r => console.log());
                         deleteFile(file);
                         _updateUploadStatus(this, fileName, 4);
                         //we can release the lock here
@@ -191,7 +304,7 @@ module.exports.createCustomers = function () {
                 console.log("Lock has been released for customers processes.. there was nothing to do");
                 this.lock.c = false;
             }
-        }).catch(err=> {
+        }).catch(err => {
             //should in-case an error occurs we can release the lock to allow a retry
             _updateUploadStatus(this, fileName, 3);
             this.lock.c = false;
@@ -200,7 +313,7 @@ module.exports.createCustomers = function () {
     };
     //if the lock is currently released we can start processing another file
     if (!this.lock.c) {
-        return fs.readdir(directory, (err, files)=> {
+        return fs.readdir(directory, (err, files) => {
             if (err) return;
             //start processing the files.. we are processing one file at a time from a specific folder
             //TODO check that this files are indeed excel files e.g xlsx or csv
@@ -217,17 +330,17 @@ module.exports.createMeterReadings = function () {
     const workbook = new Excel.Workbook();
     let currentFile = null;
 
-    const startProcessor = (file/*.xlsx*/, fileName)=> {
+    const startProcessor = (file/*.xlsx*/, fileName) => {
         this.lock.m = true;
         _updateUploadStatus(this, fileName, 2);
         currentFile = file;
-        workbook.xlsx.readFile(file).then(()=> {
+        workbook.xlsx.readFile(file).then(() => {
             const workSheet = workbook.getWorksheet(1);
             let rowLen = workSheet.rowCount, processed = 0, columnLen = workSheet.actualColumnCount;
             let colHeaderIndex = {};
             let meter_readings = [];
             //iterate through each row
-            workSheet.eachRow((row, rn)=> {
+            workSheet.eachRow((row, rn) => {
                 //the first row returned is the column header so lets skip
                 //for the first row we need to get all the column head
                 //TODO we should be able to validate the columns supplied
@@ -260,7 +373,7 @@ module.exports.createMeterReadings = function () {
                     meter_readings.push(meter_reading);
                     if (++processed == rowLen - 1) {
                         //for now lets ignore duplicates... TODO handle duplicates
-                        this.context.database.insert(meter_readings).into("meter_readings").catch(r=>console.log(r));
+                        this.context.database.insert(meter_readings).into("meter_readings").catch(r => console.log(r));
                         deleteFile(file);
                         _updateUploadStatus(this, fileName, 4);
                         //we can release the lock here
@@ -277,7 +390,7 @@ module.exports.createMeterReadings = function () {
                 console.log("Lock has been released for meter readings process.. there was nothing to do");
                 this.lock.m = false;
             }
-        }).catch(err=> {
+        }).catch(err => {
             //should in-case an error occurs we can release the lock to allow a retry
             _updateUploadStatus(this, fileName, 3);
             this.lock.m = false;
@@ -287,7 +400,7 @@ module.exports.createMeterReadings = function () {
 
     //if the lock is currently released we can start processing another file
     if (!this.lock.m) {
-        return fs.readdir(directory, (err, files)=> {
+        return fs.readdir(directory, (err, files) => {
             if (err) return;
             //start processing the files.. we are processing one file at a time from a specific folder
             //TODO check that this files are indeed excel files e.g xlsx or csv
@@ -298,13 +411,13 @@ module.exports.createMeterReadings = function () {
     console.log("Lock for Meter Reading transaction is held... i'll be waiting till it is released!!!")
 };
 
-function _updateUploadStatus(ctx, fileName, status, message = "") {
+function _updateUploadStatus(ctx, fileName, status, message = "[]") {
     ctx.context.database.table("uploads")
         .where("file_name", fileName)
         .update({
             status: status, updated_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
             message: message
-        }).then(r=>console.log());
+        }).then(r => console.log());
 }
 
 
@@ -314,6 +427,12 @@ function getRowValueOrEmpty(row, headers, key) {
     return (_row) ? _row.value : "";
 }
 
+/**
+ *
+ * @param row
+ * @param colLen
+ * @returns {{}}
+ */
 function getColumnsByNameIndex(row, colLen) {
     const colHeaderIndex = {};
     for (let i = 0; i < colLen; i++) {
@@ -325,5 +444,5 @@ function getColumnsByNameIndex(row, colLen) {
 }
 
 function deleteFile(file) {
-    fs.unlink(file, e=> (e) ? console.log(`Error deleting file ${file}`) : `${file} DELETED`);
+    fs.unlink(file, e => (e) ? console.log(`Error deleting file ${file}`, e) : `${file} DELETED`);
 }
