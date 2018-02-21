@@ -3,6 +3,7 @@
  */
 const DateUtils = require('./DateUtils');
 const MapperUtils = require('./MapperUtil');
+let unitCounter = {};
 
 
 module.exports = function Utils() {
@@ -114,7 +115,7 @@ module.exports.getMysqlError = function (err) {
 };
 
 
-module.exports.buildResponse = function ({status="success", data, msg, type, code, desc, isRoute=true}, statusCode = 200) {
+module.exports.buildResponse = function ({status = "success", data, msg, type, code, desc, isRoute = true}, statusCode = 200) {
     let responseBody = {};
     responseBody.status = status;
 
@@ -125,7 +126,7 @@ module.exports.buildResponse = function ({status="success", data, msg, type, cod
     if (desc) responseBody.description = desc;
     if (isRoute) {
         let response = {};
-        if (status == "success") {
+        if (status === "success") {
             response.data = responseBody;
             response.code = statusCode;
         } else {
@@ -169,12 +170,12 @@ module.exports.isMobile = function (userAgentFamily) {
 
 module.exports.getAndSet = function (redis, keys) {
     let variables = [];
-    keys.forEach((key, i)=> {
-        redis.get(key, (err, v)=> {
+    keys.forEach((key, i) => {
+        redis.get(key, (err, v) => {
             console.log(v);
             if (!err) variables.push(v);
         });
-        if (i == keys.length - 1) return variables;
+        if (i === (keys.length - 1)) return variables;
     });
 };
 
@@ -198,42 +199,50 @@ module.exports.authFailData = function (code) {
 module.exports.getGroupParent = function (group, type = 'business_unit') {
     if (group == null) return null;
     if (!type) return group.parent;
-    if (group.type == type) return group;
+    if (group.type === type) return group;
     let tGroup;
     let parentGroup = tGroup = group.parent;
     do {
         if (!parentGroup) continue;
-        if (parentGroup.type == type) {
+        if (parentGroup.type === type) {
             tGroup = parentGroup;
             break;
         }
         parentGroup = tGroup = parentGroup.parent;
-    } while (parentGroup != null && parentGroup.type != type);
-    return (tGroup && tGroup.type == type) ? tGroup : null;
+    } while (parentGroup != null && parentGroup.type !== type);
+    return (tGroup && tGroup.type === type) ? tGroup : null;
 };
 
 module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleName, context) {
     let generated = `${prefix}${unitName}`;
 
-    const executor = (resolve, reject)=> {
+    if (!unitCounter[unitName]) unitCounter[unitName] = 0;
+
+    const executor = (resolve, reject) => {
         let resultSets = context.database.select([moduleName]).from('unit_counters')
             .where('unit_name', unitName);
 
 
-        resultSets.then(results=> {
+        resultSets.then(results => {
             //if the result is empty we need to add the new counter
             let count = (results.length) ? results.shift()[moduleName] : 0;
-            if (!count) context.database.table('unit_counters').insert({"unit_name": unitName});
+
+            if (unitCounter[unitName] === 0) unitCounter[unitName] = count;
+
+            if (!count) context.database.table('unit_counters').insert({"unit_name": unitName}).then();
+
+            ++unitCounter[unitName];
 
             //Lets add this up
-            context.database.table('unit_counters').update({[moduleName]: count + 1})
+            context.database.table('unit_counters').update({[moduleName]: unitCounter[unitName]})
                 .where('unit_name', unitName).then();
 
-            count = `${count + 1}`;
+            count = `${unitCounter[unitName]}`;
             let randomNo = Math.round(Math.random() * (999 - 100) + 100);
             generated = `${generated}${count.padStart(6, '0')}${randomNo}${new Date().getMonth() + 1}`;
+            // console.log(generated);
             return resolve(generated);
-        }).catch(t=> {
+        }).catch(t => {
             console.log(t);
         });
     };
@@ -245,7 +254,7 @@ module.exports.humanizeUniqueSystemNumber = function (systemUniqueNo) {
     let stringItems = systemUniqueNo.split("");
     for (let i = 0; i < stringItems.length; i++) {
         formattedNo += stringItems[i];
-        if (i == 3 || i == 9 || i == 12) {
+        if (i === 3 || i === 9 || i === 12) {
             formattedNo += "-";
         }
     }
@@ -255,7 +264,22 @@ module.exports.humanizeUniqueSystemNumber = function (systemUniqueNo) {
 module.exports.isWorkOrderNo = function (workOrderNo) {
     if (!workOrderNo) return false;
     let firstChar = workOrderNo.substring(0, 1).toUpperCase();
-    return firstChar == 'W' || firstChar == 'D' || firstChar == 'R';
+    return firstChar === 'W' || firstChar === 'D' || firstChar === 'R';
+};
+
+/**
+ *
+ * @param context {Context}
+ * @param key
+ * @returns {Promise}
+ */
+module.exports.getFromPersistent = function (context, key) {
+    return new Promise((resolve, reject) => {
+        context.persistence.get(key, (err, value) => {
+            if (err) return reject(err);
+            return resolve(value)
+        });
+    });
 };
 
 
