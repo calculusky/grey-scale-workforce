@@ -183,9 +183,14 @@ module.exports.createDelinquencyList = function () {
                                     }).then(res => {
                                         //We need to get the work order id and relate it with the disconnection billing
                                         //Not necessary to wait for the return
-                                        this.context.database.table('disconnection_billings')
-                                            .where('id', '=', discId)
-                                            .update({work_order_id: res.data.data.work_order_no}).then();
+                                        this.context.database.table('disconnection_billings').where('id', '=', discId)
+                                            .update({
+                                                work_order_id: res.data.data.work_order_no,
+                                                assigned_to: JSON.stringify([assignedTo, {
+                                                    "id": hubManagerId,
+                                                    "created_at": assignedTo.created_at
+                                                }])
+                                            }).then();
 
                                         ++processedWorkOrders;
                                         endProcess(++processed);
