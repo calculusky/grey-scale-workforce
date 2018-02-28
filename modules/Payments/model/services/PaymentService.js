@@ -33,15 +33,15 @@ class PaymentService {
      */
     getPayments(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
-        var executor = (resolve, reject)=> {
+        var executor = (resolve, reject) => {
             PaymentMapper.findDomainRecord({by, value}, offset, limit)
-                .then(result=> {
+                .then(result => {
                     let payments = result.records;
                     let processed = 0;
                     let rowLen = payments.length;
                     return resolve(Utils.buildResponse({data: {items: result.records}}));
                 })
-                .catch(err=> {
+                .catch(err => {
                     return reject(err);
                 });
         };
@@ -58,15 +58,20 @@ class PaymentService {
         const Payment = DomainFactory.build(DomainFactory.PAYMENT);
         let payment = new Payment(body);
 
+        //If auto generate isn't specified, we'll generate it by default
+        body['auto_generate_rc'] = (body['auto_generate_rc'] === undefined) ? true : body['auto_generate_rc'];
+
         //Prepare the static data from persistence storage
         let {groups, workTypes} = [{}, {}];
-        this.context.persistence.get("groups", (err, grps)=> {
+        this.context.persistence.get("groups", (err, grps) => {
             if (!err) groups = JSON.parse(grps);
         });
 
-        this.context.persistence.get("work:types", (err, types)=> {
+        this.context.persistence.get("work:types", (err, types) => {
             if (!err) workTypes = JSON.parse(types);
         });
+
+        if (!isNaN(payment.amount)) payment.amount = parseFloat(payment.amount);
 
         //enforce the validation
         let isValid = validate(payment.rules(), payment);
@@ -86,13 +91,13 @@ class PaymentService {
                 desc: `The system name you specified '${payment.system}' doesn't exist or is currently not being handled`
             }, 400));
         }
-        var executor = (resolve, reject)=> {
+        const executor = (resolve, reject) => {
 
             let resultSet = this.context.database.table(systemType.table)
                 .select(['id', 'status', 'work_order_no', 'group_id', 'type_id', 'address_line', 'related_to', 'relation_id'])
                 .where(systemType.key, payment.system_id);
 
-            resultSet.then(result=> {
+            resultSet.then(result => {
                 if (!result.length) {
                     return reject(Utils.buildResponse({
                         status: "fail",
@@ -118,7 +123,7 @@ class PaymentService {
                     }, 403));
                 }
                 //check status : only accept payment for work order in disconnected state
-                if (workOrder.status != 3) {
+                if (workOrder.status !== 3) {
                     //this disconnection order isn't in a disconnection state
                     return reject(Utils.buildResponse({
                         status: "fail",
@@ -129,7 +134,7 @@ class PaymentService {
                     }, 403));
                 }
 
-                workOrder.relatedTo().then(results=> {
+                workOrder.relatedTo().then(results => {
                     let disconnection = results.records.shift();
                     const minAmountAccepted = parseFloat(disconnection.min_amount_payable);
                     //Check if this disconnection order has a payment plan
@@ -139,11 +144,11 @@ class PaymentService {
                             status: "fail",
                             msg: "The amount is not acceptable",
                             code: "INVALID_AMOUNT",
-                            desc: `The amount must be equal to or above the minimum amount payable ${minAmountAccepted}`
+                            desc: `The amount must be equal to or above the minimum amount payable (${minAmountAccepted})`
                         }, 400));
                     } else if (disconnection['has_plan']) {
                         //Get the payment plan
-                        return disconnection.paymentPlan().then(res=> {
+                        return disconnection.paymentPlan().then(res => {
                             console.log(res);
                             let paymentPlan = res.records.shift();
                             console.log(paymentPlan);
@@ -159,14 +164,14 @@ class PaymentService {
                         });
                     }
                     beginTransaction();
-                }).catch(err=> reject());
+                }).catch(err => reject());
 
-                const beginTransaction = ()=> {
+                const beginTransaction = () => {
                     //Check that this transaction id hasn't been processed yet
                     let res = this.context.database.count('id as transactions').from("payments")
                         .where("transaction_id", payment.transaction_id).orWhere('system_id', payment.system_id);
 
-                    res.then(result=> {
+                    res.then(result => {
                         if (result.shift()['transactions']) {
                             //then lets tell the user that this transaction id already exist
                             return reject(Utils.buildResponse({
@@ -178,7 +183,7 @@ class PaymentService {
                         }
                         //Now that everything is fine... lets now create the payment
                         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
-                        PaymentMapper.createDomainRecord(payment).then(payment=> {
+                        PaymentMapper.createDomainRecord(payment).then(payment => {
                             if (!payment) return Promise.reject();
                             return resolve(Utils.buildResponse({data: payment}));
                         });
@@ -186,11 +191,11 @@ class PaymentService {
                         //Update work order status to payment received
                         this.context.database.table('work_orders').update({status: 5})
                             .where(systemType.key, payment.system_id)
-                            .then(r=>console.log()).catch(err=> Log.e(TAG, JSON.stringify(err)));
+                            .then(r => console.log()).catch(err => Log.e(TAG, JSON.stringify(err)));
 
                         // let businessUnit = Utils.getGroupParent(groups[workOrder['group_id']], 'business_unit');
 
-                        const createReconnectionOrder = (result)=> {
+                        const createReconnectionOrder = (result) => {
                             //if it exist don't create a reconnection order
                             if (result.shift()['id']) return;
                             /*
@@ -210,22 +215,24 @@ class PaymentService {
                             };
 
                             API.workOrders().createWorkOrder(reconnectionOrder)
-                                .then(r=>Log.info('PAYMENTS', `Reconnection Order Created`))
-                                .catch(err=> Log.e('PAYMENTS', err));
+                                .then(r => Log.info('PAYMENTS', `Reconnection Order Created`))
+                                .catch(err => Log.e('PAYMENTS', err));
                         };
+                        //By default we create reconnection orders.
+                        if (body['auto_generate_rc']) {
+                            /*
+                             * @author Paul Okeke
+                             * Check if there already exist a reconnection order for this work-order
+                             * This is to avoid that we don't have duplicates
+                             **/
+                            this.context.database.count('id as id').from('work_orders').where({
+                                related_to: 'disconnection_billings',
+                                relation_id: workOrder.relation_id,
+                                type_id: 2
+                            }).then(createReconnectionOrder);
+                        }
 
-                        /*
-                         * @author Paul Okeke
-                         * Check if there already exist a reconnection order for this work-order
-                         * This is to avoid that we don't have duplicates
-                         **/
-                        this.context.database.count('id as id').from('work_orders').where({
-                            related_to: 'disconnection_billings',
-                            relation_id: workOrder.relation_id,
-                            type_id: 2
-                        }).then(createReconnectionOrder);
-
-                    }).catch(err=> {
+                    }).catch(err => {
                         //TODO revert the status of the work order to 3
                         //TODO delete the payment record
                         console.log(err);
@@ -276,7 +283,7 @@ class PaymentService {
      */
     deletePayment(by = "id", value) {
         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
-        return PaymentMapper.deleteDomainRecord({by, value}).then(count=> {
+        return PaymentMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
