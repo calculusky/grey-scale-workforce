@@ -1,7 +1,5 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
-const Password = require('../../../../core/Utility/Password');
-// const Util = require('../../../../core/Utility/MapperUtil');
 const Utils = require('../../../../core/Utility/Utils');
 /**
  * @name AssetService
@@ -14,13 +12,9 @@ class AssetService {
         MapperFactory = this.context.modelMappers;
     }
 
-    getName() {
-        return "assetService";
-    }
-
     getAssets(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        var executor = (resolve, reject)=> {
+        const executor = (resolve, reject)=> {
             AssetMapper.findDomainRecord({by, value}, offset, limit)
                 .then(result=> {
                     let assets = result.records;
@@ -30,7 +24,7 @@ class AssetService {
                     assets.forEach(asset=> {
                         asset.user().then(res=> {
                             asset.user = res.records.shift();
-                            if (++processed == rowLen)
+                            if (++processed === rowLen)
                                 return resolve(Utils.buildResponse({data: {items: result.records}}));
                         }).catch(err=> {
                             return reject(err)
