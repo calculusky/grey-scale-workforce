@@ -22,7 +22,7 @@ class UploadService {
 
     getUploads(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const UploadMapper = MapperFactory.build(MapperFactory.UPLOAD);
-        var executor = (resolve, reject)=> {
+        const executor = (resolve, reject)=> {
             UploadMapper.findDomainRecord({by, value}, offset, limit)
                 .then(result=> {
                     let uploads = result.records;
@@ -32,7 +32,7 @@ class UploadService {
                         upload.user().then(res=> {
                             upload.user = res.records.shift();
                             delete upload.user.password;
-                            if (++processed == rowLen)
+                            if (++processed === rowLen)
                                 return resolve(Utils.buildResponse({data: {items: result.records}}));
                         }).catch(err=> {
                             return reject(err)
@@ -79,6 +79,7 @@ class UploadService {
             files.forEach(file=> {
                 let upload = new Upload({
                     file_name: file.filename,
+                    original_file_name: `${Date.now()}_${file.originalname}`,
                     file_size: file.size,
                     file_path: file.path,
                     file_type: file.mimetype,
@@ -95,7 +96,7 @@ class UploadService {
                         delete upload.file_path;
                         uploads.push(upload);
                     }
-                    if (++processed == rowLen) {
+                    if (++processed === rowLen) {
                         console.log("DONE UPLOADING");
                         return resolve(Utils.buildResponse({data: {"items": uploads}}));
                     }
