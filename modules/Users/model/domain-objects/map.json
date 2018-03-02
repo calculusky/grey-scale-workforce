@@ -6,6 +6,8 @@
   "first_name": "first_name",
   "last_name": "last_name",
   "middle_name": "middle_name",
+  "mobile_no": "mobile_no",
+  "alt_mobile_no": "alt_mobile_no",
   "gender": "gender",
   "user_type": "user_type",
   "permissions": "permissions",
@@ -14,6 +16,8 @@
   "location": "location",
   "avatar": "avatar",
   "group_id": "group_id",
+  "assigned_to": "assigned_to",
+  "created_by": "created_by",
   "created_at": "created_at",
   "updated_at": "updated_at"
 }
