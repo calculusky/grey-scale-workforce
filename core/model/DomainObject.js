@@ -1,6 +1,5 @@
 //noinspection JSUnresolvedFunction
 const RelationShips = require('./links/Relationships');
-const Context = require('../Context');
 
 const privateStore = new WeakMap();
 
