@@ -52,7 +52,7 @@ class ModelMapper {
         
         this._(this).buildWhere = (column, value = null, resultSets, domainObject)=> {
             if (!value) return resultSets;
-            if (value && typeof value == 'object') {
+            if (value && typeof value === 'object') {
                 //it means we have got a lot of work to do here
                 let colKeys = Object.keys(value);
                 for (let i = 0; i < colKeys.length; i++) {
@@ -145,10 +145,10 @@ class ModelMapper {
         let guardedErrors = [];
 
         let dbData = domainObjects.map(domain => {
-            var [valid, , cMsg] = Util.validatePayLoad(domain, domain.required());
+            let [valid, , cMsg] = Util.validatePayLoad(domain, domain.required());
             if (!valid) validateErrors.push(cMsg);
-            var [filteredDomain, guardedKeys] = Util.validateGuarded(domain, domain.guard());
-            if (Object.keys(filteredDomain).length == 0) {
+            let [filteredDomain, guardedKeys] = Util.validateGuarded(domain, domain.guard());
+            if (Object.keys(filteredDomain).length === 0) {
                 guardedErrors.push(guardedKeys);
             } else {
                 let date = new Date();
@@ -159,7 +159,7 @@ class ModelMapper {
         });
         //Stoppers
         if (validateErrors.length) {
-            const error = Util.buildResponse({status: "fail", data: validateErrors}, 400);
+            const error = Utils.buildResponse({status: "fail", data: validateErrors}, 400);
             return Promise.reject(error);
         }
         if (guardedErrors.length) {
@@ -171,7 +171,7 @@ class ModelMapper {
             //to avoid problems from other services expecting just a single domainObject as a return value.
             //services inserting multiples should however treat the result as an array
             let id = result.shift();
-            if (domainObjects.length == 1) {
+            if (domainObjects.length === 1) {
                 domainObject = domainObjects.shift().serialize(dbData.shift(), 'client');
                 domainObject.id = id;
             } else {
@@ -184,7 +184,7 @@ class ModelMapper {
             return Promise.resolve(domainObject);
         }).catch(err=> {
             Log.e('createDomainRecord', err);
-            const error = Util.buildResponse(Util.getMysqlError(err), 400);
+            const error = Utils.buildResponse({status:'fail', data: Utils.getMysqlError(err)}, 400);
             return Promise.reject(error);
         });
     }
@@ -202,10 +202,10 @@ class ModelMapper {
         if (!(domain instanceof DomainObject)) throw new TypeError("The parameter domainObject must be " +
             "an instance of DomainObject.");
 
-        var [filteredDomain, guardedKeys] = Util.validateGuarded(domain, domain.guard());
+        let [filteredDomain, guardedKeys] = Util.validateGuarded(domain, domain.guard());
 
-        if (Object.keys(filteredDomain).length == 0) {
-            const error = Util.buildResponse({
+        if (Object.keys(filteredDomain).length === 0) {
+            const error = Utils.buildResponse({
                 status: "fail", data: {
                     message: "Nothing to update. Some included fields are not allowed for update.",
                     guarded: guardedKeys
@@ -249,7 +249,7 @@ class ModelMapper {
         let DomainObject = DomainFactory.build(this.domainName);
 
         let domainObject = new DomainObject();
-        var [softDelete, updateCol, dateDeletedCol] = domainObject.softDeletes();
+        let [softDelete, updateCol, dateDeletedCol] = domainObject.softDeletes();
 
         if (typeof softDelete === 'boolean' && softDelete) {
             domainObject[updateCol] = 1;
