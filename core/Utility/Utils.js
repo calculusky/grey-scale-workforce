@@ -58,14 +58,20 @@ module.exports.getMysqlError = function (err) {
                 desc: "You are trying to insert a record that has relationship with " +
                 "another entity of which the related entity doesn't exist"
             };
-        case 1062:
-            return {};
         case 1586:
             return {
                 status: "error",
                 msg: "Duplicate Key value entry",
                 type: "Database",
-                code: `${err.errno} - ${err.code}`,
+                code: `${err.code}`,
+                desc: "There is a unique key constraint in one of the fields you are trying to insert."
+            };
+        case 1062:
+            return {
+                status: "error",
+                msg: err.sqlMessage,
+                type: "Database",
+                code: `${err.code}`,
                 desc: "There is a unique key constraint in one of the fields you are trying to insert."
             };
         case 1022://ER_DUP_KEY
@@ -103,7 +109,6 @@ module.exports.getMysqlError = function (err) {
                 desc: "You maybe need to delete its related entity before trying to delete this record"
             };
         default:
-            console.log(err);
             return {
                 status: "error",
                 msg: "You are doing something wrong",
