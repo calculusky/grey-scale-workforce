@@ -47,7 +47,7 @@ class Context {
     loadStaticData() {
         let findParents = (_groups, group, parentKey)=> {
             _groups.forEach(gp=> {
-                if (gp.id == group[parentKey]) {
+                if (gp.id === group[parentKey]) {
                     group.parent = gp;
                     if (gp[parentKey]) findParents(_groups, group.parent, parentKey);
                 }
@@ -61,14 +61,15 @@ class Context {
         const groups = {};
         groupSubs.then(results=> {
             results.forEach(group=> {
-                if (group['parent_group_id']) {
+                //if parent_group_id and the parent_group_id isn't equals to the group_child_id
+                if (group['parent_group_id'] && group['parent_group_id']!==group.id) {
                     findParents(results, group, 'parent_group_id');
                 }
                 delete group['parent_group_id'];
                 groups[group.id] = group;
             });
             this.persistence.set("groups", JSON.stringify(groups));
-        });
+        }).catch(err=>console.log(err));
 
         //Now lets get work order types
         let wResultSets = this.database.select(['id', 'name']).from("work_order_types");
