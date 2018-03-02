@@ -41,6 +41,7 @@ jspm_packages
 .idea/*
 
 .idea/workspace.xml
+jsLibraryMappings.xml
 
 uploads
 
