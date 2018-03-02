@@ -5,6 +5,13 @@
 const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../model/services/RecognitionService');
 
+/**
+ *
+ * @param app
+ * @param API {API}
+ * @param jsonParser
+ * @param urlencodedParser
+ */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
     app.use(['/users*', '/logout'], (req, res, next)=>API.recognitions().auth(req, res, next));
     /**
@@ -101,7 +108,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.post('/users', jsonParser, (req, res)=> {
         Log.info("/users", req.body);
-        API.users().createUser(req.body, req.who)
+        API.users().createUser(req.body, req.who, API)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

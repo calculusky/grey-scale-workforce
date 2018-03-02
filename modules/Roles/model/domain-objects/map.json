@@ -1,0 +1,11 @@
+{
+  "id": "id",
+  "name": "name",
+  "slug": "slug",
+  "permissions": "permissions",
+  "assigned_to": "assigned_to",
+  "created_by": "created_by",
+  "group_id": "group_id",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}
