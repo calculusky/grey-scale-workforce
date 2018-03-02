@@ -46,9 +46,15 @@ class DomainFactory {
                     return require('./Payments/model/domain-objects/Payment');
                 case DomainFactory.PAYMENT_PLAN:
                     return require('./PaymentPlans/model/domain-objects/PaymentPlan');
+                case DomainFactory.ACTIVATION:
+                    return require('./Activations/model/domain-objects/Activation');
+                case DomainFactory.GROUP:
+                    return require('./Groups/model/domain-objects/Group');
+                case DomainFactory.ROLE:
+                    return require('./Roles/model/domain-objects/Role');
             }
         }catch (e){
-            if(e.code=="MODULE_NOT_FOUND"){
+            if(e.code==="MODULE_NOT_FOUND"){
                 return null;
             }
         }
@@ -70,5 +76,8 @@ DomainFactory.UPLOAD = "Upload";
 DomainFactory.DISCONNECTION_ORDER = "DisconnectionOrder";
 DomainFactory.PAYMENT = "Payment";
 DomainFactory.PAYMENT_PLAN = "PaymentPlan";
+DomainFactory.ACTIVATION = "Activation";
+DomainFactory.GROUP = "Group";
+DomainFactory.ROLE = "Role";
 
 module.exports = DomainFactory;
