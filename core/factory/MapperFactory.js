@@ -51,6 +51,12 @@ class MapperFactory {
                 return Utils.loadMapper(mapperStore, path, mapperName, context);
             case MapperFactory.PAYMENT_PLAN:
                 return Utils.loadMapper(mapperStore, path, mapperName, context);
+            case MapperFactory.ACTIVATION:
+                return Utils.loadMapper(mapperStore, path, mapperName, context);
+            case MapperFactory.GROUP:
+                return Utils.loadMapper(mapperStore, path, mapperName, context);
+            case MapperFactory.ROLE:
+                return Utils.loadMapper(mapperStore, path, mapperName, context);
         }
     }
 }
@@ -68,6 +74,9 @@ MapperFactory.UPLOAD = "Upload";
 MapperFactory.DISCONNECTION_ORDER = "DisconnectionBilling";
 MapperFactory.PAYMENT = "Payment";
 MapperFactory.PAYMENT_PLAN = "PaymentPlan";
+MapperFactory.ACTIVATION = "Activation";
+MapperFactory.GROUP = "Group";
+MapperFactory.ROLE = "Role";
 
 
 module.exports = MapperFactory;
