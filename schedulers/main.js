@@ -265,11 +265,11 @@ module.exports.createCustomers = function () {
                 //the first row returned is the column header so lets skip
                 //for the first row we need to get all the column head
                 //TODO we should be able to validate the columns supplied
-                if (rn == 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
+                if (rn === 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
                 else if (rn > 1) {
                     //so we should basically know the columns we are expecting since we provided the template
                     //lets build the customer data
-                    let status = (getRowValueOrEmpty(row, colHeaderIndex, 'status') == 'Active') ? 1 : 0;
+                    let status = (getRowValueOrEmpty(row, colHeaderIndex, 'status') === 'Active') ? 1 : 0;
                     let customer = {
                         "account_no": getRowValueOrEmpty(row, colHeaderIndex, 'account_no'),
                         "old_account_no": getRowValueOrEmpty(row, colHeaderIndex, 'old_account_no'),
@@ -290,7 +290,7 @@ module.exports.createCustomers = function () {
 
                     //get it ready for batch insert
                     customers.push(customer);
-                    if (++processed == rowLen - 1) {
+                    if (++processed === rowLen - 1) {
                         //for now lets ignore duplicates... TODO handle duplicates
                         this.context.database.insert(customers).into("customers").catch(r => console.log());
                         deleteFile(file);
@@ -302,7 +302,7 @@ module.exports.createCustomers = function () {
                 }
             });
             //if it is empty or just includes the column heads... lets delete the file and release lock
-            if (rowLen == 0 || rowLen == 1) {
+            if (rowLen === 0 || rowLen === 1) {
                 deleteFile(file);
                 _updateUploadStatus(this, fileName, 4);
                 //we can release the lock here
@@ -349,7 +349,7 @@ module.exports.createMeterReadings = function () {
                 //the first row returned is the column header so lets skip
                 //for the first row we need to get all the column head
                 //TODO we should be able to validate the columns supplied
-                if (rn == 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
+                if (rn === 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
                 else if (rn > 1) {
                     //so we should basically know the columns we are expecting since we provided the template
                     //lets build the customer data
@@ -376,7 +376,7 @@ module.exports.createMeterReadings = function () {
 
                     //get it ready for batch insert
                     meter_readings.push(meter_reading);
-                    if (++processed == rowLen - 1) {
+                    if (++processed === rowLen - 1) {
                         //for now lets ignore duplicates... TODO handle duplicates
                         this.context.database.insert(meter_readings).into("meter_readings").catch(r => console.log(r));
                         deleteFile(file);
@@ -388,7 +388,7 @@ module.exports.createMeterReadings = function () {
                 }
             });
             //if it is empty or just includes the column heads... lets delete the file and release lock
-            if (rowLen == 0 || rowLen == 1) {
+            if (rowLen === 0 || rowLen === 1) {
                 deleteFile(file);
                 _updateUploadStatus(this, fileName, 4);
                 //we can release the lock here
