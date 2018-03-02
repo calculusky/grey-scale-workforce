@@ -18,7 +18,7 @@ class CustomerService {
 
     getCustomers(value, by = "account_no", who = {api: -1}, offset = 0, limit = 10) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
-        var executor = (resolve, reject)=> {
+        const executor = (resolve, reject)=> {
             CustomerMapper.findDomainRecord({by, value}, offset, limit)
                 .then(result=> {
                     let customers = result.records;
