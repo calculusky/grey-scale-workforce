@@ -28,13 +28,16 @@ class User extends DomainObject {
             'first_name',
             'last_name',
             'middle_name',
-            'gender'
+            'gender',
+            'mobile_no'
         ];
     }
 
     guard() {
         return [
-            'id'
+            'id',
+            'password',
+            'email'
         ];
     }
 
@@ -46,11 +49,20 @@ class User extends DomainObject {
         ];
     }
 
-    rules(){
+    rules() {
         return {
-            email:'email',
-            gender:'in(M, F, O)'
+            email: 'email',
+            password: String,
+            gender: 'in(M, F, O)',
+            mobile_no: 'numeric',
+            username: String,
+            'assigned_to?': Array
         }
+    }
+
+
+    async roles(){
+        return this.relations().belongsToMany('Role', 'role_users', 'user_id', 'role_id');
     }
 }
 
