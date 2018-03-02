@@ -52,7 +52,7 @@ class Relationships {
         let resultSets = KNEX.select(columns).from(domainTable)
             .innerJoin(tableName, function () {
                 this.on(`${tableName}.${foreignKey}`, KNEX.raw('?', [`${primaryKeyValue}`]))
-                    .andOn(`${tableName}.${tablePrimaryKey}`, `${domainTable}.${tablePrimaryKey}`)
+                    .andOn(`${tableName}.${localKey}`, `${domainTable}.${tablePrimaryKey}`)
             });
 
         let executor = (resolve, reject)=> {
@@ -116,7 +116,7 @@ class Relationships {
         let foreignTable = DomainMapper.tableName;
 
 
-        if (!this.domainObject[foreignKey] || this.domainObject[foreignKey] == "") {
+        if (!this.domainObject[foreignKey] || this.domainObject[foreignKey] === "") {
             console.log("no foreign key");
             return Promise.resolve({records: [{}]});
         }
@@ -124,7 +124,7 @@ class Relationships {
         let resultSets = KNEX.select(['*']).from(foreignTable).where(parentKey, this.domainObject[foreignKey]);
         // console.log(resultSets.toString());
 
-        var executor = (resolve, reject)=> {
+        const executor = (resolve, reject)=> {
             resultSets.then(res => {
                 let records = [], rowLen = res.length, processed = 0;
                 for (let i = 0; i < rowLen; i++) {
@@ -217,7 +217,7 @@ class Relationships {
             throw new ReferenceError(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
         }
 
-        if (!this.domainObject[options.localKey] || this.domainObject[options.localKey] == "") {
+        if (!this.domainObject[options.localKey] || this.domainObject[options.localKey] === "") {
             return Promise.resolve({records: [{}]});
         }
 
@@ -226,7 +226,7 @@ class Relationships {
         let resultSets = KNEX.select(['*']).from(foreignTable)
             .where(foreignKey, this.domainObject[options.localKey]).andWhere(relatedDomainKey, options.localDomain);
 
-        var executor = (resolve, reject)=> {
+        const executor = (resolve, reject)=> {
             resultSets.then(res=> {
                 let records = [], rowLen = res.length, processed = 0;
                 for (let i = 0; i < rowLen; i++) {
@@ -250,7 +250,7 @@ class Relationships {
             this.domainObject.constructor.name
         ];
 
-        return domains.sort().join('s_').toLowerCase();
+        return domains.sort().join('_').toLowerCase();
     }
 
 }
