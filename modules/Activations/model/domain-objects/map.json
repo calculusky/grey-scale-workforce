@@ -1,0 +1,9 @@
+{
+  "id": "id",
+  "user_id": "user_id",
+  "code": "code",
+  "completed": "completed",
+  "completed_at": "completed_at",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}
