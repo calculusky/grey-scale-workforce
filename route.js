@@ -5,12 +5,12 @@ const bodyParser = require('body-parser');
 const urlencodedParser = bodyParser.urlencoded({extended: false, limit: '5mb'});
 const jsonParser = bodyParser.json();
 const multer = require('multer');
-var API = require('./API.js');
+let API = require('./API.js');
 const fs = require('fs');
 const swagger = require('./swagger');
 const express = require("express");
 const events = require('./events/events.js');
-var cors = require('cors');
+const cors = require('cors');
 
 module.exports = function route(context) {
 
@@ -21,15 +21,18 @@ module.exports = function route(context) {
      * Configure Express
      * Configure SocketIO
      */
-    var app = express();
+    const app = express();
+
     //initialize socket.io
     const http = require('http').Server(app);
     const io = require('socket.io')(http);
 
+    //Initialize Events - Socket IO
     events.init(context, io, API);
 
-    app.set('port', process.env.PORT || 3000);
-    // app.use(cors());
+    app.set('port', process.env.PORT || 9003);
+
+    //CORS configuration
     app.use(function (req, res, next) {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Credentials', "true");
@@ -37,7 +40,7 @@ module.exports = function route(context) {
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, apim-debug, x-working-token, Content-Type, Accept');
         res.header('Access-Control-Expose-Headers', "true");
 
-        if (req.method == 'OPTIONS'
+        if (req.method.toUpperCase() === 'OPTIONS'
             || req.header('access-control-request-Headers')
             || req.header('access-control-request-Method')) {
             return res.sendStatus(200);
@@ -47,6 +50,7 @@ module.exports = function route(context) {
     });
 
     app.use(jsonParser);
+    //Handle Errors partaking to payload data being sent.
     app.use(function (error, req, res, next) {
         if (error instanceof SyntaxError) {
             return res.status(400).send({
@@ -64,8 +68,8 @@ module.exports = function route(context) {
      * Configure the storage options
      * @type {string}
      */
-    var controllerPath = './modules';
-    var swaggerAPIs = ['./route*.js', './api.yml'];
+    const controllerPath = './modules';
+    const swaggerAPIs = ['./route*.js', './api.yml'];
 
     //configure multer for dynamic storage
     const storage = multer.diskStorage({
@@ -80,10 +84,10 @@ module.exports = function route(context) {
             if (routePath) {
                 saveAt = (routePath.use_parent) ? `${saveAt}${routePath.path}` : routePath.path;
             } else {
-                if (path == "attachments") {
+                if (path === "attachments") {
                     const body = req.body;
                     saveAt = `${saveAt}/attachments/${body.module}`
-                } else if (path == 'uploads') {
+                } else if (path === 'uploads') {
                     console.log(req.body);
                     //for uploads the upload type is important
                     saveAt = `${saveAt}/uploads/${req.body['upload_type']}`;
@@ -95,16 +99,16 @@ module.exports = function route(context) {
 
     let multiPart = multer({storage: storage});
     /**
-     * Add all Application Controller to the system
+     * Add all Application Controller|Route to the system
      * @type {string}
      */
     fs.readdirSync(controllerPath).forEach(dir=> {
         if (fs.statSync(`${controllerPath}/${dir}`).isDirectory()) {
-            var filePath = `${controllerPath}/${dir}/controller`;
+            let filePath = `${controllerPath}/${dir}/controller`;
             if (fs.existsSync(filePath)) {
                 fs.readdirSync(filePath).forEach(controller=> {
                     if (controller) {
-                        var routeCtrl = require(`${filePath}/${controller}`);
+                        const routeCtrl = require(`${filePath}/${controller}`);
                         swaggerAPIs.push(`${filePath}/${controller}`);
                         routeCtrl.controller(app, {API, jsonParser, urlencodedParser, multiPart});
                     }
