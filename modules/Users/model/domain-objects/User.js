@@ -36,8 +36,7 @@ class User extends DomainObject {
     guard() {
         return [
             'id',
-            'password',
-            'email'
+            'roles'
         ];
     }
 
