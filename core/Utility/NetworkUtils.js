@@ -6,10 +6,11 @@ module.exports = function NetworkUtils() {
 };
 
 module.exports.exponentialBackOff = function (fnc, max, retries) {
-    fnc.then(()=> {
+    console.log(fnc.constructor.name);
+    fnc.then(() => {
         //end
-        console.log("Sent a data to fcm server which was initially unavailable")
-    }).catch(()=> {
+        console.log(`Processed task for ${fnc.constructor.name} after ${retries} retries`);
+    }).catch(() => {
         //if we have not exceeded the amount of times we can do a retry
         if (max > 0) {
             //Exponential callback formula
@@ -18,11 +19,13 @@ module.exports.exponentialBackOff = function (fnc, max, retries) {
             //In first failure lets assume there has been 3 collisions --- :)
             let c = retries = (retries === 0) ? 3 : retries;
 
-            var N = Math.pow(2, c) - 1;
+            let N = Math.pow(2, c) - 1;
             //get a random number from 0 to the N
-            var delay = (Math.floor(Math.random() * (N))) * 1000;//to milliseconds
+            let delay = (Math.floor(Math.random() * (N))) * 1000;//to milliseconds
             //delay the request
-            setTimeout(NetworkUtils.exponentialBackOff(fnc, --max, ++retries), delay);
+            setTimeout(function () {
+                this.exponentialBackOff(fnc, --max, ++retries)
+            }.bind(this), delay);
         }
     });
     return true;
