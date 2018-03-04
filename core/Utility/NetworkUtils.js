@@ -6,7 +6,6 @@ module.exports = function NetworkUtils() {
 };
 
 module.exports.exponentialBackOff = function (fnc, max, retries) {
-    console.log(fnc.constructor.name);
     fnc.then(() => {
         //end
         console.log(`Processed task for ${fnc.constructor.name} after ${retries} retries`);
