@@ -1,7 +1,7 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
-const Util = require('../../../../core/Utility/MapperUtil');
+const Utils = require('../../../../core/Utility/Utils');
 const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
 const validate = require('validate-fields')();
 const request = require('request');
@@ -18,9 +18,6 @@ class NotificationService {
         MapperFactory = this.context.modelMappers;
     }
 
-    getName() {
-        return "notificationService";
-    }
 
     /**
      *
@@ -32,17 +29,17 @@ class NotificationService {
      * @returns {Promise}
      */
     getNotifications(value, by = "to", who = {api: -1}, offset = 0, limit = 10) {
-        if (!value || "" + value + "".trim() == '') {
+        if (!value || "" + value + "".trim() === '') {
             //Its important that all queries are streamlined to majorly for each business
             value = who.api;
         } else if (value) {
             console.log(value)
         }
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
-        var executor = (resolve, reject)=> {
+        const executor = (resolve, reject) => {
             NotificationMapper.findDomainRecord({by, value}, offset, limit).then(result=> {
                 let notifications = result.records;
-                return resolve(Util.buildResponse({data: {items: notifications}}));
+                return resolve(Utils.buildResponse({data: {items: notifications}}));
             }).catch(err=> {
                 return reject(err);
             });
@@ -65,7 +62,7 @@ class NotificationService {
         let isValid = validate(notification.rules(), notification);
 
         if (!isValid) {
-            return Promise.reject(Util.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
 
         let userIds = [];
@@ -83,8 +80,8 @@ class NotificationService {
         //We need to get the fire-base token of the users in notification.to
         let resultSet = this.context.database.select(['fire_base_token']).from('users');
         userIds.forEach((id, i)=> {
-            resultSet = (i == 0) ? resultSet.where('id', id) : resultSet.orWhere('id', id);
-            if (++processed == userIds.length) {
+            resultSet = (i === 0) ? resultSet.where('id', id) : resultSet.orWhere('id', id);
+            if (++processed === userIds.length) {
                 resultSet.then(results=> {
                     fcmTokens = results.reduce((accumulator, cVal)=> {
                         //we should however check if the value is an array to avoid un wanted errors
@@ -104,19 +101,19 @@ class NotificationService {
                     };
                     if (payload.registration_ids.length) return this.push(payload, API);
                     else
-                        return Promise.reject(Util.buildResponse({
+                        return Promise.reject(Utils.buildResponse({
                             status: "fail",
                             data: {message: "Device not registered"}
                         }, 400));
                 });
             }
         });
-        if (userIds.length == 0) {
-            return Promise.resolve(Util.buildResponse({data: {message: "Nothing to do"}}));
+        if (userIds.length === 0) {
+            return Promise.resolve(Utils.buildResponse({data: {message: "Nothing to do"}}));
         }
         // Get Mapper
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
-        return NotificationMapper.createDomainRecord(notification).then(n => Util.buildResponse({data: {items: n}}));
+        return NotificationMapper.createDomainRecord(notification).then(n => Utils.buildResponse({data: {items: n}}));
     }
 
     /**
@@ -128,9 +125,9 @@ class NotificationService {
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
         return NotificationMapper.deleteDomainRecord({by, value}).then(count=> {
             if (!count) {
-                return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
+                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Util.buildResponse({data: {by, message: "Notification deleted"}});
+            return Utils.buildResponse({data: {by, message: "Notification deleted"}});
         });
     }
 
@@ -142,11 +139,11 @@ class NotificationService {
      * @returns {Promise}
      */
     push(payload, API, retrying = false) {
-        var SEVER_KEY = "AIzaSyAcsDeik3Pp7chgiUu89xAW26WA_ylDFcY";
+        const SEVER_KEY = "AIzaSyAcsDeik3Pp7chgiUu89xAW26WA_ylDFcY";
         let fcmHeader = {"Content-Type": "application/json", "Authorization": "Key=" + SEVER_KEY};
         let rOptions = {headers: fcmHeader, url: "https://fcm.googleapis.com/fcm/send", json: payload};
 
-        var executor = (resolve, reject)=> {
+        const executor = (resolve, reject) => {
             request.post(rOptions, (err, response, body)=> {
                 if (err) {
                     console.log('FCM:', err);
