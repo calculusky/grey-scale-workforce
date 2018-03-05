@@ -231,7 +231,7 @@ class ModelMapper {
             })
             .catch(err=> {
                 Log.e('updateDomainRecord', err);
-                const error = Util.buildResponse(Util.getMysqlError(err), 400);
+                const error = Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400);
                 return Promise.reject(error)
             });
     }
@@ -249,10 +249,9 @@ class ModelMapper {
         let DomainObject = DomainFactory.build(this.domainName);
 
         let domainObject = new DomainObject();
-        let [softDelete, updateCol, dateDeletedCol] = domainObject.softDeletes();
+        let [softDelete, dateDeletedCol] = domainObject.softDeletes();
 
         if (typeof softDelete === 'boolean' && softDelete) {
-            domainObject[updateCol] = 1;
             domainObject[dateDeletedCol] = Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s");
             return this.updateDomainRecord({by, value, domainObject});
         }
@@ -267,7 +266,7 @@ class ModelMapper {
             })
             .catch(err=> {
                 Log.e('deleteDomainRecord', err);
-                const error = Util.buildResponse(Util.getMysqlError(err), 400);
+                const error = Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400);
                 return Promise.reject(error)
             });
     }

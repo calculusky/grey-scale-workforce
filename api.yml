@@ -55,6 +55,13 @@ parameters:
     in: path
     description: The user id
 
+  group_id:
+    name: group_id
+    type: integer
+    required: true
+    in: path
+    description: The group id
+
   fault_id:
     name: fault_id
     type: integer
@@ -263,6 +270,68 @@ definitions:
       updated_at:
         type: string
         format: date
+
+  postGroupInput:
+    required:
+      - name
+      - type
+      - short_name
+    properties:
+      name:
+        type: string
+      type:
+        type: string
+      short_name:
+        type: string
+
+  getGroupOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/Group'
+      required:
+        - data
+        - status
+
+  Group:
+    required:
+      - id
+      - name
+      - type
+      - short_name
+      - description
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      type:
+        type: string
+      short_name:
+        type: string
+      description:
+        type: string
+      assigned_to:
+        type: array
+      group_id:
+        type: integer
+      created_by:
+        type: integer
+      created_at:
+        type: string
+        format: date
+      updated_at:
+        type: string
+        format: date
+
+
 
   postFaultInput:
     type: "object"
@@ -924,26 +993,6 @@ definitions:
               $ref: '#/definitions/Attachment'
     required:
     - status
-
-  Group:
-    type: object
-    properties:
-      id:
-        type: integer
-        description: The Group ID
-      name:
-        type: string
-      type:
-        type: string
-        description: The type of group this is e.g A Business Group, Technical Group etc
-      description:
-        type: string
-      group_id:
-        type: integer
-        description: The parent Group ID
-      parent:
-        type: object
-        $ref: '#/definitions/Group'
 
 
   Location:
