@@ -1,0 +1,14 @@
+{
+  "id": "id",
+  "name": "name",
+  "type": "type",
+  "short_name": "short_name",
+  "ext_code": "ext_code",
+  "description": "description",
+  "assigned_to": "assigned_to",
+  "created_by": "created_by",
+  "group_id": "group_id",
+  "deleted_at": "deleted_at",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}
