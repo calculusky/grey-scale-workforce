@@ -78,7 +78,7 @@ class RoleService extends ApiService {
      */
     addUserToRole(roleId, userId, who = {}, API) {
         let user_roles = {
-            role_id: roleId,
+            role_id: (isNaN(roleId)) ? parseInt(roleId) : roleId,
             user_id: userId,
         };
         const isValid = validate({user_id: 'int', role_id: 'int'}, user_roles);
