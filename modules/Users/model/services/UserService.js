@@ -165,7 +165,9 @@ class UserService extends ApiService {
                     }
                     await API.roles().addUserToRole(body['roles'], user.id);
                 }
-                API.workflows().updateUser(by, value, user);
+
+                API.workflows().updateUser(by, value, user).then().catch(err => console.log(err));
+
                 return Utils.buildResponse({data: result.shift()});
             } else {
                 return Promise.reject(Utils.buildResponse({status: "fail", data: result.shift()}, 404));
