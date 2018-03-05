@@ -146,6 +146,35 @@ class API {
     }
 
     /**
+     * @returns {ActivationService|*}
+     */
+    activations() {
+        return API._(this)['services']['ActivationService'];
+    }
+
+    /**
+     * @returns {WorkflowService|*}
+     */
+    workflows() {
+        return API._(this)['services']['WorkflowService'];
+    }
+
+    /**
+     * @returns {GroupService|*}
+     */
+    groups() {
+        return API._(this)['services']['GroupService'];
+    }
+
+
+    /**
+     * @returns {RoleService|*}
+     */
+    roles() {
+        return API._(this)['services']['RoleService'];
+    }
+
+    /**
      * @returns {ReportService|*}
      */
     reports() {
