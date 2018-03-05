@@ -108,7 +108,7 @@ exports.request = (endPoint = "", data = {}, method = 'GET') => {
                 console.log('StatusCode:', res.statusCode);
                 return reject(err || body);
             }
-            return resolve(body);
+            return resolve(body || true);
         });
 
     };
