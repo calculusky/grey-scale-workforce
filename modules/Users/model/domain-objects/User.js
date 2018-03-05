@@ -27,7 +27,6 @@ class User extends DomainObject {
             'password',
             'first_name',
             'last_name',
-            'middle_name',
             'gender',
             'mobile_no'
         ];
@@ -42,8 +41,7 @@ class User extends DomainObject {
 
     softDeletes() {
         return [
-            true,
-            "deleted",
+            false,
             "deleted_at"
         ];
     }

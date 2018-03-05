@@ -216,7 +216,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.put("/users/:id", jsonParser, (req, res)=> {
         Log.info("updateUser:", req.body);
-        API.users().updateUser('id', req.params['id'], req.body)
+        API.users().updateUser('id', req.params['id'], req.body, API)
             .then(({data, code=200})=> {
                 console.log('success', data);
                 return res.status(code).send(data);
@@ -260,6 +260,34 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             })
             .catch(({err, code})=> {
                 console.error('err', err);
+                return res.status(code).send(err);
+            });
+    });
+
+
+    /**
+     * @swagger
+     * /users/{id}:
+     *  delete:
+     *    summary: Deletes a User
+     *    description: "Deletes a User"
+     *    tags: [Users]
+     *    produces:
+     *    - application/json
+     *    operationId: deleteUser
+     *    responses:
+     *      '200':
+     *        description: Returns true with the id of the request deleted
+     *    parameters:
+     *    - $ref: '#/parameters/sessionId'
+     *    - $ref: '#/parameters/id'
+     */
+    app.delete('/users/:id', urlencodedParser, (req, res) => {
+        API.users().deleteUser("id", req.params.id, API)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
