@@ -1,6 +1,6 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
-const Util = require('../../../../core/Utility/MapperUtil');
+const Utils = require('../../../../core/Utility/Utils');
 /**
  * @name CustomerService
  * Created by paulex on 09/4/17.
@@ -12,10 +12,6 @@ class CustomerService {
         MapperFactory = this.context.modelMappers;
     }
 
-    getName() {
-        return "customerService";
-    }
-
     getCustomers(value, by = "account_no", who = {api: -1}, offset = 0, limit = 10) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         const executor = (resolve, reject)=> {
@@ -24,7 +20,7 @@ class CustomerService {
                     let customers = result.records;
                     let processed = 0;
                     let rowLen = customers.length;
-                    return resolve(Util.buildResponse({data: {items: customers}}));
+                    return resolve(Utils.buildResponse({data: {items: customers}}));
                     // customers.forEach(customer=> {
                     //     customer.user().then(res=> {
                     //         customer.user = res.records.shift();
@@ -57,7 +53,7 @@ class CustomerService {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         return CustomerMapper.createDomainRecord(customer).then(customer=> {
             if (!customer) return Promise.reject();
-            return Util.buildResponse({data: customer});
+            return Utils.buildResponse({data: customer});
         });
     }
 
@@ -83,9 +79,9 @@ class CustomerService {
                     : `${customer.first_name} ${customer.last_name}`;
                 customers.push(new Customer(customer))
             });
-            return Util.buildResponse({data: {items: customers}});
+            return Utils.buildResponse({data: {items: customers}});
         }).catch(err=> {
-            return Util.buildResponse({status: "fail", data: err}, 500);
+            return Utils.buildResponse({status: "fail", data: err}, 500);
         });
     }
 
@@ -99,9 +95,9 @@ class CustomerService {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         return CustomerMapper.deleteDomainRecord({by, value}).then(count=> {
             if (!count) {
-                return Util.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
+                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Util.buildResponse({data: {by, message: "Customer deleted"}});
+            return Utils.buildResponse({data: {by, message: "Customer deleted"}});
         });
     }
 }

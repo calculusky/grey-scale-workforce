@@ -5,6 +5,13 @@
 const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
+/**
+ *
+ * @param app
+ * @param API {API}
+ * @param jsonParser
+ * @param urlencodedParser
+ */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
     app.use('/customers', (req, res, next)=>API.recognitions().auth(req, res, next));
 
