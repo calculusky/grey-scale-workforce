@@ -128,7 +128,7 @@ class RoleService extends ApiService {
         return new Promise(executor);
     }
 
-    async detachUseFromRole(roleId, userId, who = {}) {
+    async detachUserFromRole(roleId, userId, who = {}) {
         return await this.context.database.table("role_users").where('role_id', roleId)
             .where('user_id', userId).del();
     }
