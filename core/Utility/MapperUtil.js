@@ -11,21 +11,23 @@ module.exports.loadMapper = function (store = {}, path, key, context=null) {
     if (store[key]) {
         return store[key];
     }
-    let mapper = require(path);
-    if (mapper) {
-        store[key] = new mapper(context);
+    try {
+        let mapper = require(path);
+        if (mapper) store[key] = new mapper(context);
+    } catch (e) {
+        return;
     }
     return store[key];
 };
 
 
 module.exports.validatePayLoad = function (payLoad, checks) {
-    var pKeys = Object.keys(payLoad);
+    let pKeys = Object.keys(payLoad);
     let valid = true;
     let missing = [];
     let clientMessage = {};
-    for (var i = 0; i < checks.length; i++) {
-        var key = checks[i];
+    for (let i = 0; i < checks.length; i++) {
+        let key = checks[i];
         //if the payload doesn't have the required keys lets bounce the request
         if (!pKeys.includes(key) || (payLoad[key] == null || payLoad[key].toString().trim() === '')) {
             valid = false;
@@ -39,9 +41,9 @@ module.exports.validatePayLoad = function (payLoad, checks) {
 
 module.exports.validateGuarded = function (payload, guarded = []) {
     //guarded: check for keys that shouldn't be in the payload and remove
-    var pKeys = Object.keys(payload);
+    let pKeys = Object.keys(payload);
     let guardedKeys = [];
-    for (var i = 0; i < guarded.length; i++) {
+    for (let i = 0; i < guarded.length; i++) {
         let key = guarded[i];
         if (pKeys.includes(key)) {
             guardedKeys.push(key);
