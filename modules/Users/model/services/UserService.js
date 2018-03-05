@@ -149,10 +149,21 @@ class UserService extends ApiService {
      * @param API {API}
      * @returns {Promise.<User>|*}
      */
-    updateUser(by, value, body = {}, API) {
+    async updateUser(by, value, body = {}, API) {
         const User = DomainFactory.build(DomainFactory.USER);
         let user = new User(body);
         const UserMapper = MapperFactory.build(MapperFactory.USER);
+
+        //The only reason we are checking here is basically because we need to get the previous group_id
+        //So we can tell process maker if the user needs to be removed from the previous group and added to a new one
+        //Else this line is redundant and annoying
+        let userExist = await this.context.database.table("users").where(by, value).select(['group_id']);
+
+        if (!userExist.length) return Promise.reject(Utils.buildResponse({
+            status: "fail",
+            msg: "record doesn't exist"
+        }, 404));
+
 
         return UserMapper.updateDomainRecord({value, domain: user}).then(async (result) => {
             if (result.pop()) {
@@ -165,6 +176,8 @@ class UserService extends ApiService {
                     }
                     await API.roles().addUserToRole(body['roles'], user.id);
                 }
+
+                user['old_group_id'] = userExist.shift()['group_id'];
 
                 API.workflows().updateUser(by, value, user).then().catch(err => console.log(err));
 

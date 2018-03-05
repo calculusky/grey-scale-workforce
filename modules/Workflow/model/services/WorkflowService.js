@@ -75,7 +75,7 @@ class WorkflowService {
      * @returns {Promise.<User>|*}
      */
     async updateUser(by, value, body = {}) {
-        if (!ProcessAPI['token']) await ProcessAPI.login("admin@nogic.org", "admin");
+        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
 
         //we need to get the updated user record
         let dbUser = await  this.context.database.table("users").where(by, value).select();
@@ -92,7 +92,13 @@ class WorkflowService {
                 console.log("updateUser:", err);
             });
 
-            //TODO should in-case the user group_id has changed, lets update the user group
+            if (body['group_id'] && (body['group_id'] !== body['old_group_id'])) {
+                //remove the user from the old group
+                //add him to the new group
+                console.log(body);
+                this.removeUserFromGroup(dbUser['wf_user_id'], body['old_group_id']).then();
+                this.addUserToGroup(dbUser['wf_user_id'], body['group_id']).then();
+            }
 
         } else {
             console.log("creating this user on process maker because it doesn't have a wf_user_id");
@@ -109,8 +115,9 @@ class WorkflowService {
      * @param groupId
      */
     async addUserToGroup(wfUserId, groupId) {
+        if (!ProcessAPI['token']) await ProcessAPI.login("admin@nogic.org", "admin");
         //first let get the wf_group_id of this group
-        let group = await this.context.database.table("groups").where("id", groupId).select(['id', 'wf_group_id']);
+        let group = await this.context.database.table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
         group = group.shift();
         let response = null;
         if (group) {
@@ -123,6 +130,36 @@ class WorkflowService {
                 .catch(err => {
                     //Error Handler : the user might already be added to the group
                     console.log("addUserToGroup:", err);
+                });
+        }
+        return response;
+    }
+
+    /**
+     * Remove user from group
+     *
+     * @param wfUserId
+     * @param groupId
+     * @returns {Promise<*>}
+     */
+    async removeUserFromGroup(wfUserId, groupId) {
+        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+
+        let group = await this.context.database.table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
+        group = group.shift();
+
+        let response = null;
+
+        if (group) {
+            if (!group['wf_group_id']) {
+                //if the group doesn't exist on process maker lets create it
+                const grp = await this.createGroup(group);
+                group['wf_group_id'] = grp['grp_uid'];
+            }
+            response = await ProcessAPI.request(`/group/${group['wf_group_id']}/user/${wfUserId}`, null, 'DELETE')
+                .catch(err => {
+                    //Error Handler : the user might already be added to the group
+                    console.log("removeUserFromGroup:", err);
                 });
         }
         return response;
@@ -198,7 +235,6 @@ class WorkflowService {
         if (!dbGroup) return;
 
         let response = null;
-        console.log("WfGroup", dbGroup);
         if (dbGroup['wf_group_id']) {
             const pmGroup = {grp_title: dbGroup["name"]};
             response = await ProcessAPI.request(`/group/${dbGroup['wf_group_id']}`, pmGroup, 'PUT').catch(err => {
