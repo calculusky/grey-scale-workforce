@@ -183,6 +183,10 @@ class PaymentService {
                         }
                         //Now that everything is fine... lets now create the payment
                         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
+                        //however let set the group and assigned to value
+                        const date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
+                        payment.group_id = workOrder.group_id;
+                        payment.assigned_to = `[{"id": ${who.sub}, "created_at": "${date}"}]`;
                         PaymentMapper.createDomainRecord(payment).then(payment => {
                             if (!payment) return Promise.reject();
                             return resolve(Utils.buildResponse({data: payment}));
@@ -211,9 +215,10 @@ class PaymentService {
                                 "address_line": workOrder.address_line,
                                 "type_id": 2,//2 means reconnection
                                 "group_id": workOrder.group_id,
-                                "issue_date": Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s')
+                                assigned_to: `[{"id": ${who.sub}, "created_at": "${date}"}]`,
+                                "issue_date": Utils.date.dateToMysql(date, 'YYYY-MM-DD H:m:s')
                             };
-
+                            console.log(reconnectionOrder);
                             API.workOrders().createWorkOrder(reconnectionOrder)
                                 .then(r => Log.info('PAYMENTS', `Reconnection Order Created`))
                                 .catch(err => Log.e('PAYMENTS', err));
