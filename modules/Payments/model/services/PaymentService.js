@@ -92,9 +92,10 @@ class PaymentService {
             }, 400));
         }
         const executor = (resolve, reject) => {
+            const columns = ['id', 'status', 'work_order_no', 'assigned_to', 'group_id', 'type_id', 'address_line',
+                'related_to', 'relation_id'];
 
-            let resultSet = this.context.database.table(systemType.table)
-                .select(['id', 'status', 'work_order_no', 'group_id', 'type_id', 'address_line', 'related_to', 'relation_id'])
+            let resultSet = this.context.database.table(systemType.table).select(columns)
                 .where(systemType.key, payment.system_id);
 
             resultSet.then(result => {
@@ -185,8 +186,15 @@ class PaymentService {
                         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
                         //however let set the group and assigned to value
                         const date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
+
                         payment.group_id = workOrder.group_id;
-                        payment.assigned_to = `[{"id": ${who.sub}, "created_at": "${date}"}]`;
+
+                        if (!workOrder.assigned_to.find(item => item.id === who.sub))
+                            workOrder.assigned_to.push({"id": who.sub, created_at: date});
+
+                        payment.assigned_to = JSON.stringify(workOrder.assigned_to);
+
+
                         PaymentMapper.createDomainRecord(payment).then(payment => {
                             if (!payment) return Promise.reject();
                             return resolve(Utils.buildResponse({data: payment}));
@@ -197,15 +205,13 @@ class PaymentService {
                             .where(systemType.key, payment.system_id)
                             .then(r => console.log()).catch(err => Log.e(TAG, JSON.stringify(err)));
 
-                        // let businessUnit = Utils.getGroupParent(groups[workOrder['group_id']], 'business_unit');
-
                         const createReconnectionOrder = (result) => {
                             //if it exist don't create a reconnection order
                             if (result.shift()['id']) return;
                             /*
                              * Generate a unique number for this work order
                              **/
-
+                            console.log(workOrder.assigned_to);
                             let reconnectionOrder = {
                                 "related_to": "disconnection_billings",
                                 "relation_id": workOrder.relation_id,
@@ -215,8 +221,8 @@ class PaymentService {
                                 "address_line": workOrder.address_line,
                                 "type_id": 2,//2 means reconnection
                                 "group_id": workOrder.group_id,
-                                assigned_to: `[{"id": ${who.sub}, "created_at": "${date}"}]`,
-                                "issue_date": Utils.date.dateToMysql(date, 'YYYY-MM-DD H:m:s')
+                                "assigned_to": JSON.stringify(workOrder.assigned_to),
+                                "issue_date": date
                             };
                             console.log(reconnectionOrder);
                             API.workOrders().createWorkOrder(reconnectionOrder)
