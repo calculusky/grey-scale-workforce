@@ -6,13 +6,13 @@
 const ModelMapper = require('../../../../core/model/ModelMapper');
 
 
-class AssetMapper extends ModelMapper{
+class PaymentPlanMapper extends ModelMapper {
     constructor(context) {
         super(context);
         this.primaryKey = "id";
-        this.tableName = "assets";
-        this.domainName = "Asset";
+        this.tableName = "payment_plans";
+        this.domainName = "PaymentPlan";
     }
 }
 
-module.exports = AssetMapper;
+module.exports = PaymentPlanMapper;

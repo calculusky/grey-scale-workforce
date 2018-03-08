@@ -17,9 +17,7 @@ class PaymentPlan extends DomainObject {
 
     required() {
         return [
-            'asset_name',
-            'asset_type',
-            'serial_no'
+            'disc_order_id'
         ];
     }
 
@@ -40,13 +38,15 @@ class PaymentPlan extends DomainObject {
 
     rules() {
         return {
-            asset_name: String
+            disc_order_id: 'int',
+            period: String,
+            amount: 'number(100, 90000000)',
+            waive_percentage: 'numeric'
         };
     }
 
-
-    user() {
-        return this.relations().belongsTo("User", "assigned_to");
+    disconnection() {
+        return this.relations().belongsTo("DisconnectionOrder", "disc_order_id");
     }
 }
 

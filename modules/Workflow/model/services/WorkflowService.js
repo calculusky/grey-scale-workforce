@@ -18,7 +18,7 @@ class WorkflowService {
     constructor(context) {
         this.context = context;
         /*TODO username and password should be put in a secret file e.g .env*/
-        this.username = "admin@nogic.org";
+        this.username = "admin";
         this.password = "admin";
         ProcessAPI.init(context.config.processMaker).login(this.username, this.password).catch(e => {
             console.log(e);
@@ -250,6 +250,98 @@ class WorkflowService {
 
     async deleteGroup() {
 
+    }
+
+
+    /**
+     *
+     *
+     * @param domain {DomainObject}
+     * @param who
+     * @param processKey
+     * @param tableName - The table name to update with the wf_case_id. If not set the table will not be updated
+     * @returns {Promise<void>}
+     */
+    async startCase(processKey, who, domain, tableName = null) {
+        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+
+        let process = processes[processKey];
+
+        if (!process) return;
+
+        //lets get the wf_user_id of the user
+        let user = await this.context.database.table("users").where("id", who.sub).select(['wf_user_id']);
+
+        if (!user.length) return;
+
+        user = user.shift();
+
+        let payload = {};
+        //let get the
+        if (process['saveAs']) {
+            let saveAs = process['saveAs'];
+            for (let key in saveAs) {
+                if (saveAs.hasOwnProperty(key) && domain.hasOwnProperty(key)) payload[saveAs[key]] = domain[key];
+            }
+        }
+
+        payload['SUBMITTER'] = user['wf_user_id'];
+
+        payload = PUtils.buildCaseVars(process['processId'], process['taskStartId'], payload);
+
+        let response = await ProcessAPI.request('/cases', payload, 'POST').catch(err => {
+            console.log(err);
+        });
+
+
+        if (tableName && (response && response['app_uid'])) {
+            this.doAssignment(response['app_uid'], domain);
+        }
+
+        return response;
+    }
+
+
+    async getCase(caseId) {
+        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+
+        return await ProcessAPI.request(`/cases/${caseId}`, null, 'GET').catch(err => {
+            console.log(err);
+        });
+    }
+
+    doAssignment(caseId, domain) {
+        this.context.database.table(tableName).where('id', domain['id'])
+            .update({wf_case_id: caseId}).then(r => console.log(r)).catch(err => console.log(err));
+
+        this.getCase(caseId).then(res => {
+            res = JSON.parse(res);
+            const currentTask = res['current_task'];
+            const date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
+            currentTask.forEach(async task => {
+                //Now lets assign the record to each user
+                //Also lets emit an event that a case has been assigned
+                let user = await this.context.database.table("users").where('wf_user_id', task['usr_uid']).select(['id']);
+
+                if (!user.length) return;
+
+                user = user.shift();
+
+                //lets fetch the record and append the assigned_to
+                let assignedTo = await this.context.database.table(tableName).where("id", domain['id']).select(['assigned_to']);
+
+                if (!assignedTo.length()) return;
+
+                assignedTo = assignedTo.shift();
+
+                if (!assignedTo.assigned_to.find(item => item.id === user.id)) {
+                    assignedTo.push({"id": user.id, created_at: date});
+                }
+
+                this.context.database.table(tableName).where("id", domain['id'])
+                    .update({"assigned_to": assignedTo}).then();
+            });
+        });
     }
 }
 

@@ -211,7 +211,6 @@ class PaymentService {
                             /*
                              * Generate a unique number for this work order
                              **/
-                            console.log(workOrder.assigned_to);
                             let reconnectionOrder = {
                                 "related_to": "disconnection_billings",
                                 "relation_id": workOrder.relation_id,

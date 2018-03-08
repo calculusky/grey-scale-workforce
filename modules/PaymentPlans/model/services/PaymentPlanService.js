@@ -1,41 +1,39 @@
+const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
-const Password = require('../../../../core/Utility/Password');
-// const Util = require('../../../../core/Utility/MapperUtil');
 const Utils = require('../../../../core/Utility/Utils');
+const validate = require('validate-fields')();
+
 /**
- * @name AssetService
+ * @name PaymentPlanService
  * Created by paulex on 8/22/17.
  */
-class AssetService {
+class PaymentPlanService extends ApiService {
 
     constructor(context) {
-        this.context = context;
+        super(context);
         MapperFactory = this.context.modelMappers;
     }
 
-    getName() {
-        return "assetService";
-    }
 
-    getAssets(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
-        const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        var executor = (resolve, reject)=> {
-            AssetMapper.findDomainRecord({by, value}, offset, limit)
+    getPaymentPlans(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+        const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
+        const executor = (resolve, reject) => {
+            PaymentPlanMapper.findDomainRecord({by, value}, offset, limit)
                 .then(result=> {
                     let assets = result.records;
                     let processed = 0;
                     let rowLen = assets.length;
 
-                    assets.forEach(asset=> {
-                        asset.user().then(res=> {
-                            asset.user = res.records.shift();
-                            if (++processed == rowLen)
-                                return resolve(Utils.buildResponse({data: {items: result.records}}));
-                        }).catch(err=> {
-                            return reject(err)
-                        })
-                    })
+                    // assets.forEach(asset=> {
+                    //     asset.user().then(res=> {
+                    //         asset.user = res.records.shift();
+                    //         if (++processed == rowLen)
+                    //             return resolve(Utils.buildResponse({data: {items: result.records}}));
+                    //     }).catch(err=> {
+                    //         return reject(err)
+                    //     })
+                    // })
                 })
                 .catch(err=> {
                     return reject(err);
@@ -48,52 +46,38 @@ class AssetService {
      *
      * @param body
      * @param who
+     * @param API {API}
      */
-    createAsset(body = {}, who = {}) {
-        const Asset = DomainFactory.build(DomainFactory.ASSET);
-        body['api_instance_id'] = who.api;
-        let staff = new Asset(body);
+    createPaymentPlan(body = {}, who = {}, API) {
+        const PaymentPlan = DomainFactory.build(DomainFactory.PAYMENT_PLAN);
+        let paymentPlan = new PaymentPlan(body);
 
+        //enforce the validation
+        let isValid = validate(paymentPlan.rules(), paymentPlan);
+
+        ApiService.insertPermissionRights(paymentPlan, who);
+
+        if (!isValid) {
+            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        }
 
         //Get Mapper
-        const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        return AssetMapper.createDomainRecord(staff).then(staff=> {
-            if (!staff) return Promise.reject();
-            return Utils.buildResponse({data: staff});
+        const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
+        return PaymentPlanMapper.createDomainRecord(paymentPlan).then(paymentPlan => {
+            if (!paymentPlan) return Promise.reject();
+
+            let updateDisc = this.context.database.table("disconnection_billings")
+                .where('id', paymentPlan.disc_order_id).update({has_plan: 1});
+
+            Promise.all([
+                updateDisc,
+                API.workflows().startCase("payment_plan", who, paymentPlan, PaymentPlanMapper.tableName)
+            ]).then();
+
+            return Utils.buildResponse({data: paymentPlan});
         });
     }
 
-
-    /**
-     * We are majorly searching for asset by name
-     * @param keyword
-     * @param offset
-     * @param limit
-     * @returns {Promise.<Customer>}
-     */
-    searchAssets(keyword, offset = 0, limit = 10) {
-        const Customer = DomainFactory.build(DomainFactory.ASSET);
-        let fields = [
-            'id',
-            'asset_type',
-            'asset_type_name',
-            'asset_name',
-            'status',
-            'group_id',
-            'serial_no'
-        ];
-        let resultSets = this.context.database.select(fields).from('assets')
-            .where('asset_name', 'like', `%${keyword}%`).orWhere('asset_type_name', 'like', `%${keyword}%`);
-        resultSets = resultSets.limit(parseInt(limit)).offset(parseInt(offset)).orderBy('asset_name', 'asc');
-        
-        return resultSets.then(results=> {
-            let customers = [];
-            results.forEach(customer=>customers.push(new Customer(customer)));
-            return Utils.buildResponse({data: {items: customers}});
-        }).catch(err=> {
-            return Utils.buildResponse({status: "fail", data: err}, 500);
-        });
-    }
 
     /**
      *
@@ -101,15 +85,15 @@ class AssetService {
      * @param value
      * @returns {*}
      */
-    deleteAsset(by = "id", value) {
-        const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        return AssetMapper.deleteDomainRecord({by, value}).then(count=> {
+    deletePaymentPlan(by = "id", value) {
+        const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
+        return PaymentPlanMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            return Utils.buildResponse({data: {by, message: "Asset deleted"}});
+            return Utils.buildResponse({data: {by, message: "PaymentPlan deleted"}});
         });
     }
 }
 
-module.exports = AssetService;
+module.exports = PaymentPlanService;

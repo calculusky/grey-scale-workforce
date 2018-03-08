@@ -50,6 +50,7 @@ module.exports.validateGuarded = function (payload, guarded = []) {
 module.exports.getMysqlError = function (err) {
     switch (err.errno) {
         case 1452:
+
             return {
                 status: "error",
                 msg: "A related field value doesn't exist. Foreign key constraint",

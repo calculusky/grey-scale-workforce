@@ -105,7 +105,7 @@ exports.request = (endPoint = "", data = {}, method = 'GET') => {
 
         request[method.toLowerCase()](options, (err, res, body) => {
             if (err || ![200, 201, 202].includes(res.statusCode)) {
-                console.log('StatusCode:', res.statusCode);
+                console.log('StatusCode:', res);
                 return reject(err || body);
             }
             return resolve(body || true);

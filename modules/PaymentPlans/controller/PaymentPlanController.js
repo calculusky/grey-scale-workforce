@@ -5,21 +5,28 @@
 const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
+/**
+ *
+ * @param app
+ * @param API {API}
+ * @param jsonParser
+ * @param urlencodedParser
+ */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
-    app.use('/assets*', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/payment_plans*', (req, res, next) => API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
-     * /assets:
+     * /payment_plans:
      *   post:
-     *     summary: Creates an Asset
+     *     summary: Creates an PaymentPlan
      *     description: ''
-     *     tags: [Assets]
+     *     tags: [PaymentPlans]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: createAsset
+     *     operationId: createPaymentPlan
      *     responses:
      *       '200':
      *         description: Successfully Added
@@ -29,11 +36,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        name: 'asset'
      *        required: true
      *        schema:
-     *          $ref: '#/definitions/postAssetInput'
+     *          $ref: '#/definitions/postPaymentPlanInput'
      */
-    app.post('/assets', jsonParser, (req, res)=> {
+    app.post('/payment_plans', jsonParser, (req, res) => {
         console.log(req.body);
-        API.assets().createAsset(req.body, req.who)
+        API.paymentPlans().createPaymentPlan(req.body, req.who)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);
@@ -46,16 +53,16 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /assets:
+     * /payment_plans:
      *   put:
-     *     summary: Updates a Asset
+     *     summary: Updates a PaymentPlan
      *     description: ''
-     *     tags: [Assets]
+     *     tags: [PaymentPlans]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: updateAsset
+     *     operationId: updatePaymentPlan
      *     responses:
      *       '200':
      *         description: Successfully Added
@@ -65,10 +72,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        name: 'asset'
      *        required: true
      *        schema:
-     *          $ref: '#/definitions/postAssetInput'
+     *          $ref: '#/definitions/postPaymentPlanInput'
      */
-    app.put('/assets', jsonParser, (req, res)=> {
-        API.assets().updateAsset(req.body, req.who)
+    app.put('/payment_plans', jsonParser, (req, res) => {
+        API.paymentPlans().updatePaymentPlan(req.body, req.who)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);
@@ -82,27 +89,27 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /assets/user/{user_id}/{offset}/{limit}:
+     * /payment_plans/user/{user_id}/{offset}/{limit}:
      *   get:
-     *     summary: Gets assets assigned to a user
+     *     summary: Gets payment_plans assigned to a user
      *     description: ''
-     *     tags: [Assets]
+     *     tags: [PaymentPlans]
      *     produces:
      *     - application/json
-     *     operationId: getAssetsByUser
+     *     operationId: getPaymentPlansByUser
      *     responses:
      *       '200':
      *         description: Successful
      *         schema:
-     *           $ref: '#/definitions/getAssetOutput'
+     *           $ref: '#/definitions/getPaymentPlanOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/user_id'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/assets/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        return API.assets().getAssets(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
+    app.get('/payment_plans/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res) => {
+        return API.paymentPlans().getPaymentPlans(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -114,27 +121,27 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /assets/{offset}/{limit}:
+     * /payment_plans/{offset}/{limit}:
      *   get:
-     *     summary: Retrieves a List of assets
+     *     summary: Retrieves a List of payment_plans
      *     description: ''
-     *     tags: [Assets]
+     *     tags: [PaymentPlans]
      *     produces:
      *     - application/json
-     *     operationId: getAssets
+     *     operationId: getPaymentPlans
      *     responses:
      *       '200':
      *         description: Successful
      *         schema:
-     *           $ref: '#/definitions/getAssetOutput'
+     *           $ref: '#/definitions/getPaymentPlanOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/assets/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        console.log('/assets/offset/limit');
-        return API.assets().getAssets({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
+    app.get('/payment_plans/:offset?/:limit?', urlencodedParser, (req, res) => {
+        console.log('/payment_plans/offset/limit');
+        return API.paymentPlans().getPaymentPlans({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -146,25 +153,25 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /assets/{id}:
+     * /payment_plans/{id}:
      *   get:
-     *     summary: Retrieves a Single Asset
+     *     summary: Retrieves a Single PaymentPlan
      *     description: ''
-     *     tags: [Assets]
+     *     tags: [PaymentPlans]
      *     produces:
      *     - application/json
-     *     operationId: getAsset
+     *     operationId: getPaymentPlan
      *     responses:
      *       '200':
      *         description: Successful
      *         schema:
-     *           $ref: '#/definitions/getAssetOutput'
+     *           $ref: '#/definitions/getPaymentPlanOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/asset_id'
      */
-    app.get('/assets/:id', urlencodedParser, (req, res)=> {
-        return API.assets().getAssets(req.params['id'], undefined, req.who)
+    app.get('/payment_plans/:id', urlencodedParser, (req, res) => {
+        return API.paymentPlans().getPaymentPlans(req.params['id'], undefined, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -175,14 +182,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /assets/search/{keyword}/{offset}/{limit}:
+     * /payment_plans/search/{keyword}/{offset}/{limit}:
      *   get:
-     *     summary: Search for a asset either by the Asset Name or by an Asset Type
+     *     summary: Search for a asset either by the PaymentPlan Name or by an PaymentPlan Type
      *     description: ''
-     *     tags: [Assets]
+     *     tags: [PaymentPlans]
      *     produces:
      *     - application/json
-     *     operationId: searchAssets
+     *     operationId: searchPaymentPlans
      *     responses:
      *       '200':
      *         description: Successful
@@ -194,9 +201,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/assets/search/:keyword/:offset?/:limit?', urlencodedParser, (req, res)=> {
-        console.log('/assets/search/keyword');
-        return API.assets().searchAssets(req.params['keyword'])
+    app.get('/payment_plans/search/:keyword/:offset?/:limit?', urlencodedParser, (req, res) => {
+        console.log('/payment_plans/search/keyword');
+        return API.paymentPlans().searchPaymentPlans(req.params['keyword'])
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -207,14 +214,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /assets/{id}:
+     * /payment_plans/{id}:
      *  delete:
-     *    summary: Deletes a Asset
-     *    description: "Deletes a Asset"
-     *    tags: [Assets]
+     *    summary: Deletes a PaymentPlan
+     *    description: "Deletes a PaymentPlan"
+     *    tags: [PaymentPlans]
      *    produces:
      *    - application/json
-     *    operationId: deleteAsset
+     *    operationId: deletePaymentPlan
      *    responses:
      *      '200':
      *        description: Returns true with the id of the request deleted
@@ -222,8 +229,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/asset_id'
      */
-    app.delete('/assets/:id', urlencodedParser, (req, res)=> {
-        API.assets().deleteAsset("id", req.params.id)
+    app.delete('/payment_plans/:id', urlencodedParser, (req, res) => {
+        API.paymentPlans().deletePaymentPlan("id", req.params.id)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

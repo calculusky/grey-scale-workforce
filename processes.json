@@ -1,6 +1,10 @@
 {
-  "paymentPlan": {
+  "payment_plan": {
     "processId": "9786593895a8c35b75eac29010710589",
-    "taskStartId": "1827922105a8c35e9589c91028391365"
+    "taskStartId": "1827922105a8c35e9589c91028391365",
+    "saveAs": {
+      "waive_percentage": "PERCENTAGE",
+      "id": "RECORD_ID"
+    }
   }
 }
