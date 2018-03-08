@@ -110,6 +110,7 @@ module.exports.getMysqlError = function (err) {
                 desc: "You maybe need to delete its related entity before trying to delete this record"
             };
         default:
+            console.log(err);
             return {
                 status: "error",
                 msg: "You are doing something wrong",
