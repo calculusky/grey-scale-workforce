@@ -38,9 +38,9 @@ class PaymentPlan extends DomainObject {
 
     rules() {
         return {
-            disc_order_id: 'int',
+            disc_order_id: 'numeric',
             period: String,
-            amount: 'number(100, 90000000)',
+            amount: 'numeric(100, 90000000)',
             waive_percentage: 'numeric'
         };
     }
