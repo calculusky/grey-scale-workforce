@@ -55,6 +55,11 @@ class PaymentPlanService extends ApiService {
         //enforce the validation
         let isValid = validate(paymentPlan.rules(), paymentPlan);
 
+        paymentPlan.amount = parseInt(paymentPlan.amount);
+        paymentPlan.waive_percentage = parseInt(paymentPlan.waive_percentage);
+        paymentPlan.disc_order_id = parseInt(paymentPlan.disc_order_id);
+        paymentPlan.balance = parseFloat(paymentPlan.balance);
+
         ApiService.insertPermissionRights(paymentPlan, who);
 
         if (!isValid) {
