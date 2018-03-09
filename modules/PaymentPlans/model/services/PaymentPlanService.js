@@ -20,7 +20,7 @@ class PaymentPlanService extends ApiService {
         const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
         const executor = (resolve, reject) => {
             PaymentPlanMapper.findDomainRecord({by, value}, offset, limit)
-                .then(result=> {
+                .then(result => {
                     let assets = result.records;
                     let processed = 0;
                     let rowLen = assets.length;
@@ -35,7 +35,7 @@ class PaymentPlanService extends ApiService {
                     //     })
                     // })
                 })
-                .catch(err=> {
+                .catch(err => {
                     return reject(err);
                 });
         };
@@ -51,6 +51,9 @@ class PaymentPlanService extends ApiService {
     createPaymentPlan(body = {}, who = {}, API) {
         const PaymentPlan = DomainFactory.build(DomainFactory.PAYMENT_PLAN);
         let paymentPlan = new PaymentPlan(body);
+
+        //Because of the issue with form data that sends numeric-strings
+        Utils.numericToInteger(paymentPlan, 'waive_percentage', 'amount', 'disc_order_id', 'balance');
 
         //enforce the validation
         let isValid = validate(paymentPlan.rules(), paymentPlan);
@@ -72,7 +75,7 @@ class PaymentPlanService extends ApiService {
             Promise.all([
                 updateDisc,
                 API.workflows().startCase("payment_plan", who, paymentPlan, PaymentPlanMapper.tableName)
-            ]).then();
+            ]).then().catch(e => console.log(e));
 
             return Utils.buildResponse({data: paymentPlan});
         });

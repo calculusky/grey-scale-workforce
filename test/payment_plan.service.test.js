@@ -19,9 +19,10 @@ test("That it rejects if the required fields are not set", async () => {
 
 test("That it resolves after supplying the right fields", () => {
     const paymentPlan = {
-        disc_order_id: 168157,
+        disc_order_id: '168157',
         period: '3M',
-        amount: 4000,
+        amount: '4000',
+        balance: '22596.936',
         waive_percentage: '50'
     };
     return expect(API.paymentPlans().createPaymentPlan(paymentPlan, {sub: 1}, API)).resolves

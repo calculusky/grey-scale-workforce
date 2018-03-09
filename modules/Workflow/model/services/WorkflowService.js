@@ -293,10 +293,7 @@ class WorkflowService {
             console.log(err);
         });
 
-
-        if (tableName && (response && response['app_uid'])) {
-            this.doAssignment(response['app_uid'], domain);
-        }
+        if (tableName && (response && response['app_uid'])) this.doAssignment(response['app_uid'], domain, tableName);
 
         return response;
     }
@@ -310,7 +307,7 @@ class WorkflowService {
         });
     }
 
-    doAssignment(caseId, domain) {
+    doAssignment(caseId, domain, tableName) {
         this.context.database.table(tableName).where('id', domain['id'])
             .update({wf_case_id: caseId}).then(r => console.log(r)).catch(err => console.log(err));
 
@@ -330,16 +327,16 @@ class WorkflowService {
                 //lets fetch the record and append the assigned_to
                 let assignedTo = await this.context.database.table(tableName).where("id", domain['id']).select(['assigned_to']);
 
-                if (!assignedTo.length()) return;
+                if (!assignedTo.length) return;
 
                 assignedTo = assignedTo.shift();
 
                 if (!assignedTo.assigned_to.find(item => item.id === user.id)) {
                     assignedTo.push({"id": user.id, created_at: date});
                 }
-
+                console.log(assignedTo.assigned_to);
                 this.context.database.table(tableName).where("id", domain['id'])
-                    .update({"assigned_to": assignedTo}).then();
+                    .update({"assigned_to": JSON.stringify(assignedTo.assigned_to)}).then();
             });
         });
     }

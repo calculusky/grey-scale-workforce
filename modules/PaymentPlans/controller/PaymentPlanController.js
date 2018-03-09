@@ -33,14 +33,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - in: body
-     *        name: 'asset'
+     *        name: 'paymentPlan'
      *        required: true
      *        schema:
      *          $ref: '#/definitions/postPaymentPlanInput'
      */
     app.post('/payment_plans', jsonParser, (req, res) => {
         console.log(req.body);
-        API.paymentPlans().createPaymentPlan(req.body, req.who)
+        API.paymentPlans().createPaymentPlan(req.body, req.who, API)
             .then(({data, code})=> {
                 console.log(data);
                 return res.status(code).send(data);
