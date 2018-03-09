@@ -274,6 +274,16 @@ module.exports.isWorkOrderNo = function (workOrderNo) {
     return firstChar === 'W' || firstChar === 'D' || firstChar === 'R';
 };
 
+module.exports.numericToInteger = function (body, ...keys) {
+    for (let key in body) {
+        if (body.hasOwnProperty(key) && keys.includes(key)) {
+            let value = Number(body[key]);
+            if (isNaN(value)) continue;
+            body[key] = value;
+        }
+    }
+};
+
 /**
  *
  * @param context {Context}
