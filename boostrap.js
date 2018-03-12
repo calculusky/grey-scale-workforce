@@ -14,12 +14,10 @@ const cors = require('cors');
 
 module.exports = function route(context) {
 
-    //Initialize the API
-    API = new API(context);
-
     /**
      * Configure Express
      * Configure SocketIO
+     *
      */
     const app = express();
 
@@ -27,7 +25,9 @@ module.exports = function route(context) {
     const http = require('http').Server(app);
     const io = require('socket.io')(http);
 
-    //Initialize Events - Socket IO
+    /*-------------------------------------
+    | Initialize Events - Socket IO
+    *--------------------------------------*/
     events.init(context, io, API);
 
     app.set('port', process.env.PORT || 9003);
@@ -63,6 +63,8 @@ module.exports = function route(context) {
         }
     });
 
+    //Initialize the API
+    API = new API(context);
 
     /**
      * Configure the storage options
@@ -116,6 +118,11 @@ module.exports = function route(context) {
             }
         }
     });
+
+    /*-----------------------------------------------
+     | Start the scheduler
+     |----------------------------------------------*/
+    require('./schedulers/main.js')(context, API);
 
 
     /**

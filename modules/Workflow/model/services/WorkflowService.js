@@ -4,6 +4,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const processes = require('../../../../processes.json');
 const ProcessAPI = require('../../../../processes/ProcessAPI');
 const PUtils = ProcessAPI.Utils;
+const EmailEvent = require('../../../../events/EmailEvent');
 const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
 
 /**
@@ -18,12 +19,10 @@ class WorkflowService {
     constructor(context) {
         this.context = context;
         /*TODO username and password should be put in a secret file e.g .env*/
-        this.username = "admin";
+        this.username = "admin@nogic.org";
         this.password = "admin";
-        ProcessAPI.init(context.config.processMaker).login(this.username, this.password).catch(e => {
+        ProcessAPI.init(this.context.config.processMaker).login(this.username, this.password).catch(e => {
             console.log(e);
-            //If we can't reach process maker, let's end the application process
-            process.exit(1);
         });
     }
 
@@ -36,7 +35,7 @@ class WorkflowService {
      * @param retry - determines if this should be retried in-case an error occurs
      */
     async createUser(body = {}, who = {}, retry = true) {
-        if (!ProcessAPI['token']) await ProcessAPI.login("admin@nogic.org", "admin");
+        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
 
         const pUser = toPMUser(body);
 
@@ -101,7 +100,9 @@ class WorkflowService {
             }
 
         } else {
-            console.log("creating this user on process maker because it doesn't have a wf_user_id");
+            // If this user doesn't have a wf_user_id
+            // We can assume that the user doesn't exist
+            // Create the user using the username as the default password
             dbUser.password = dbUser.username;//default password
             response = await this.createUser(dbUser);
         }
@@ -115,7 +116,7 @@ class WorkflowService {
      * @param groupId
      */
     async addUserToGroup(wfUserId, groupId) {
-        if (!ProcessAPI['token']) await ProcessAPI.login("admin@nogic.org", "admin");
+        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
         //first let get the wf_group_id of this group
         let group = await this.context.database.table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
         group = group.shift();
@@ -171,7 +172,7 @@ class WorkflowService {
      * @returns {*}
      */
     async deleteUser(user, retry = true) {
-        if (!ProcessAPI['token']) await ProcessAPI.login("admin@nogic.org", "admin");
+        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
         return await ProcessAPI.request(`/user/${user.wf_user_id}`, null, 'DELETE').catch(err => {
             console.log(err);
             //No matter what happens we can assume this was successful except a network issue
@@ -241,10 +242,11 @@ class WorkflowService {
                 console.log('UpdateGroupProcessMaker:', err);
             });
         } else {
-            //If this dbGroup doesn't have a wf_group_id: lets create the group on process maker
+            // Should in-case the group doesn't have a wf_case_id
+            // We can assume that the group doesn't exist on process maker
+            // So we create it on the background
             response = this.createGroup(dbGroup);
         }
-        console.log(response);
         return response;
     }
 
@@ -263,7 +265,7 @@ class WorkflowService {
      * @returns {Promise<void>}
      */
     async startCase(processKey, who, domain, tableName = null) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        if (!who['pmToken'] && !ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
 
         let process = processes[processKey];
 
@@ -277,7 +279,6 @@ class WorkflowService {
         user = user.shift();
 
         let payload = {};
-        //let get the
         if (process['saveAs']) {
             let saveAs = process['saveAs'];
             for (let key in saveAs) {
@@ -288,11 +289,9 @@ class WorkflowService {
         payload['SUBMITTER'] = user['wf_user_id'];
 
         payload = PUtils.buildCaseVars(process['processId'], process['taskStartId'], payload);
-
-        let response = await ProcessAPI.request('/cases', payload, 'POST').catch(err => {
+        let response = await ProcessAPI.request('/cases', payload, 'POST', who['pmToken']).catch(err => {
             console.log(err);
         });
-
         if (tableName && (response && response['app_uid'])) this.doAssignment(response['app_uid'], domain, tableName);
 
         return response;

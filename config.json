@@ -5,6 +5,13 @@
     "password": "Nigeriasns$1",
     "database": "mr_working"
   },
+  "email": {
+    "secure": false,
+    "auth": {
+      "domain": "info.projectbasket.com.ng",
+      "api_key": "key-47d861c8b04e4a0c32d4f7a7d22cb595"
+    }
+  },
   "storage": {
     "path": "/var/www/html/fsm/storage/app/public",
     "routeStorage": {

@@ -99,7 +99,8 @@ class GroupService extends ApiService {
 
         let date = new Date();
         multi = multi.map(item => {
-            if (item.parent_group_id === item.child_group_id) errors.push("parent_id and child_id cannot be the same");
+            if (item.parent_id === item.child_id) errors.push("parent_id and child_id cannot be the same");
+            Utils.numericToInteger(item, "parent_id", "child_id");
             if (validate({'parent_id': 'int', 'child_id': 'int'}, item))
                 return {
                     'parent_group_id': item['parent_id'],

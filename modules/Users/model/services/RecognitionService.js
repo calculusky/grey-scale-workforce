@@ -9,6 +9,7 @@ let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
 const jwt = require("jsonwebtoken");
 const Util = require('../../../../core/Utility/Utils');
+const ProcessAPI = require('../../../../processes/ProcessAPI');
 const useragent = require('useragent');
 
 /**
@@ -25,11 +26,11 @@ class RecognitionService {
         return "recognitionService";
     }
 
-    login(username, password, req) {
+    async login(username, password, req) {
         const userAgent = useragent.parse(req.headers['user-agent']);
         //TODO make use of the device key sent along the request payload console.log(req.headers['device']);
         // const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        
+
         let isMobile = Util.isMobile(userAgent.family);
 
         let [valid, , cMsg] = Util.validatePayLoad({username, password}, ["username", "password"]);
@@ -45,10 +46,10 @@ class RecognitionService {
             }, 400));
         }
 
-        const executor = (resolve, reject)=> {
+        const executor = (resolve, reject) => {
             const UserMapper = MapperFactory.build(MapperFactory.USER);
             UserMapper.findDomainRecord({by: "*_and", value: {username}})
-                .then(({records})=> {
+                .then(async ({records}) => {
                     if (!records.length) {
                         return reject(Util.buildResponse({status: "fail", data: Util.authFailData("AUTH_CRED")}, 401));
                     }
@@ -61,22 +62,34 @@ class RecognitionService {
                     //For Mobile we are giving 4months before token will expire
                     //but this token must be tied to the same user-agent and device
                     const tokenExpiry = (isMobile) ? 3600 * 3600 : 3600 * 3600;//TODO limit the time
+
+                    //Login to process maker
+                    const {access_token, refresh_token} = await ProcessAPI.login(username, password).catch(e => {
+                        console.log('UserPMLogin', e);
+                    });
+
                     //TODO add permissions
                     const tokenOpt = {
                         sub: user.id,
                         aud: `${userAgent.family}`,
                         exp: Math.floor(Date.now() / 1000) + tokenExpiry,
                         name: user.username,
-                        group: user.group_id
+                        group: user.group_id,
+                        pmToken: {access_token, refresh_token}
                     };
 
+                    console.log(tokenOpt);
+
+                    //TODO use a better secret
                     let token = jwt.sign(tokenOpt, "mySecretKeyFile");
+
                     //Set up the token on redis server
                     this.context.persistence.set(token, true, 'EX', tokenExpiry);
 
                     delete user.firebase_token;
+
                     return resolve(Util.buildResponse({data: {token, user}}));
-                }).catch(err=> {
+                }).catch(err => {
                 return reject(Util.buildResponse({
                     status: "error", msg: "An internal server error occurred.", type: "Server",
                     code: `${err.errno || err.name} - ${err.code}`
@@ -123,7 +136,7 @@ class RecognitionService {
             isRoute: false
         };
         if (token) {
-            this.context.persistence.get(token, (err, v)=> {
+            this.context.persistence.get(token, (err, v) => {
                 /*
                  * Check if the token exist on redis and the value is true.
                  * Can we assume that there wouldn't be any form off error here? No
@@ -131,8 +144,8 @@ class RecognitionService {
                  * So we should send 500 when there is an error
                  **/
                 if (err) return res.status(500).send();
-                if (!v || v !== 'true')  return res.status(401).send(Util.buildResponse(unAuthMsg));
-                jwt.verify(token, 'mySecretKeyFile', (err, decoded)=> {
+                if (!v || v !== 'true') return res.status(401).send(Util.buildResponse(unAuthMsg));
+                jwt.verify(token, 'mySecretKeyFile', (err, decoded) => {
                     if (err) return res.status(401).send(Util.buildResponse({
                         status: 'fail',
                         data: Util.jwtTokenErrorMsg(err),

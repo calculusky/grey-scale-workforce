@@ -56,7 +56,6 @@ exports.login = (username, password, options = {grantType: 'password'}) => {
             //The api should persist the token for the user
             if (res.statusCode !== 200) return reject(body);
             else if (body.error) return reject(body.error);
-
             return (this.token = body) && resolve(this.token);
         });
     };
@@ -68,8 +67,9 @@ exports.login = (username, password, options = {grantType: 'password'}) => {
  * @param endPoint
  * @param data
  * @param method
+ * @param token
  */
-exports.request = (endPoint = "", data = {}, method = 'GET') => {
+exports.request = (endPoint = "", data = {}, method = 'GET', token = null) => {
     // If the token is null, we can retry a re-login
     // but i assume we have to get the username and password --- hmmm
     if (!this.token) {
@@ -80,10 +80,15 @@ exports.request = (endPoint = "", data = {}, method = 'GET') => {
     //Check if the endpoint starts with a slash
     if (endPoint.substring(0, endPoint.length - (endPoint.length - 1)) !== '/') endPoint = `/${endPoint}`;
 
+    //Check the token supplied
+    const _token = (token && token['access_token']) ? token['access_token'] : this.token['access_token'];
+
+    if (!_token) throw new Error('You should login to obtain a toke first');
+
     const executor = (resolve, reject) => {
         const options = {
             url: `${this.baseUrl}/api/${this.apiVersion}/${this.workSpace}${endPoint}`,
-            headers: {"Authorization": `Bearer ${this.token['access_token']}`},
+            headers: {"Authorization": `Bearer ${_token}`},
             json: data,
             timeout: 1500
         };

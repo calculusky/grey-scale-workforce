@@ -5,13 +5,13 @@ const fs = require("fs");
 const cron = require('node-schedule');
 const Excel = require('exceljs');
 const Utils = require('../core/Utility/Utils');
-let API = require('../API.js');
+let API = null;
 
 
-module.exports = function main(context) {
+module.exports = function main(context, Api) {
     this.context = context;
 
-    API = new API(context);
+    API = Api;
 
     //lock.d for delinquency list, lock.c for customer
     this.lock = {d: false};

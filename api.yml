@@ -1095,3 +1095,77 @@ definitions:
             type: array
           data:
             type: array
+
+
+  PaymentPlan:
+    type: object
+    properties:
+      id:
+        type: integer
+      disc_order_id:
+        type: integer
+      period:
+        type: string
+      amount:
+        type: number
+        format: float
+      balance:
+        type: integer
+      approval_status:
+        type: integer
+      approved_by:
+        type: integer
+      status:
+        type: integer
+      waive_percentage:
+        type: integer
+      assigned_to:
+        type: array
+      group_id:
+        type: integer
+      created_by:
+        type: integer
+      created_at:
+        type: string
+        format: date
+      updated_at:
+        type: string
+        format: date
+
+  postPaymentPlanInput:
+    type: object
+    required:
+    - disc_order_id
+    - amount
+    - waive_percentage
+    - period
+    properties:
+      disc_order_id:
+        type: integer
+        description: ""
+      period:
+        type: string
+        description: "The Key or Unique ID supplied by the Payer for this payment"
+      amount:
+        type: number
+        format: float
+      waive_percentage:
+        type: number
+      balance:
+        type: number
+        format: float
+
+  getPaymentPlanOutput:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/definitions/PaymentPlan'
+    required:
+    - status

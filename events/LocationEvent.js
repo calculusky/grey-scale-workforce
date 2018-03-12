@@ -6,14 +6,22 @@ const nUtils = require('util');
 
 class LocationEvent extends EventEmitter{
 
-    constructor(context, io, API){
+    constructor() {
         super();
+        this.on('update_location', this.broadcastLocation);
+    }
+
+    /**
+     *
+     * @param context {Context}
+     * @param io
+     * @param API {API}
+     */
+    init(context, io, API) {
         this.context = context;
         this.io = io;
         this.api = API;
         this.name = "Paul Okeke";
-        
-        this.on('update_location', this.broadcastLocation);
     }
     
     broadcastLocation(data){
@@ -30,5 +38,5 @@ class LocationEvent extends EventEmitter{
     
 }
 
-module.exports = LocationEvent;
+module.exports = new LocationEvent();
 
