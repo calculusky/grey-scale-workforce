@@ -76,56 +76,44 @@ class RoleService extends ApiService {
      * @param who
      * @param API
      */
-    addUserToRole(roleId, userId, who = {}, API) {
-        let user_roles = {
-            role_id: (!isNaN(roleId)) ? parseInt(roleId) : roleId,
-            user_id: userId,
-        };
+    async addUserToRole(roleId, userId, who = {}, API) {
+        let user_roles = {role_id: roleId, user_id: userId,};
+
+        Utils.numericToInteger(user_roles, 'role_id', 'user_id');
+
         const isValid = validate({user_id: 'int', role_id: 'int'}, user_roles);
 
         if (!isValid) return Promise.reject(Utils.buildResponse({
-                status: "fail", data: {message: validate.lastError}
-            }, 400)
-        );
+            status: "fail",
+            data: {message: validate.lastError}
+        }, 400));
 
-        let date = new Date();
-        user_roles.created_at = Utils.date.dateToMysql(date, 'YYYY-MM-DD H:m:s');
-        user_roles.updated_at = Utils.date.dateToMysql(date, 'YYYY-MM-DD H:m:s');
+        let date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
+        user_roles.created_at = date;
+        user_roles.updated_at = date;
 
-        //Actually we need to check if the roleId exist and the userId exist
-        const executor = (resolve, reject) => {
-            let userExist = this.context.database.table("users").count("id as count").where("id", userId);
-            let roleExist = this.context.database.table("roles").count("id as count").where("id", roleId);
-            Promise.all([userExist, roleExist]).then(values => {
-                let userCount = values.shift().shift();
-                let roleCount = values.shift().shift();
-                if (!userCount.count || !roleCount.count)
-                    return reject(Utils.buildResponse({
-                        status: "fail", data: {
-                            message: `The ${(!userCount && !roleCount)
-                                ? "The user_id and the role_id specified doesn't exist"
-                                : (!userCount) ? "The user_id specified doesn't exist"
-                                    : "The role_id specified doesn't exist."}`
-                        }
-                    }, 400));
+        const db = this.context.database;
+        const resp = await db.table("role_users").insert(user_roles).catch(console.error);
 
-                this.context.database.table("role_users").insert(user_roles)
-                    .then(res => {
-                        return resolve(Utils.buildResponse({data: res}));
-                    })
-                    .catch(err => {
-                        //if the record already exist we should still return a success message
-                        if (err.errno === 1062) return resolve(Utils.buildResponse({
-                                msg: "Record already exist",
-                                code: "DUPLICATE"
-                            })
-                        );
-                        return reject(Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400));
-                    });
-            });
+        return Utils.buildResponse({data: resp});
+    }
 
-        };
-        return new Promise(executor);
+    /**
+     *
+     * @param userId
+     * @param oldRoleId
+     * @param body
+     * @param who
+     * @param API {API}
+     * @returns {Promise<void>|*}
+     */
+    async updateUserRole(userId, oldRoleId, body = {role_id: null}, who = {}, API) {
+        if (oldRoleId === body.role_id) return true;
+        const db = this.context.database;
+        let date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
+        const user_roles = {'role_id': body.role_id, updated_at: date};
+        return await db.table("role_users").where('role_id', oldRoleId)
+            .where('user_id', userId).update(user_roles).catch(console.error);
     }
 
     async detachUserFromRole(roleId, userId, who = {}) {

@@ -64,24 +64,26 @@ class RecognitionService {
                     const tokenExpiry = (isMobile) ? 3600 * 3600 : 3600 * 3600;//TODO limit the time
 
                     //Login to process maker
-                    const {access_token, refresh_token} = await ProcessAPI.login(username, password).catch(e => {
+                    const pmToken = await ProcessAPI.login(username, password).catch(e => {
                         console.log('UserPMLogin', e);
                     });
-
                     //TODO add permissions
+                    //TODO load the right user group
+                    // const userGroup = await user.groups();
+
                     const tokenOpt = {
                         sub: user.id,
                         aud: `${userAgent.family}`,
                         exp: Math.floor(Date.now() / 1000) + tokenExpiry,
                         name: user.username,
                         group: user.group_id,
-                        pmToken: {access_token, refresh_token}
+                        pmToken
                     };
 
                     console.log(tokenOpt);
 
                     //TODO use a better secret
-                    let token = jwt.sign(tokenOpt, "mySecretKeyFile");
+                    let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
 
                     //Set up the token on redis server
                     this.context.persistence.set(token, true, 'EX', tokenExpiry);
@@ -90,6 +92,7 @@ class RecognitionService {
 
                     return resolve(Util.buildResponse({data: {token, user}}));
                 }).catch(err => {
+                console.log(err);
                 return reject(Util.buildResponse({
                     status: "error", msg: "An internal server error occurred.", type: "Server",
                     code: `${err.errno || err.name} - ${err.code}`
@@ -145,7 +148,7 @@ class RecognitionService {
                  **/
                 if (err) return res.status(500).send();
                 if (!v || v !== 'true') return res.status(401).send(Util.buildResponse(unAuthMsg));
-                jwt.verify(token, 'mySecretKeyFile', (err, decoded) => {
+                jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
                     if (err) return res.status(401).send(Util.buildResponse({
                         status: 'fail',
                         data: Util.jwtTokenErrorMsg(err),

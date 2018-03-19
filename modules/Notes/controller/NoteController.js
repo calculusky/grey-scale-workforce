@@ -9,7 +9,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     app.use('/notes', (req, res, next)=>API.recognitions().auth(req, res, next));
 
     /**
-     * @swag
+     * @swagger
      * /notes:
      *   post:
      *     summary: Creates a Note
@@ -26,16 +26,16 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     parameters:
      *      - $ref: '#/parameters/sessionId'
      *      - in: body
-     *        name: 'fault'
+     *        name: 'note'
      *        required: true
      *        schema:
      *          $ref: '#/definitions/postNoteInput'
      */
     app.post('/notes', multiPart.array("files", 5), (req, res)=> {
         console.log(req.body);
-        API.notes().createNote(req.body, req.who)
+        API.notes().createNote(req.body, req.who, req.files, API)
             .then(({data, code})=> {
-                console.log(data);
+                // console.log(data);
                 return res.status(code).send(data);
             })
             .catch(({err, code})=> {

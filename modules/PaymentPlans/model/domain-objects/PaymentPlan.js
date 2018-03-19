@@ -46,7 +46,7 @@ class PaymentPlan extends DomainObject {
     }
 
     disconnection() {
-        return this.relations().belongsTo("DisconnectionOrder", "disc_order_id");
+        return this.relations().belongsTo("DisconnectionBilling", "disc_order_id");
     }
 }
 

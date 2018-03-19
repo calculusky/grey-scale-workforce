@@ -1,7 +1,7 @@
 /**
  * Created by paulex on 10/18/17.
  */
-module.exports.init = function (context, io, API) {
+exports.init = function (context, io, API) {
     this.eventListeners = [];
     this.sharedData = {};
 
@@ -15,9 +15,11 @@ module.exports.init = function (context, io, API) {
         eventListenersPath.forEach(listener => {
             try {
                 let EventListener = require(listener);
-                this.eventListeners.push(EventListener.init(context, io, API, sharedData));
+                //Just in-case the init function doesn't return an object(this)
+                this.eventListeners.push(EventListener.init(context, io, API, sharedData) || EventListener);
             } catch (e) {
                 //File not found
+                console.log(e);
             }
         });
     };
@@ -43,6 +45,12 @@ module.exports.init = function (context, io, API) {
         });
 
         console.log("I'm connected as i am");
+    });
+};
+
+exports.emit = function (eventName, ...args) {
+    this.eventListeners.forEach(listener => {
+        if (listener) listener.emit(eventName, ...args)
     });
 };
 

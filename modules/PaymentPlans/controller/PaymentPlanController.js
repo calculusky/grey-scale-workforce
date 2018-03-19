@@ -89,6 +89,101 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
+     * /payment_plans/{id}:
+     *   get:
+     *     summary: Retrieves a Single PaymentPlan
+     *     description: ''
+     *     tags: [PaymentPlans]
+     *     produces:
+     *     - application/json
+     *     operationId: getPaymentPlan
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getPaymentPlanOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/asset_id'
+     */
+    app.get('/payment_plans/:id', urlencodedParser, (req, res) => {
+        return API.paymentPlans().getPaymentPlans(req.params['id'], undefined, req.who)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
+     * /payment_plans/{id}/approve:
+     *   put:
+     *     summary: Use to approve a payment plan
+     *     description: ''
+     *     tags: [PaymentPlans]
+     *     produces:
+     *     - application/json
+     *     operationId: approvePaymentPlan
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/approvePaymentPlan'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/payment_plan_id'
+     *     - name: 'payment_plan_approval'
+     *       in: body
+     *       required: true
+     *       schema:
+     *        $ref: '#/definitions/paymentPlanApprovalInput'
+     */
+    app.put('/payment_plans/:id/approve', urlencodedParser, (req, res) => {
+        return API.paymentPlans().approvePaymentPlan(req.params['id'], req.body, req.who, API)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            }).catch(({err, code}) => {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
+     * /payment_plans/{id}/reject:
+     *   put:
+     *     summary: Use to reject a payment plan
+     *     description: ''
+     *     tags: [PaymentPlans]
+     *     produces:
+     *     - application/json
+     *     operationId: approvePaymentPlan
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/rejectPaymentPlan'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/payment_plan_id'
+     *     - name: 'payment_plan_approval'
+     *       in: body
+     *       required: true
+     *       schema:
+     *        $ref: '#/definitions/paymentPlanApprovalInput'
+     */
+    app.put('/payment_plans/:id/reject', urlencodedParser, (req, res) => {
+        return API.paymentPlans().rejectPaymentPlan(req.params['id'], req.who, API)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            }).catch(({err, code}) => {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
      * /payment_plans/user/{user_id}/{offset}/{limit}:
      *   get:
      *     summary: Gets payment_plans assigned to a user
@@ -150,35 +245,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
-
-    /**
-     * @swagger
-     * /payment_plans/{id}:
-     *   get:
-     *     summary: Retrieves a Single PaymentPlan
-     *     description: ''
-     *     tags: [PaymentPlans]
-     *     produces:
-     *     - application/json
-     *     operationId: getPaymentPlan
-     *     responses:
-     *       '200':
-     *         description: Successful
-     *         schema:
-     *           $ref: '#/definitions/getPaymentPlanOutput'
-     *     parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/asset_id'
-     */
-    app.get('/payment_plans/:id', urlencodedParser, (req, res) => {
-        return API.paymentPlans().getPaymentPlans(req.params['id'], undefined, req.who)
-            .then(({data, code})=> {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
-                return res.status(code).send(err);
-            });
-    });
 
     /**
      * @swagger

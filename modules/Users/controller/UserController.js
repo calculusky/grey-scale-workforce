@@ -216,7 +216,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.put("/users/:id", jsonParser, (req, res)=> {
         Log.info("updateUser:", req.body);
-        API.users().updateUser('id', req.params['id'], req.body, API)
+        API.users().updateUser('id', req.params['id'], req.body, req.who, API)
             .then(({data, code=200})=> {
                 console.log('success', data);
                 return res.status(code).send(data);

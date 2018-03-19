@@ -1,6 +1,7 @@
 /**
  * Created by paulex on 7/11/17.
  */
+require('dotenv').config();
 let API = require('../API');
 
 const config = require('../config.json');
@@ -87,7 +88,7 @@ test("That we can register an fcm_token", () => {
 
 describe('Updating User', () => {
     test('Update a user', () => {
-        return expect(API.users().updateUser('id', 1, {first_name: "Bolanle", roles: 1, group_id: 3}, API)).resolves
+        return expect(API.users().updateUser('id', 1, {first_name: "Bolanle", roles: 1, group_id: 3}, {}, API)).resolves
             .toEqual(expect.objectContaining({
                 code: expect.any(Number)
             }))

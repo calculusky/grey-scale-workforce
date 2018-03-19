@@ -35,7 +35,9 @@ class User extends DomainObject {
     guard() {
         return [
             'id',
-            'roles'
+            'roles',
+            'old_group_id',
+            'user_group_id'
         ];
     }
 
@@ -60,6 +62,14 @@ class User extends DomainObject {
 
     async roles(){
         return this.relations().belongsToMany('Role', 'role_users', 'user_id', 'role_id');
+    }
+
+    async userGroups() {
+        return this.relations().belongsToMany('Group', 'user_groups', 'user_id', 'group_id');
+    }
+
+    async group() {
+
     }
 }
 

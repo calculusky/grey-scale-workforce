@@ -74,6 +74,9 @@ class NotificationService {
             notification.to = `[${notification.to}]`;
         }
 
+        //TODO we only have this here currently because group:column can't be null
+        notification.group = "[]";
+
         let fcmTokens = [];
         let processed = 0;
 

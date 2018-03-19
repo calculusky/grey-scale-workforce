@@ -6,6 +6,7 @@ const ctx = new Context(config);
 API = new API(ctx);
 
 
+
 test("That createGroup is defined", () => {
     return expect(API.groups().createGroup()).toBeDefined();
 });
@@ -49,6 +50,16 @@ describe("Linking Groups", () => {
     });
 });
 
+describe("Add user to group:user_groups", () => {
+
+    it("Should reject if the required keys are empty", () => {
+        return expect(API.groups().addUserToGroup({}, {sub: 1})).rejects.toEqual({});
+    });
+
+    it("Should resolve and add a user to the group", () => {
+        return expect(API.groups().addUserToGroup({user_id: 1, group_id: 1}, {sub: 1})).rejects.toEqual({});
+    });
+});
 
 describe("Update Groups", () => {
 

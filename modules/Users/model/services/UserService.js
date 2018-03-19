@@ -43,7 +43,7 @@ class UserService extends ApiService {
      * @param who
      * @param API {API}
      */
-    createUser(body = {}, who = {}, API) {
+    async createUser(body = {}, who = {}, API) {
         const User = DomainFactory.build(DomainFactory.USER);
         const password = body['password'];
         let user = new User(body);
@@ -52,27 +52,43 @@ class UserService extends ApiService {
         //enforce the validation
         let isValid = validate(user.rules(), user);
 
+        let group_id = null;
+        //if the group_id is set, it means we are adding this user to a group
+        // We'll be setting the group that created this user when we call :insertPermissionRights
+        if (user.group_id) {
+            group_id = user.group_id;
+            delete user.group_id;
+        }
+
         ApiService.insertPermissionRights(user, who);
 
         if (!isValid) {
             return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
 
-        if (user.password) {
-            //replace the password prefix as well for laravel's sake
-            user.setPassword(Password.encrypt(user.password).hash.replace("$2a$", "$2y$"));
-        }
-        const UserMapper = MapperFactory.build(MapperFactory.USER);
+        delete user.password;
 
+        //Create the user on process maker first
+        const pmUser = await API.workflows().createUser(Object.assign({password: password}, user), who).catch(err => {
+            return Promise.reject(err);
+        });
+
+        user['wf_user_id'] = pmUser['USR_UID'];
+
+        //replace the password prefix as well for laravel's sake
+        user.setPassword(Password.encrypt(password).hash.replace("$2a$", "$2y$"));
+
+        const UserMapper = MapperFactory.build(MapperFactory.USER);
         return UserMapper.createDomainRecord(user).then(user => {
             if (!user) return Promise.reject();
-            delete user.password;
-            const backgroundTask = [
-                API.activations().activateUser(user.id, who),
-                API.workflows().createUser(Object.assign({password: password}, user), who)
-            ];
+            const backgroundTask = [API.activations().activateUser(user.id, who)];
             if (body.roles) backgroundTask.push(API.roles().addUserToRole(body.roles, user.id));
-            Promise.all(backgroundTask).then().catch(err => console.log('OBOI', err));
+
+            if (group_id) {
+                const userGroup = {group_id, user_id: user.id, wf_user_id: user['wf_user_id']};
+                backgroundTask.push(API.groups().addUserToGroup(userGroup, who, API));
+            }
+            Promise.all(backgroundTask).catch(err => console.error('CreateUser', err));
             return Utils.buildResponse({data: user});
         });
     }
@@ -146,41 +162,36 @@ class UserService extends ApiService {
      * @param by
      * @param value
      * @param body
+     * @param who
      * @param API {API}
      * @returns {Promise.<User>|*}
      */
-    async updateUser(by, value, body = {}, API) {
+    async updateUser(by, value, body = {}, who, API) {
         const User = DomainFactory.build(DomainFactory.USER);
-        let user = new User(body);
         const UserMapper = MapperFactory.build(MapperFactory.USER);
+        const role_id = body['roles'];
+        let user = new User(body);
+        let group_id = null;
 
-        //The only reason we are checking here is basically because we need to get the previous group_id
-        //So we can tell process maker if the user needs to be removed from the previous group and added to a new one
-        //Else this line is redundant and annoying
-        let userExist = await this.context.database.table("users").where(by, value).select(['group_id']);
+        //We shouldn't override the group that created the user
+        if (body.group_id) (group_id = body.group_id) && (delete user.group_id);
 
-        if (!userExist.length) return Promise.reject(Utils.buildResponse({
-            status: "fail",
-            msg: "record doesn't exist"
-        }, 404));
-
+        Utils.numericToInteger(body, 'roles', 'group_id');
 
         return UserMapper.updateDomainRecord({value, domain: user}).then(async (result) => {
             if (result.pop()) {
                 user[by] = value;
-                if (body['roles']) {
-                    let roles = await user.roles();
-                    if (roles.records.length) {
-                        roles = roles.records.shift();
-                        await API.roles().detachUserFromRole(roles.id, user.id);
-                    }
-                    await API.roles().addUserToRole(body['roles'], user.id);
+                if (role_id) {
+                    let roles = await user.roles(), role = roles.records.shift();
+                    if (role) API.roles().updateUserRole(user.id, role.id, {role_id}, who, API).catch(console.error);
+                    else API.roles().addUserToRole(role_id, user.id).catch(this.console.error);
                 }
-
-                user['old_group_id'] = userExist.shift()['group_id'];
-
-                API.workflows().updateUser(by, value, user).then().catch(err => console.log(err));
-
+                if (group_id) {
+                    let userGroups = await user.userGroups(), group = userGroups.records.pop();
+                    if (userGroups.records.length) user['old_group_id'] = group.id;
+                    API.groups().updateUserGroup(user.id, group.id, {group_id}, who, API).catch(console.error);
+                }
+                API.workflows().updateUser(by, value, user).catch(console.error);
                 return Utils.buildResponse({data: result.shift()});
             } else {
                 return Promise.reject(Utils.buildResponse({status: "fail", data: result.shift()}, 404));
@@ -209,7 +220,6 @@ class UserService extends ApiService {
             data: {message: "The specified record doesn't exist"}
         }, 404);
 
-        console.log("I got here");
         return UserMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {
                 return Utils.buildResponse({
@@ -217,7 +227,7 @@ class UserService extends ApiService {
                     data: {message: "The specified record doesn't exist"}
                 }, 404);
             }
-            API.workflows().deleteUser(user.shift());
+            API.workflows().deleteUser(user.shift()).catch(console.error);
             return Utils.buildResponse({data: {message: "User deleted"}});
         });
     }

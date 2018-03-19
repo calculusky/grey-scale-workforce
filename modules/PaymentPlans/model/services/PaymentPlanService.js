@@ -3,6 +3,7 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validate-fields')();
+const Events = require('../../../../events/events');
 
 /**
  * @name PaymentPlanService
@@ -21,34 +22,36 @@ class PaymentPlanService extends ApiService {
         const executor = (resolve, reject) => {
             PaymentPlanMapper.findDomainRecord({by, value}, offset, limit)
                 .then(result => {
-                    let assets = result.records;
+                    let paymentPlans = result.records;
                     let processed = 0;
-                    let rowLen = assets.length;
-
-                    // assets.forEach(asset=> {
-                    //     asset.user().then(res=> {
-                    //         asset.user = res.records.shift();
-                    //         if (++processed == rowLen)
-                    //             return resolve(Utils.buildResponse({data: {items: result.records}}));
-                    //     }).catch(err=> {
-                    //         return reject(err)
-                    //     })
-                    // })
+                    let rowLen = paymentPlans.length;
+                    paymentPlans.forEach(async plan => {
+                        const disconnection = await plan.disconnection();
+                        plan['disconnection'] = disconnection.records.shift() || {};
+                        //We need to humanize the work order number
+                        if (Object.keys(plan['disconnection']).length > 0) {
+                            plan['disconnection']['work_order_id'] = Utils.humanizeUniqueSystemNumber(
+                                plan['disconnection']['work_order_id']
+                            );
+                        }
+                        if (++processed === rowLen) return resolve(Utils.buildResponse({data: {items: paymentPlans}}));
+                    });
                 })
                 .catch(err => {
-                    return reject(err);
+                    return reject(Utils.buildResponse({status: "fail", data: err}, 500));
                 });
         };
-        return new Promise(executor)
+        return new Promise(executor);
     }
 
     /**
+     * Creates a payment plan
      *
      * @param body
      * @param who
      * @param API {API}
      */
-    createPaymentPlan(body = {}, who = {}, API) {
+    async createPaymentPlan(body = {}, who = {}, API) {
         const PaymentPlan = DomainFactory.build(DomainFactory.PAYMENT_PLAN);
         let paymentPlan = new PaymentPlan(body);
 
@@ -64,21 +67,155 @@ class PaymentPlanService extends ApiService {
             return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
 
-        //Get Mapper
         const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
+
+        // We need to check if a pending or an approved payment plan already exist for this disconnection
+        // We shouldn't create a payment plan if either of an approved payment_plan or pending payment plan exist.
+        let planExist = await this.context.database.table(PaymentPlanMapper.tableName)
+            .where('disc_order_id', paymentPlan.disc_order_id).where(function () {
+                this.where('approval_status', 0).orWhere('approval_status', 1);
+            }).select(['approval_status']);
+
+        if (planExist.length) {
+            const approvalStatus = planExist.shift()['approval_status'];
+            const res = Utils.buildResponse({
+                status: "fail",
+                data: {
+                    message: `${
+                        (approvalStatus === 1)
+                            ? "An approved"
+                            : "A pending"
+                        } payment plan already exist for this disconnection`,
+                    code: "DUPLICATE_PAYMENT_PLAN"
+                }
+            }, 400);
+            console.log(res);
+            return Promise.reject(res);
+        }
+
         return PaymentPlanMapper.createDomainRecord(paymentPlan).then(paymentPlan => {
             if (!paymentPlan) return Promise.reject();
 
-            let updateDisc = this.context.database.table("disconnection_billings")
-                .where('id', paymentPlan.disc_order_id).update({has_plan: 1});
-
-            Promise.all([
-                updateDisc,
+            const discId = paymentPlan.disc_order_id;
+            let backgroundTask = [
+                this.context.database.table("disconnection_billings").where('id', discId).update({has_plan: 1}),
                 API.workflows().startCase("payment_plan", who, paymentPlan, PaymentPlanMapper.tableName)
-            ]).then().catch(e => console.log(e));
-
+            ];
+            Promise.all(backgroundTask).then().catch(e => console.log(e));
             return Utils.buildResponse({data: paymentPlan});
         });
+    }
+
+
+    /**
+     *
+     * @param planId
+     * @param body
+     * @param who
+     * @param API {API}
+     * @returns {Promise<>|*}
+     */
+    async approvePaymentPlan(planId, {comments}, who, API) {
+        //check and retrieve the wf_case_id of the payment plan
+        let paymentPlan = await this.context.database.table("payment_plans").where('id', planId)
+            .select(['id', 'wf_case_id', 'assigned_to']);
+
+        if (!paymentPlan.length) {
+            const res = Utils.buildResponse({status: "fail", data: {message: "Payment Plan doesn't exist"}}, 400);
+            return Promise.reject(res);
+        }
+
+        paymentPlan = paymentPlan.shift();
+
+        const _command = {"COMMAND": "APPROVE"};
+
+        const approve = await API.workflows().resume(paymentPlan.wf_case_id, comments, _command, who).catch(err => {
+            console.log('PaymentPlanApproval', err);
+            return Promise.reject(Utils.buildResponse({
+                status: 'fail', data: {
+                    message: "This payment plan has already been approved"
+                }
+            }, 400));
+        });
+
+        // If the task has already been completed or a task doesn't exist
+        // 1 is returned; so we should ignore the comments
+        if (approve !== 1) {
+            // Set the approval_status to approved
+            // We can as well choose to notify the user who created it that it has been approved
+            this.context.database.table("payment_plans").where("id", planId).update({
+                approval_status: 1,
+                approved_by: who.sub,
+                approval_date: Utils.date.dateToMysql()
+            }).then().catch(console.error);
+
+            if (comments.length) {
+                API.notes().createNote({
+                    relation_id: planId,
+                    module: 'payment_plans',
+                    note: `Payment Plan Approval : ${comments}`
+                }, who).then(console.log).catch(console.error);
+            }
+            Events.emit("payment_plan_approval", paymentPlan.id, who);
+        }
+        return Utils.buildResponse({data: paymentPlan});
+    }
+
+
+    /**
+     * Rejects a payment plan
+     *
+     * @param planId
+     * @param body
+     * @param who
+     * @param API {API}
+     * @returns {Promise<>|*}
+     */
+    async rejectPaymentPlan(planId, {comments}, who, API) {
+        let paymentPlan = await this.context.database.table("payment_plans").where('id', planId)
+            .select(['id', 'wf_case_id', 'assigned_to']);
+
+        if (!paymentPlan.length) {
+            const res = Utils.buildResponse({status: "fail", data: {message: "Payment Plan doesn't exist"}}, 400);
+            return Promise.reject(res);
+        }
+
+        paymentPlan = paymentPlan.shift();
+
+        const _command = {"COMMAND": "REJECT"};
+
+        const reject = await API.workflows().resume(paymentPlan.wf_case_id, comments, _command, who).catch(err => {
+            console.log('PaymentPlanRejection', err);
+            return Promise.reject(Utils.buildResponse({
+                status: 'fail', data: {
+                    message: "This payment plan has already been rejected"
+                }
+            }, 400));
+        });
+
+        // If the task has already been completed or a task doesn't exist
+        // 1 is returned; so we should ignore the comments
+        if (reject !== 1) {
+            // Set the approval_status to approved
+            // We can as well choose to notify the user who created it, that it has been approved
+            this.context.database.table("payment_plans").where("id", planId).update({
+                approval_status: -1
+            }).then().catch(console.error);
+
+            if (comments.length) {
+                API.notes().createNote({
+                    relation_id: planId,
+                    module: 'payment_plans',
+                    note: `Payment Plan Rejection : ${comments}`
+                }, who).then(console.log).catch(console.error);
+            }
+            Events.emit("payment_plan_approval", paymentPlan.id, who, false);
+        }
+        return Utils.buildResponse({data: paymentPlan});
+    }
+
+    updatePaymentPlan() {
+
     }
 
 

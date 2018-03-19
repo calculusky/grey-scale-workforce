@@ -8,7 +8,7 @@ const request = require('request');
  *
  * @param config
  * @param options
- * @returns {ProcessAPI}
+ * @returns {ProcessAPI|*}
  */
 exports.init = function (config, options = {autoLogin: false}) {
     this.baseUrl = config.baseUrl;
@@ -24,7 +24,8 @@ exports.init = function (config, options = {autoLogin: false}) {
     if (options.autoLogin) {
         this.username = options.username;
         this.password = options.password;
-        return this.login(this.username, this.password).then();
+        this.login(this.username, this.password).then();
+        return this;
     }
     this.configured = true;
     return this;
@@ -83,7 +84,7 @@ exports.request = (endPoint = "", data = {}, method = 'GET', token = null) => {
     //Check the token supplied
     const _token = (token && token['access_token']) ? token['access_token'] : this.token['access_token'];
 
-    if (!_token) throw new Error('You should login to obtain a toke first');
+    if (!_token) throw new Error('You should login to obtain a token first');
 
     const executor = (resolve, reject) => {
         const options = {
@@ -110,7 +111,6 @@ exports.request = (endPoint = "", data = {}, method = 'GET', token = null) => {
 
         request[method.toLowerCase()](options, (err, res, body) => {
             if (err || ![200, 201, 202].includes(res.statusCode)) {
-                console.log('StatusCode:', res);
                 return reject(err || body);
             }
             return resolve(body || true);
@@ -132,7 +132,7 @@ exports.request = (endPoint = "", data = {}, method = 'GET', token = null) => {
  |----------------------------------------------------------
  */
 exports.Utils = {
-    buildCaseVars: function (pro_uid, tas_uid, ...variables) {
+    buildCaseVars: function (pro_uid = "", tas_uid = "", ...variables) {
         const data = {pro_uid, tas_uid, variables: []};
         variables.forEach(item => {
             if (item instanceof Object) data.variables.push(item);

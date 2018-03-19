@@ -39,7 +39,7 @@ class GroupService extends ApiService {
                             if (++processed === rowLen)
                                 return resolve(Utils.buildResponse({data: {items: result.records}}));
                         }).catch(err => {
-                            return reject(err)
+                            return reject(err);
                         })
                     })
                 })
@@ -103,8 +103,8 @@ class GroupService extends ApiService {
             Utils.numericToInteger(item, "parent_id", "child_id");
             if (validate({'parent_id': 'int', 'child_id': 'int'}, item))
                 return {
-                    'parent_group_id': item['parent_id'],
-                    'child_group_id': item['child_id'],
+                    parent_group_id: item['parent_id'],
+                    child_group_id: item['child_id'],
                     created_at: Utils.date.dateToMysql(date, 'YYYY-MM-DD H:m:s'),
                     updated_at: Utils.date.dateToMysql(date, 'YYYY-MM-DD H:m:s'),
                 };
@@ -130,6 +130,69 @@ class GroupService extends ApiService {
         return new Promise(executor);
     }
 
+    /**
+     * Adds a user to a group
+     *
+     * Note that for iforce this function doesn't allow you
+     * add a user to multiple groups as at the time this was
+     * written.
+     *
+     * @param body
+     * @param who
+     * @param API {API}
+     */
+    async addUserToGroup(body = {user_id: null, group_id, wf_user_id: null}, who, API) {
+        const db = this.context.database;
+
+        Utils.numericToInteger(body, "user_id", "group_id");
+
+        if (!validate({'user_id': 'int', 'group_id': 'int'}, body))
+            return Promise.reject(Utils.buildResponse({status: 'fail', msg: validate.lastError}, 400));
+
+        if (body.wf_user_id) {
+            await API.workflows().addUserToGroup(body.wf_user_id, body.group_id).catch(err => {
+                return Promise.reject(Utils.buildResponse({status: 'fail', msg: "Internal Server Error"}, 500));
+            });
+        }
+
+        let date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
+        const data = {user_id: body.user_id, group_id: body.group_id, created_at: date, updated_at: date};
+
+        let resp = await db.table("user_groups").insert(data).catch(err => {
+            console.log(err);
+            return Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400);
+        });
+        return Utils.buildResponse({data: resp});
+    }
+
+
+    /**
+     *
+     * @param userId
+     * @param oldGroupId
+     * @param body
+     * @param who
+     * @param API {API}
+     * @returns {Promise<*>}
+     */
+    async updateUserGroup(userId, oldGroupId, body = {group_id: null}, who = {}, API) {
+        if (body.group_id === oldGroupId) return true;
+
+        const db = this.context.database;
+        const user_groups = {'role_id': body.role_id, updated_at: Utils.date.dateToMysql()};
+
+        let user = await db.table("users").where("id", userId).select(['wf_user_id']);
+        if (!user.length) return false;
+
+        user = user.shift();
+
+        await API.workflows().removeUserFromGroup(user.wf_user_id, oldGroupId);
+        await API.workflows().addUserToGroup(user.wf_user_id, body.group_id);
+
+        return await db.table("user_groups").where('group_id', oldGroupId).where('user_id', userId)
+            .update(user_groups).catch(console.error);
+    }
+
 
     /**
      *
@@ -144,11 +207,13 @@ class GroupService extends ApiService {
 
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
         return GroupMapper.updateDomainRecord({value, domain}).then(() => {
+            const db = this.context.database;
             domain.id = value;
             const backgroundTask = [API.workflows().updateGroup(Object.assign({}, domain))];
             if (body['parent']) {
-                let update = this.context.database.table("group_subs")
-                    .where('child_group_id', value).update({'parent_group_id': body['parent']});
+                let update = db.table("group_subs").where('child_group_id', value).update({
+                    'parent_group_id': body['parent']
+                });
                 backgroundTask.push(update);
             }
             Promise.all(backgroundTask).then().catch(err => console.log(err));

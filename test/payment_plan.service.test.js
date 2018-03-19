@@ -1,3 +1,4 @@
+require('dotenv').config();
 let API = require('../API');
 
 const config = require('../config.json');
@@ -29,6 +30,10 @@ test("That it resolves after supplying the right fields", () => {
         .toEqual(expect.objectContaining({
             code: 200
         }));
+});
+
+test("Payment Plan Approval", () => {
+    return expect(API.paymentPlans().approvePaymentPlan(1, {sub: 1}, API)).resolves.toEqual({});
 });
 
 

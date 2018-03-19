@@ -145,6 +145,12 @@ module.exports.buildResponse = function ({status = "success", data, msg, type, c
     return responseBody;
 };
 
+// module.exports.buildResp = function(status=true, data={}, msg="", desc="", code=null, statusCode=200){
+//     let responseBody = {};
+//     responseBody.status = (status) ? "success" : "fail";
+//     if (status !== "error" && data) responseBody.data = data;
+// };
+
 module.exports.jwtTokenErrorMsg = function (err) {
     console.log(err);
     switch (err.name) {
@@ -188,7 +194,7 @@ module.exports.getAndSet = function (redis, keys) {
 
 
 module.exports.validateEmail = function (email) {
-    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
 };
 
@@ -311,4 +317,16 @@ module.exports.queryTimeType = function (time) {
     else if (/^\dM$/g.test(time) || /^([1-9]|1[01])-([1-9]|1[012])M$/g.test(time)) return 'M';
     else if (/^\dY$/g.test(time) || /^(\d{4})-(\d{4})Y$/g.test(time)) return 'Y';
     else return null;
+};
+
+
+module.exports.getModuleName = function (module) {
+    switch (module) {
+        case "disconnection_billings":
+            return "Disconnection";
+        case "payment_plans":
+            return "Payment Plan";
+        default:
+            return "Module";
+    }
 };
