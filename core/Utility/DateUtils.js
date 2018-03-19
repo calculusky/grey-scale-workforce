@@ -12,9 +12,11 @@ module.exports = function DateUtils(){
  * @param format
  * @returns {string}
  */
-module.exports.dateToMysql = function(jsDate, format="YYYY-MM-DD"){
+module.exports.dateToMysql = function (jsDate = new Date(), format = "YYYY-MM-DD H:m:s") {
     return moment(jsDate).format(format);
 };
+
+module.exports.moment = moment;
 
 module.exports.elapsedTime = function(jsDate){
 

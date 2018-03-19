@@ -26,10 +26,6 @@ class WorkOrderService {
 
     }
 
-    getName() {
-        return "workOrderService";
-    }
-
     /**
      *
      * @param value

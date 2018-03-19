@@ -4,7 +4,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const processes = require('../../../../processes.json');
 const ProcessAPI = require('../../../../processes/ProcessAPI');
 const PUtils = ProcessAPI.Utils;
-const EmailEvent = require('../../../../events/EmailEvent');
+const Events = require('../../../../events/events');
 const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
 
 /**
@@ -21,48 +21,27 @@ class WorkflowService {
         /*TODO username and password should be put in a secret file e.g .env*/
         this.username = "admin@nogic.org";
         this.password = "admin";
-        ProcessAPI.init(this.context.config.processMaker).login(this.username, this.password).catch(e => {
+
+        ProcessAPI.init({
+            "baseUrl": process.env.PM_BASE_URL,
+            "clientId": process.env.PM_CLIENT_ID,
+            "clientSecret": process.env.PM_CLIENT_SECRET,
+            "workSpace": process.env.PM_WORK_SPACE,
+            "apiVersion": process.env.PM_API_VERSION
+        }).login(this.username, this.password).catch(e => {
             console.log(e);
         });
     }
 
-
     /**
-     * Creates a User on process maker
-     *
-     * @param body
+     * @param caseId
+     * @param variables
      * @param who
-     * @param retry - determines if this should be retried in-case an error occurs
+     * @returns {Promise<*>}
      */
-    async createUser(body = {}, who = {}, retry = true) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
-
-        const pUser = toPMUser(body);
-
-        const response = await ProcessAPI.request('/users', pUser, 'POST').catch(err => {
-            //First we should notify the dev team about the error
-
-            //If there persist a network error we are going to do a retry
-            //However we should resolve the promise to the primary callee and internally handle the process
-
-            if (err.error.code !== 400 && retry /*TODO properly check if the error is worth a retry*/) {
-                NetworkUtils.exponentialBackOff(this.createUser(body, who, false), 10, 0);
-                return Promise.resolve('retrying');
-            }
-            //TODO if the user already exist then let's update the user usr_uid with the user
-            return Promise.reject(err);
-        });
-
-        //Now lets update the user record with the wf_user_id
-        if (response && response['USR_UID']) {
-            //Updates the users table with the process maker user id
-            this.context.database.table("users").where("users.id", body.id).update({wf_user_id: response['USR_UID']})
-                .then().catch();
-
-            //If the group_id is specified while creating this user, add the user to the group in process maker as well
-            if (body.group_id) this.addUserToGroup(response['USR_UID'], body.group_id).then();
-        }
-        return response;
+    static async sendVariables(caseId, variables = {}, who) {
+        if (!who['pmToken']) return;
+        return ProcessAPI.request(`/cases/${caseId}/variable`, variables, 'PUT', who['pmToken']);
     }
 
     /**
@@ -90,15 +69,6 @@ class WorkflowService {
             response = await ProcessAPI.request(`/user/${dbUser['wf_user_id']}`, pmUser, 'PUT').catch(err => {
                 console.log("updateUser:", err);
             });
-
-            if (body['group_id'] && (body['group_id'] !== body['old_group_id'])) {
-                //remove the user from the old group
-                //add him to the new group
-                console.log(body);
-                this.removeUserFromGroup(dbUser['wf_user_id'], body['old_group_id']).then();
-                this.addUserToGroup(dbUser['wf_user_id'], body['group_id']).then();
-            }
-
         } else {
             // If this user doesn't have a wf_user_id
             // We can assume that the user doesn't exist
@@ -110,30 +80,21 @@ class WorkflowService {
     }
 
     /**
-     *  Adds a user to a group in process maker
+     * Creates a User on process maker
      *
-     * @param wfUserId - The workflow user id
-     * @param groupId
+     * @param body
+     * @param who
+     * @param retry - determines if this should be retried in-case an error occurs
      */
-    async addUserToGroup(wfUserId, groupId) {
+    async createUser(body = {}, who = {}, retry = true) {
         if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
-        //first let get the wf_group_id of this group
-        let group = await this.context.database.table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
-        group = group.shift();
-        let response = null;
-        if (group) {
-            if (!group['wf_group_id']) {
-                //if the group doesn't exist on process maker lets create it
-                const grp = await this.createGroup(group);
-                group['wf_group_id'] = grp['grp_uid'];
-            }
-            response = await ProcessAPI.request(`/group/${group['wf_group_id']}/user`, {usr_uid: wfUserId}, 'POST')
-                .catch(err => {
-                    //Error Handler : the user might already be added to the group
-                    console.log("addUserToGroup:", err);
-                });
-        }
-        return response;
+
+        const pUser = toPMUser(body);
+
+        return await ProcessAPI.request('/users', pUser, 'POST').catch(err => {
+            //TODO send a formatted error
+            return Promise.reject(err);
+        });
     }
 
     /**
@@ -254,6 +215,35 @@ class WorkflowService {
 
     }
 
+    /**
+     *  Adds a user to a group in process maker
+     *
+     * @param wfUserId - The workflow user id
+     * @param groupId
+     */
+    async addUserToGroup(wfUserId, groupId) {
+        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+
+        const db = this.context.database;
+
+        //first let get the wf_group_id of this group
+        let group = await db.table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
+        group = group.shift();
+        let response = null;
+        if (group) {
+            if (!group['wf_group_id']) {
+                //if the group doesn't exist on process maker lets create it
+                const grp = await this.createGroup(group);
+                group['wf_group_id'] = grp['grp_uid'];
+            }
+            response = await ProcessAPI.request(`/group/${group['wf_group_id']}/user`, {usr_uid: wfUserId}, 'POST')
+                .catch(err => {
+                    //Error Handler : the user might already be added to the group
+                    console.log("addUserToGroup:", err);
+                });
+        }
+        return response;
+    }
 
     /**
      *
@@ -287,31 +277,90 @@ class WorkflowService {
         }
 
         payload['SUBMITTER'] = user['wf_user_id'];
+        payload['dateDue'] = Utils.date.moment(new Date(), "YYYY-MM-DD HH:MM:SS").add(30, 'days');
 
         payload = PUtils.buildCaseVars(process['processId'], process['taskStartId'], payload);
         let response = await ProcessAPI.request('/cases', payload, 'POST', who['pmToken']).catch(err => {
             console.log(err);
         });
-        if (tableName && (response && response['app_uid'])) this.doAssignment(response['app_uid'], domain, tableName);
+
+        const caseId = (response) ? response['app_uid'] : null;
+
+        await this.routeCase(caseId, who).catch(err => {
+            console.log('ROUTE', err);
+        });
+
+        if (tableName && caseId) this.doAssignment(caseId, domain, tableName, who);
 
         return response;
     }
 
+    /**
+     * Routes a case to the next task
+     *
+     * @param caseId
+     * @param who
+     * @param data
+     * @param delIndex
+     * @returns {Promise<*>}
+     */
+    async routeCase(caseId, who, delIndex = '1', data = {},) {
+        if (!who['pmToken']) await ProcessAPI.login(this.username, this.password);//TODO revert
+        const routeUrl = `/cases/${caseId}/route-case`;
+        data['del_index'] = delIndex;
+        return await ProcessAPI.request(routeUrl, data, 'PUT', who['pmToken']);
+    }
 
-    async getCase(caseId) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+    /**
+     *
+     * @param caseId
+     * @param comments
+     * @param variables
+     * @param who
+     * @returns {Promise<void>}
+     */
+    async resume(caseId, comments, variables, who) {
+        //1: get the delIndex
+        let $case = await this.getCase(caseId, who);
+        $case = JSON.parse($case);
 
-        return await ProcessAPI.request(`/cases/${caseId}`, null, 'GET').catch(err => {
-            console.log(err);
+        const $task = $case['current_task'].shift();
+
+        if (!$task) return Promise.resolve(1);
+
+        console.log($task);
+
+        const delIndex = $task['del_index'];
+
+        if (comments) {
+            //TODO send comments here
+        }
+        //Send the set variables
+        await WorkflowService.sendVariables(caseId, variables, who);
+
+        return this.routeCase(caseId, who, delIndex);
+    }
+
+    /**
+     *
+     * @param caseId
+     * @param who
+     * @returns {Promise<*>}
+     */
+    async getCase(caseId, who) {
+        if (!who['pmToken'] && !ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        return await ProcessAPI.request(`/cases/${caseId}`, null, 'GET', who['pmToken']).catch(err => {
+            return err;
         });
     }
 
-    doAssignment(caseId, domain, tableName) {
+    doAssignment(caseId, domain, tableName, who) {
         this.context.database.table(tableName).where('id', domain['id'])
-            .update({wf_case_id: caseId}).then(r => console.log(r)).catch(err => console.log(err));
+            .update({wf_case_id: caseId}).then(r => console.log('UPDATED_CASE_ID', r)).catch(err => console.log(err));
 
-        this.getCase(caseId).then(res => {
+        this.getCase(caseId, who).then(res => {
             res = JSON.parse(res);
+            console.log(res);
             const currentTask = res['current_task'];
             const date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
             currentTask.forEach(async task => {
@@ -331,9 +380,11 @@ class WorkflowService {
                 assignedTo = assignedTo.shift();
 
                 if (!assignedTo.assigned_to.find(item => item.id === user.id)) {
-                    assignedTo.push({"id": user.id, created_at: date});
+                    assignedTo.assigned_to.push({"id": user.id, created_at: date});
                 }
-                console.log(assignedTo.assigned_to);
+
+                Events.emit("payment_plan_assigned", domain.id, [user.id]);
+
                 this.context.database.table(tableName).where("id", domain['id'])
                     .update({"assigned_to": JSON.stringify(assignedTo.assigned_to)}).then();
             });
