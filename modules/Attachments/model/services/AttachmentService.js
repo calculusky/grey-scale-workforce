@@ -1,20 +1,16 @@
+const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
-const Password = require('../../../../core/Utility/Password');
-const Util = require('../../../../core/Utility/MapperUtil');
+const Utils = require('../../../../core/Utility/Utils');
 /**
  * @name AttachmentService
  * Created by paulex on 8/22/17.
  */
-class AttachmentService {
+class AttachmentService extends ApiService {
 
     constructor(context) {
-        this.context = context;
+        super(context);
         MapperFactory = this.context.modelMappers;
-    }
-
-    getName() {
-        return "attachmentService";
     }
 
     /**
@@ -30,7 +26,7 @@ class AttachmentService {
     getAttachments(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         value = {[by]: value, "module": module};
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        var executor = (resolve, reject)=> {
+        const executor = (resolve, reject) => {
             AttachmentMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
                 .then(result=> {
                     let attachments = result.records;
@@ -49,13 +45,13 @@ class AttachmentService {
                                 delete attachment.user.created_at;
                                 delete attachment.user.updated_at;
                             }
-                            if (++processed == rowLen)
-                                return resolve(Util.buildResponse({data: {items: result.records}}));
+                            if (++processed === rowLen)
+                                return resolve(Utils.buildResponse({data: {items: result.records}}));
                         }).catch(err=> {
                             return reject(err)
                         })
                     });
-                    if (!rowLen) return resolve(Util.buildResponse({data: {items: attachments}}));
+                    if (!rowLen) return resolve(Utils.buildResponse({data: {items: attachments}}));
                 })
                 .catch(err=> {
                     return reject(err);
@@ -94,7 +90,7 @@ class AttachmentService {
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         return AttachmentMapper.createDomainRecord(null, attachments).then(attachment=> {
             if (!attachment) return Promise.reject();
-            return Util.buildResponse({data: Array.isArray(attachment) ? attachment.pop() : attachment});
+            return Utils.buildResponse({data: Array.isArray(attachment) ? attachment.pop() : attachment});
         });
     }
 
@@ -108,8 +104,8 @@ class AttachmentService {
     addIncomingAttachments(body = {}, who = {}, files = [], API) {
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
         //for incoming request , the module name and request-id is required and there must be a file
-        if (!body.module || !body['request_id'] || files.length == 0) {
-            return Promise.reject(Util.buildResponse({
+        if (!body.module || !body['request_id'] || files.length === 0) {
+            return Promise.reject(Utils.buildResponse({
                 status: "fail",
                 data: {message: 'Nothing to do'}
             }, 400));
@@ -119,7 +115,7 @@ class AttachmentService {
 
         if (!this.context.getIncoming(requestId)) {
             console.log("Not Request ID found");
-            return Promise.reject(Util.buildResponse({
+            return Promise.reject(Utils.buildResponse({
                 status: "fail",
                 data: {message: 'Request ID Not Found'}
             }, 404));
@@ -145,10 +141,10 @@ class AttachmentService {
             //TODO: Do a multiple insert here rather than call a for-loop
             attachments.forEach(attachment=> {
                 this.createAttachment(attachment, who).then(response=> {
-                    if (++processed == rowLen) {
+                    if (++processed === rowLen) {
                         attachmentIds.push(response.data.data.id);
                         this.context.deleteIncoming(requestId);
-                        return resolve(Util.buildResponse({data: true}));
+                        return resolve(Utils.buildResponse({data: true}));
                     }
                 }).catch(err=> {
                     console.log(err);
@@ -191,12 +187,12 @@ class AttachmentService {
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         return AttachmentMapper.deleteDomainRecord({value}).then(count=> {
             if (!count) {
-                return Promise.reject(Util.buildResponse({
+                return Promise.reject(Utils.buildResponse({
                     status: "fail",
                     data: {message: "The specified record doesn't exist"}
                 }));
             }
-            return Util.buildResponse({data: {[by]: value, message: "Attachment deleted"}});
+            return Utils.buildResponse({data: {[by]: value, message: "Attachment deleted"}});
         });
     }
 }
