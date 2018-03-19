@@ -111,6 +111,13 @@ parameters:
     in: path
     description: The Payment ID
 
+  payment_plan_id:
+    name: id
+    type: integer
+    required: true
+    in: path
+    description: The payment plan id
+
   fromDate:
     name: fromDate
     type: string
@@ -1169,3 +1176,25 @@ definitions:
               $ref: '#/definitions/PaymentPlan'
     required:
     - status
+
+  paymentPlanApprovalInput:
+    type: object
+    properties:
+      comments:
+        type: string
+
+  postNoteInput:
+    type: object
+    required:
+    - module
+    - relation_id
+    - note
+    properties:
+      module:
+        type: string
+        description: The module it is related to. (most likely the table name)
+      relation_id:
+        type: string
+        description: The id of the record within the module specified
+      note:
+        type: string

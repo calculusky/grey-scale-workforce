@@ -9,6 +9,7 @@ let globalContext = null;
 
 //Private Fields
 let _privateStore = new WeakMap();
+
 /**
  * @name Context
  */
@@ -19,18 +20,23 @@ class Context {
         this.persistence = client;
         this.database = KNEX({
             client: "mysql2",
-            connection: config.database
+            connection: {
+                "host": process.env.DB_HOST,
+                "user": process.env.DB_USER,
+                "password": process.env.DB_PASS,
+                "database": process.env.DB_DATABASE
+            }
         });
 
-        this.persistence.on('ready', ()=> this.loadStaticData());
+        this.persistence.on('ready', () => this.loadStaticData());
         // this.persistence.init({dir: this.config.storage.persistence.path}).then(i=>this.loadStaticData(i));
         this._(this).incoming_store = {};
 
         //load the modelMappers here into memory
-        this._(this).buildModelMappers = ()=> {
+        this._(this).buildModelMappers = () => {
             let mappers = this.config['mappers'];
             if (mappers) {
-                mappers.forEach(mapper=> {
+                mappers.forEach(mapper => {
                     let mapperName = mapper.substring(0, mapper.indexOf(":"));
                     let mapperPath = mapper.substring(mapper.indexOf(":") + 1, mapper.length);
                     MapperFactory.build(mapperName, mapperPath, this);
@@ -39,14 +45,14 @@ class Context {
         };
         this._(this).buildModelMappers();
         this.modelMappers = MapperFactory;
-        
+
         Context.globalContext = this;
     }
 
     //we are going load certain static data into memory
     loadStaticData() {
-        let findParents = (_groups, group, parentKey)=> {
-            _groups.forEach(gp=> {
+        let findParents = (_groups, group, parentKey) => {
+            _groups.forEach(gp => {
                 if (gp.id === group[parentKey]) {
                     group.parent = gp;
                     if (gp[parentKey]) findParents(_groups, group.parent, parentKey);
@@ -59,23 +65,23 @@ class Context {
             .leftJoin('group_subs', 'groups.id', 'group_subs.child_group_id');
 
         const groups = {};
-        groupSubs.then(results=> {
-            results.forEach(group=> {
+        groupSubs.then(results => {
+            results.forEach(group => {
                 //if parent_group_id and the parent_group_id isn't equals to the group_child_id
-                if (group['parent_group_id'] && group['parent_group_id']!==group.id) {
+                if (group['parent_group_id'] && group['parent_group_id'] !== group.id) {
                     findParents(results, group, 'parent_group_id');
                 }
                 delete group['parent_group_id'];
                 groups[group.id] = group;
             });
             this.persistence.set("groups", JSON.stringify(groups));
-        }).catch(err=>console.log(err));
+        }).catch(err => console.log(err));
 
         //Now lets get work order types
         let wResultSets = this.database.select(['id', 'name']).from("work_order_types");
         const workTypes = {};
-        wResultSets.then(results=> {
-            results.forEach(type=> {
+        wResultSets.then(results => {
+            results.forEach(type => {
                 workTypes[type.id] = type;
             });
             this.persistence.set("work:types", JSON.stringify(workTypes));
@@ -84,8 +90,8 @@ class Context {
         //Lets load all assets types
         let aResultSets = this.database.select(['id', 'name']).from("asset_types");
         const assetTypes = {};
-        aResultSets.then(results=> {
-            results.forEach(type=> {
+        aResultSets.then(results => {
+            results.forEach(type => {
                 assetTypes[type.id] = type;
             });
             this.persistence.set("asset:types", JSON.stringify(assetTypes));
@@ -122,17 +128,17 @@ class Context {
 
 if (!String.prototype.padStart) {
     String.prototype.padStart = function padStart(targetLength, padString) {
-        targetLength = targetLength>>0; //floor if number or convert non-number to 0;
+        targetLength = targetLength >> 0; //floor if number or convert non-number to 0;
         padString = String(padString || ' ');
         if (this.length > targetLength) {
             return String(this);
         }
         else {
-            targetLength = targetLength-this.length;
+            targetLength = targetLength - this.length;
             if (targetLength > padString.length) {
-                padString += padString.repeat(targetLength/padString.length); //append to original to ensure we are longer than needed
+                padString += padString.repeat(targetLength / padString.length); //append to original to ensure we are longer than needed
             }
-            return padString.slice(0,targetLength) + String(this);
+            return padString.slice(0, targetLength) + String(this);
         }
     };
 }

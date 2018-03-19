@@ -1,17 +1,4 @@
 {
-  "database": {
-    "host": "127.0.0.1",
-    "user": "root",
-    "password": "Nigeriasns$1",
-    "database": "mr_working"
-  },
-  "email": {
-    "secure": false,
-    "auth": {
-      "domain": "info.projectbasket.com.ng",
-      "api_key": "key-47d861c8b04e4a0c32d4f7a7d22cb595"
-    }
-  },
   "storage": {
     "path": "/var/www/html/fsm/storage/app/public",
     "routeStorage": {
@@ -53,12 +40,5 @@
     "Activation:../../modules/Activations/model/mappers/ActivationMapper",
     "Group:../../modules/Groups/model/mappers/GroupMapper",
     "Role:../../modules/Roles/model/mappers/RoleMapper"
-  ],
-  "processMaker": {
-    "baseUrl": "http://62.138.0.167:9999",
-    "clientId": "GFSATYDLMNFJVQNLQHDWLUPTKKNAMJNT",
-    "clientSecret": "58412160557bc5ac9096659005021464",
-    "workSpace": "workflow",
-    "apiVersion": "1.0"
-  }
+  ]
 }
