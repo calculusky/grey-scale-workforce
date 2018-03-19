@@ -320,15 +320,13 @@ class WorkflowService {
      * @returns {Promise<void>}
      */
     async resume(caseId, comments, variables, who) {
-        //1: get the delIndex
         let $case = await this.getCase(caseId, who);
+
         $case = JSON.parse($case);
 
         const $task = $case['current_task'].shift();
 
         if (!$task) return Promise.resolve(1);
-
-        console.log($task);
 
         const delIndex = $task['del_index'];
 
@@ -349,9 +347,12 @@ class WorkflowService {
      */
     async getCase(caseId, who) {
         if (!who['pmToken'] && !ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
-        return await ProcessAPI.request(`/cases/${caseId}`, null, 'GET', who['pmToken']).catch(err => {
+        let resp = await ProcessAPI.request(`/cases/${caseId}`, null, 'GET', who['pmToken']).catch(err => {
             return err;
         });
+        resp = JSON.parse(resp);
+        console.error(resp);
+        return (!resp.error) ? resp : Promise.reject(Utils.processMakerError(resp));
     }
 
     doAssignment(caseId, domain, tableName, who) {

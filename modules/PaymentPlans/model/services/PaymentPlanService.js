@@ -116,9 +116,9 @@ class PaymentPlanService extends ApiService {
      * @returns {Promise<>|*}
      */
     async approvePaymentPlan(planId, {comments}, who, API) {
-        //check and retrieve the wf_case_id of the payment plan
-        let paymentPlan = await this.context.database.table("payment_plans").where('id', planId)
-            .select(['id', 'wf_case_id', 'assigned_to']);
+        const db = this.context.database;
+
+        let paymentPlan = await db.table("payment_plans").where('id', planId).select(['wf_case_id', 'assigned_to']);
 
         if (!paymentPlan.length) {
             const res = Utils.buildResponse({status: "fail", data: {message: "Payment Plan doesn't exist"}}, 400);
@@ -131,11 +131,7 @@ class PaymentPlanService extends ApiService {
 
         const approve = await API.workflows().resume(paymentPlan.wf_case_id, comments, _command, who).catch(err => {
             console.log('PaymentPlanApproval', err);
-            return Promise.reject(Utils.buildResponse({
-                status: 'fail', data: {
-                    message: "This payment plan has already been approved"
-                }
-            }, 400));
+            return Promise.reject(err);
         });
 
         // If the task has already been completed or a task doesn't exist
@@ -143,20 +139,20 @@ class PaymentPlanService extends ApiService {
         if (approve !== 1) {
             // Set the approval_status to approved
             // We can as well choose to notify the user who created it that it has been approved
-            this.context.database.table("payment_plans").where("id", planId).update({
+            db.table("payment_plans").where("id", planId).update({
                 approval_status: 1,
                 approved_by: who.sub,
                 approval_date: Utils.date.dateToMysql()
-            }).then().catch(console.error);
+            }).catch(console.error);
 
             if (comments.length) {
                 API.notes().createNote({
                     relation_id: planId,
                     module: 'payment_plans',
                     note: `Payment Plan Approval : ${comments}`
-                }, who).then(console.log).catch(console.error);
+                }, who).catch(console.error);
             }
-            Events.emit("payment_plan_approval", paymentPlan.id, who);
+            Events.emit("payment_plan_approval", planId, who);
         }
         return Utils.buildResponse({data: paymentPlan});
     }

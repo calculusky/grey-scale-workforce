@@ -330,3 +330,29 @@ module.exports.getModuleName = function (module) {
             return "Module";
     }
 };
+
+
+module.exports.processMakerError = function ({error}) {
+    if (!error) return "";
+    const processMessage = (msg) => {
+        if (msg.includes("permission")) {
+            return "You don't have permission to act on this record";
+        } else if (msg.includes("does not exist")) {
+            return "The record you are trying to access doesn't exist";
+        }
+    };
+    switch (error.code) {
+        case 400:
+            return this.buildResponse({
+                status: 'fail',
+                code: "PM_ERROR",
+                msg: processMessage(error.message)
+            }, 400);
+        default:
+            return this.buildResponse({
+                status: 'fail',
+                code: "PM_ERROR",
+                msg: ""
+            }, 500);
+    }
+};
