@@ -63,26 +63,25 @@ class RecognitionService {
                     //but this token must be tied to the same user-agent and device
                     const tokenExpiry = (isMobile) ? 3600 * 3600 : 3600 * 3600;//TODO limit the time
 
+                    let userGroup = {records: []};
+                    user.userGroups().then(grp => (userGroup = grp));
+
                     //Login to process maker
                     const pmToken = await ProcessAPI.login(username, password).catch(e => {
                         console.log('UserPMLogin', e);
                     });
                     //TODO add permissions
-                    //TODO load the right user group
-                    // const userGroup = await user.groups();
-
                     const tokenOpt = {
                         sub: user.id,
                         aud: `${userAgent.family}`,
                         exp: Math.floor(Date.now() / 1000) + tokenExpiry,
                         name: user.username,
-                        group: user.group_id,
+                        group: (userGroup.records.length) ? userGroup.records.map(({id}) => id) : [],
                         pmToken
                     };
 
                     console.log(tokenOpt);
 
-                    //TODO use a better secret
                     let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
 
                     //Set up the token on redis server

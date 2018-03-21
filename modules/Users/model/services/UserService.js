@@ -53,12 +53,9 @@ class UserService extends ApiService {
         let isValid = validate(user.rules(), user);
 
         let group_id = null;
-        //if the group_id is set, it means we are adding this user to a group
+        // If the group_id is set, it means we are adding this user to a group
         // We'll be setting the group that created this user when we call :insertPermissionRights
-        if (user.group_id) {
-            group_id = user.group_id;
-            delete user.group_id;
-        }
+        if (user.group_id) (group_id = user.group_id) && delete user.group_id;
 
         ApiService.insertPermissionRights(user, who);
 
@@ -74,13 +71,14 @@ class UserService extends ApiService {
         });
 
         user['wf_user_id'] = pmUser['USR_UID'];
-
+        user['wf_user_pass'] = Utils.encrypt(password, process.env.JWT_SECRET);
         //replace the password prefix as well for laravel's sake
         user.setPassword(Password.encrypt(password).hash.replace("$2a$", "$2y$"));
 
+
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         return UserMapper.createDomainRecord(user).then(user => {
-            if (!user) return Promise.reject();
+            if (!user) return Promise.reject(false/*TODO change to the right error format*/);
             const backgroundTask = [API.activations().activateUser(user.id, who)];
             if (body.roles) backgroundTask.push(API.roles().addUserToRole(body.roles, user.id));
 
@@ -167,6 +165,7 @@ class UserService extends ApiService {
      * @returns {Promise.<User>|*}
      */
     async updateUser(by, value, body = {}, who, API) {
+        Utils.numericToInteger(body, 'roles', 'group_id');
         const User = DomainFactory.build(DomainFactory.USER);
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         const role_id = body['roles'];
@@ -175,8 +174,6 @@ class UserService extends ApiService {
 
         //We shouldn't override the group that created the user
         if (body.group_id) (group_id = body.group_id) && (delete user.group_id);
-
-        Utils.numericToInteger(body, 'roles', 'group_id');
 
         return UserMapper.updateDomainRecord({value, domain: user}).then(async (result) => {
             if (result.pop()) {
@@ -188,8 +185,10 @@ class UserService extends ApiService {
                 }
                 if (group_id) {
                     let userGroups = await user.userGroups(), group = userGroups.records.pop();
-                    if (userGroups.records.length) user['old_group_id'] = group.id;
-                    API.groups().updateUserGroup(user.id, group.id, {group_id}, who, API).catch(console.error);
+                    if (group) {
+                        user['old_group_id'] = group.id;
+                        API.groups().updateUserGroup(user.id, group.id, {group_id}, who, API).catch(console.error);
+                    } else API.groups().addUserToGroup({user_id: user.id, group_id}, who, API).catch(console.error);
                 }
                 API.workflows().updateUser(by, value, user).catch(console.error);
                 return Utils.buildResponse({data: result.shift()});
