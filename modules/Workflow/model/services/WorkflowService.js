@@ -109,9 +109,7 @@ class WorkflowService {
 
         let group = await this.context.database.table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
         group = group.shift();
-
         let response = null;
-
         if (group) {
             if (!group['wf_group_id']) {
                 //if the group doesn't exist on process maker lets create it
@@ -167,7 +165,7 @@ class WorkflowService {
                 if (err.error.code === 400) {
                     console.log("Group already exist on process maker");
                     //TODO we can quickly fetch the grp_uid and resolve
-                    return Promise.resolve();
+                    return Promise.resolve(false);
                 }
                 return Promise.reject(err);
             });
@@ -188,8 +186,9 @@ class WorkflowService {
      */
     async updateGroup(group) {
         if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        const db = this.context.database;
         //let's check if the group already exist on process maker
-        let dbGroup = await this.context.database.table("groups").where("id", group.id)
+        let dbGroup = await db.table("groups").where("id", group.id)
             .select(['id', 'name', 'wf_group_id']);
 
         dbGroup = dbGroup.shift();
@@ -322,8 +321,6 @@ class WorkflowService {
     async resume(caseId, comments, variables, who) {
         let $case = await this.getCase(caseId, who);
 
-        $case = JSON.parse($case);
-
         const $task = $case['current_task'].shift();
 
         if (!$task) return Promise.resolve(1);
@@ -351,7 +348,6 @@ class WorkflowService {
             return err;
         });
         resp = JSON.parse(resp);
-        console.error(resp);
         return (!resp.error) ? resp : Promise.reject(Utils.processMakerError(resp));
     }
 
@@ -360,8 +356,6 @@ class WorkflowService {
             .update({wf_case_id: caseId}).then(r => console.log('UPDATED_CASE_ID', r)).catch(err => console.log(err));
 
         this.getCase(caseId, who).then(res => {
-            res = JSON.parse(res);
-            console.log(res);
             const currentTask = res['current_task'];
             const date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
             currentTask.forEach(async task => {
