@@ -3,10 +3,25 @@
  */
 const DateUtils = require('./DateUtils');
 const MapperUtils = require('./MapperUtil');
+const crypto = require('crypto'), algorithm = 'aes192';
 let unitCounter = {};
 
 
 module.exports = function Utils() {
+};
+
+module.exports.encrypt = function (value, secret = "") {
+    const cipher = crypto.createCipher(algorithm, secret);
+    let crypted = cipher.update(value, 'utf8', 'hex');
+    crypted += cipher.final('hex');
+    return crypted;
+};
+
+module.exports.decrypt = function (value, secret = "") {
+    const decipher = crypto.createDecipher(algorithm, secret);
+    let dec = decipher.update(value, 'hex', 'utf8');
+    dec += decipher.final('utf8');
+    return dec;
 };
 
 module.exports.date = DateUtils;
