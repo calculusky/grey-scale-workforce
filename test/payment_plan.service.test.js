@@ -33,7 +33,11 @@ test("That it resolves after supplying the right fields", () => {
 });
 
 test("Payment Plan Approval", () => {
-    return expect(API.paymentPlans().approvePaymentPlan(1, {comments: ""}, {sub: 1}, API)).resolves.toEqual({});
+    return expect(API.paymentPlans().approvePaymentPlan(4, {comments: "kkkk"}, {sub: 1}, API)).resolves.toEqual({});
+});
+
+test("Reject Plan Approval", () => {
+    return expect(API.paymentPlans().rejectPaymentPlan(20, {comments: ""}, {sub: 1}, API)).resolves.toEqual({});
 });
 
 

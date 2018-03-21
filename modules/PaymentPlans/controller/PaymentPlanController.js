@@ -174,7 +174,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        $ref: '#/definitions/paymentPlanApprovalInput'
      */
     app.put('/payment_plans/:id/reject', urlencodedParser, (req, res) => {
-        return API.paymentPlans().rejectPaymentPlan(req.params['id'], req.who, API)
+        return API.paymentPlans().rejectPaymentPlan(req.params['id'], req.body, req.who, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             }).catch(({err, code}) => {

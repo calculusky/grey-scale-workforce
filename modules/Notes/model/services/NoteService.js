@@ -70,7 +70,7 @@ class NoteService extends ApiService {
         //Get Mapper
         const NoteMapper = MapperFactory.build(MapperFactory.NOTE);
         return NoteMapper.createDomainRecord(note).then(note => {
-            if (!note) return Promise.reject();
+            if (!note) return Promise.reject(false);
 
             if (files.length) {
                 API.attachments().createAttachment({module: "notes", relation_id: note.id}, who, files, API).then();
