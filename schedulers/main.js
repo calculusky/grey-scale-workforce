@@ -45,12 +45,13 @@ module.exports.createDelinquencyList = function () {
         let groups = {};
         const currDate = new Date();
         const logMessages = [];
+        const db = this.context.database;
 
 
         //Fetch Groups and the Uploaded record before hand
         Promise.all([
             Utils.getFromPersistent(this.context, "groups"),
-            this.context.database.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to']),
+            db.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to']),
             workbook.xlsx.readFile(file)
         ]).then(values => {
 
@@ -124,10 +125,10 @@ module.exports.createDelinquencyList = function () {
 
                         //There is no need looking up for the hub manager if the UT doesn't belong to a hub
                         if (hubGroup.id !== utIndex.result) {
-                            this.context.database.select(['users.id']).from("users")
+                            db.select(['users.id']).from("users")
                                 .innerJoin("role_users", "users.id", "role_users.user_id")
                                 .innerJoin("roles", "role_users.role_id", "roles.id")
-                                .where("users.group_id", hubGroup.id)
+                                .innerJoin("user_groups", "user_groups.group_id", hubGroup.id)
                                 .where("roles.slug", "technical_hub")
                                 .then(userId => {
                                     hubManagerId = (userId.length) ? userId.shift().id : null;
@@ -150,12 +151,12 @@ module.exports.createDelinquencyList = function () {
                         "group_id": uploadData.group_id,
                         "created_by": assignedTo.id,
                         "assigned_to": JSON.stringify([assignedTo]),
-                        "created_at": Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s"),
-                        "updated_at": Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s")
+                        "created_at": assignedTo.created_at,
+                        "updated_at": assignedTo.created_at
                     };
 
                     // Insert record to Database
-                    this.context.database.table("disconnection_billings").insert(delinquency)
+                    db.table("disconnection_billings").insert(delinquency)
                         .then(res => {
                             const discId = res.shift();
                             ++processedDelinquencies;
@@ -176,14 +177,14 @@ module.exports.createDelinquencyList = function () {
                                         summary: "Disconnect Customer!!!",
                                         status: '1',
                                         group_id: hubGroup.id,
-                                        assigned_to: `[{"id": ${hubManagerId}, "created_at": "${Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s")}"}]`,
+                                        assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
                                         issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
-                                        created_at: Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s"),
-                                        updated_at: Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s")
+                                        created_at: assignedTo.created_at,
+                                        updated_at: assignedTo.created_at
                                     }).then(res => {
                                         //We need to get the work order id and relate it with the disconnection billing
                                         //Not necessary to wait for the return
-                                        this.context.database.table('disconnection_billings').where('id', '=', discId)
+                                        db.table('disconnection_billings').where('id', '=', discId)
                                             .update({
                                                 work_order_id: res.data.data.work_order_no,
                                                 assigned_to: JSON.stringify([assignedTo, {
