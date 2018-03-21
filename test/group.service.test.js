@@ -1,10 +1,10 @@
+require('dotenv').config();
 let API = require('../API');
 
 const config = require('../config.json');
 const Context = require('../core/Context');
 const ctx = new Context(config);
 API = new API(ctx);
-
 
 
 test("That createGroup is defined", () => {
@@ -68,7 +68,7 @@ describe("Update Groups", () => {
     });
 
     test("That updateGroup resolves with a defined value", () => {
-        return expect(API.groups().updateGroup(1, {name: "Root"}, {}, API)).resolves.toBeDefined();
+        return expect(API.groups().updateGroup(1, {name: "Root"}, {}, API)).resolves.toEqual({});
     });
 });
 

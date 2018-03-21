@@ -71,7 +71,7 @@ class GroupService extends ApiService {
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
 
         return GroupMapper.createDomainRecord(group).then(group => {
-            if (!group) return Promise.reject();
+            if (!group) return Promise.reject(false);
 
             //lets check if the parent of the group is specified
             let backgroundTask = [API.workflows().createGroup(group)];
@@ -149,10 +149,12 @@ class GroupService extends ApiService {
         if (!validate({'user_id': 'int', 'group_id': 'int'}, body))
             return Promise.reject(Utils.buildResponse({status: 'fail', msg: validate.lastError}, 400));
 
-        if (body.wf_user_id) {
-            await API.workflows().addUserToGroup(body.wf_user_id, body.group_id).catch(err => {
-                return Promise.reject(Utils.buildResponse({status: 'fail', msg: "Internal Server Error"}, 500));
-            });
+        if (body.wf_user_id) await API.workflows().addUserToGroup(body.wf_user_id, body.group_id).catch(Promise.reject);
+        else {
+            let user = await db.table("users").where("id", body.user_id).select(['wf_user_id']);
+            user = user.shift();
+            if (user['wf_user_id']) await API.workflows().addUserToGroup(user.wf_user_id, body.group_id)
+                .catch(Promise.reject);
         }
 
         let date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
@@ -177,9 +179,9 @@ class GroupService extends ApiService {
      */
     async updateUserGroup(userId, oldGroupId, body = {group_id: null}, who = {}, API) {
         if (body.group_id === oldGroupId) return true;
-
+        console.log(body.group_id, oldGroupId);
         const db = this.context.database;
-        const user_groups = {'role_id': body.role_id, updated_at: Utils.date.dateToMysql()};
+        const user_groups = {'group_id': body.group_id, updated_at: Utils.date.dateToMysql()};
 
         let user = await db.table("users").where("id", userId).select(['wf_user_id']);
         if (!user.length) return false;
@@ -204,19 +206,18 @@ class GroupService extends ApiService {
     updateGroup(value, body = {}, who = {}, API) {
         const Group = DomainFactory.build(DomainFactory.GROUP);
         const domain = new Group(body);
+        const parent_group_id = (body['parent']) ? body['parent'] : null;
 
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
         return GroupMapper.updateDomainRecord({value, domain}).then(() => {
             const db = this.context.database;
             domain.id = value;
             const backgroundTask = [API.workflows().updateGroup(Object.assign({}, domain))];
-            if (body['parent']) {
-                let update = db.table("group_subs").where('child_group_id', value).update({
-                    'parent_group_id': body['parent']
-                });
+            if (parent_group_id) {
+                let update = db.table("group_subs").where('child_group_id', value).update({parent_group_id});
                 backgroundTask.push(update);
             }
-            Promise.all(backgroundTask).then().catch(err => console.log(err));
+            Promise.all(backgroundTask).catch(console.error);
             return Utils.buildResponse({data: domain});
         });
     }

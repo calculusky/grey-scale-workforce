@@ -75,7 +75,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *          $ref: '#/definitions/postGroupInput'
      */
     app.put('/groups/:id', jsonParser, (req, res) => {
-        API.groups().updateGroup(req.params['id'], req.body, req.who)
+        API.groups().updateGroup(req.params['id'], req.body, req.who, API)
             .then(({data, code}) => {
                 console.log(data);
                 return res.status(code).send(data);
