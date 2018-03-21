@@ -49,8 +49,9 @@ exports.init = function (context, io, API) {
 };
 
 exports.emit = function (eventName, ...args) {
+    if (!this.eventListeners) return;
     this.eventListeners.forEach(listener => {
-        if (listener) listener.emit(eventName, ...args)
+        if (listener) listener.emit(eventName, ...args);
     });
 };
 

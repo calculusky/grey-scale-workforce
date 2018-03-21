@@ -4,7 +4,6 @@ class WebEvent extends EventEmitter {
 
     constructor() {
         super();
-
         this.on("note_added", this.onNotesAdded);
     }
 

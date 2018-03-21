@@ -8,6 +8,7 @@ const mailer = require('nodemailer');
 const Utils = require('../core/Utility/Utils');
 const mg = require('nodemailer-mailgun-transport');
 const jwt = require('jsonwebtoken');
+const ProcessAPI = require('../processes/ProcessAPI');
 
 
 class EmailEvent extends EventEmitter {
@@ -70,9 +71,9 @@ class EmailEvent extends EventEmitter {
         if (!paymentPlan.length) return;
 
         const users = await db.table("users").whereIn("id", assignedTo)
-            .select(['id', 'email', 'username', 'first_name', 'last_name', 'group_id']);
+            .select(['id', 'email', 'username', 'first_name', 'last_name', 'group_id', 'wf_user_pass']);
 
-        users.forEach(user => {
+        users.forEach(async user => {
             const tokenOpt = {
                 sub: user.id,
                 aud: `api`,
@@ -80,9 +81,18 @@ class EmailEvent extends EventEmitter {
                 name: user.username,
                 group: user.group_id
             };
+
+            tokenOpt['pmToken'] = await ProcessAPI.login(
+                user.username,
+                Utils.decrypt(user.wf_user_pass, process.env.JWT_SECRET)
+            );
+
             //Generate a one time token
             let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
             this.context.persistence.set(token, true, 'EX', 10000);
+
+            console.log(tokenOpt);
+            console.log(token);
 
             this.email.send({
                 template: 'payment_plan',
@@ -103,6 +113,7 @@ class EmailEvent extends EventEmitter {
      * @returns {Promise<void>}
      */
     async onNotesAdded(note, who) {
+        console.log("Adding note");
         //So we are going to send email to all users assigned to the record this note was meant for
         const db = this.context.database;
 
@@ -117,6 +128,7 @@ class EmailEvent extends EventEmitter {
 
         let users = await db.table("users").whereIn('id', userIds).select(['id', 'email', 'first_name', 'last_name']);
 
+        if (!users.length) return;
         //Remove the user that added this note from the list of users
         users = users.filter(user => user.id !== note.created_by);
 
@@ -158,6 +170,7 @@ class EmailEvent extends EventEmitter {
 
         let users = await db.table("users").whereIn('id', userIds).select(['id', 'email', 'first_name', 'last_name']);
 
+        if (!users.length) return;
         //Remove the user that added this note from the list of users
         users = users.filter(user => user.id !== who.sub);
 
