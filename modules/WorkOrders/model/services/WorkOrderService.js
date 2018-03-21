@@ -1,18 +1,19 @@
 /**
  * Created by paulex on 7/4/17.
  */
-let MapperFactory = null;
+const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validate-fields')();
+let MapperFactory = null;
 
 /**
  * @name WorkOrderService
  */
-class WorkOrderService {
+class WorkOrderService extends ApiService {
 
     constructor(context) {
-        this.context = context;
+        super(context);
         MapperFactory = this.context.modelMappers;
         this.moduleName = "work_orders";
         // Note this is irrelevant but also relevant
@@ -144,11 +145,13 @@ class WorkOrderService {
             return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
 
+        ApiService.insertPermissionRights(workOrder, who);
+
         const executor = (resolve, reject)=> {
             this.context.persistence.get("groups", (err, groups)=> {
                 if (err) return;
                 groups = JSON.parse(groups);
-                let userGroup = groups[body.group_id || who.group];
+                let userGroup = groups[workOrder.group_id];
                 // If the group actually doesn't exist then we can return this as a false request
                 if (!userGroup) return Promise.reject(Utils.buildResponse(
                     {status: "fail", data: {message: "Group specified doesn't exist"}}, 400
