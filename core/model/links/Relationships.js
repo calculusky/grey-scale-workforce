@@ -66,7 +66,7 @@ class Relationships {
                     records.push(domainObject);
                     if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
                 }
-                if (0 === rowLen) return resolve(records);
+                if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
             }).catch(err=> {
                 return reject(err);
             });
