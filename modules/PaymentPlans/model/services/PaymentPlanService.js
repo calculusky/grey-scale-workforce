@@ -17,22 +17,31 @@ class PaymentPlanService extends ApiService {
     }
 
 
-    getPaymentPlans(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    getPaymentPlans(value, by = "id", who = {}, offset = 0, limit = 10) {
         const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
+        const db = this.context.database;
         const executor = (resolve, reject) => {
             PaymentPlanMapper.findDomainRecord({by, value}, offset, limit)
                 .then(result => {
-                    let paymentPlans = result.records;
-                    let processed = 0;
-                    let rowLen = paymentPlans.length;
+                    let paymentPlans = result.records, processed = 0, rowLen = paymentPlans.length;
                     paymentPlans.forEach(async plan => {
-                        const disconnection = await plan.disconnection();
-                        plan['disconnection'] = disconnection.records.shift() || {};
-                        if (Object.keys(plan['disconnection']).length > 0) {
-                            plan['disconnection']['work_order_id'] = Utils.humanizeUniqueSystemNumber(
-                                plan['disconnection']['work_order_id']
-                            );
+                        const task = [plan.disconnection(), plan.createdBy(), plan.approvedBy()];
+                        task.push(Utils.getAssignees(plan.assigned_to, db));
+
+                        const [disconnection, {records: [{id, username, first_name, last_name}]}, approvedBy, assignee]
+                            = await Promise.all(task);
+
+                        const disc = disconnection.records.shift() || {};
+
+                        if (Object.keys(disc).length > 0) {
+                            disc['work_order_id'] = Utils.humanizeUniqueSystemNumber(disc['work_order_id']);
+                            const {records: [{customer_name, mobile_no, plain_address}]} = await disc.customer();
+                            plan['customer'] = {customer_name, mobile_no, plain_address};
                         }
+                        plan["disconnection"] = disc;
+                        plan['assigned_to'] = assignee || [];
+                        plan['created_by'] = {id, username, first_name, last_name};
+                        plan['for'] = plan.assigned_to.find(u => (u.id === who.sub)) || {};
                         if (++processed === rowLen) return resolve(Utils.buildResponse({data: {items: paymentPlans}}));
                     });
                 })
@@ -93,14 +102,14 @@ class PaymentPlanService extends ApiService {
         }
 
         return PaymentPlanMapper.createDomainRecord(paymentPlan).then(paymentPlan => {
-            if (!paymentPlan) return Promise.reject();
+            if (!paymentPlan) return Promise.reject(false);
 
             const discId = paymentPlan.disc_order_id;
             let backgroundTask = [
                 db.table("disconnection_billings").where('id', discId).update({has_plan: 1}),
                 API.workflows().startCase("payment_plan", who, paymentPlan, PaymentPlanMapper.tableName)
             ];
-            Promise.all(backgroundTask).then().catch(e => console.log(e));
+            Promise.all(backgroundTask).catch(e => console.log(e));
             return Utils.buildResponse({data: paymentPlan});
         });
     }
@@ -117,18 +126,21 @@ class PaymentPlanService extends ApiService {
     async approvePaymentPlan(planId, {comments = ""}, who, API) {
         const db = this.context.database;
 
-        let paymentPlan = await db.table("payment_plans").where('id', planId).select(['wf_case_id', 'assigned_to']);
+        let plan = await db.table("payment_plans").where('id', planId)
+            .select(['wf_case_id', 'assigned_to', 'approval_status']);
 
-        if (!paymentPlan.length) {
+        if (!plan.length) {
             const res = Utils.buildResponse({status: "fail", data: {message: "Payment Plan doesn't exist"}}, 400);
             return Promise.reject(res);
         }
 
-        paymentPlan = paymentPlan.shift();
+        if (plan['approval_status'] !== 0) return Promise.reject(Utils.paymentPlanProcessed(plan['approval_status']));
+
+        plan = plan.shift();
 
         const _command = {"COMMAND": "APPROVE"};
 
-        const approve = await API.workflows().resume(paymentPlan.wf_case_id, comments, _command, who).catch(err => {
+        const approve = await API.workflows().resume(plan.wf_case_id, comments, _command, who).catch(err => {
             console.log('PaymentPlanApproval', err);
             return Promise.reject(err);
         });
@@ -151,10 +163,8 @@ class PaymentPlanService extends ApiService {
                 }, who).catch(console.error);
             }
             Events.emit("payment_plan_approval", planId, who);
-        } else {
-            //TODO return that the task doesn't exist or has already been approved/rejected
         }
-        return Utils.buildResponse({data: paymentPlan});
+        return Utils.buildResponse({data: plan});
     }
 
 
@@ -169,18 +179,20 @@ class PaymentPlanService extends ApiService {
      */
     async rejectPaymentPlan(planId, {comments}, who, API) {
         const db = this.context.database;
-        let paymentPlan = await db.table("payment_plans").where('id', planId).select(['wf_case_id', 'assigned_to']);
+        let plan = await db.table("payment_plans").where('id', planId).select(['wf_case_id', 'assigned_to']);
 
-        if (!paymentPlan.length) {
+        if (!plan.length) {
             const res = Utils.buildResponse({status: "fail", data: {message: "Payment Plan doesn't exist"}}, 400);
             return Promise.reject(res);
         }
 
-        paymentPlan = paymentPlan.shift();
+        if (plan['approval_status'] !== 0) return Promise.reject(Utils.paymentPlanProcessed(plan['approval_status']));
+
+        plan = plan.shift();
 
         const _command = {"COMMAND": "REJECT"};
 
-        const reject = await API.workflows().resume(paymentPlan.wf_case_id, comments, _command, who).catch(err => {
+        const reject = await API.workflows().resume(plan.wf_case_id, comments, _command, who).catch(err => {
             console.log('PaymentPlanRejection', err);
             return Promise.reject(err);
         });
@@ -196,11 +208,8 @@ class PaymentPlanService extends ApiService {
                 }, who).catch(console.error);
             }
             Events.emit("payment_plan_approval", planId, who, false);
-        } else {
-            console.log("No task was found");
-            //TODO return that the task doesn't exist or has already been approved/rejected
         }
-        return Utils.buildResponse({data: paymentPlan});
+        return Utils.buildResponse({data: plan});
     }
 
     updatePaymentPlan() {

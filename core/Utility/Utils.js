@@ -24,6 +24,12 @@ module.exports.decrypt = function (value, secret = "") {
     return dec;
 };
 
+
+module.exports.getAssignees = function (assignedTo = [], db, cols = ["id", "username", "first_name", "last_name"]) {
+    let filtered = assignedTo.filter(i => i.id);
+    return db.table("users").whereIn("id", filtered.map(({id}) => id)).select(cols);
+};
+
 module.exports.date = DateUtils;
 
 module.exports.mapper = function () {
@@ -346,14 +352,28 @@ module.exports.getModuleName = function (module) {
     }
 };
 
+module.exports.paymentPlanProcessed = function (appStatus) {
+    if (appStatus !== 0) {
+        return this.buildResponse({
+            status: "fail",
+            code: `${(appStatus === -1) ? "PAYMENT_PLAN_REJECTED" : "PAYMENT_PLAN_APPROVED"}`,
+            msg: `This payment plan has already been worked on`
+        }, 400);
+    }
+    return this.buildResponse({msg: "The current state of this payment plan is unknown."});
+};
+
 
 module.exports.processMakerError = function ({error}) {
+    console.log(error);
     if (!error) return "";
     const processMessage = (msg) => {
         if (msg.includes("permission")) {
             return "You don't have permission to act on this record";
         } else if (msg.includes("does not exist")) {
             return "The record you are trying to access doesn't exist";
+        } else if (msg.includes("Unauthorized")) {
+            return "Unauthorized Access";
         }
     };
     switch (error.code) {
@@ -363,6 +383,12 @@ module.exports.processMakerError = function ({error}) {
                 code: "PM_ERROR",
                 msg: processMessage(error.message)
             }, 400);
+        case 401:
+            return this.buildResponse({
+                status: 'fail',
+                code: "PM_ERROR",
+                msg: processMessage(error.message)
+            }, 401);
         default:
             return this.buildResponse({
                 status: 'fail',

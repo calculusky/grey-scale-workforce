@@ -358,29 +358,30 @@ class WorkflowService {
         this.getCase(caseId, who).then(res => {
             const currentTask = res['current_task'];
             const date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
+            const db = this.context.database;
             currentTask.forEach(async task => {
-                //Now lets assign the record to each user
+                //Now lets assign the record to the user process maker assigned it to
                 //Also lets emit an event that a case has been assigned
-                let user = await this.context.database.table("users").where('wf_user_id', task['usr_uid']).select(['id']);
+                let user = await db.table("users").where('wf_user_id', task['usr_uid']).select(['id']);
 
                 if (!user.length) return;
 
                 user = user.shift();
 
                 //lets fetch the record and append the assigned_to
-                let assignedTo = await this.context.database.table(tableName).where("id", domain['id']).select(['assigned_to']);
+                let assignedTo = await db.table(tableName).where("id", domain['id']).select(['assigned_to']);
 
                 if (!assignedTo.length) return;
 
                 assignedTo = assignedTo.shift();
 
                 if (!assignedTo.assigned_to.find(item => item.id === user.id)) {
-                    assignedTo.assigned_to.push({"id": user.id, created_at: date});
+                    assignedTo.assigned_to.push({"id": user.id, created_at: date, "for": "approval"});
                 }
 
                 Events.emit("payment_plan_assigned", domain.id, [user.id]);
 
-                this.context.database.table(tableName).where("id", domain['id'])
+                db.table(tableName).where("id", domain['id'])
                     .update({"assigned_to": JSON.stringify(assignedTo.assigned_to)}).then();
             });
         });

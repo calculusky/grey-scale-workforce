@@ -91,9 +91,6 @@ class EmailEvent extends EventEmitter {
             let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
             this.context.persistence.set(token, true, 'EX', 10000);
 
-            console.log(tokenOpt);
-            console.log(token);
-
             this.email.send({
                 template: 'payment_plan',
                 message: {to: user.email},
