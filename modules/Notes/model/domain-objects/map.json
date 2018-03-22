@@ -3,10 +3,14 @@
   "module": "module",
   "relation_id": "relation_id",
   "note": "note",
-  "created_by": "created_by",
   "source": "source",
   "source_id": "source_id",
   "source_name": "source_name",
+  "created_by": "created_by",
+  "assigned_to": "assigned_to",
+  "group_id": "group_id",
+  "request_id": "request_id",
+  "deleted_at": "deleted_at",
   "created_at": "created_at",
   "updated_at": "updated_at"
 }
