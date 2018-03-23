@@ -50,40 +50,40 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-    /**
-     * @swag
-     * /notes:
-     *   put:
-     *     summary: Updates a Note
-     *     description: ''
-     *     tags: [Notes]
-     *     consumes:
-     *     - application/json
-     *     produces:
-     *     - application/json
-     *     operationId: updateNote
-     *     responses:
-     *       '200':
-     *         description: Successfully Added
-     *     parameters:
-     *      - $ref: '#/parameters/sessionId'
-     *      - in: body
-     *        name: 'fault'
-     *        required: true
-     *        schema:
-     *          $ref: '#/definitions/postNoteInput'
-     */
-    app.put('/notes', jsonParser, (req, res)=> {
-        API.notes().updateNote(req.body, req.who)
-            .then(({data, code})=> {
-                console.log(data);
-                return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
-                console.log(code, err);
-                return res.status(code).send(err);
-            });
-    });
+    // /**
+    //  * @swag
+    //  * /notes:
+    //  *   put:
+    //  *     summary: Updates a Note
+    //  *     description: ''
+    //  *     tags: [Notes]
+    //  *     consumes:
+    //  *     - application/json
+    //  *     produces:
+    //  *     - application/json
+    //  *     operationId: updateNote
+    //  *     responses:
+    //  *       '200':
+    //  *         description: Successfully Added
+    //  *     parameters:
+    //  *      - $ref: '#/parameters/sessionId'
+    //  *      - in: body
+    //  *        name: 'fault'
+    //  *        required: true
+    //  *        schema:
+    //  *          $ref: '#/definitions/postNoteInput'
+    //  */
+    // app.put('/notes', jsonParser, (req, res)=> {
+    //     API.notes().updateNote(req.body, req.who)
+    //         .then(({data, code})=> {
+    //             console.log(data);
+    //             return res.status(code).send(data);
+    //         })
+    //         .catch(({err, code})=> {
+    //             console.log(code, err);
+    //             return res.status(code).send(err);
+    //         });
+    // });
 
     
     /**

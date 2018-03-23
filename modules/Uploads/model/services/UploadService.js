@@ -92,15 +92,10 @@ class UploadService {
                 });
                 //Get Mapper
                 UploadMapper.createDomainRecord(upload).then(upload=> {
-                    if (upload) {
-                        delete upload.file_path;
-                        uploads.push(upload);
-                    }
-                    if (++processed === rowLen) {
-                        console.log("DONE UPLOADING");
-                        return resolve(Utils.buildResponse({data: {"items": uploads}}));
-                    }
+                    if (upload) (delete upload.file_path) && uploads.push(upload);
+                    if (++processed === rowLen) return resolve(Utils.buildResponse({data: {"items": uploads}}));
                 }).catch(err=> {
+                    files.forEach(file => fs.unlink(file.path));
                     console.log(err);
                     return reject(err);
                 });

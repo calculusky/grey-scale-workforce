@@ -18,7 +18,7 @@ module.exports = function main(context, Api) {
     //all cron jobs
     console.log('* * * * * * Registered CronJobs');
     //schedule job for running createDelinquencyList
-    cron.scheduleJob('*/1 * * * *', main.createDelinquencyList.bind(this));
+    cron.scheduleJob('*/2 * * * *', main.createDelinquencyList.bind(this));
 
     //schedule job for creating meter readings
     cron.scheduleJob('*/1 * * * *', main.createMeterReadings.bind(this));
@@ -38,194 +38,190 @@ module.exports.createDelinquencyList = function () {
     let currentFile = null;
 
     //This function processes the excel document
-    const startProcessor = (file/*.xlsx*/, fileName) => {
+    const startProcessor = async (file/*.xlsx*/, fileName) => {
         this.lock.d = true;
         currentFile = file;
-        let uploadData = {};
-        let groups = {};
         const currDate = new Date();
         const logMessages = [];
         const db = this.context.database;
 
-
-        //Fetch Groups and the Uploaded record before hand
-        Promise.all([
+        const task = [
             Utils.getFromPersistent(this.context, "groups"),
             db.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to']),
             workbook.xlsx.readFile(file)
-        ]).then(values => {
+        ];
 
-            groups = JSON.parse(values[0]);
-            uploadData = values[1].shift();
-
-            const workSheet = workbook.getWorksheet(1);
-            let rowLen = workSheet.rowCount,
-                columnLen = workSheet.actualColumnCount,
-                processed = 0,
-                processedDelinquencies = 0,
-                processedWorkOrders = 0;
-
-            let colHeaderIndex = {};
-
-            //if it is empty or just includes the column heads... lets delete the file and release lock
-            if (rowLen <= 1) {
-                deleteFile(file);
-                logMessages.push("The uploaded file is empty. Nothing to do.");
-                this.lock.d = false;//release the lock here
-                return _updateUploadStatus(this, fileName, 4, logMessages);
-            }
-
-            const endProcess = (recordsProcessed) => {
-                if (recordsProcessed === rowLen - 1) {
-                    deleteFile(file);
-                    logMessages.push(`${processedDelinquencies} of ${rowLen - 1}` +
-                        " delinquent records imported successfully"
-                    );
-                    logMessages.push(`${processedWorkOrders} work orders was generated for a total of` +
-                        ` ${processedDelinquencies}` + " delinquencies imported.");
-
-                    let status = (processedDelinquencies === rowLen - 1) ? 4 : 5;
-                    _updateUploadStatus(this, fileName, status, JSON.stringify(logMessages));
-                    this.lock.d = false;
-                    console.log(logMessages);
-                }
-                return recordsProcessed === rowLen - 1;
-            };
-
-            const processDelinquentRows = (row, rn) => {
-                let rowNum = rn;
-                if (rowNum === 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
-                else if (rowNum > 1) {
-                    const accountNo = row.getCell(colHeaderIndex['account_no']).value;
-                    const cBill = row.getCell(colHeaderIndex['current_bill']).value;
-                    const arrears = row.getCell(colHeaderIndex['net_arrears']).value;
-                    const undertaking = row.getCell(colHeaderIndex['undertaking']).value;
-                    const utIndex = row.getCell(colHeaderIndex['undertaking_index']).value;
-                    const generate = row.getCell(colHeaderIndex['auto_generate_do']).value;
-                    //We need to validate the rows.
-                    //If the current row is empty quickly move to the next and log the error for the client
-                    if (rn !== rowLen && (accountNo == null || !accountNo.length > 0
-                            || Number.isNaN(cBill)
-                            || Number.isNaN(arrears)
-                            || utIndex == null)) {
-                        //TODO make error messages
-                        return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
-                    }
-
-
-                    //Worst case scenario: if we can't find the hub an undertaking falls under
-                    //lets assign it to the UT group itself
-                    let hubGroup = {id: utIndex.result};
-                    let hubManagerId = null;
-
-                    //Get the technical hub that manages the Undertaking of the Delinquent customer
-                    //Only if we are to generate work order for this delinquent customer automatically
-                    if (generate.toUpperCase() === 'YES') {
-                        hubGroup = Utils.getGroupParent(groups[utIndex.result], "technical_hub") || hubGroup;
-
-                        //There is no need looking up for the hub manager if the UT doesn't belong to a hub
-                        if (hubGroup.id !== utIndex.result) {
-                            db.select(['users.id']).from("users")
-                                .innerJoin("role_users", "users.id", "role_users.user_id")
-                                .innerJoin("roles", "role_users.role_id", "roles.id")
-                                .innerJoin("user_groups", "user_groups.group_id", hubGroup.id)
-                                .where("roles.slug", "technical_hub")
-                                .then(userId => {
-                                    hubManagerId = (userId.length) ? userId.shift().id : null;
-                                });
-                        } else {
-                            logMessages.push(`The undertaking(${undertaking}) specified in row(${rowNum})` +
-                                " doesn't belong to any Hub.");
-                        }
-                    } else logMessages.push("Work order was not auto-generated for row(" + rowNum + ")");
-
-                    let assignedTo = uploadData.assigned_to[0];
-                    assignedTo.created_at = Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s");
-
-                    let delinquency = {
-                        "account_no": accountNo,
-                        "current_bill": cBill,
-                        "arrears": arrears,
-                        "min_amount_payable": cBill + arrears,
-                        "total_amount_payable": cBill + arrears + 2000,
-                        "group_id": uploadData.group_id,
-                        "created_by": assignedTo.id,
-                        "assigned_to": JSON.stringify([assignedTo]),
-                        "created_at": assignedTo.created_at,
-                        "updated_at": assignedTo.created_at
-                    };
-
-                    // Insert record to Database
-                    db.table("disconnection_billings").insert(delinquency)
-                        .then(res => {
-                            const discId = res.shift();
-                            ++processedDelinquencies;
-
-                            // We need to only call endProcess only when we are sure that all processes are completed
-                            // thus if we are creating a work order we can only call endProcess when it either passes
-                            // or fail. If we aren't creating a work-order then we can test endProcess
-                            let doWorkOrder = generate.toUpperCase() === 'YES';
-
-                            if (doWorkOrder) {
-                                //We now need to create a work order only if it has a hub and a hub mgr
-                                if (hubGroup.id !== utIndex.result) {
-                                    API.workOrders().createWorkOrder({
-                                        type_id: 1,
-                                        related_to: "disconnection_billings",
-                                        relation_id: `${discId}`,
-                                        labels: '["work"]',
-                                        summary: "Disconnect Customer!!!",
-                                        status: '1',
-                                        group_id: hubGroup.id,
-                                        assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
-                                        issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
-                                        created_at: assignedTo.created_at,
-                                        updated_at: assignedTo.created_at
-                                    }).then(res => {
-                                        //We need to get the work order id and relate it with the disconnection billing
-                                        //Not necessary to wait for the return
-                                        db.table('disconnection_billings').where('id', '=', discId)
-                                            .update({
-                                                work_order_id: res.data.data.work_order_no,
-                                                assigned_to: JSON.stringify([assignedTo, {
-                                                    "id": hubManagerId,
-                                                    "created_at": assignedTo.created_at
-                                                }])
-                                            }).then();
-
-                                        ++processedWorkOrders;
-                                        endProcess(++processed);
-                                    }).catch(err => {
-                                        console.log('CREATE_ERR', err);
-                                        endProcess(++processed);
-                                    });
-                                } else {
-                                    logMessages.push(`Couldn't create a work order for row(${rowNum})`
-                                        + " because the undertaking doesn't belong to a hub; " +
-                                        "however a delinquent record was created.");
-                                    endProcess(++processed);
-                                }
-                            }
-                            if (!doWorkOrder) endProcess(++processed);
-                        })
-                        .catch(err => {
-                            logMessages.push(`An error occurred while processing row(${rowNum})` + "." +
-                                " It could be that the account number doesn't exist.");
-                            endProcess(++processed);
-                        });
-                }
-                if (rn !== rowLen) return setTimeout(() => processDelinquentRows(workSheet.getRow(++rn), rn), 20);
-            };
-
-            processDelinquentRows(workSheet.getRow(1), 1);
-
-        }).catch(err => {
+        //Fetch Groups and the Uploaded record before hand
+        let [groups, uploadData,] = await Promise.all(task).catch(err => {
             console.log(err);
             deleteFile(file);
             this.lock.d = false;//should in-case an error occurs we can release the lock to allow a retry
             logMessages.push("There was an error reading the file");
             return _updateUploadStatus(this, fileName, 3, logMessages);
         });
+
+        groups = JSON.parse(groups);
+        uploadData = uploadData.shift();
+
+        const workSheet = workbook.getWorksheet(1);
+        let rowLen = workSheet.rowCount,
+            columnLen = workSheet.actualColumnCount,
+            processed = 0,
+            processedDelinquencies = 0,
+            processedWorkOrders = 0;
+
+        let colHeaderIndex = {};
+
+        //if it is empty or just includes the column heads... lets delete the file and release lock
+        if (rowLen <= 1) {
+            deleteFile(file);
+            logMessages.push("The uploaded file is empty. Nothing to do.");
+            this.lock.d = false;//release the lock here
+            return _updateUploadStatus(this, fileName, 4, logMessages);
+        }
+
+        const endProcess = (recordsProcessed) => {
+            if (recordsProcessed === rowLen - 1) {
+                deleteFile(file);
+                logMessages.push(`${processedDelinquencies} of ${rowLen - 1}` +
+                    " delinquent records imported successfully"
+                );
+                logMessages.push(`${processedWorkOrders} work orders was generated for a total of` +
+                    ` ${processedDelinquencies}` + " delinquencies imported.");
+
+                let status = (processedDelinquencies === rowLen - 1) ? 4 : 5;
+                _updateUploadStatus(this, fileName, status, JSON.stringify(logMessages));
+                this.lock.d = false;
+                console.log(logMessages);
+            }
+            return recordsProcessed === rowLen - 1;
+        };
+
+        const processDelinquentRows = (row, rn) => {
+            let rowNum = rn;
+            if (rowNum === 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
+            else if (rowNum > 1) {
+                const accountNo = row.getCell(colHeaderIndex['account_no']).value;
+                const cBill = row.getCell(colHeaderIndex['current_bill']).value;
+                const arrears = row.getCell(colHeaderIndex['net_arrears']).value;
+                const undertaking = row.getCell(colHeaderIndex['undertaking']).value;
+                const utIndex = row.getCell(colHeaderIndex['undertaking_index']).value;
+                const generate = row.getCell(colHeaderIndex['auto_generate_do']).value;
+                //We need to validate the rows.
+                //If the current row is empty quickly move to the next and log the error for the client
+                if (rn !== rowLen && (accountNo == null || !accountNo.length > 0
+                        || Number.isNaN(cBill)
+                        || Number.isNaN(arrears)
+                        || utIndex == null)) {
+                    //TODO make error messages
+                    return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
+                }
+
+
+                //Worst case scenario: if we can't find the hub an undertaking falls under
+                //lets assign it to the UT group itself
+                let hubGroup = {id: utIndex.result};
+                let hubManagerId = null;
+
+                //Get the technical hub that manages the Undertaking of the Delinquent customer
+                //Only if we are to generate work order for this delinquent customer automatically
+                if (generate.toUpperCase() === 'YES') {
+                    hubGroup = Utils.getGroupParent(groups[utIndex.result], "technical_hub") || hubGroup;
+
+                    //There is no need looking up for the hub manager if the UT doesn't belong to a hub
+                    if (hubGroup.id !== utIndex.result) {
+                        db.select(['users.id']).from("users")
+                            .innerJoin("role_users", "users.id", "role_users.user_id")
+                            .innerJoin("roles", "role_users.role_id", "roles.id")
+                            .innerJoin("user_groups", "user_groups.group_id", hubGroup.id)
+                            .where("roles.slug", "technical_hub")
+                            .then(userId => {
+                                hubManagerId = (userId.length) ? userId.shift().id : null;
+                            });
+                    } else {
+                        logMessages.push(`The undertaking(${undertaking}) specified in row(${rowNum})` +
+                            " doesn't belong to any Hub.");
+                    }
+                } else logMessages.push("Work order was not auto-generated for row(" + rowNum + ")");
+
+                let assignedTo = uploadData.assigned_to[0];
+                assignedTo.created_at = Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s");
+
+                let delinquency = {
+                    "account_no": accountNo,
+                    "current_bill": cBill,
+                    "arrears": arrears,
+                    "min_amount_payable": cBill + arrears,
+                    "total_amount_payable": cBill + arrears + 2000,
+                    "group_id": uploadData.group_id,
+                    "created_by": assignedTo.id,
+                    "assigned_to": JSON.stringify([assignedTo]),
+                    "created_at": assignedTo.created_at,
+                    "updated_at": assignedTo.created_at
+                };
+
+                // Insert record to Database
+                db.table("disconnection_billings").insert(delinquency)
+                    .then(res => {
+                        const discId = res.shift();
+                        ++processedDelinquencies;
+
+                        // We need to only call endProcess only when we are sure that all processes are completed
+                        // thus if we are creating a work order we can only call endProcess when it either passes
+                        // or fail. If we aren't creating a work-order then we can test endProcess
+                        let doWorkOrder = generate.toUpperCase() === 'YES';
+
+                        if (doWorkOrder) {
+                            //We now need to create a work order only if it has a hub and a hub mgr
+                            if (hubGroup.id !== utIndex.result) {
+                                API.workOrders().createWorkOrder({
+                                    type_id: 1,
+                                    related_to: "disconnection_billings",
+                                    relation_id: `${discId}`,
+                                    labels: '["work"]',
+                                    summary: "Disconnect Customer!!!",
+                                    status: '1',
+                                    group_id: hubGroup.id,
+                                    assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
+                                    issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
+                                    created_at: assignedTo.created_at,
+                                    updated_at: assignedTo.created_at
+                                }).then(res => {
+                                    //We need to get the work order id and relate it with the disconnection billing
+                                    //Not necessary to wait for the return
+                                    db.table('disconnection_billings').where('id', '=', discId)
+                                        .update({
+                                            work_order_id: res.data.data.work_order_no,
+                                            assigned_to: JSON.stringify([assignedTo, {
+                                                "id": hubManagerId,
+                                                "created_at": assignedTo.created_at
+                                            }])
+                                        }).then();
+
+                                    ++processedWorkOrders;
+                                    endProcess(++processed);
+                                }).catch(err => {
+                                    console.log('CREATE_ERR', err);
+                                    endProcess(++processed);
+                                });
+                            } else {
+                                logMessages.push(`Couldn't create a work order for row(${rowNum})`
+                                    + " because the undertaking doesn't belong to a hub; " +
+                                    "however a delinquent record was created.");
+                                endProcess(++processed);
+                            }
+                        }
+                        if (!doWorkOrder) endProcess(++processed);
+                    })
+                    .catch(err => {
+                        logMessages.push(`An error occurred while processing row(${rowNum})` + "." +
+                            " It could be that the account number doesn't exist.");
+                        endProcess(++processed);
+                    });
+            }
+            if (rn !== rowLen) return setTimeout(() => processDelinquentRows(workSheet.getRow(++rn), rn), 20);
+        };
+        processDelinquentRows(workSheet.getRow(1), 1);
     };
     //if the lock is currently released we can start processing another file
     if (!this.lock.d) {
