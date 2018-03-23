@@ -3,7 +3,7 @@
  * Created by paulex on 7/4/17.
  */
 const Log = require(`${__dirname}/../../../core/logger`);
-const RecognitionService = require('../model/services/RecognitionService');
+// const RecognitionService = require('../model/services/RecognitionService');
 
 /**
  *
@@ -12,8 +12,8 @@ const RecognitionService = require('../model/services/RecognitionService');
  * @param jsonParser
  * @param urlencodedParser
  */
-module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
-    app.use(['/users*', '/logout'], (req, res, next)=>API.recognitions().auth(req, res, next));
+module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
+    app.use(['/users*', '/logout'], (req, res, next) => API.recognitions().auth(req, res, next));
     /**
      * @swagger
      * /login:
@@ -39,13 +39,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/loginInput'
      *
      */
-    app.post('/login', jsonParser, urlencodedParser, (req, res)=> {
+    app.post('/login', jsonParser, urlencodedParser, (req, res) => {
         // Log.info('/login', req.body);
         API.recognitions().login(req.body.username, req.body.password, req)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 // console.log(data);
                 res.status(code).send(data);
-            }).catch(({err, code})=> {
+            }).catch(({err, code}) => {
             console.log(err);
             res.status(code).send(err);
         });
@@ -68,12 +68,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/fireBaseToken'
      */
-    app.get('/logout', (req, res)=> {
+    app.get('/logout', (req, res) => {
         API.recognitions().logout(req.who, API, req)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(err=> {
+            .catch(err => {
                 return res.status(503).send(err);
             });
     });
@@ -106,13 +106,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        schema:
      *          $ref: '#/definitions/postUserInput'
      */
-    app.post('/users', jsonParser, (req, res)=> {
+    app.post('/users', jsonParser, (req, res) => {
         Log.info("/users", req.body);
         API.users().createUser(req.body, req.who, API)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
@@ -141,15 +141,15 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *       required: true
      *       type: integer
      */
-    app.get("/users/:id", urlencodedParser, (req, res)=> {
+    app.get("/users/:id", urlencodedParser, (req, res) => {
         Log.info('/users/:id', `/users/:${req.params.id}`);
         API.users().getUsers(req.params.id)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 console.log('RES', data);
                 return res.status(code).send(data);
-            }).catch((err)=> {
+            }).catch(({err, code = 500}) => {
             console.log(err);
-            // return res.status(code).send(err);
+            return res.status(code).send(err);
         });
     });
 
@@ -214,10 +214,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *       schema:
      *         $ref: '#/definitions/postUserInput'
      */
-    app.put("/users/:id", jsonParser, (req, res)=> {
+    app.put("/users/:id", multiPart.single("avatar"), (req, res) => {
         Log.info("updateUser:", req.body);
-        API.users().updateUser('id', req.params['id'], req.body, req.who, API)
-            .then(({data, code=200})=> {
+        API.users().updateUser('id', req.params['id'], req.body, req.who, req.file, API)
+            .then(({data, code = 200}) => {
                 console.log('success', data);
                 return res.status(code).send(data);
             })
@@ -251,14 +251,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/limit'
      *
      */
-    app.put("/users/register/fcm/:token", urlencodedParser, (req, res)=> {
+    app.put("/users/register/fcm/:token", urlencodedParser, (req, res) => {
         Log.info("registerFcmToken:", req.params);
         API.users().registerFcmToken(req.params.token, req.who)
-            .then(({data, code=200})=> {
+            .then(({data, code = 200}) => {
                 console.log('success', data);
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code = 500}) => {
                 console.error('err', err);
                 return res.status(code).send(err);
             });
@@ -287,7 +287,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code}) => {
+            .catch(({err, code = 500}) => {
                 return res.status(code).send(err);
             });
     });

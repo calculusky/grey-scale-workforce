@@ -54,26 +54,37 @@ class WorkflowService {
      */
     async updateUser(by, value, body = {}) {
         if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        const db = this.context.database;
+        // //we need to get the updated user record
+        let dbUser = await db.table("users").where(by, value).select([
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'mobile_no',
+            'wf_user_id'
+        ]);
 
-        //we need to get the updated user record
-        let dbUser = await  this.context.database.table("users").where(by, value).select();
+        if (!dbUser.length) return;
+
         dbUser = dbUser.shift();
 
-        if (!dbUser) return;
+        body['wf_user_id'] = dbUser['wf_user_id'];
+
+        if (!body) return;
 
         let response = null;
 
-        if (dbUser['wf_user_id']) {
-            delete  dbUser.password;
-            const pmUser = toPMUser(dbUser);
-            response = await ProcessAPI.request(`/user/${dbUser['wf_user_id']}`, pmUser, 'PUT').catch(err => {
+        if (body['wf_user_id']) {
+            const pmUser = toPMUser(body);
+            response = await ProcessAPI.request(`/user/${body['wf_user_id']}`, pmUser, 'PUT').catch(err => {
                 console.log("updateUser:", err);
             });
         } else {
             // If this user doesn't have a wf_user_id
             // We can assume that the user doesn't exist
             // Create the user using the username as the default password
-            dbUser.password = dbUser.username;//default password
+            if (body.password) dbUser.password = body.password; else dbUser.password = dbUser.username;
             response = await this.createUser(dbUser);
         }
         return response;

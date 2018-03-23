@@ -302,8 +302,10 @@ module.exports.isWorkOrderNo = function (workOrderNo) {
 };
 
 module.exports.numericToInteger = function (body, ...keys) {
-    for (let key in body) {
-        if (body.hasOwnProperty(key) && keys.includes(key)) {
+    let _oKeys = Object.keys(body);
+    for (let i = 0; i < _oKeys.length; i++) {
+        let key = _oKeys[i];
+        if (body[key] && keys.includes(key)) {
             let value = Number(body[key]);
             if (isNaN(value)) continue;
             body[key] = value;

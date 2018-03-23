@@ -75,13 +75,12 @@ module.exports = function route(context) {
 
     //configure multer for dynamic storage
     const storage = multer.diskStorage({
-        destination: (req, file, cb)=> {
+        destination: (req, file, cb) => {
             let path = req.path.substring(1, req.path.length);
             path = (path.includes("/")) ? path.substr(0, path.indexOf('/')) : path;
             let parentPath = context.config.storage.path;
             let routePaths = context.config.storage['routeStorage'];
             let saveAt = parentPath;
-
             let routePath = routePaths[path];
             if (routePath) {
                 saveAt = (routePath.use_parent) ? `${saveAt}${routePath.path}` : routePath.path;
@@ -90,9 +89,12 @@ module.exports = function route(context) {
                     const body = req.body;
                     saveAt = `${saveAt}/attachments/${body.module}`
                 } else if (path === 'uploads') {
-                    console.log(req.body);
                     //for uploads the upload type is important
                     saveAt = `${saveAt}/uploads/${req.body['upload_type']}`;
+                } else if (req.method === "PUT" && path.toLowerCase() === "users") {
+                    const userFolderPath = `${saveAt}/profile/${req.params['id']}`;
+                    if (!fs.existsSync(userFolderPath)) fs.mkdirSync(`${saveAt}/profile/${req.params['id']}`);
+                    saveAt = `${saveAt}/profile/${req.params['id']}`
                 }
             }
             cb(null, saveAt);
@@ -104,11 +106,11 @@ module.exports = function route(context) {
      * Add all Application Controller|Route to the system
      * @type {string}
      */
-    fs.readdirSync(controllerPath).forEach(dir=> {
+    fs.readdirSync(controllerPath).forEach(dir => {
         if (fs.statSync(`${controllerPath}/${dir}`).isDirectory()) {
             let filePath = `${controllerPath}/${dir}/controller`;
             if (fs.existsSync(filePath)) {
-                fs.readdirSync(filePath).forEach(controller=> {
+                fs.readdirSync(filePath).forEach(controller => {
                     if (controller) {
                         const routeCtrl = require(`${filePath}/${controller}`);
                         swaggerAPIs.push(`${filePath}/${controller}`);
@@ -171,5 +173,5 @@ module.exports = function route(context) {
     //Register Plugins
     app.use(express.static('public'));
 
-    http.listen(9003, ()=>console.log("Started MrWorking API"));
+    http.listen(9003, () => console.log("Started MrWorking API"));
 };

@@ -1,7 +1,13 @@
 /**
  * Created by paulex on 7/5/17.
  */
-const RecognitionService = require('../../Users/model/services/RecognitionService');
+/**
+ *
+ * @param app
+ * @param API {API}
+ * @param jsonParser
+ * @param urlencodedParser
+ */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
     app.use('/work_orders*', (req, res, next)=>API.recognitions().auth(req, res, next));
     

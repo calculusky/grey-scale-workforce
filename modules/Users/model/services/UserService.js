@@ -161,16 +161,27 @@ class UserService extends ApiService {
      * @param value
      * @param body
      * @param who
+     * @param file
      * @param API {API}
      * @returns {Promise.<User>|*}
      */
-    async updateUser(by, value, body = {}, who, API) {
+    async updateUser(by, value, body = {}, who, file, API) {
         Utils.numericToInteger(body, 'roles', 'group_id');
         const User = DomainFactory.build(DomainFactory.USER);
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         const role_id = body['roles'];
+        const password = body.password;
         let user = new User(body);
         let group_id = null;
+
+        //If a file was uploaded lets update the user profile
+        user['avatar'] = (file) ? file.filename : undefined;
+
+        //If there is also a new password, we should update the password
+        if (password) {
+            user['wf_user_pass'] = Utils.encrypt(password, process.env.JWT_SECRET);
+            user.setPassword(Password.encrypt(password).hash.replace("$2a$", "$2y$"));
+        }
 
         //We shouldn't override the group that created the user
         if (body.group_id) (group_id = body.group_id) && (delete user.group_id);
@@ -190,7 +201,7 @@ class UserService extends ApiService {
                         API.groups().updateUserGroup(user.id, group.id, {group_id}, who, API).catch(console.error);
                     } else API.groups().addUserToGroup({user_id: user.id, group_id}, who, API).catch(console.error);
                 }
-                API.workflows().updateUser(by, value, user).catch(console.error);
+                API.workflows().updateUser(by, value, Object.assign({password: password}, user)).catch(console.error);
                 return Utils.buildResponse({data: result.shift()});
             } else {
                 return Promise.reject(Utils.buildResponse({status: "fail", data: result.shift()}, 404));
