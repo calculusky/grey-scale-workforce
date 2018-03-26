@@ -249,36 +249,31 @@ module.exports.getGroupParent = function (group, type = 'business_unit') {
 
 module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleName, context) {
     let generated = `${prefix}${unitName}`;
-
+    const db = context.database;
     if (!unitCounter[unitName]) unitCounter[unitName] = 0;
 
     const executor = (resolve, reject) => {
-        let resultSets = context.database.select([moduleName]).from('unit_counters')
-            .where('unit_name', unitName);
-
-
-        resultSets.then(results => {
+        let resultSets = db.select([moduleName]).from('unit_counters').where('unit_name', unitName);
+        return resultSets.then(results => {
             //if the result is empty we need to add the new counter
             let count = (results.length) ? results.shift()[moduleName] : 0;
 
             if (unitCounter[unitName] === 0) unitCounter[unitName] = count;
 
-            if (!count) context.database.table('unit_counters').insert({"unit_name": unitName}).then();
+            if (!count) db.table('unit_counters').insert({"unit_name": unitName}).then(() => null);
 
             ++unitCounter[unitName];
 
             //Lets add this up
-            context.database.table('unit_counters').update({[moduleName]: unitCounter[unitName]})
-                .where('unit_name', unitName).then();
+            db.table('unit_counters').update({[moduleName]: unitCounter[unitName]}).where('unit_name', unitName)
+                .then(() => null);
 
             count = `${unitCounter[unitName]}`;
             let randomNo = Math.round(Math.random() * (999 - 100) + 100);
             generated = `${generated}${count.padStart(6, '0')}${randomNo}${new Date().getMonth() + 1}`;
             // console.log(generated);
             return resolve(generated);
-        }).catch(t => {
-            console.log(t);
-        });
+        }).catch(console.error);
     };
     return new Promise(executor);
 };

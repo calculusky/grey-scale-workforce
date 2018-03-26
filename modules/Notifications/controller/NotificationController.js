@@ -3,8 +3,15 @@
  */
 
 const Log = require(`${__dirname}/../../../core/logger`);
-const RecognitionService = require('../../Users/model/services/RecognitionService');
 
+/**
+ *
+ * @param app
+ * @param API {API}
+ * @param jsonParser
+ * @param urlencodedParser
+ * @param multiPart
+ */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
     app.use('/notifications*', (req, res, next)=>API.recognitions().auth(req, res, next));
 
@@ -42,7 +49,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 return res.status(code).send(err);
             });
     });
-    
 
 
     /**

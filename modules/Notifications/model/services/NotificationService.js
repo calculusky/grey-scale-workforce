@@ -5,6 +5,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
 const validate = require('validate-fields')();
 const request = require('request');
+const _ = require("lodash");
 
 /**
  * @author Paul Okeke
@@ -37,10 +38,10 @@ class NotificationService {
         }
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
         const executor = (resolve, reject) => {
-            NotificationMapper.findDomainRecord({by, value}, offset, limit).then(result=> {
+            NotificationMapper.findDomainRecord({by, value}, offset, limit).then(result => {
                 let notifications = result.records;
                 return resolve(Utils.buildResponse({data: {items: notifications}}));
-            }).catch(err=> {
+            }).catch(err => {
                 return reject(err);
             });
         };
@@ -55,15 +56,17 @@ class NotificationService {
      * @param who
      * @param API {API}
      */
-    sendNotification(body = {}, who = {}, API) {
+    async sendNotification(body = {}, who = {}, API) {
         const Notification = DomainFactory.build(DomainFactory.NOTIFICATION);
-        let notification = new Notification(body);
-        console.log(notification);
-        let isValid = validate(notification.rules(), notification);
+        const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
+        const db = this.context.database;
+        const notification = new Notification(body);
+        const isValid = validate(notification.rules(), notification);
 
-        if (!isValid) {
-            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
-        }
+        if (!isValid) return Promise.reject(Utils.buildResponse({
+            status: "fail",
+            data: {message: validate.lastError}
+        }, 400));
 
         let userIds = [];
         //The to column is an array
@@ -73,49 +76,30 @@ class NotificationService {
         } else {
             notification.to = `[${notification.to}]`;
         }
-
         //TODO we only have this here currently because group:column can't be null
         notification.group = "[]";
 
-        let fcmTokens = [];
-        let processed = 0;
+        if (userIds.length === 0) return Promise.resolve(Utils.buildResponse({data: {message: "Nothing to do"}}));
 
-        //We need to get the fire-base token of the users in notification.to
-        let resultSet = this.context.database.select(['fire_base_token']).from('users');
-        userIds.forEach((id, i)=> {
-            resultSet = (i === 0) ? resultSet.where('id', id) : resultSet.orWhere('id', id);
-            if (++processed === userIds.length) {
-                resultSet.then(results=> {
-                    fcmTokens = results.reduce((accumulator, cVal)=> {
-                        //we should however check if the value is an array to avoid un wanted errors
-                        return accumulator['fire_base_token'].concat(cVal['fire_base_token']);
-                    }, {"fire_base_token": []});
-                    //Now lets do the actual notification
-                    let payload = {
-                        notification: {
-                            'title': 'IE Force',
-                            body: notification.message,
-                            click_action: "com.mrworking.workorder.MAIN"
-                        },
-                        data: {
-                            type: notification.type
-                        },
-                        registration_ids: fcmTokens
-                    };
-                    if (payload.registration_ids.length) return this.push(payload, API);
-                    else
-                        return Promise.reject(Utils.buildResponse({
-                            status: "fail",
-                            data: {message: "Device not registered"}
-                        }, 400));
-                });
-            }
-        });
-        if (userIds.length === 0) {
-            return Promise.resolve(Utils.buildResponse({data: {message: "Nothing to do"}}));
-        }
-        // Get Mapper
-        const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
+        const fcmTokens = await db.select(['fire_base_token']).from('users').whereIn('id', userIds);
+
+        let payload = {
+            notification: {
+                'title': 'IE Force',
+                body: notification.message,
+                click_action: "com.mrworking.workorder.MAIN"
+            },
+            data: {
+                type: notification.type
+            },
+            registration_ids: _.flatten(fcmTokens.map(({fire_base_token}) => fire_base_token))
+        };
+        if (payload.registration_ids.length) this.push(payload, API).catch(console.error);
+        else return Promise.reject(Utils.buildResponse({
+            status: "fail",
+            data: {message: "Device not registered"}
+        }, 400));
+
         return NotificationMapper.createDomainRecord(notification).then(n => Utils.buildResponse({data: {items: n}}));
     }
 
@@ -126,7 +110,7 @@ class NotificationService {
      */
     deleteNotification(by = "id", value) {
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
-        return NotificationMapper.deleteDomainRecord({by, value}).then(count=> {
+        return NotificationMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
@@ -142,12 +126,12 @@ class NotificationService {
      * @returns {Promise}
      */
     push(payload, API, retrying = false) {
-        const SEVER_KEY = "AIzaSyAcsDeik3Pp7chgiUu89xAW26WA_ylDFcY";
+        const SEVER_KEY = process.env.FSM_SERVER_KEY;
         let fcmHeader = {"Content-Type": "application/json", "Authorization": "Key=" + SEVER_KEY};
         let rOptions = {headers: fcmHeader, url: "https://fcm.googleapis.com/fcm/send", json: payload};
 
         const executor = (resolve, reject) => {
-            request.post(rOptions, (err, response, body)=> {
+            request.post(rOptions, (err, response, body) => {
                 if (err) {
                     console.log('FCM:', err);
                     return;
@@ -155,14 +139,13 @@ class NotificationService {
                 console.log(body);
                 if (body.failure === 0 && body['canonical_ids'] === 0) return resolve(true); //everything was successful
                 let results = body.results;
-                results.forEach((err, index)=> {
+                results.forEach((err, index) => {
                     if (err['message_id']) {
                         //lets get the registrationId
                         if (err['registration_id']) {
                             //update the old registration id
                             let oldReg = (payload.registration_ids) ? payload.registration_ids[index] : payload.to;
                             //Update the Old Token
-                            // API.users().updateUser('firebase_token', oldReg, {'firebase_token': err['registration_id']});
                             API.users().unRegisterFcmToken(oldReg, err['registration_id']);
                             if (retrying) return resolve();
                         }
@@ -183,7 +166,6 @@ class NotificationService {
                             if (retrying) return resolve();
                         } else if (err.error === "NotRegistered") {
                             let oldReg = (payload.registration_ids) ? payload.registration_ids[index] : payload.to;
-                            // API.users().updateUser('firebase_token', oldReg, {'firebase_token': ''});
                             API.users().unRegisterFcmToken(oldReg);
                             if (retrying) return resolve();
                         }

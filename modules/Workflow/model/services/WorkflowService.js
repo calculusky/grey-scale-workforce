@@ -199,8 +199,7 @@ class WorkflowService {
         if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
         const db = this.context.database;
         //let's check if the group already exist on process maker
-        let dbGroup = await db.table("groups").where("id", group.id)
-            .select(['id', 'name', 'wf_group_id']);
+        let dbGroup = await db.table("groups").where("id", group.id).select(['id', 'name', 'wf_group_id']);
 
         dbGroup = dbGroup.shift();
 
@@ -266,13 +265,13 @@ class WorkflowService {
      */
     async startCase(processKey, who, domain, tableName = null) {
         if (!who['pmToken'] && !ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
-
+        const db = this.context.database;
         let process = processes[processKey];
 
         if (!process) return;
 
         //lets get the wf_user_id of the user
-        let user = await this.context.database.table("users").where("id", who.sub).select(['wf_user_id']);
+        let user = await db.table("users").where("id", who.sub).select(['wf_user_id']);
 
         if (!user.length) return;
 

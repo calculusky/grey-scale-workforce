@@ -1,6 +1,6 @@
+'use strict';
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
-const Password = require('../../../../core/Utility/Password');
 const Log = require('../../../../core/logger');
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validate-fields')();
@@ -18,10 +18,6 @@ class PaymentService {
         MapperFactory = this.context.modelMappers;
     }
 
-    getName() {
-        return "paymentService";
-    }
-
     /**
      * Retrieve Payment Acknowledgements
      * @param value
@@ -33,7 +29,7 @@ class PaymentService {
      */
     getPayments(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
-        var executor = (resolve, reject) => {
+        const executor = (resolve, reject) => {
             PaymentMapper.findDomainRecord({by, value}, offset, limit)
                 .then(result => {
                     let payments = result.records;
@@ -92,11 +88,11 @@ class PaymentService {
             }, 400));
         }
         const executor = (resolve, reject) => {
+            const db = this.context.database;
             const columns = ['id', 'status', 'work_order_no', 'assigned_to', 'group_id', 'type_id', 'address_line',
                 'related_to', 'relation_id'];
 
-            let resultSet = this.context.database.table(systemType.table).select(columns)
-                .where(systemType.key, payment.system_id);
+            const resultSet = db.table(systemType.table).select(columns).where(systemType.key, payment.system_id);
 
             resultSet.then(result => {
                 if (!result.length) {
@@ -107,7 +103,6 @@ class PaymentService {
                         desc: `The Work Order Number specified '${payment.system_id}' does not exist or it is invalid`
                     }, 400));
                 }
-                // const workTypes = this.context.persistence.getItemSync("work_types");
 
                 //get the domain
                 const Domain = systemType.domain;
@@ -150,26 +145,24 @@ class PaymentService {
                     } else if (disconnection['has_plan']) {
                         //Get the payment plan
                         return disconnection.paymentPlan().then(res => {
-                            console.log(res);
                             let paymentPlan = res.records.shift();
-                            console.log(paymentPlan);
                             if (!paymentPlan || payment.amount < paymentPlan.amount) {
                                 return reject(Utils.buildResponse({
                                     status: "fail",
                                     msg: "The amount is not acceptable",
                                     code: "INVALID_AMOUNT",
-                                    desc: `Couldn't find a payment plan for this order or the amount paid is lower than the amount specified on the payment plan`
+                                    desc: `The amount paid is lower than the amount specified on the payment plan (${paymentPlan.amount})`
                                 }, 400));
                             }
                             return beginTransaction();
                         });
                     }
-                    beginTransaction();
-                }).catch(err => reject());
+                    return beginTransaction();
+                }).catch(reject);
 
                 const beginTransaction = () => {
                     //Check that this transaction id hasn't been processed yet
-                    let res = this.context.database.count('id as transactions').from("payments")
+                    let res = db.count('id as transactions').from("payments")
                         .where("transaction_id", payment.transaction_id).orWhere('system_id', payment.system_id);
 
                     res.then(result => {
@@ -196,14 +189,13 @@ class PaymentService {
 
 
                         PaymentMapper.createDomainRecord(payment).then(payment => {
-                            if (!payment) return Promise.reject();
+                            if (!payment) return Promise.reject(false);
                             return resolve(Utils.buildResponse({data: payment}));
                         });
 
                         //Update work order status to payment received
-                        this.context.database.table('work_orders').update({status: 5})
-                            .where(systemType.key, payment.system_id)
-                            .then(r => console.log()).catch(err => Log.e(TAG, JSON.stringify(err)));
+                        db.table('work_orders').update({status: 5}).where(systemType.key, payment.system_id)
+                            .catch(err => Log.e(TAG, JSON.stringify(err)));
 
                         const createReconnectionOrder = (result) => {
                             //if it exist don't create a reconnection order
@@ -224,9 +216,7 @@ class PaymentService {
                                 "issue_date": date
                             };
                             console.log(reconnectionOrder);
-                            API.workOrders().createWorkOrder(reconnectionOrder)
-                                .then(r => Log.info('PAYMENTS', `Reconnection Order Created`))
-                                .catch(err => Log.e('PAYMENTS', err));
+                            API.workOrders().createWorkOrder(reconnectionOrder).catch(err => Log.e('PAYMENTS', err));
                         };
                         //By default we create reconnection orders.
                         if (body['auto_generate_rc']) {
@@ -235,13 +225,13 @@ class PaymentService {
                              * Check if there already exist a reconnection order for this work-order
                              * This is to avoid that we don't have duplicates
                              **/
-                            this.context.database.count('id as id').from('work_orders').where({
+                            db.count('id as id').from('work_orders').where({
                                 related_to: 'disconnection_billings',
                                 relation_id: workOrder.relation_id,
                                 type_id: 2
                             }).then(createReconnectionOrder);
                         }
-
+                        return null;
                     }).catch(err => {
                         //TODO revert the status of the work order to 3
                         //TODO delete the payment record
@@ -309,7 +299,6 @@ class PaymentService {
                     key: "work_order_no",
                     domain: DomainFactory.build(DomainFactory.WORK_ORDER)
                 };
-                break;
             default:
                 return null;
         }
