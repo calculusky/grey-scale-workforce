@@ -5,6 +5,7 @@ const fs = require("fs");
 const cron = require('node-schedule');
 const Excel = require('exceljs');
 const Utils = require('../core/Utility/Utils');
+const _ = require('lodash');
 let API = null;
 
 
@@ -36,6 +37,7 @@ module.exports.createDelinquencyList = function () {
     const directory = `${this.context.config.storage.path}/uploads/delinquencies`;
     const workbook = new Excel.Workbook();
     let currentFile = null;
+    const delinquentCols = ['account_no', 'current_bill', 'net_arrears', 'undertaking', 'undertaking_index', 'auto_generate_do'];
 
     //This function processes the excel document
     const startProcessor = async (file/*.xlsx*/, fileName) => {
@@ -99,7 +101,16 @@ module.exports.createDelinquencyList = function () {
 
         const processDelinquentRows = (row, rn) => {
             let rowNum = rn;
-            if (rowNum === 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
+            if (rowNum === 1) {
+                colHeaderIndex = getColumnsByNameIndex(row, columnLen);
+                if (_.difference(delinquentCols, Object.keys(colHeaderIndex)).length > 0) {
+                    deleteFile(file);
+                    this.lock.d = false;//release the lock here
+                    logMessages.push("Invalid delinquency template uploaded. Template doesn't contain either one of " +
+                        `this column heads; ${delinquentCols.join(', ')}`);
+                    return _updateUploadStatus(this, fileName, 3, JSON.stringify(logMessages));
+                }
+            }
             else if (rowNum > 1) {
                 const accountNo = row.getCell(colHeaderIndex['account_no']).value;
                 const cBill = row.getCell(colHeaderIndex['current_bill']).value;
@@ -444,6 +455,7 @@ function getColumnsByNameIndex(row, colLen) {
     }
     return colHeaderIndex;
 }
+
 
 function deleteFile(file) {
     fs.unlink(file, e => (e) ? console.log(`Error deleting file ${file}`, e) : `${file} DELETED`);
