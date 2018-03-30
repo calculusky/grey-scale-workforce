@@ -54,7 +54,7 @@ module.exports.createDelinquencyList = function () {
         ];
 
         //Fetch Groups and the Uploaded record before hand
-        let [groups, uploadData,] = await Promise.all(task).catch(err => {
+        let [groups, uploadData] = await Promise.all(task).catch(err => {
             console.log(err);
             deleteFile(file);
             this.lock.d = false;//should in-case an error occurs we can release the lock to allow a retry
@@ -117,7 +117,7 @@ module.exports.createDelinquencyList = function () {
                 const arrears = row.getCell(colHeaderIndex['net_arrears']).value;
                 const undertaking = row.getCell(colHeaderIndex['undertaking']).value;
                 const utIndex = row.getCell(colHeaderIndex['undertaking_index']).value;
-                const generate = row.getCell(colHeaderIndex['auto_generate_do']).value;
+                const generate = row.getCell(colHeaderIndex['auto_generate_do']).value || "NO";
                 //We need to validate the rows.
                 //If the current row is empty quickly move to the next and log the error for the client
                 if (rn !== rowLen && (accountNo == null || !accountNo.length > 0
@@ -125,6 +125,13 @@ module.exports.createDelinquencyList = function () {
                         || Number.isNaN(arrears)
                         || utIndex == null)) {
                     //TODO make error messages
+                    return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
+                }
+
+                //check if the the row is empty
+                if (accountNo == null && cBill == null
+                    && arrears == null && undertaking == null
+                    && utIndex == null && generate == null) {
                     return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
                 }
 
@@ -157,7 +164,7 @@ module.exports.createDelinquencyList = function () {
 
                 let assignedTo = uploadData.assigned_to[0];
                 assignedTo.created_at = Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s");
-
+                //TODO what happens if the hubManagerID is null?
                 let delinquency = {
                     "account_no": accountNo,
                     "current_bill": cBill,
