@@ -112,7 +112,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code}) => {
+            .catch((data) => {
+                const {code, err} = data;
                 return res.status(code).send(err);
             });
     });
