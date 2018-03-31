@@ -57,7 +57,7 @@ class GroupService extends ApiService {
      * @param who
      * @param API {API}
      */
-    createGroup(body = {}, who = {}, API) {
+    async createGroup(body = {}, who = {}, API) {
         const Group = DomainFactory.build(DomainFactory.GROUP);
         let group = new Group(body);
 
@@ -67,21 +67,24 @@ class GroupService extends ApiService {
 
         ApiService.insertPermissionRights(group, who);
 
+        const pmGroup = await API.workflows().createGroup(group).catch(err => {
+            return Promise.reject(err);
+        });
+
+        group['wf_group_id'] = pmGroup['grp_uid'];
+
         //Get Mapper
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
 
-        return GroupMapper.createDomainRecord(group).then(group => {
-            if (!group) return Promise.reject(false);
-
-            //lets check if the parent of the group is specified
-            let backgroundTask = [API.workflows().createGroup(group)];
-
-            if (body['parent']) backgroundTask.push(this.linkGroup({parent_id: body['parent'], child_id: group.id}));
-
-            Promise.all(backgroundTask).then().catch(err => console.log(err));
-
-            return Utils.buildResponse({data: group});
+        const dbGroup = await GroupMapper.createDomainRecord(group).catch(err => {
+            //if it created on process maker then we have to rollback
+            if (group['wf_group_id']) API.workflows().deleteGroup(group['wf_group_id']).catch(console.error);
+            return Promise.reject(err);
         });
+
+        if (body['parent']) this.linkGroup({parent_id: body['parent'], child_id: group.id}).catch(console.error);
+
+        return Utils.buildResponse({data: dbGroup});
     }
 
     /**
@@ -97,7 +100,7 @@ class GroupService extends ApiService {
         multi.push(body);
         let errors = [];
 
-        let date = new Date();
+        let date = Utils.date.dateToMysql();
         multi = multi.map(item => {
             if (item.parent_id === item.child_id) errors.push("parent_id and child_id cannot be the same");
             Utils.numericToInteger(item, "parent_id", "child_id");
@@ -105,8 +108,8 @@ class GroupService extends ApiService {
                 return {
                     parent_group_id: item['parent_id'],
                     child_group_id: item['child_id'],
-                    created_at: Utils.date.dateToMysql(date, 'YYYY-MM-DD H:m:s'),
-                    updated_at: Utils.date.dateToMysql(date, 'YYYY-MM-DD H:m:s'),
+                    created_at: date,
+                    updated_at: date,
                 };
             errors.push(validate.lastError);
         }).filter(item => item !== undefined && (item.parent_group_id !== item.child_group_id));

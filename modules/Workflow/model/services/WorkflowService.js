@@ -5,7 +5,7 @@ const processes = require('../../../../processes.json');
 const ProcessAPI = require('../../../../processes/ProcessAPI');
 const PUtils = ProcessAPI.Utils;
 const Events = require('../../../../events/events');
-const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
+// const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
 
 /**
  * Created by paulex on 02/27/18.
@@ -104,7 +104,7 @@ class WorkflowService {
 
         return await ProcessAPI.request('/users', pUser, 'POST').catch(err => {
             //TODO send a formatted error
-            return Promise.reject(err);
+            return Promise.reject(Utils.processMakerError(err));
         });
     }
 
@@ -171,21 +171,9 @@ class WorkflowService {
      */
     async createGroup(group = {}) {
         if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
-        const response = await ProcessAPI.request('/group', {grp_title: group.name, grp_status: 'ACTIVE'}, 'POST')
-            .catch(err => {
-                if (err.error.code === 400) {
-                    console.log("Group already exist on process maker");
-                    //TODO we can quickly fetch the grp_uid and resolve
-                    return Promise.resolve(false);
-                }
-                return Promise.reject(err);
-            });
-        if (response && response['grp_uid']) {
-            //update the table
-            this.context.database.table("groups").where("id", group.id).update({wf_group_id: response['grp_uid']})
-                .then().catch();
-        }
-        return response;
+        return await ProcessAPI.request('/group', {grp_title: group.name, grp_status: 'ACTIVE'}, 'POST').catch(err => {
+            return Promise.reject(Utils.processMakerError(err));
+        });
     }
 
 
@@ -220,8 +208,12 @@ class WorkflowService {
         return response;
     }
 
-    async deleteGroup() {
-
+    async deleteGroup(wfGroupId) {
+        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        console.log("Waiting");
+        return ProcessAPI.request(`/group/${wfGroupId}`, null, 'DELETE').catch(err => {
+            console.log('DeleteGroupProcessMaker:', err);
+        });
     }
 
     /**

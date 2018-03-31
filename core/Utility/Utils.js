@@ -88,14 +88,19 @@ module.exports.getMysqlError = function (err) {
                 code: `${err.code}`,
                 desc: "There is a unique key constraint in one of the fields you are trying to insert."
             };
-        case 1062:
-            return {
+        case 1062://ER_DUP_ENTRY
+            const _x = err.sqlMessage.split("'"), _d = _x[3].split("_");
+            const _err = {
                 status: "error",
-                msg: err.sqlMessage,
                 type: "Database",
-                code: `${err.code}`,
-                desc: "There is a unique key constraint in one of the fields you are trying to insert."
+                code: `DUPLICATE_ENTRY`,
+                field_name: _d[1],
+                desc: `There is a unique key constraint in '${_d[1]}'.`
             };
+            _err.msg = (_d.length === 3)
+                ? `The ${_d[0].slice(0, -1)} ${_d[1]} '${_x[1]}' already exist.`
+                : `The ${_x[3].replace(/_/g, " ").substring(0, _x[3].indexOf("unique") - 1)} already exist.`;
+            return _err;
         case 1022://ER_DUP_KEY
             return {
                 status: "error",
@@ -104,7 +109,6 @@ module.exports.getMysqlError = function (err) {
                 code: `${err.errno} - ${err.code}`,
                 desc: "There is a unique key constraint in one of the fields you are trying to insert."
             };
-
         case 1048:
             return {
                 status: "error",
@@ -165,12 +169,6 @@ module.exports.buildResponse = function ({status = "success", data, msg, type, c
     }
     return responseBody;
 };
-
-// module.exports.buildResp = function(status=true, data={}, msg="", desc="", code=null, statusCode=200){
-//     let responseBody = {};
-//     responseBody.status = (status) ? "success" : "fail";
-//     if (status !== "error" && data) responseBody.data = data;
-// };
 
 module.exports.jwtTokenErrorMsg = function (err) {
     console.log(err);
@@ -364,33 +362,31 @@ module.exports.paymentPlanProcessed = function (appStatus) {
 module.exports.processMakerError = function ({error}) {
     console.log(error);
     if (!error) return "";
-    const processMessage = (msg) => {
+    const processMessage = (msg, obj) => {
         if (msg.includes("permission")) {
-            return "You don't have permission to act on this record";
+            obj.msg = "You don't have permission to act on this record";
+            obj.code = "PM_ERROR_NO_PERMISSION";
+            return obj;
         } else if (msg.includes("does not exist")) {
-            return "The record you are trying to access doesn't exist";
+            obj.msg = "The record you are trying to access doesn't exist";
+            obj.code = "PM_ERROR_NOT_FOUND";
+            return obj;
         } else if (msg.includes("Unauthorized")) {
-            return "Unauthorized Access";
+            obj.msg = "Unauthorized Access";
+            obj.code = "PM_ERROR_UNAUTHORIZED";
+            return obj;
+        } else if (msg.includes("already exists")) {
+            obj.msg = `The record ${msg.slice(msg.indexOf('"'), -1)}`;
+            obj.code = "PM_ERROR_DUPLICATE";
+            return obj;
         }
     };
     switch (error.code) {
         case 400:
-            return this.buildResponse({
-                status: 'fail',
-                code: "PM_ERROR",
-                msg: processMessage(error.message)
-            }, 400);
+            return this.buildResponse(processMessage(error.message, {status: 'fail'}), 400);
         case 401:
-            return this.buildResponse({
-                status: 'fail',
-                code: "PM_ERROR",
-                msg: processMessage(error.message)
-            }, 401);
+            return this.buildResponse(processMessage(error.message, {status: 'fail'}), 401);
         default:
-            return this.buildResponse({
-                status: 'fail',
-                code: "PM_ERROR",
-                msg: ""
-            }, 500);
+            return this.buildResponse(processMessage(error.message, {status: 'fail'}), 500);
     }
 };

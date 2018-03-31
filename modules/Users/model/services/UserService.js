@@ -59,17 +59,14 @@ class UserService extends ApiService {
 
         ApiService.insertPermissionRights(user, who);
 
-        console.log("didnt' create");
         if (!isValid) {
             return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
         }
 
         delete user.password;
 
-        console.log("Creating ....");
         //Create the user on process maker first
         const pmUser = await API.workflows().createUser(Object.assign({password: password}, user), who).catch(err => {
-            console.log(err);
             return Promise.reject(err);
         });
 
@@ -79,10 +76,10 @@ class UserService extends ApiService {
         user.setPassword(Password.encrypt(password).hash.replace("$2a$", "$2y$"));
 
 
-        console.log("attempted to create");
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         return UserMapper.createDomainRecord(user).then(user => {
             if (!user) return Promise.reject(false/*TODO change to the right error format*/);
+
             const backgroundTask = [API.activations().activateUser(user.id, who)];
             if (body.roles) backgroundTask.push(API.roles().addUserToRole(body.roles, user.id));
 
