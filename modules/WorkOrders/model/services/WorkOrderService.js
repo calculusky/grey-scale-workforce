@@ -4,7 +4,7 @@
 const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validate-fields')();
+const validate = require('validatorjs');
 let MapperFactory = null;
 
 /**
@@ -46,19 +46,19 @@ class WorkOrderService extends ApiService {
         //If the value is in type of an object we can say the request
         //is not for fetching just a single work order
         const isSingle = typeof value !== 'object';
-        let executor = (resolve, reject)=> {
+        let executor = (resolve, reject) => {
             //Prepare the static data from persistence storage
             let {groups, workTypes} = [{}, {}];
-            this.context.persistence.get("groups", (err, grps)=> {
+            this.context.persistence.get("groups", (err, grps) => {
                 if (!err) groups = JSON.parse(grps);
             });
 
-            this.context.persistence.get("work:types", (err, types)=> {
+            this.context.persistence.get("work:types", (err, types) => {
                 if (!err) workTypes = JSON.parse(types);
             });
 
             WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
-                .then(results=> {
+                .then(results => {
                     const workOrders = results.records;
                     _doWorkOrderList(workOrders,
                         this.context, this.moduleName,
@@ -67,7 +67,7 @@ class WorkOrderService extends ApiService {
                         workTypes || this.fallBackType
                     );
                     if (!workOrders.length) return resolve(Utils.buildResponse({data: {items: results.records}}));
-                }).catch(err=> {
+                }).catch(err => {
                 return reject(err);
             });
         };
@@ -88,14 +88,14 @@ class WorkOrderService extends ApiService {
     getWorkOrdersBetweenDates(userId, status, fromDate, toDate, offset = 0, limit = 10, who = {}) {
         offset = parseInt(offset);
         limit = parseInt(limit);
-        let executor = (resolve, reject)=> {
+        let executor = (resolve, reject) => {
             //Prepare the static data from persistence storage
             let {groups, workTypes} = [{}, {}];
-            this.context.persistence.get("groups", (err, grps)=> {
+            this.context.persistence.get("groups", (err, grps) => {
                 if (!err) groups = JSON.parse(grps)
             });
 
-            this.context.persistence.get("work:types", (err, types)=> {
+            this.context.persistence.get("work:types", (err, types) => {
                 if (!err) workTypes = JSON.parse(types);
             });
 
@@ -104,7 +104,7 @@ class WorkOrderService extends ApiService {
             if (userId) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${userId}}')`);
             if (status) resultSet = resultSet.where('status', status);
             resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
-            resultSet.then(records=> {
+            resultSet.then(records => {
                 let workOrders = [];
                 const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
                 records.forEach(record => {
@@ -121,7 +121,7 @@ class WorkOrderService extends ApiService {
                 );
                 //
                 if (!records.length) return resolve(Utils.buildResponse({data: {items: workOrders}}));
-            }).catch(err=> {
+            }).catch(err => {
                 const error = Utils.buildResponse(Utils.getMysqlError(err), 400);
                 return Promise.reject(error);
             });
@@ -140,15 +140,19 @@ class WorkOrderService extends ApiService {
         let workOrder = new WorkOrder(body);
 
         //enforce the validation
-        let isValid = validate(workOrder.rules(), workOrder);
-        if (!isValid) {
-            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        let validator = new validate(workOrder, workOrder.rules(), workOrder.customErrorMessages());
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all(),
+                code: 'VALIDATION_ERROR'
+            }, 400));
         }
 
         ApiService.insertPermissionRights(workOrder, who);
 
-        const executor = (resolve, reject)=> {
-            this.context.persistence.get("groups", (err, groups)=> {
+        const executor = (resolve, reject) => {
+            this.context.persistence.get("groups", (err, groups) => {
                 if (err) return;
                 groups = JSON.parse(groups);
                 let userGroup = groups[workOrder.group_id];
@@ -163,14 +167,14 @@ class WorkOrderService extends ApiService {
 
                 Utils.generateUniqueSystemNumber(
                     getNumberPrefix(workOrder.type_id), businessUnit['short_name'], 'work_orders', this.context
-                ).then(uniqueNo=> {
+                ).then(uniqueNo => {
                     //Get Mapper
                     workOrder.work_order_no = uniqueNo;
                     const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-                    WorkOrderMapper.createDomainRecord(workOrder).then(workOrder=> {
+                    WorkOrderMapper.createDomainRecord(workOrder).then(workOrder => {
                         if (!workOrder) return reject();
                         return resolve(Utils.buildResponse({data: workOrder}));
-                    }).catch(err=>{
+                    }).catch(err => {
                         return reject(err);
                     });
                 });
@@ -192,7 +196,7 @@ class WorkOrderService extends ApiService {
         workOrder.status = status;
 
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.updateDomainRecord({value: orderId, domain: workOrder}).then(result=> {
+        return WorkOrderMapper.updateDomainRecord({value: orderId, domain: workOrder}).then(result => {
             if (result.pop()) {
                 return Utils.buildResponse({data: result.shift()});
             } else {
@@ -203,7 +207,7 @@ class WorkOrderService extends ApiService {
 
     deleteWorkOrder(by = "id", value) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.deleteDomainRecord({by, value}).then(count=> {
+        return WorkOrderMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
@@ -266,7 +270,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
     let rowLen = workOrders.length;
     let processed = 0;
 
-    workOrders.forEach(workOrder=> {
+    workOrders.forEach(workOrder => {
         let promises = [];
 
         let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
@@ -289,7 +293,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
         //0: The related Entity e.g faults, disconnection_billing
         //1: Notes Count
         //2: Attachments Count
-        Promise.all(promises).then(values=> {
+        Promise.all(promises).then(values => {
             //its compulsory that we check that a record exist
             const relatedToRecord = values[0];
             const notesCount = values[1];
@@ -318,7 +322,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                         wait = true;
                         //We know that a disconnection billing is related
                         //To a customer so we need to get the customer details.
-                        relatedModel.customer().then(customer=> {
+                        relatedModel.customer().then(customer => {
                             wait = false;
                             workOrder['customer'] = customer.records.shift();
                             if (!wait) {
@@ -340,7 +344,7 @@ function _doWorkOrderList(workOrders, context, moduleName, resolve, reject, isSi
                     return resolve(Utils.buildResponse({data: {items: workOrders}}));
                 }
             }
-        }).catch(err=> {
+        }).catch(err => {
             console.log(err);
             return reject(err);
         });

@@ -2,7 +2,7 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validate-fields')();
+const validate = require('validatorjs');
 const Events = require('../../../../events/events');
 
 /**
@@ -68,12 +68,16 @@ class PaymentPlanService extends ApiService {
         Utils.numericToInteger(paymentPlan, 'waive_percentage', 'amount', 'disc_order_id', 'balance');
 
         //enforce the validation
-        let isValid = validate(paymentPlan.rules(), paymentPlan);
+        let validator = new validate(paymentPlan, paymentPlan.rules(), paymentPlan.customErrorMessages());
 
         ApiService.insertPermissionRights(paymentPlan, who);
 
-        if (!isValid) {
-            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all(),
+                code: 'VALIDATION_ERROR'
+            }, 400));
         }
 
         const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);

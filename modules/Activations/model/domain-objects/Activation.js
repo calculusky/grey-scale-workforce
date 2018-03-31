@@ -37,9 +37,9 @@ class Activation extends DomainObject {
 
     rules() {
         return {
-            user_id: 'int',
-            code: String,
-            'completed?': 'int'
+            user_id: 'integer|required',
+            code: 'string|required',
+            'completed': 'integer'
         }
     }
 }

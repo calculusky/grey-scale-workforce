@@ -39,16 +39,16 @@ class WorkOrder extends DomainObject {
 
     rules() {
         return {
-            type_id: 'int',
-            related_to: String,
-            relation_id: String,
-            'status?': 'numeric',
-            summary: String,
-            issue_date: Date
+            type_id: 'integer|required',
+            related_to: 'string|required',
+            relation_id: 'string|required',
+            status: 'numeric|required',
+            summary: 'string|required',
+            issue_date: 'date'
         }
     }
-    
-    relatedTo(){
+
+    relatedTo() {
         return this.relations().morphTo('related_to', 'relation_id');
     }
 
@@ -70,25 +70,25 @@ class WorkOrder extends DomainObject {
     }
 
     /**
-     * 
+     *
      * @returns {*}
      */
-    disconnection(){
+    disconnection() {
         return this.relations().belongsTo("DisconnectionOrder", "id", "work_order_id");
     }
 
     /**
-     * 
+     *
      */
-    workOrder(){
+    workOrder() {
         return this.relations().belongsTo("WorkOrder", "relation_id", "work_order_no");
     }
 
     /**
-     * 
+     *
      * @returns {*}
      */
-    payment(){
+    payment() {
         return this.relations().belongsTo("Payment", "work_order_no", "system_id");
     }
 }

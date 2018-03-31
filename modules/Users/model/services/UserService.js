@@ -3,7 +3,7 @@ let MapperFactory = null;
 const ApiService = require('../../../ApiService');
 const Password = require('../../../../core/Utility/Password');
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validate-fields')();
+const validate = require('validatorjs');
 
 /**
  * Created by paulex on 7/4/17.
@@ -50,18 +50,22 @@ class UserService extends ApiService {
         user.firebase_token = '[]';
 
         //enforce the validation
-        let isValid = validate(user.rules(), user);
+        let validator = new validate(user, user.rules(), user.customErrorMessages());
 
         let group_id = null;
         // If the group_id is set, it means we are adding this user to a group
         // We'll be setting the group that created this user when we call :insertPermissionRights
         if (user.group_id) (group_id = user.group_id) && delete user.group_id;
 
-        ApiService.insertPermissionRights(user, who);
-
-        if (!isValid) {
-            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                code: 'VALIDATION_ERROR',
+                data: validator.errors.all()
+            }, 400));
         }
+
+        ApiService.insertPermissionRights(user, who);
 
         delete user.password;
 
@@ -77,19 +81,25 @@ class UserService extends ApiService {
 
 
         const UserMapper = MapperFactory.build(MapperFactory.USER);
-        return UserMapper.createDomainRecord(user).then(user => {
-            if (!user) return Promise.reject(false/*TODO change to the right error format*/);
 
-            const backgroundTask = [API.activations().activateUser(user.id, who)];
-            if (body.roles) backgroundTask.push(API.roles().addUserToRole(body.roles, user.id));
-
-            if (group_id) {
-                const userGroup = {group_id, user_id: user.id, wf_user_id: user['wf_user_id']};
-                backgroundTask.push(API.groups().addUserToGroup(userGroup, who, API));
-            }
-            Promise.all(backgroundTask).catch(err => console.error('CreateUser', err));
-            return Utils.buildResponse({data: user});
+        const dbUser = await UserMapper.createDomainRecord(user).catch(err => {
+            if (user['wf_user_id']) API.workflows().deleteUser({wf_user_id: user.wf_user_id});
+            return Promise.reject(err);
         });
+
+        if (!dbUser) return Promise.reject(false/*TODO change to the right error format*/);
+
+        const backgroundTask = [API.activations().activateUser(user.id, who)];
+
+        if (body.roles) backgroundTask.push(API.roles().addUserToRole(body.roles, user.id));
+
+        if (group_id) {
+            backgroundTask.push(API.groups()
+                .addUserToGroup({group_id, user_id: user.id, wf_user_id: user['wf_user_id']}, who, API));
+        }
+        Promise.all(backgroundTask).catch(err => console.error('CreateUser', err));
+
+        return Utils.buildResponse({data: dbUser});
     }
 
     /**
@@ -119,7 +129,7 @@ class UserService extends ApiService {
     }
 
     //don't expose
-    unRegisterFcmToken(fcmToken, newFcmToken) {
+    unRegisterFcmToken(fcmToken, newToken) {
         const executor = (resolve, reject) => {
             let column = "fire_base_token";
             this.context.database.raw(`select id, username, fire_base_token from users where 
@@ -130,9 +140,9 @@ class UserService extends ApiService {
                         const tokens = user['fire_base_token'];
                         const index = tokens.indexOf(fcmToken);
                         //if the newFcmToken is supplied we are do a replace else a remove
-                        if (newFcmToken) {
-                            const updateValue = `JSON_REPLACE(${column}, '$[${index}]', ?) where users.id = ?`;
-                            this.context.database.raw(`update users set ${column} = ${updateValue}`, [newFcmToken, user.id])
+                        if (newToken) {
+                            const updateVal = `JSON_REPLACE(${column}, '$[${index}]', ?) where users.id = ?`;
+                            this.context.database.raw(`update users set ${column} = ${updateVal}`, [newToken, user.id])
                                 .then(result => {
                                     console.log(`Replace an FCMToken of user with id ${user.id}`);
                                     return resolve(Utils.buildResponse({data: user}));

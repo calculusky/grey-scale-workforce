@@ -40,8 +40,8 @@ class Group extends DomainObject {
 
     rules() {
         return {
-            name: String,
-            short_name: String,
+            name: 'string|required',
+            short_name: 'string|required',
         };
     }
 

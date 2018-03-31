@@ -2,7 +2,7 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validate-fields')();
+const validate = require('validatorjs');
 
 /**
  * @name GroupService
@@ -61,9 +61,15 @@ class GroupService extends ApiService {
         const Group = DomainFactory.build(DomainFactory.GROUP);
         let group = new Group(body);
 
-        let isValid = validate(group.rules(), group);
+        let validator = new validate(group, group.rules(), group.customErrorMessages());
 
-        if (!isValid) return Promise.reject(Utils.buildResponse({status: "fail", msg: validate.lastError}, 400));
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all(),
+                code: 'VALIDATION_ERROR'
+            }, 400));
+        }
 
         ApiService.insertPermissionRights(group, who);
 
@@ -73,11 +79,9 @@ class GroupService extends ApiService {
 
         group['wf_group_id'] = pmGroup['grp_uid'];
 
-        //Get Mapper
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
 
         const dbGroup = await GroupMapper.createDomainRecord(group).catch(err => {
-            //if it created on process maker then we have to rollback
             if (group['wf_group_id']) API.workflows().deleteGroup(group['wf_group_id']).catch(console.error);
             return Promise.reject(err);
         });
@@ -149,8 +153,14 @@ class GroupService extends ApiService {
 
         Utils.numericToInteger(body, "user_id", "group_id");
 
-        if (!validate({'user_id': 'int', 'group_id': 'int'}, body))
-            return Promise.reject(Utils.buildResponse({status: 'fail', msg: validate.lastError}, 400));
+        const validator = new validate(body, {'user_id': 'integer|required', 'group_id': 'integer|required'});
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: 'fail',
+                data: validator.errors.all(),
+                code: 'VALIDATION_ERROR'
+            }, 400));
+        }
 
         if (body.wf_user_id) await API.workflows().addUserToGroup(body.wf_user_id, body.group_id).catch(Promise.reject);
         else {

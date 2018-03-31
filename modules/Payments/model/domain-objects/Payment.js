@@ -44,13 +44,13 @@ class Payment extends DomainObject {
 
     rules() {
         return {
-            system: String,
-            system_id: String,
-            amount: 'number(100, 1000000)', //1 <= 0 <= 1000000
-            transaction_id: String,
-            payer: String,
-            channel: String,
-            payment_date: Date
+            system: 'string|required',
+            system_id: 'string|required',
+            amount: 'between:100,1000000|required', //1 <= 0 <= 1000000
+            transaction_id: 'string|required',
+            payer: 'string|required',
+            channel: 'string|required',
+            payment_date: 'date'
         };
     }
 

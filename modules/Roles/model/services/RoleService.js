@@ -2,7 +2,7 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validate-fields')();
+const validate = require('validatorjs');
 
 /**
  * @name RoleService
@@ -52,9 +52,14 @@ class RoleService extends ApiService {
         const Role = DomainFactory.build(DomainFactory.ROLE);
         let role = new Role(body);
 
-        let isValid = validate(role.rules(), role);
+        let validator = new validate(role, role.rules(), role.customErrorMessages());
 
-        if (!isValid) return Promise.reject(Utils.buildResponse({status: "fail", msg: validate.lastError}, 400));
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all()
+            }, 400));
+        }
 
         ApiService.insertPermissionRights(role, who);
 

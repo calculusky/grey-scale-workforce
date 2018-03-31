@@ -3,7 +3,7 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Log = require('../../../../core/logger');
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validate-fields')();
+const validate = require('validatorjs');
 const TAG = "PaymentService:";
 
 /**
@@ -70,11 +70,16 @@ class PaymentService {
         if (!isNaN(payment.amount)) payment.amount = parseFloat(payment.amount);
 
         //enforce the validation
-        let isValid = validate(payment.rules(), payment);
+        let validator = new validate(payment, payment.rules(), payment.customErrorMessages());
 
-        if (!isValid) {
-            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all(),
+                code: 'VALIDATION_ERROR'
+            }, 400));
         }
+
         payment.system_id = payment.system_id.replace(/-/g, "");
         //check if the system exist
         let systemType = PaymentService.getPaymentType(payment.system);

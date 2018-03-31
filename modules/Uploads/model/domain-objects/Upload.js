@@ -46,9 +46,9 @@ class Upload extends DomainObject {
             // file_size: Number,
             // file_path: String,
             // status: Number,
-            upload_type: String,
-            group_id: 'numeric',
-            assigned_to: 'numeric'
+            upload_type: 'string|required',
+            group_id: 'numeric|required',
+            assigned_to: 'numeric|required'
         };
     }
 }

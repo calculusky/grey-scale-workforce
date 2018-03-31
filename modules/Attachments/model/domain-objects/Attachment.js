@@ -44,11 +44,11 @@ class Attachment extends DomainObject {
 
     rules() {
         return {
-            relation_id: Number,
-            attachment_by: 'numeric',
-            module: String,
-            file_path: String,
-            file_type: String
+            relation_id: 'integer|required',
+            attachment_by: 'numeric|required',
+            module: 'string|required',
+            file_path: 'string|required',
+            file_type: 'string|required'
         };
     }
 

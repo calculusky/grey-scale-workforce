@@ -41,10 +41,10 @@ class Note extends DomainObject {
 
     rules() {
         return {
-            relation_id: 'numeric',
-            module: String,
-            note: String,
-            created_by: Number
+            relation_id: 'numeric|required',
+            module: 'string|required',
+            note: 'string|required',
+            created_by: 'integer|required'
         };
     }
 

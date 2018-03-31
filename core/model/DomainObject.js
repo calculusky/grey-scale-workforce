@@ -19,14 +19,14 @@ class DomainObject {
         this._(this).data = data;
         this._(this).map = map;
 
-       
+
         //------Map data to Domain instances------//
         let hasData = (data && (Object.keys(data).length > 0));
         if (hasData) {
             let mapKeys = Object.keys(map);
-            mapKeys.forEach(key=> {
+            mapKeys.forEach(key => {
                 if (data[key] !== null
-                    && data[key] !== undefined && data[key]!=='') this[key] = data[key];
+                    && data[key] !== undefined && data[key] !== '') this[key] = data[key];
             });
         }
         this._(this).relations = new RelationShips(this);
@@ -44,12 +44,12 @@ class DomainObject {
         if (!hasData) return newData;
         let clKeys = Object.keys(map);
         if (to === 'db') {
-            clKeys.forEach(key=> {
+            clKeys.forEach(key => {
                 if (data[key])
                     newData[map[key]] = data[key];
             });
         } else {
-            clKeys.forEach(key=> {
+            clKeys.forEach(key => {
                 const dbKey = map[key];
                 if (data.hasOwnProperty(dbKey)) {
                     newData[key] = data[dbKey];
@@ -84,6 +84,12 @@ class DomainObject {
      */
     rules() {
         return {};
+    }
+
+    customErrorMessages() {
+        return {
+            required: 'The :attribute is required.'
+        };
     }
 
     relations() {

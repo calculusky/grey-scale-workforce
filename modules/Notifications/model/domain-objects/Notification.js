@@ -41,11 +41,11 @@ class Notification extends DomainObject {
 
     rules() {
         return {
-            type: String,
-            message: String,
-            'status?': 'numeric',
-            from: Number,
-            to: '*'
+            type: 'string|required',
+            message: 'string|required',
+            status: 'numeric',
+            from: 'integer|required',
+            to: 'required'
         };
     }
 }

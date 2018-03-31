@@ -2,7 +2,7 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validate-fields')();
+const validate = require('validatorjs');
 const Events = require('../../../../events/events');
 
 /**
@@ -63,9 +63,12 @@ class NoteService extends ApiService {
 
         ApiService.insertPermissionRights(note, who);
 
-        let isValid = validate(note.rules(), note);
-        if (!isValid) {
-            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+        let validator = new validate(note, note.rules(), note.customErrorMessages());
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all()
+            }, 400));
         }
         //Get Mapper
         const NoteMapper = MapperFactory.build(MapperFactory.NOTE);

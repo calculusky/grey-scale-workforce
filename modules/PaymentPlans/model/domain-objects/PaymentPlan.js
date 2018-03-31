@@ -38,10 +38,10 @@ class PaymentPlan extends DomainObject {
 
     rules() {
         return {
-            disc_order_id: Number,
-            period: String,
-            amount: 'number(100, 90000000)',
-            waive_percentage: Number
+            disc_order_id: 'numeric|required',
+            period: 'string|required',
+            amount: 'between:100,1000000|required',
+            waive_percentage: 'numeric|required'
         };
     }
 

@@ -40,9 +40,9 @@ class Role extends DomainObject {
 
     rules() {
         return {
-            name: String,
-            slug: String,
-            permissions: Object,
+            name: 'string|required',
+            slug: 'required|string',
+            permissions: 'string|required',
         };
     }
 

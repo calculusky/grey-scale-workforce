@@ -3,7 +3,7 @@ let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
 const Utils = require('../../../../core/Utility/Utils');
 const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
-const validate = require('validate-fields')();
+const validate = require('validatorjs');
 const request = require('request');
 const _ = require("lodash");
 
@@ -61,12 +61,15 @@ class NotificationService {
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
         const db = this.context.database;
         const notification = new Notification(body);
-        const isValid = validate(notification.rules(), notification);
+        const validator = new validate(notification, notification.rules(), notification.customErrorMessages());
 
-        if (!isValid) return Promise.reject(Utils.buildResponse({
-            status: "fail",
-            data: {message: validate.lastError}
-        }, 400));
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all(),
+                code: 'VALIDATION_ERROR'
+            }, 400));
+        }
 
         let userIds = [];
         //The to column is an array

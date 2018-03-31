@@ -50,17 +50,23 @@ class User extends DomainObject {
 
     rules() {
         return {
-            email: 'email',
-            password: String,
-            gender: 'in(M, F, O)',
-            mobile_no: 'numeric',
-            username: String,
-            'assigned_to?': Array
+            email: 'email|required',
+            password: 'string|required',
+            gender: ['required', {'in': ['M', 'F', 'O']}],
+            mobile_no: 'numeric|required',
+            username: 'string|required',
+            assigned_to: 'array'
         }
     }
 
+    customErrorMessages() {
+        return {
+            required: 'The :attribute is required.'
+        };
+    }
 
-    async roles(){
+
+    async roles() {
         return this.relations().belongsToMany('Role', 'role_users', 'user_id', 'role_id');
     }
 

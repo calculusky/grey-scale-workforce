@@ -4,7 +4,8 @@ const Password = require('../../../../core/Utility/Password');
 const Util = require('../../../../core/Utility/MapperUtil');
 const fs = require("fs");
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validate-fields')();
+const validate = require('validatorjs');
+
 /**
  * @name UploadService
  * Created by paulex on 8/22/17.
@@ -22,24 +23,24 @@ class UploadService {
 
     getUploads(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const UploadMapper = MapperFactory.build(MapperFactory.UPLOAD);
-        const executor = (resolve, reject)=> {
+        const executor = (resolve, reject) => {
             UploadMapper.findDomainRecord({by, value}, offset, limit)
-                .then(result=> {
+                .then(result => {
                     let uploads = result.records;
                     let processed = 0;
                     let rowLen = uploads.length;
-                    uploads.forEach(upload=> {
-                        upload.user().then(res=> {
+                    uploads.forEach(upload => {
+                        upload.user().then(res => {
                             upload.user = res.records.shift();
                             delete upload.user.password;
                             if (++processed === rowLen)
                                 return resolve(Utils.buildResponse({data: {items: result.records}}));
-                        }).catch(err=> {
+                        }).catch(err => {
                             return reject(err)
                         })
                     })
                 })
-                .catch(err=> {
+                .catch(err => {
                     return reject(err);
                 });
         };
@@ -59,11 +60,15 @@ class UploadService {
         const uploadObj = new Upload(body);
 
         //Enforce validation
-        let isValid = validate(uploadObj.rules(), uploadObj);
-        if (!isValid) {
+        let validator = new validate(uploadObj, uploadObj.rules(), uploadObj.customErrorMessages());
+        if (validator.fails()) {
             //immediately delete the uploaded file
             files.forEach(file => fs.unlink(file.path));
-            return Promise.reject(Utils.buildResponse({status: "fail", data: {message: validate.lastError}}, 400));
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all(),
+                code: 'VALIDATION_ERROR'
+            }, 400));
         }
 
         if (!files.length) return Promise.reject(Utils.buildResponse({
@@ -72,11 +77,11 @@ class UploadService {
         }, 400));
 
         const UploadMapper = MapperFactory.build(MapperFactory.UPLOAD);
-        const executor = (resolve, reject)=> {
+        const executor = (resolve, reject) => {
             let processed = 0;
             let rowLen = files.length;
             let uploads = [];
-            files.forEach(file=> {
+            files.forEach(file => {
                 let upload = new Upload({
                     file_name: file.filename,
                     original_file_name: `${Date.now()}_${file.originalname}`,
@@ -91,10 +96,10 @@ class UploadService {
                     updated_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
                 });
                 //Get Mapper
-                UploadMapper.createDomainRecord(upload).then(upload=> {
+                UploadMapper.createDomainRecord(upload).then(upload => {
                     if (upload) (delete upload.file_path) && uploads.push(upload);
                     if (++processed === rowLen) return resolve(Utils.buildResponse({data: {"items": uploads}}));
-                }).catch(err=> {
+                }).catch(err => {
                     files.forEach(file => fs.unlink(file.path));
                     console.log(err);
                     return reject(err);
@@ -112,7 +117,7 @@ class UploadService {
      */
     deleteUpload(by = "id", value) {
         const UploadMapper = MapperFactory.build(MapperFactory.UPLOAD);
-        return UploadMapper.deleteDomainRecord({by, value}).then(count=> {
+        return UploadMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
