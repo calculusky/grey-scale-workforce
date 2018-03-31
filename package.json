@@ -39,7 +39,8 @@
     "socket.io": "^2.0.3",
     "swagger-jsdoc": "^1.9.5",
     "useragent": "^2.3.0",
-    "validate-fields": "^3.7.1"
+    "validate-fields": "^3.7.1",
+    "validatorjs": "^3.14.2"
   },
   "devDependencies": {
     "jest": "^22.4.2"
