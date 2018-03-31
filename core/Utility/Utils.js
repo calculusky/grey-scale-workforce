@@ -73,7 +73,7 @@ module.exports.getMysqlError = function (err) {
         case 1452:
 
             return {
-                status: "error",
+                status: "fail",
                 msg: "A related field value doesn't exist. Foreign key constraint",
                 type: "Database",
                 code: `${err.errno} - ${err.code}`,
@@ -82,7 +82,7 @@ module.exports.getMysqlError = function (err) {
             };
         case 1586:
             return {
-                status: "error",
+                status: "fail",
                 msg: "Duplicate Key value entry",
                 type: "Database",
                 code: `${err.code}`,
@@ -91,7 +91,7 @@ module.exports.getMysqlError = function (err) {
         case 1062://ER_DUP_ENTRY
             const _x = err.sqlMessage.split("'"), _d = _x[3].split("_");
             const _err = {
-                status: "error",
+                status: "fail",
                 type: "Database",
                 code: `DUPLICATE_ENTRY`,
                 field_name: _d[1],
@@ -103,7 +103,7 @@ module.exports.getMysqlError = function (err) {
             return _err;
         case 1022://ER_DUP_KEY
             return {
-                status: "error",
+                status: "fail",
                 msg: "Duplicate Key value entry",
                 type: "Database",
                 code: `${err.errno} - ${err.code}`,
@@ -111,7 +111,7 @@ module.exports.getMysqlError = function (err) {
             };
         case 1048:
             return {
-                status: "error",
+                status: "fail",
                 msg: "Cannot insert null",
                 type: "Database",
                 code: `${err.errno} - ${err.code}`,
@@ -119,7 +119,7 @@ module.exports.getMysqlError = function (err) {
             };
         case 1216:
             return {
-                status: "error",
+                status: "fail",
                 msg: "The related field value doesn't exist. Foreign key constraint",
                 type: "Database",
                 code: `${err.errno} - ${err.code}`,
@@ -128,7 +128,7 @@ module.exports.getMysqlError = function (err) {
             };
         case 1217:
             return {
-                status: "error",
+                status: "fail",
                 msg: "You can't delete this record because it has a related entity",
                 type: "Database",
                 code: `${err.errno} - ${err.code}`,
@@ -137,7 +137,7 @@ module.exports.getMysqlError = function (err) {
         default:
             console.log(err);
             return {
-                status: "error",
+                status: "fail",
                 msg: "You are doing something wrong",
                 type: "Database",
                 code: `${err.errno} - ${err.code}`,
@@ -377,7 +377,7 @@ module.exports.processMakerError = function ({error}) {
             return obj;
         } else if (msg.includes("already exists")) {
             obj.msg = `The record ${msg.slice(msg.indexOf('"'), -1)}`;
-            obj.code = "PM_ERROR_DUPLICATE";
+            obj.code = "VALIDATION_ERROR";
             return obj;
         }
     };
