@@ -82,16 +82,20 @@ class RoleService extends ApiService {
      * @param API
      */
     async addUserToRole(roleId, userId, who = {}, API) {
-        let user_roles = {role_id: roleId, user_id: userId,};
+        let user_roles = {role_id: roleId, user_id: userId};
 
         Utils.numericToInteger(user_roles, 'role_id', 'user_id');
 
-        const isValid = validate({user_id: 'int', role_id: 'int'}, user_roles);
+        const validator = new validate(user_roles, {user_id: 'integer|required', role_id: 'integer|required'});
 
-        if (!isValid) return Promise.reject(Utils.buildResponse({
-            status: "fail",
-            data: {message: validate.lastError}
-        }, 400));
+        if (validator.fails()) {
+            console.log(validator.errors.all());
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all(),
+                code: 'VALIDATION_ERROR'
+            }, 400));
+        }
 
         let date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
         user_roles.created_at = date;

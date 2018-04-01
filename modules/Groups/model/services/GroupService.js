@@ -108,17 +108,18 @@ class GroupService extends ApiService {
         multi = multi.map(item => {
             if (item.parent_id === item.child_id) errors.push("parent_id and child_id cannot be the same");
             Utils.numericToInteger(item, "parent_id", "child_id");
-            if (validate({'parent_id': 'int', 'child_id': 'int'}, item))
+            let validator = new validate(item, {'parent_id': 'int', 'child_id': 'int'});
+            if (validator.passes())
                 return {
                     parent_group_id: item['parent_id'],
                     child_group_id: item['child_id'],
                     created_at: date,
                     updated_at: date,
                 };
-            errors.push(validate.lastError);
+            errors.push(validator.errors.all());
         }).filter(item => item !== undefined && (item.parent_group_id !== item.child_group_id));
 
-        if (!multi.length) return Promise.reject(Utils.buildResponse({status: 'fail', msg: errors}, 400));
+        if (!multi.length) return Promise.reject(Utils.buildResponse({status: 'fail', data: errors.shift()}, 400));
 
         const executor = (resolve, reject) => {
             return this.context.database('group_subs').insert(multi)

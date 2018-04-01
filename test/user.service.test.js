@@ -28,16 +28,21 @@ API = new API(new Context(config));
 
 it("Should create a user and attach a role to the user", () => {
     return expect(API.users().createUser({
-            email: "bankole@gmail1.com",
-            username: "banky1",//TODO generate
-            password: "admin",
-            first_name: "Bankee",
-            last_name: "Odemu",
-            middle_name: "Ugo",
-            mobile_no: "08139201337",
-            gender: "M",
-            "roles": 1
-        }, {sub: 1, group: 1}, API)
+            _token: 'ZjOzAzIGD5hLrTSh1KNMmZlL5IxdLoNoRS52PaGj',
+            first_name: 'IE CCO_USER',
+            middle_name: '',
+            last_name: 'Test',
+            gender: 'M',
+            username: 'cco_user',
+            email: '03balogun@gmail.com',
+            mobile_no: '08131174231',
+            alt_mobile_no: '',
+            group_id: '7',
+            user_type: 'admin',
+            password: 'admin$$',
+            roles: '1'
+        }
+        , {sub: 1, group: 1}, API)
     ).resolves.toEqual(expect.objectContaining({
         code: expect.any(Number)
     }));

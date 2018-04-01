@@ -81,6 +81,7 @@ class PaymentPlanService extends ApiService {
         }
 
         const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
+        const tblName = PaymentPlanMapper.tableName;
 
         // We need to check if a pending or an approved payment plan already exist for this disconnection
         // We shouldn't create a payment plan if either of an approved payment_plan or pending payment plan exist.
@@ -93,29 +94,33 @@ class PaymentPlanService extends ApiService {
             const approvalStatus = planExist.shift()['approval_status'];
             const res = Utils.buildResponse({
                 status: "fail",
-                data: {
-                    message: `${
-                        (approvalStatus === 1)
-                            ? "An approved"
-                            : "A pending"
-                        } payment plan already exist for this disconnection`,
-                    code: "DUPLICATE_PAYMENT_PLAN"
-                }
+                message: `${
+                    (approvalStatus === 1)
+                        ? "An approved"
+                        : "A pending"
+                    } payment plan already exist for this disconnection`,
+                code: "DUPLICATE_PAYMENT_PLAN"
             }, 400);
             return Promise.reject(res);
         }
 
-        return PaymentPlanMapper.createDomainRecord(paymentPlan).then(paymentPlan => {
-            if (!paymentPlan) return Promise.reject(false);
-
-            const discId = paymentPlan.disc_order_id;
-            let backgroundTask = [
-                db.table("disconnection_billings").where('id', discId).update({has_plan: 1}),
-                API.workflows().startCase("payment_plan", who, paymentPlan, PaymentPlanMapper.tableName)
-            ];
-            Promise.all(backgroundTask).catch(e => console.log(e));
-            return Utils.buildResponse({data: paymentPlan});
+        paymentPlan['wf_case_id'] = await API.workflows().startCase("payment_plan", who, paymentPlan).catch(err => {
+            return Promise.reject(err);
         });
+
+        const dbPlan = await PaymentPlanMapper.createDomainRecord(paymentPlan).catch(err => {
+            API.workflows().deleteCase(paymentPlan['wf_case_id'], who).catch(console.error);
+            return Promise.reject(err);
+        });
+
+        API.workflows().routeCase(dbPlan['wf_case_id'], who).then(() => {
+            API.workflows().assignCase(dbPlan['wf_case_id'], dbPlan, tblName, who);
+        });
+
+        let bgTask = [db.table("disconnection_billings").where('id', dbPlan.disc_order_id).update({has_plan: 1})];
+
+        Promise.all(bgTask).catch(console.error);
+        return Utils.buildResponse({data: dbPlan});
     }
 
 

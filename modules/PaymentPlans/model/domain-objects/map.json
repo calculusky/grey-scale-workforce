@@ -9,6 +9,7 @@
   "approved_by": "approved_by",
   "created_by": "created_by",
   "assigned_to": "assigned_to",
+  "wf_case_id": "wf_case_id",
   "group_id": "group_id",
   "deleted_at": "deleted_at",
   "created_at": "created_at",

@@ -89,15 +89,17 @@ class UserService extends ApiService {
 
         if (!dbUser) return Promise.reject(false/*TODO change to the right error format*/);
 
-        const backgroundTask = [API.activations().activateUser(user.id, who)];
+        const backgroundTask = [API.activations().activateUser(dbUser.id, who)];
 
-        if (body.roles) backgroundTask.push(API.roles().addUserToRole(body.roles, user.id));
+        if (body.roles) backgroundTask.push(API.roles().addUserToRole(body.roles, dbUser.id));
 
         if (group_id) {
-            backgroundTask.push(API.groups()
-                .addUserToGroup({group_id, user_id: user.id, wf_user_id: user['wf_user_id']}, who, API));
+            backgroundTask.push(
+                API.groups().addUserToGroup({group_id, user_id: dbUser.id, wf_user_id: dbUser['wf_user_id']}, who, API)
+            );
         }
-        Promise.all(backgroundTask).catch(err => console.error('CreateUser', err));
+
+        Promise.all(backgroundTask).catch(err => console.error('CreateUser', JSON.stringify(err)));
 
         return Utils.buildResponse({data: dbUser});
     }

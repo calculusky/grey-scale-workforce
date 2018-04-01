@@ -347,6 +347,12 @@ module.exports.getModuleName = function (module) {
     }
 };
 
+module.exports.invokeInSequence = function (args, ...promises) {
+    (async function () {
+        for (let promise of promises) await promise.catch(console.error);
+    })().catch(console.error);
+};
+
 module.exports.paymentPlanProcessed = function (appStatus) {
     if (appStatus !== 0) {
         return this.buildResponse({

@@ -41,7 +41,7 @@ class Role extends DomainObject {
     rules() {
         return {
             name: 'string|required',
-            slug: 'required|string',
+            slug: 'string|required',
             permissions: 'string|required',
         };
     }

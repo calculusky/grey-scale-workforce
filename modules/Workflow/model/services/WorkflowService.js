@@ -252,11 +252,10 @@ class WorkflowService {
      * @param domain {DomainObject}
      * @param who
      * @param processKey
-     * @param tableName - The table name to update with the wf_case_id. If not set the table will not be updated
      * @returns {Promise<void>}
      */
-    async startCase(processKey, who, domain, tableName = null) {
-        if (!who['pmToken'] && !ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+    async startCase(processKey, who, domain) {
+        if (!who['pmToken']) return Promise.reject(Utils.buildResponse({status: 'fail', msg: 'Unauthorized'}, 401));
         const db = this.context.database;
         let process = processes[processKey];
 
@@ -282,18 +281,17 @@ class WorkflowService {
 
         payload = PUtils.buildCaseVars(process['processId'], process['taskStartId'], payload);
         let response = await ProcessAPI.request('/cases', payload, 'POST', who['pmToken']).catch(err => {
-            console.log(err);
+            return Promise.reject(Utils.processMakerError(err));
         });
 
-        const caseId = (response) ? response['app_uid'] : null;
+        return (response) ? response['app_uid'] : null;
+    }
 
-        await this.routeCase(caseId, who).catch(err => {
-            console.log('ROUTE', err);
+    async deleteCase(caseId, who) {
+        if (!who['pmToken']) return;
+        return await ProcessAPI.request(`/cases/${caseId}`, null, 'DELETE', who['pmToken']).catch(err => {
+            return Promise.reject(Utils.processMakerError(err));
         });
-
-        if (tableName && caseId) this.doAssignment(caseId, domain, tableName, who);
-
-        return response;
     }
 
     /**
@@ -305,11 +303,11 @@ class WorkflowService {
      * @param delIndex
      * @returns {Promise<*>}
      */
-    async routeCase(caseId, who, delIndex = '1', data = {},) {
+    async routeCase(caseId, who, delIndex = "1", data = {}) {
         if (!who['pmToken']) await ProcessAPI.login(this.username, this.password);//TODO revert
         const routeUrl = `/cases/${caseId}/route-case`;
         data['del_index'] = delIndex;
-        return await ProcessAPI.request(routeUrl, data, 'PUT', who['pmToken']);
+        return ProcessAPI.request(routeUrl, data, 'PUT', who['pmToken']);
     }
 
     /**
@@ -353,22 +351,30 @@ class WorkflowService {
         return (!resp.error) ? resp : Promise.reject(Utils.processMakerError(resp));
     }
 
-    doAssignment(caseId, domain, tableName, who) {
-        this.context.database.table(tableName).where('id', domain['id'])
-            .update({wf_case_id: caseId}).then(r => console.log('UPDATED_CASE_ID', r)).catch(err => console.log(err));
-
+    /**
+     *
+     * @param caseId
+     * @param domain
+     * @param tableName - The table name to update with the wf_case_id. If not set the table will not be updated
+     * @param who
+     */
+    assignCase(caseId, domain, tableName, who) {
+        const db = this.context.database;
         this.getCase(caseId, who).then(res => {
+
             const currentTask = res['current_task'];
-            const date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
-            const db = this.context.database;
+
+            const date = Utils.date.dateToMysql();
+
             currentTask.forEach(async task => {
                 //Now lets assign the record to the user process maker assigned it to
-                //Also lets emit an event that a case has been assigned
                 let user = await db.table("users").where('wf_user_id', task['usr_uid']).select(['id']);
 
                 if (!user.length) return;
 
                 user = user.shift();
+
+                if (user.id === who.sub) return;
 
                 //lets fetch the record and append the assigned_to
                 let assignedTo = await db.table(tableName).where("id", domain['id']).select(['assigned_to']);
@@ -386,7 +392,7 @@ class WorkflowService {
                 db.table(tableName).where("id", domain['id'])
                     .update({"assigned_to": JSON.stringify(assignedTo.assigned_to)}).then();
             });
-        });
+        }).catch(console.error);
     }
 }
 
