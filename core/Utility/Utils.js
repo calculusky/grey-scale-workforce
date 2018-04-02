@@ -10,6 +10,13 @@ let unitCounter = {};
 module.exports = function Utils() {
 };
 
+module.exports.random = function (callback, length = 5) {
+    crypto.randomBytes(length, (err, buff) => {
+        if (err) return;
+        callback(buff.toString('hex'))
+    });
+};
+
 module.exports.encrypt = function (value, secret = "") {
     const cipher = crypto.createCipher(algorithm, secret);
     let crypted = cipher.update(value, 'utf8', 'hex');
@@ -127,6 +134,14 @@ module.exports.getMysqlError = function (err) {
                 "another entity of which the related entity doesn't exist"
             };
         case 1217:
+            return {
+                status: "fail",
+                msg: "You can't delete this record because it has a related entity",
+                type: "Database",
+                code: `${err.errno} - ${err.code}`,
+                desc: "You maybe need to delete its related entity before trying to delete this record"
+            };
+        case 1451:
             return {
                 status: "fail",
                 msg: "You can't delete this record because it has a related entity",

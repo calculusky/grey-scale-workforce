@@ -25,7 +25,6 @@ class DisconnectionOrder extends DomainObject {
     softDeletes() {
         return [
             false,
-            "deleted",
             "deleted_at"
         ];
     }

@@ -32,8 +32,7 @@ class Group extends DomainObject {
 
     softDeletes() {
         return [
-            false,
-            "deleted",
+            true,
             "deleted_at"
         ];
     }

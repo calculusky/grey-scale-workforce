@@ -35,7 +35,6 @@ class Upload extends DomainObject {
     softDeletes() {
         return [
             false,
-            "deleted",
             "deleted_at"
         ];
     }

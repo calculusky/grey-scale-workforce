@@ -34,7 +34,6 @@ class Notification extends DomainObject {
     softDeletes() {
         return [
             false,
-            "deleted",
             "deleted_at"
         ];
     }

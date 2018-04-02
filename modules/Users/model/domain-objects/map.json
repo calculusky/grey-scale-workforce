@@ -20,6 +20,7 @@
   "wf_user_id": "wf_user_id",
   "wf_user_pass": "wf_user_pass",
   "created_by": "created_by",
+  "deleted_at": "deleted_at",
   "created_at": "created_at",
   "updated_at": "updated_at"
 }

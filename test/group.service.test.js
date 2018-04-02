@@ -78,7 +78,10 @@ afterAll(() => {
         let t = r.shift();
         if (t) {
             ctx.database.table("group_subs").where("child_group_id", t.id).del().then(m => {
-                let vv = [API.groups().deleteGroup("name", "GroupUs"), API.groups().deleteGroup("name", "GroupMe")];
+                let vv = [
+                    API.groups().deleteGroup("name", "GroupUs", API),
+                    API.groups().deleteGroup("name", "GroupMe", API)
+                ];
                 Promise.all(vv).then(r => console.log("")).catch(err => console.log(err));
             }).catch(err => console.log(err));
         }

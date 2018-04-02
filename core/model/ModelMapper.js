@@ -21,7 +21,7 @@ class ModelMapper {
             '->[]': 'JSON_CONTAINS'//check mysql implementation
         };
 
-        this._(this).whereJson = (column, value, resultSets, domainObject)=> {
+        this._(this).whereJson = (column, value, resultSets, domainObject) => {
             //I think the process here can explain itself
             let fnKeys = Object.keys(this.jsonFunction);
             for (let i = 0; i < fnKeys.length; i++) {
@@ -49,8 +49,8 @@ class ModelMapper {
             }
             return resultSets;
         };
-        
-        this._(this).buildWhere = (column, value = null, resultSets, domainObject)=> {
+
+        this._(this).buildWhere = (column, value = null, resultSets, domainObject) => {
             if (!value) return resultSets;
             if (value && typeof value === 'object') {
                 //it means we have got a lot of work to do here
@@ -94,7 +94,7 @@ class ModelMapper {
      * @param orderBy
      * @param order
      */
-    findDomainRecord({by=this.primaryKey, value, fields=["*"]}, offset = 0, limit = 10, orderBy = "created_at", order = "asc") {
+    findDomainRecord({by = this.primaryKey, value, fields = ["*"]}, offset = 0, limit = 10, orderBy = "created_at", order = "asc") {
         if (!by) throw new ReferenceError(`${this.constructor.name} must override the primary key field.`);
         if (by !== "*_all" && !value) throw new TypeError("The parameter value must be set for this operation");
         if (!this.tableName) throw new ReferenceError(`${this.constructor.name} must override the tableName field.`);
@@ -106,11 +106,15 @@ class ModelMapper {
         let resultSets = this.context.database
             .select(fields).from(this.tableName).limit(parseInt(limit)).offset(parseInt(offset))
             .orderBy(orderBy, order);
+
+        const [softDeleteEnabled, deletedAt] = domainObject.softDeletes() || [false];
+        if (softDeleteEnabled) resultSets.where(deletedAt, null);
+
         //if this query is based on a condition:e.g where clause
         resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
-        let executor = (resolve, reject)=> {
+        let executor = (resolve, reject) => {
             resultSets
-                .then(rows=> {
+                .then(rows => {
                     let domains = [];
                     for (let i = 0; i < rows.length; i++) {
                         let domain = new DomainObject(rows[i]);
@@ -118,7 +122,7 @@ class ModelMapper {
                         domains.push(domain);
                     }
                     return resolve({records: domains, query: resultSets.toString()});
-                }).catch(err=> {
+                }).catch(err => {
                 Log.e("findDomainRecord", err);
                 return reject({err, query: resultSets.toString()});
             });
@@ -175,16 +179,16 @@ class ModelMapper {
                 domainObject = domainObjects.shift().serialize(dbData.shift(), 'client');
                 domainObject.id = id;
             } else {
-                domainObject = domainObjects.map(domain=> {
+                domainObject = domainObjects.map(domain => {
                     domain = domain.serialize(dbData.shift(), 'client');
                     domain.id = id++;
                     return domain;
                 });
             }
             return Promise.resolve(domainObject);
-        }).catch(err=> {
+        }).catch(err => {
             Log.e('createDomainRecord', err);
-            const error = Utils.buildResponse({status:'fail', data: Utils.getMysqlError(err)}, 400);
+            const error = Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400);
             return Promise.reject(error);
         });
     }
@@ -223,13 +227,15 @@ class ModelMapper {
             //TODO test that value is an object
             resultSets = resultSets.where(filteredDomain.serialize(value));
         }
+        const [softDeleteEnabled, deletedAt] = domain.softDeletes() || [false];
+        if (softDeleteEnabled) resultSets.where(deletedAt, null);
 
         return resultSets
-            .then(itemsUpdated=> {
+            .then(itemsUpdated => {
                 filteredDomain.serialize(updateData, "client");
                 return Promise.resolve([filteredDomain, itemsUpdated]);
             })
-            .catch(err=> {
+            .catch(err => {
                 Log.e('updateDomainRecord', err);
                 const error = Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400);
                 return Promise.reject(error)
@@ -253,7 +259,7 @@ class ModelMapper {
 
         if (typeof softDelete === 'boolean' && softDelete) {
             domainObject[dateDeletedCol] = Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s");
-            return this.updateDomainRecord({by, value, domainObject});
+            return this.updateDomainRecord({by, value, domain: domainObject});
         }
 
         let resultSets = this.context.database.table(this.tableName).delete();
@@ -261,10 +267,10 @@ class ModelMapper {
         resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
 
         return resultSets
-            .then(itemsDeleted=> {
+            .then(itemsDeleted => {
                 return Promise.resolve(itemsDeleted);
             })
-            .catch(err=> {
+            .catch(err => {
                 Log.e('deleteDomainRecord', err);
                 const error = Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400);
                 return Promise.reject(error)

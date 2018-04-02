@@ -34,7 +34,6 @@ class Note extends DomainObject {
     softDeletes() {
         return [
             false,
-            "deleted",
             "deleted_at"
         ];
     }

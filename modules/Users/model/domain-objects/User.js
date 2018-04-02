@@ -43,7 +43,7 @@ class User extends DomainObject {
 
     softDeletes() {
         return [
-            false,
+            true,
             "deleted_at"
         ];
     }

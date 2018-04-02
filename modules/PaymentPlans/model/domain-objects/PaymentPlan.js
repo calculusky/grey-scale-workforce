@@ -31,7 +31,6 @@ class PaymentPlan extends DomainObject {
     softDeletes() {
         return [
             false,
-            "deleted",
             "deleted_at"
         ];
     }

@@ -241,17 +241,23 @@ class GroupService extends ApiService {
      *
      * @param by
      * @param value
+     * @param API {API}
      * @returns {*}
      */
-    deleteGroup(by = "id", value) {
+    deleteGroup(by = "id", value, API) {
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
-        //check if the group is referenced as a parent group or child on group_subs
-        //TODO we need to be certain if the group is a parent; should we render all its child useless?
+        const db = this.context.database;
+
+        Utils.random((r) => {
+            db.raw(`update groups set name = CONCAT(name, ?) where ${by} = ?`, [`_${r}_deleted`, value]).then(() => {
+                API.workflows().updateGroup(Object.assign({}, {id: value})).catch(console.error);
+            }).catch(console.error);
+        });
+
         return GroupMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
-            //delete on process maker
             return Utils.buildResponse({data: {by, message: "Group deleted"}});
         });
     }

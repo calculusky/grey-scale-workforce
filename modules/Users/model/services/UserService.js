@@ -231,26 +231,29 @@ class UserService extends ApiService {
      */
     async deleteUser(by = "id", value, API) {
         const UserMapper = MapperFactory.build(MapperFactory.USER);
+        const db = this.context.database;
 
         //Because we need to delete this user also on process maker
         //We'd have to read the user table to get the wf_user_id.
         //Ideally we should delete the record straight
-        let user = await this.context.database.table("users").where(by, value).select(['wf_user_id']);
+        let user = await db.table("users").where(by, value).select(['wf_user_id']);
 
         //We can quickly return to the developer that the record doesn't exist
-        if (!user.length) return Utils.buildResponse({
-            status: "fail",
-            data: {message: "The specified record doesn't exist"}
-        }, 404);
+        if (!user.length) {
+            return Utils.buildResponse({
+                status: "fail",
+                msg: "The specified record doesn't exist"
+            }, 404);
+        }
 
-        return UserMapper.deleteDomainRecord({by, value}).then(count => {
-            if (!count) {
-                return Utils.buildResponse({
-                    status: "fail",
-                    data: {message: "The specified record doesn't exist"}
-                }, 404);
-            }
-            API.workflows().deleteUser(user.shift()).catch(console.error);
+        Utils.random((r) => {
+            const u = "username";
+            db.raw(`update users set ${u} = CONCAT(${u}, ?) where ${by} = ?`, [`_${r}_deleted`, value]).then(() => {
+                API.workflows().updateUser(by, value, {}).catch(console.error);
+            }).catch(console.error);
+        });
+
+        return UserMapper.deleteDomainRecord({by, value}).then(() => {
             return Utils.buildResponse({data: {message: "User deleted"}});
         });
     }

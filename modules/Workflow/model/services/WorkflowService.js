@@ -70,6 +70,7 @@ class WorkflowService {
         dbUser = dbUser.shift();
 
         body['wf_user_id'] = dbUser['wf_user_id'];
+        body['username'] = dbUser['username'];
 
         if (!body) return;
 

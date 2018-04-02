@@ -75,7 +75,7 @@ class DomainObject {
     }
 
     softDeletes() {
-        return {uses: false, columns: {status: 'deleted', date: "deleted_at"}};
+        return [false, "deleted_at"];
     }
 
     /**
