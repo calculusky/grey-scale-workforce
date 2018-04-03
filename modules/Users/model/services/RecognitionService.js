@@ -22,9 +22,6 @@ class RecognitionService {
         MapperFactory = this.context.modelMappers;
     }
 
-    getName() {
-        return "recognitionService";
-    }
 
     async login(username, password, req) {
         const userAgent = useragent.parse(req.headers['user-agent']);
@@ -53,6 +50,7 @@ class RecognitionService {
                     if (!records.length) {
                         return reject(Util.buildResponse({status: "fail", data: Util.authFailData("AUTH_CRED")}, 401));
                     }
+
                     const user = records.shift();
                     //checks to see that the password supplied matches
                     if (!Password.equals(password, user.password)) {
@@ -63,12 +61,13 @@ class RecognitionService {
                     //but this token must be tied to the same user-agent and device
                     const tokenExpiry = (isMobile) ? 3600 * 3600 : 3600 * 3600;//TODO limit the time
 
-                    let userGroup = {records: []};
-                    user.userGroups().then(grp => (userGroup = grp));
-
+                    const task = [user.userGroups(), user.roles()];
+                    const [userGroup = {records: []}, {records: [{permissions}]}] = await Promise.all(task).catch(err => {
+                        console.error(err);
+                    });
                     //Login to process maker
                     const pmToken = await ProcessAPI.login(username, password).catch(e => {
-                        console.log('UserPMLogin', e);
+                        console.error('UserPMLogin', e);
                     });
                     //TODO add permissions
                     const tokenOpt = {
@@ -83,9 +82,12 @@ class RecognitionService {
                     console.log(tokenOpt);
 
                     let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
-
+                    const persistence = this.context.persistence;
                     //Set up the token on redis server
-                    this.context.persistence.set(token, true, 'EX', tokenExpiry);
+                    persistence.set(token, true, 'EX', tokenExpiry);
+                    persistence.set(`permissions:${user.id}`, (permissions)
+                        ? permissions
+                        : "{}", 'EX', tokenExpiry);
 
                     delete user.firebase_token;
 
@@ -127,7 +129,6 @@ class RecognitionService {
      * @param next
      */
     auth(req, res, next) {
-        const userAgent = useragent.parse(req.headers['user-agent']);
         const token = req.header('x-working-token');
         const unAuthMsg = {
             status: 'fail',
@@ -138,7 +139,8 @@ class RecognitionService {
             isRoute: false
         };
         if (token) {
-            this.context.persistence.get(token, (err, v) => {
+            const persistence = this.context.persistence;
+            persistence.get(token, (err, v) => {
                 /*
                  * Check if the token exist on redis and the value is true.
                  * Can we assume that there wouldn't be any form off error here? No
@@ -147,23 +149,19 @@ class RecognitionService {
                  **/
                 if (err) return res.status(500).send();
                 if (!v || v !== 'true') return res.status(401).send(Util.buildResponse(unAuthMsg));
+                //Verify the JWT token
                 jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
                     if (err) return res.status(401).send(Util.buildResponse({
                         status: 'fail',
                         data: Util.jwtTokenErrorMsg(err),
                         isRoute: false
                     }));
-                    /*
-                     * lets also check that this token is coming from the right device
-                     * If the token is coming from a different device which isn't the original device used to
-                     * get this token we can flag it as un-authorize.
-                     *
-                     * There are probably more things we should be able to do here to make it more secured
-                     **/
-                    //TODO enable !!!!!!!!!!!!!!!!!!!!!!!!
-                    // if (userAgent.family !== decoded.aud) return res.status(401).send(Util.buildResponse(unAuthMsg));
-                    req.who = decoded;
-                    return next();
+
+                    persistence.get(`permissions:${decoded.sub}`, (err, v) => {
+                        decoded.permissions = (!err) ? JSON.parse(v) : {};
+                        req.who = decoded;
+                        return next();
+                    });
                 });
             });
         } else return res.status(401).send(Util.buildResponse(unAuthMsg));

@@ -140,7 +140,7 @@ class PaymentService {
                     const minAmountAccepted = parseFloat(disconnection.min_amount_payable);
                     //Check if this disconnection order has a payment plan
                     //thus use the amount on the payment plan
-                    if (!disconnection['has_plan'] && payment.amount < minAmountAccepted) {
+                    if (!disconnection['has_plan'] && (payment.amount < minAmountAccepted)) {
                         return reject(Utils.buildResponse({
                             status: "fail",
                             msg: "The amount is not acceptable",
@@ -155,7 +155,7 @@ class PaymentService {
                                 return reject(Utils.buildResponse({
                                     status: "fail",
                                     msg: "The amount is not acceptable",
-                                    code: "INVALID_AMOUNT",
+                                    code: "INVALID_PLANNED_AMOUNT",
                                     desc: `The amount paid is lower than the amount specified on the payment plan (${paymentPlan.amount})`
                                 }, 400));
                             }
