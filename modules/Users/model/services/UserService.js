@@ -226,10 +226,12 @@ class UserService extends ApiService {
      *
      * @param by
      * @param value
+     * @param who
      * @param API {API}
      * @returns {*}
      */
-    async deleteUser(by = "id", value, API) {
+    async deleteUser(by = "id", value, who, API) {
+        // ApiService.checkPermissions('users.delete');
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         const db = this.context.database;
 

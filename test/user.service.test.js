@@ -102,7 +102,7 @@ describe('Updating User', () => {
 
 
 test("Delete a user", () => {
-    return expect(API.users().deleteUser('id', 51, API)).resolves.toBeDefined();
+    return expect(API.users().deleteUser('id', 51, {}, API)).resolves.toBeDefined();
 });
 
 //
