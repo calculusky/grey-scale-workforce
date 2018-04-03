@@ -112,7 +112,9 @@ module.exports.createDelinquencyList = function () {
                 }
             }
             else if (rowNum > 1) {
-                const accountNo = row.getCell(colHeaderIndex['account_no']).value;
+                const accountCell = row.getCell(colHeaderIndex['account_no']);
+
+                const accountNo = accountCell.value.text || accountCell.value;
                 const cBill = row.getCell(colHeaderIndex['current_bill']).value;
                 const arrears = row.getCell(colHeaderIndex['net_arrears']).value;
                 const undertaking = row.getCell(colHeaderIndex['undertaking']).value;
