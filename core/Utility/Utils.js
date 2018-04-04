@@ -380,8 +380,16 @@ module.exports.paymentPlanProcessed = function (appStatus) {
 };
 
 
-module.exports.processMakerError = function ({error}) {
-    console.log(error);
+module.exports.processMakerError = function (err) {
+    if (!err.error) {
+        return this.buildResponse({
+            status: 'fail',
+            msg: 'Connection Timed Out, Please try again later.',
+            desc: "One of our servers can't be reached at this moment"
+        }, 500);
+    }
+    const error = err.error;
+    console.log(err);
     if (!error) return "";
     const processMessage = (msg, obj) => {
         if (msg.includes("permission")) {

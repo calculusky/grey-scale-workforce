@@ -103,8 +103,9 @@ class WorkflowService {
 
         const pUser = toPMUser(body);
 
-        return await ProcessAPI.request('/users', pUser, 'POST').catch(err => {
+        return ProcessAPI.request('/users', pUser, 'POST').catch(err => {
             //TODO send a formatted error
+            console.log('FromWorkFlowCreateUser', err);
             return Promise.reject(Utils.processMakerError(err));
         });
     }
