@@ -67,6 +67,7 @@ module.exports.createDelinquencyList = function () {
 
         const workSheet = workbook.getWorksheet(1);
         let rowLen = workSheet.rowCount,
+            actualRowCount = rowLen,
             columnLen = workSheet.actualColumnCount,
             processed = 0,
             processedDelinquencies = 0,
@@ -113,13 +114,18 @@ module.exports.createDelinquencyList = function () {
             }
             else if (rowNum > 1) {
                 const accountCell = row.getCell(colHeaderIndex['account_no']);
-
-                const accountNo = accountCell.value.text || accountCell.value;
+                const accountNo = (accountCell.value) ? accountCell.value.text || accountCell.value : null;
                 const cBill = row.getCell(colHeaderIndex['current_bill']).value;
                 const arrears = row.getCell(colHeaderIndex['net_arrears']).value;
                 const undertaking = row.getCell(colHeaderIndex['undertaking']).value;
                 const utIndex = row.getCell(colHeaderIndex['undertaking_index']).value;
                 const generate = row.getCell(colHeaderIndex['auto_generate_do']).value || "NO";
+
+                //check if the the row is empty
+                if (row.actualCellCount < delinquentCols.length) {
+                    --actualRowCount;
+                    return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
+                }
                 //We need to validate the rows.
                 //If the current row is empty quickly move to the next and log the error for the client
                 if (rn !== rowLen && (accountNo == null || !accountNo.length > 0
@@ -127,13 +133,6 @@ module.exports.createDelinquencyList = function () {
                         || Number.isNaN(arrears)
                         || utIndex == null)) {
                     //TODO make error messages
-                    return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
-                }
-
-                //check if the the row is empty
-                if (accountNo == null && cBill == null
-                    && arrears == null && undertaking == null
-                    && utIndex == null && generate == null) {
                     return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
                 }
 
@@ -239,7 +238,7 @@ module.exports.createDelinquencyList = function () {
                         endProcess(++processed);
                     });
             }
-            if (rn !== rowLen) return setTimeout(() => processDelinquentRows(workSheet.getRow(++rn), rn), 20);
+            if (rn < rowLen) return setTimeout(() => processDelinquentRows(workSheet.getRow(++rn), rn), 20);
         };
         processDelinquentRows(workSheet.getRow(1), 1);
     };
