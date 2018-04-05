@@ -10,7 +10,7 @@ The API currently supports the below functionality:
 * Field Service Tracking(GPS)
 * Spot Billing etc.
 
-**Prerequisites**
+#### Prerequisites
 
 * NPM/NodeJs
 * MySQL
@@ -23,7 +23,7 @@ migration included on the web application(laravel project).
 However if for any other reason you can get the SQL insert of the
 database then you can proceed.
 
-**Set Up/Installation**
+#### Set Up/Installation
 
 First you'll want to clone this project into your working directory.
 
