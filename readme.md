@@ -1,4 +1,4 @@
-**MrWorkingAPI**
+### MrWorkingAPI
 
 API for a field service management system(FSM) targeted at
 *ikeja electric*, a power distribution company in Nigeria.
@@ -44,3 +44,9 @@ created *.env* file
 process maker etc.
 
 
+
+#### Authors
+
+* Paul Okeke - Software Developer
+
+See also the list of [contributors](./CONTRIBUTORS.txt) who participated in this project.
