@@ -10,6 +10,10 @@ let unitCounter = {};
 module.exports = function Utils() {
 };
 
+String.prototype.ellipsize = function (limit = 50, suffix = "...") {
+    return (this.length > limit) ? `${this.substring(0, limit)}${suffix}` : this.toString();
+};
+
 module.exports.random = function (callback, length = 5) {
     crypto.randomBytes(length, (err, buff) => {
         if (err) return;
@@ -377,6 +381,24 @@ module.exports.paymentPlanProcessed = function (appStatus) {
         }, 400);
     }
     return this.buildResponse({msg: "The current state of this payment plan is unknown."});
+};
+
+module.exports.customerHasPendingWorkOrder = async function (db, acctNo = "", tbl = "disconnection_billings") {
+    const dis = await db.table(tbl).where("account_no", acctNo).orderBy('created_at', 'desc').limit(2).catch(err => {
+        console.error(err);
+        return Promise.resolve(true);
+    });
+
+    if (!dis.length || !dis[0]['work_order_id']) return false;
+
+    const disc = dis.shift();
+
+    let wks = await db.table("work_orders").where("relation_to", tbl).where("relation_id", disc.id)
+        .select(['status']).catch(err => {
+            return Promise.resolve(true);
+        });
+
+    return (wks.length && wks.shift().status <= 4);
 };
 
 

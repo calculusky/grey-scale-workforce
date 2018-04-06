@@ -38,7 +38,7 @@ module.exports.createDelinquencyList = function () {
     const workbook = new Excel.Workbook();
     let currentFile = null;
     const delinquentCols = ['account_no', 'current_bill', 'net_arrears', 'undertaking', 'undertaking_index', 'auto_generate_do'];
-
+    const tableName = "disconnection_billings";
     //This function processes the excel document
     const startProcessor = async (file/*.xlsx*/, fileName) => {
         this.lock.d = true;
@@ -180,8 +180,8 @@ module.exports.createDelinquencyList = function () {
                 };
 
                 // Insert record to Database
-                db.table("disconnection_billings").insert(delinquency)
-                    .then(res => {
+                db.table(tableName).insert(delinquency)
+                    .then(async res => {
                         const discId = res.shift();
                         ++processedDelinquencies;
 
@@ -190,47 +190,53 @@ module.exports.createDelinquencyList = function () {
                         // or fail. If we aren't creating a work-order then we can test endProcess
                         let doWorkOrder = generate.toUpperCase() === 'YES';
 
-                        if (doWorkOrder) {
-                            //We now need to create a work order only if it has a hub and a hub mgr
-                            if (hubGroup.id !== utIndex.result) {
-                                API.workOrders().createWorkOrder({
-                                    type_id: 1,
-                                    related_to: "disconnection_billings",
-                                    relation_id: `${discId}`,
-                                    labels: '["work"]',
-                                    summary: "Disconnect Customer!!!",
-                                    status: '1',
-                                    group_id: hubGroup.id,
-                                    assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
-                                    issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
-                                    created_at: assignedTo.created_at,
-                                    updated_at: assignedTo.created_at
-                                }).then(res => {
-                                    //We need to get the work order id and relate it with the disconnection billing
-                                    //Not necessary to wait for the return
-                                    db.table('disconnection_billings').where('id', '=', discId)
-                                        .update({
-                                            work_order_id: res.data.data.work_order_no,
-                                            assigned_to: JSON.stringify([assignedTo, {
-                                                "id": hubManagerId,
-                                                "created_at": assignedTo.created_at
-                                            }])
-                                        }).then();
+                        if (!doWorkOrder) return endProcess(++processed);
 
-                                    ++processedWorkOrders;
-                                    endProcess(++processed);
-                                }).catch(err => {
-                                    console.log('CREATE_ERR', err);
-                                    endProcess(++processed);
-                                });
-                            } else {
-                                logMessages.push(`Couldn't create a work order for row(${rowNum})`
-                                    + " because the undertaking doesn't belong to a hub; " +
-                                    "however a delinquent record was created.");
-                                endProcess(++processed);
-                            }
+                        if (hubGroup.id === utIndex.result) {
+                            logMessages.push(`Couldn't create a work order for row(${rowNum})`
+                                + " because the undertaking doesn't belong to a hub; " +
+                                "however a delinquent record was created.");
+                            return endProcess(++processed);
                         }
-                        if (!doWorkOrder) endProcess(++processed);
+
+                        const hasPending = await Utils.customerHasPendingWorkOrder(db, accountNo);
+
+                        if (hasPending) {
+                            logMessages.push(`Couldn't create a work order for customer (${accountNo}) in (${rowNum})`
+                                + ` because the customer still has a pending work order.`);
+                            return endProcess(++processed);
+                        }
+
+                        API.workOrders().createWorkOrder({
+                            type_id: 1,
+                            related_to: tableName,
+                            relation_id: `${discId}`,
+                            labels: '["work"]',
+                            summary: "Disconnect Customer!!!",
+                            status: '1',
+                            group_id: hubGroup.id,
+                            assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
+                            issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
+                            created_at: assignedTo.created_at,
+                            updated_at: assignedTo.created_at
+                        }).then(res => {
+                            //We need to get the work order id and relate it with the disconnection billing
+                            //Not necessary to wait for the return
+                            db.table('disconnection_billings').where('id', '=', discId)
+                                .update({
+                                    work_order_id: res.data.data.work_order_no,
+                                    assigned_to: JSON.stringify([assignedTo, {
+                                        "id": hubManagerId,
+                                        "created_at": assignedTo.created_at
+                                    }])
+                                }).then();
+
+                            ++processedWorkOrders;
+                            endProcess(++processed);
+                        }).catch(err => {
+                            console.log('CREATE_ERR', err);
+                            endProcess(++processed);
+                        });
                     })
                     .catch(err => {
                         logMessages.push(`An error occurred while processing row(${rowNum})` + "." +
