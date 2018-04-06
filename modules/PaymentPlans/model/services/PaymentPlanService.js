@@ -143,9 +143,9 @@ class PaymentPlanService extends ApiService {
             return Promise.reject(res);
         }
 
-        if (plan['approval_status'] !== 0) return Promise.reject(Utils.paymentPlanProcessed(plan['approval_status']));
-
         plan = plan.shift();
+
+        if (plan['approval_status'] !== 0) return Promise.reject(Utils.paymentPlanProcessed(plan['approval_status']));
 
         const _command = {"COMMAND": "APPROVE"};
 
@@ -195,9 +195,9 @@ class PaymentPlanService extends ApiService {
             return Promise.reject(res);
         }
 
-        if (plan['approval_status'] !== 0) return Promise.reject(Utils.paymentPlanProcessed(plan['approval_status']));
-
         plan = plan.shift();
+
+        if (plan['approval_status'] !== 0) return Promise.reject(Utils.paymentPlanProcessed(plan['approval_status']));
 
         const _command = {"COMMAND": "REJECT"};
 
