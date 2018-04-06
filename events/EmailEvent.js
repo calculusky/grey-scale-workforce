@@ -45,7 +45,7 @@ class EmailEvent extends EventEmitter {
     }
 
     static onEmailFail(e) {
-        console.log('EmailFailed:', e);
+        // console.log('EmailFailed:', e);
     }
 
     /**
@@ -54,19 +54,19 @@ class EmailEvent extends EventEmitter {
      * @param context {Context}
      * @param io
      * @param API {API}
+     * @param sharedData
      */
-    init(context, io, API) {
+    init(context, io, API, sharedData) {
         this.context = context;
         this.io = io;
         this.api = API;
-        this.name = "Paul Okeke";
+        this.sharedData = sharedData;
         return this;
     }
 
     async onPaymentPlanAssigned(planId, assignedTo) {
         const db = this.context.database;
-        let paymentPlan = await db.table("payment_plans")
-            .where("id", planId).select(['assigned_to', 'disc_order_id']);
+        let paymentPlan = await db.table("payment_plans").where("id", planId).select(['assigned_to', 'disc_order_id']);
 
         if (!paymentPlan.length) return;
 
@@ -110,7 +110,6 @@ class EmailEvent extends EventEmitter {
      * @returns {Promise<void>}
      */
     async onNotesAdded(note, who) {
-        console.log("Adding note");
         //So we are going to send email to all users assigned to the record this note was meant for
         const db = this.context.database;
 

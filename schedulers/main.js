@@ -258,7 +258,7 @@ module.exports.createDelinquencyList = function () {
             //start processing the files.. we are processing one file at a time from a specific folder
             //TODO check that this files are indeed excel files e.g xlsx or csv
             const fileName = files.shift();
-            if (fileName) startProcessor(`${directory}/${fileName}`, fileName);
+            if (fileName) startProcessor(`${directory}/${fileName}`, fileName).catch(console.error);
         });
     }
     console.log("Lock for delinquency list is held, i'll wait till it is released")

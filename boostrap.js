@@ -25,10 +25,6 @@ module.exports = function route(context) {
     const http = require('http').Server(app);
     const io = require('socket.io')(http);
 
-    /*-------------------------------------
-    | Initialize Events - Socket IO
-    *--------------------------------------*/
-    events.init(context, io, API);
 
     app.set('port', process.env.PORT || 9003);
 
@@ -120,6 +116,11 @@ module.exports = function route(context) {
             }
         }
     });
+
+    /*-------------------------------------
+    | Initialize Events - Socket IO
+    *--------------------------------------*/
+    events.init(context, io, API);
 
     /*-----------------------------------------------
      | Start the scheduler

@@ -47,6 +47,10 @@ class Notification extends DomainObject {
             to: 'required'
         };
     }
+
+    fromUser() {
+        return this.relations().belongsTo("User", "from");
+    }
 }
 
 //noinspection JSUnresolvedVariable

@@ -3,13 +3,16 @@
  */
 exports.init = function (context, io, API) {
     this.eventListeners = [];
-    this.sharedData = {};
+    this.sharedData = {
+        clients: {}//save all the connected socket id here
+    };
 
     const register = (context, io, API, sharedData) => {
         //TODO put this file in a config
         const eventListenersPath = [
             './LocationEvent',
-            './EmailEvent'
+            './EmailEvent',
+            './WebEvent'
         ];
 
         eventListenersPath.forEach(listener => {
@@ -30,9 +33,35 @@ exports.init = function (context, io, API) {
     //Listen for connections and emitted client events
     io.on("connection", socket => {
 
+        //lets create an event for registering clients
+        socket.on("add_me", user => {
+            if (user && (user.username || user.id)) {
+                const clientSocs = this.sharedData.clients[user.id] || [];
+                clientSocs.push(socket.id);
+                this.sharedData.clients[user.id] = clientSocs;
+                this.sharedData.clients[socket.id] = user.id;
+                console.log(this.sharedData.clients);
+            }
+        });
+
+
+        socket.on("disconnect", () => {
+            console.log("disconnection");
+            const userId = this.sharedData.clients[socket.id];
+            const clientSocs = this.sharedData.clients[userId];
+            if (!userId) return;
+            if (clientSocs.includes(socket.id)) {
+                clientSocs.splice(clientSocs.indexOf(socket.id), 1);
+                this.sharedData.clients[userId] = clientSocs;
+                if (!this.sharedData.clients[userId].length) delete this.sharedData.clients[userId];
+            }
+            delete this.sharedData.clients[socket.id];
+            console.log(this.sharedData.clients);
+        });
+
         socket.on("update_location", data => {
             console.log(data);
-            this.eventListeners.forEach(listener => listener.emit('update_location', data, this.sharedData))
+            this.eventListeners.forEach(listener => listener.emit('update_location', data))
         });
 
         socket.on("notes_added", data => {
