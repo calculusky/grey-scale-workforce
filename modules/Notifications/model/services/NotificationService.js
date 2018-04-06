@@ -20,6 +20,27 @@ class NotificationService {
     }
 
 
+    createNotification(body) {
+        const Notification = DomainFactory.build(DomainFactory.NOTIFICATION);
+        let notification = new Notification(body);
+        const validator = new validate(notification, notification.rules(), notification.customErrorMessages());
+
+        if (validator.fails()) {
+            return Promise.reject(Utils.buildResponse({
+                status: "fail",
+                data: validator.errors.all(),
+                code: 'VALIDATION_ERROR'
+            }, 400));
+        }
+
+        //Get Mapper
+        const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
+        return NotificationMapper.createDomainRecord(notification).then(notification => {
+            if (!notification) return Promise.reject(notification);
+            return Utils.buildResponse({data: notification});
+        });
+    }
+
     /**
      *
      * @param value
@@ -29,24 +50,18 @@ class NotificationService {
      * @param limit
      * @returns {Promise}
      */
-    getNotifications(value, by = "to", who = {api: -1}, offset = 0, limit = 10) {
-        if (!value || "" + value + "".trim() === '') {
-            //Its important that all queries are streamlined to majorly for each business
-            value = who.api;
-        } else if (value) {
-            console.log(value)
-        }
+    async getNotifications(value, by = "to", who = {}, offset = 0, limit = 10) {
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
-        const executor = (resolve, reject) => {
-            NotificationMapper.findDomainRecord({by, value}, offset, limit).then(result => {
-                let notifications = result.records;
-                return resolve(Utils.buildResponse({data: {items: notifications}}));
-            }).catch(err => {
-                return reject(err);
-            });
-        };
+        const {records: notifications} = await NotificationMapper.findDomainRecord({by, value}, offset, limit);
 
-        return new Promise(executor)
+        for (let notification of notifications) {
+            const fromUser = await notification.fromUser();
+            //the below code uses destructuring and IIFE to retrieve the values needed
+            notification.from = (
+                ({id, username, first_name, last_name}) => ({id, username, first_name, last_name})
+            )(fromUser.records.shift() || {});
+        }
+        return Utils.buildResponse({data: {items: notifications}});
     }
 
 
