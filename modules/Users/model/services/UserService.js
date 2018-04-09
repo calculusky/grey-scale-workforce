@@ -100,7 +100,7 @@ class UserService extends ApiService {
         }
 
         Promise.all(backgroundTask).catch(err => console.error('CreateUser', JSON.stringify(err)));
-
+        delete dbUser.password;
         return Utils.buildResponse({data: dbUser});
     }
 
