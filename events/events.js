@@ -44,6 +44,9 @@ exports.init = function (context, io, API) {
             }
         });
 
+        socket.on("update_location", data => {
+            this.eventListeners.forEach(listener => listener.emit('update_location', data, socket))
+        });
 
         socket.on("disconnect", () => {
             console.log("disconnection");
@@ -59,10 +62,6 @@ exports.init = function (context, io, API) {
             console.log(this.sharedData.clients);
         });
 
-        socket.on("update_location", data => {
-            console.log(data);
-            this.eventListeners.forEach(listener => listener.emit('update_location', data))
-        });
 
         socket.on("notes_added", data => {
             console.log(data);
