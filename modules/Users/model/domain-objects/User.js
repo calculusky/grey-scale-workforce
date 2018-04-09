@@ -51,6 +51,8 @@ class User extends DomainObject {
     rules() {
         return {
             email: 'email|required',
+            first_name: 'required|string',
+            last_name: 'required|string',
             password: 'string|required',
             gender: ['required', {'in': ['M', 'F', 'O']}],
             mobile_no: 'numeric|required',
