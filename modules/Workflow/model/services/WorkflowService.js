@@ -1,11 +1,8 @@
-// const DomainFactory = require('../../../DomainFactory');
-// let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const processes = require('../../../../processes.json');
 const ProcessAPI = require('../../../../processes/ProcessAPI');
 const PUtils = ProcessAPI.Utils;
 const Events = require('../../../../events/events');
-// const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
 
 /**
  * Created by paulex on 02/27/18.
@@ -21,6 +18,7 @@ class WorkflowService {
         /*TODO username and password should be put in a secret file e.g .env*/
         this.username = "admin@nogic.org";
         this.password = "admin";
+        this.token = null;
 
         ProcessAPI.init({
             "baseUrl": process.env.PM_BASE_URL,
@@ -28,9 +26,9 @@ class WorkflowService {
             "clientSecret": process.env.PM_CLIENT_SECRET,
             "workSpace": process.env.PM_WORK_SPACE,
             "apiVersion": process.env.PM_API_VERSION
-        }).login(this.username, this.password).catch(e => {
-            console.log(e);
-        });
+        }).login(this.username, this.password).then(token => {
+            this.token = token;
+        }).catch(console.error);
     }
 
     /**
@@ -53,7 +51,7 @@ class WorkflowService {
      * @returns {Promise.<User>|*}
      */
     async updateUser(by, value, body = {}) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        if (!this.token) await ProcessAPI.login(this.username, this.password);
         const db = this.context.database;
         // //we need to get the updated user record
         let dbUser = await db.table("users").where(by, value).select([
@@ -78,7 +76,8 @@ class WorkflowService {
 
         if (body['wf_user_id']) {
             const pmUser = toPMUser(body);
-            response = await ProcessAPI.request(`/user/${body['wf_user_id']}`, pmUser, 'PUT').catch(err => {
+            response = await ProcessAPI.request(`/user/${body['wf_user_id']}`, pmUser, 'PUT', this.token).catch(err => {
+                console.log('PMToken', ProcessAPI['token']);
                 console.log("updateUser:", err);
             });
         } else {
@@ -99,12 +98,13 @@ class WorkflowService {
      * @param retry - determines if this should be retried in-case an error occurs
      */
     async createUser(body = {}, who = {}, retry = true) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        if (!this.token) await ProcessAPI.login(this.username, this.password);
 
         const pUser = toPMUser(body);
 
-        return ProcessAPI.request('/users', pUser, 'POST').catch(err => {
+        return ProcessAPI.request('/users', pUser, 'POST', this.token).catch(err => {
             //TODO send a formatted error
+            console.log('PMToken', this.token);
             console.log('FromWorkFlowCreateUser', err);
             return Promise.reject(Utils.processMakerError(err));
         });
@@ -118,24 +118,24 @@ class WorkflowService {
      * @returns {Promise<*>}
      */
     async removeUserFromGroup(wfUserId, groupId) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        if (!this.token) await ProcessAPI.login(this.username, this.password);
 
         let group = await this.context.database.table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
         group = group.shift();
-        let response = null;
+        let resp = null;
         if (group) {
             if (!group['wf_group_id']) {
                 //if the group doesn't exist on process maker lets create it
                 const grp = await this.createGroup(group);
                 group['wf_group_id'] = grp['grp_uid'];
             }
-            response = await ProcessAPI.request(`/group/${group['wf_group_id']}/user/${wfUserId}`, null, 'DELETE')
-                .catch(err => {
-                    //Error Handler : the user might already be added to the group
-                    console.log("removeUserFromGroup:", err);
-                });
+            const endpoint = `/group/${group['wf_group_id']}/user/${wfUserId}`;
+            resp = await ProcessAPI.request(endpoint, {}, 'DELETE', this.token).catch(err => {
+                //Error Handler : the user might already be added to the group
+                console.log("removeUserFromGroup:", err);
+            });
         }
-        return response;
+        return resp;
     }
 
     /**
@@ -144,8 +144,8 @@ class WorkflowService {
      * @returns {*}
      */
     async deleteUser(user, retry = true) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
-        return await ProcessAPI.request(`/user/${user.wf_user_id}`, null, 'DELETE').catch(err => {
+        if (!this.token) await ProcessAPI.login(this.username, this.password);
+        return await ProcessAPI.request(`/user/${user.wf_user_id}`, null, 'DELETE', this.token).catch(err => {
             console.log(err);
             //No matter what happens we can assume this was successful except a network issue
             if (retry && err/*Error is a network error*/) {
@@ -158,9 +158,9 @@ class WorkflowService {
 
 
     async getUsers(filter) {
-        if (!ProcessAPI['token']) await ProcessAPI.login("admin@nogic.org", "admin");
+        if (!this.token) await ProcessAPI.login("admin@nogic.org", "admin");
         let endPoint = `/users?start=0&limit=10${(filter) ? "&filter=" + filter : ""}`;
-        return await ProcessAPI.request(endPoint, null, 'GET').catch(err => {
+        return await ProcessAPI.request(endPoint, null, 'GET', this.token).catch(err => {
             console.log(err);
         });
     }
@@ -172,8 +172,9 @@ class WorkflowService {
      * @returns {Promise<void>}
      */
     async createGroup(group = {}) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
-        return await ProcessAPI.request('/group', {grp_title: group.name, grp_status: 'ACTIVE'}, 'POST').catch(err => {
+        if (!this.token) await ProcessAPI.login(this.username, this.password);
+        const payload = {grp_title: group.name, grp_status: 'ACTIVE'};
+        return await ProcessAPI.request('/group', payload, 'POST', this.token).catch(err => {
             return Promise.reject(Utils.processMakerError(err));
         });
     }
@@ -186,7 +187,7 @@ class WorkflowService {
      * @returns {Promise<*>}
      */
     async updateGroup(group) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        if (!this.token) await ProcessAPI.login(this.username, this.password);
         const db = this.context.database;
         //let's check if the group already exist on process maker
         let dbGroup = await db.table("groups").where("id", group.id).select(['id', 'name', 'wf_group_id']);
@@ -198,7 +199,7 @@ class WorkflowService {
         let response = null;
         if (dbGroup['wf_group_id']) {
             const pmGroup = {grp_title: dbGroup["name"]};
-            response = await ProcessAPI.request(`/group/${dbGroup['wf_group_id']}`, pmGroup, 'PUT').catch(err => {
+            response = await ProcessAPI.request(`/group/${dbGroup['wf_group_id']}`, pmGroup, 'PUT', this.token).catch(err => {
                 console.log('UpdateGroupProcessMaker:', err);
             });
         } else {
@@ -211,9 +212,9 @@ class WorkflowService {
     }
 
     async deleteGroup(wfGroupId) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        if (!this.token) await ProcessAPI.login(this.username, this.password);
         console.log("Waiting");
-        return ProcessAPI.request(`/group/${wfGroupId}`, null, 'DELETE').catch(err => {
+        return ProcessAPI.request(`/group/${wfGroupId}`, null, 'DELETE', this.token).catch(err => {
             console.log('DeleteGroupProcessMaker:', err);
         });
     }
@@ -225,7 +226,7 @@ class WorkflowService {
      * @param groupId
      */
     async addUserToGroup(wfUserId, groupId) {
-        if (!ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        if (!this.token) await ProcessAPI.login(this.username, this.password);
 
         const db = this.context.database;
 
@@ -239,7 +240,8 @@ class WorkflowService {
                 const grp = await this.createGroup(group);
                 group['wf_group_id'] = grp['grp_uid'];
             }
-            response = await ProcessAPI.request(`/group/${group['wf_group_id']}/user`, {usr_uid: wfUserId}, 'POST')
+            const payload = {usr_uid: wfUserId};
+            response = await ProcessAPI.request(`/group/${group['wf_group_id']}/user`, payload, 'POST', this.token)
                 .catch(err => {
                     //Error Handler : the user might already be added to the group
                     console.log("addUserToGroup:", err);
@@ -345,7 +347,7 @@ class WorkflowService {
      * @returns {Promise<*>}
      */
     async getCase(caseId, who) {
-        if (!who['pmToken'] && !ProcessAPI['token']) await ProcessAPI.login(this.username, this.password);
+        if (!who['pmToken'] && !this.token) await ProcessAPI.login(this.username, this.password);
         let resp = await ProcessAPI.request(`/cases/${caseId}`, null, 'GET', who['pmToken']).catch(err => {
             return err;
         });
