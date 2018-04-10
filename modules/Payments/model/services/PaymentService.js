@@ -80,7 +80,7 @@ class PaymentService {
             }, 400));
         }
 
-        payment.system_id = payment.system_id.replace(/-/g, "");
+        payment.system_id = payment.system_id.replace(/-/g, "").toUpperCase();
         //check if the system exist
         let systemType = PaymentService.getPaymentType(payment.system);
 
