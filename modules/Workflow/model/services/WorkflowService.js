@@ -28,6 +28,7 @@ class WorkflowService {
             "apiVersion": process.env.PM_API_VERSION
         }).login(this.username, this.password).then(token => {
             this.token = token;
+
         }).catch(console.error);
     }
 

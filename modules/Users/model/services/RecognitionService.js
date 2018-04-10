@@ -115,7 +115,7 @@ class RecognitionService {
         const executor = (resolve, reject) => {
             //Let's ask, should we really care about the response of the two actions
             //We somehow know this will definitely always be called
-            this.context.persistence.set(token, false);
+            this.context.persistence.del(token);
             if (fireBaseToken && fireBaseToken.trim().length > 0) API.users().unRegisterFcmToken(fireBaseToken);
             return resolve(Util.buildResponse({data: {token, user: {id: who.sub}}}));
         };

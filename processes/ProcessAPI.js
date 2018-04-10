@@ -58,7 +58,7 @@ exports.login = (username, password, options = {grantType: 'password'}) => {
             if (res.statusCode !== 200) return reject(body);
             else if (body.error) return reject(body.error);
             console.log(body);
-            return resolve(this.token);
+            return resolve(body);
         });
     };
     return new Promise(executor);
