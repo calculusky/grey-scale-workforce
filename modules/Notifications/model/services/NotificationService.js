@@ -1,6 +1,5 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
-const Password = require('../../../../core/Utility/Password');
 const Utils = require('../../../../core/Utility/Utils');
 const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
 const validate = require('validatorjs');
@@ -48,7 +47,7 @@ class NotificationService {
      * @param who
      * @param offset
      * @param limit
-     * @returns {Promise}
+     * @returns {Promise<{data?: *, code?: *}>}
      */
     async getNotifications(value, by = "to", who = {}, offset = 0, limit = 10) {
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
@@ -64,6 +63,26 @@ class NotificationService {
         return Utils.buildResponse({data: {items: notifications}});
     }
 
+    /**
+     *
+     * @param value
+     * @param by
+     * @param body
+     * @param who
+     * @param API
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async updateNotification(value, by = "id", body = {}, who, API) {
+        const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
+        const Notification = DomainFactory.build(DomainFactory.NOTIFICATION);
+
+        const notification = new Notification(body);
+        const updated = await NotificationMapper.updateDomainRecord({by, value, domain: notification});
+
+        if (!updated.length) return Utils.buildResponse({status: 'fail', data: updated.shift()}, 404);
+
+        return Utils.buildResponse({data: updated.shift()});
+    }
 
     /**
      *

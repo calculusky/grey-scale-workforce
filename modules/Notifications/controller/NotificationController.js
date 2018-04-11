@@ -13,7 +13,7 @@ const Log = require(`${__dirname}/../../../core/logger`);
  * @param multiPart
  */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
-    app.use('/notifications*', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/notifications*', (req, res, next) => API.recognitions().auth(req, res, next));
 
     /**
      * @swag
@@ -38,13 +38,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        schema:
      *          $ref: '#/definitions/postNotificationInput'
      */
-    app.post('/notifications', jsonParser, (req, res)=> {
+    app.post('/notifications', jsonParser, (req, res) => {
         API.notifications().sendNotification(req.body, req.who, API)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 // console.log(data);
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 console.log(code, err);
                 return res.status(code).send(err);
             });
@@ -74,16 +74,43 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/notifications/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
+    app.get('/notifications/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res) => {
         return API.notifications().getNotifications(`${req.params['user_id']}`, "to->[]", req.who, req.params.offset, req.params.limit)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
 
+    /**
+     * @swag
+     * /notifications/{id}:
+     *  put:
+     *    summary: Updates a Notification
+     *    description: "Updates a Notification"
+     *    tags: [Notification]
+     *    produces:
+     *    - application/json
+     *    operationId: updateNotification
+     *    responses:
+     *      '200':
+     *        description: Returns true with the id of the request updated
+     *    parameters:
+     *    - $ref: '#/parameters/sessionId'
+     *    - $ref: '#/parameters/fault_id'
+     */
+    app.put('/notifications/:id', urlencodedParser, (req, res) => {
+        console.log(req.params.id);
+        API.notifications().updateNotification(req.params.id, "id", req.body, req.who, API)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
+                return res.status(code).send(err);
+            });
+    });
 
     /**
      * @swag
@@ -102,12 +129,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/fault_id'
      */
-    app.delete('/notifications/:id', urlencodedParser, (req, res)=> {
+    app.delete('/notifications/:id', urlencodedParser, (req, res) => {
         API.notifications().deleteNotification("id", req.params.id)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
