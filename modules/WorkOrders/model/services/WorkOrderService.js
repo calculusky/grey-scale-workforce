@@ -64,7 +64,7 @@ class WorkOrderService extends ApiService {
             });
         const workOrders = results.records;
 
-        if (!workOrders.length) return resolve(Utils.buildResponse({data: {items: results.records}}));
+        if (!workOrders.length) return Utils.buildResponse({data: {items: results.records}});
 
         return _doWorkOrderList(workOrders, this.context, this.moduleName, isSingle, groups, workTypes || this.fallBackType);
     }
@@ -107,14 +107,14 @@ class WorkOrderService extends ApiService {
 
         let workOrders = [];
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
-
+        console.log(workOrders);
         records.forEach(record => {
             let domain = new WorkOrder(record);
             domain.serialize(undefined, "client");
             workOrders.push(domain);
         });
 
-        if (!records.length) return resolve(Utils.buildResponse({data: {items: workOrders}}));
+        if (!records.length) return Utils.buildResponse({data: {items: workOrders}});
 
         // Process the work order list
         return _doWorkOrderList(workOrders, this.context, this.moduleName, false, groups, workTypes || this.fallBackType)
