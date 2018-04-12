@@ -165,7 +165,18 @@ module.exports.getMysqlError = function (err) {
     }
 };
 
-
+/**
+ *
+ * @param status
+ * @param data
+ * @param msg
+ * @param type
+ * @param code
+ * @param desc
+ * @param isRoute
+ * @param statusCode
+ * @returns {{data?:*, code?:*}}
+ */
 module.exports.buildResponse = function ({status = "success", data, msg, type, code, desc, isRoute = true}, statusCode = 200) {
     let responseBody = {};
     responseBody.status = status;

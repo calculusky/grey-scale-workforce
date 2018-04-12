@@ -62,6 +62,13 @@ module.exports.createDelinquencyList = function () {
             return _updateUploadStatus(this, fileName, 3, logMessages);
         });
 
+        //check that the uploaded data is intact.. if we can't find the uploaded record we can end this right now
+        if (!uploadData) {
+            logMessages.push("Couldn't find the uploaded record.");
+            this.lock.d = false;
+            return _updateUploadStatus(this, fileName, 4, logMessages) && deleteFile(file);
+        }
+
         groups = JSON.parse(groups);
         uploadData = uploadData.shift();
 
@@ -128,7 +135,7 @@ module.exports.createDelinquencyList = function () {
                 }
                 //We need to validate the rows.
                 //If the current row is empty quickly move to the next and log the error for the client
-                if (rn !== rowLen && (accountNo == null || !accountNo.length > 0
+                if (rn !== rowLen && (accountNo == null || !`${accountNo}`.length > 0
                         || Number.isNaN(cBill)
                         || Number.isNaN(arrears)
                         || utIndex == null)) {
@@ -200,6 +207,7 @@ module.exports.createDelinquencyList = function () {
                         }
 
                         const hasPending = await Utils.customerHasPendingWorkOrder(db, accountNo);
+                        console.log('HasPending', hasPending);
 
                         if (hasPending) {
                             logMessages.push(`Couldn't create a work order for customer (${accountNo}) in (${rowNum})`
@@ -442,9 +450,9 @@ function _updateUploadStatus(ctx, fileName, status, message = "[]") {
     ctx.context.database.table("uploads")
         .where("file_name", fileName)
         .update({
-            status: status, updated_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
+            status: status, updated_at: Utils.date.dateToMysql(),
             message: message
-        }).then(r => console.log());
+        }).then(console.log);
 }
 
 
