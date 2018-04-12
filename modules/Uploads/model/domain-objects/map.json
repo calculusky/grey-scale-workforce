@@ -8,6 +8,7 @@
   "upload_type": "upload_type",
   "group_id": "group_id",
   "assigned_to": "assigned_to",
+  "created_by": "created_by",
   "status": "status",
   "deleted_at": "deleted_at",
   "created_at": "created_at",

@@ -78,8 +78,25 @@ class WebEvent extends EventEmitter {
         });
     }
 
-    async onUploadComplete() {
+    async onUploadComplete(type, status, fileName, createdBy) {
+        if (!createdBy || !(Array.isArray(createdBy) && createdBy.length)) return;
+        //now we need to notify this guy who uploaded the record
 
+        const notification = {
+            type: "upload_complete",
+            title: `Upload Complete`,
+            message: `The ${type} record you uploaded is done processing.`,
+            to: `[${createdBy}]`,
+            group: '[]',
+            level: 3
+        };
+
+        const socketIds = this.sharedData.clients[createdBy];
+        if (!socketIds || socketIds.length < 1) return;
+        socketIds.forEach(socketId => {
+            const socket = this.io.sockets.connected[socketId];
+            if (socket) socket.emit('upload_complete', notification);
+        });
     }
 }
 

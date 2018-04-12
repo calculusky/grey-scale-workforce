@@ -1,3 +1,4 @@
+const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
@@ -10,10 +11,10 @@ const validate = require('validatorjs');
  * @name UploadService
  * Created by paulex on 8/22/17.
  */
-class UploadService {
+class UploadService extends ApiService {
 
     constructor(context) {
-        this.context = context;
+        super(context);
         MapperFactory = this.context.modelMappers;
     }
 
@@ -55,9 +56,10 @@ class UploadService {
      * @param API
      */
     uploadFile(body = {}, who = {}, files = [], API) {
-        console.log(body);
         const Upload = DomainFactory.build(DomainFactory.UPLOAD);
         const uploadObj = new Upload(body);
+
+        ApiService.insertPermissionRights(uploadObj, who);
 
         //Enforce validation
         let validator = new validate(uploadObj, uploadObj.rules(), uploadObj.customErrorMessages());
@@ -70,6 +72,7 @@ class UploadService {
                 code: 'VALIDATION_ERROR'
             }, 400));
         }
+        console.log(uploadObj);
 
         if (!files.length) return Promise.reject(Utils.buildResponse({
             status: "fail",
@@ -91,7 +94,8 @@ class UploadService {
                     status: 1,
                     upload_type: uploadObj.upload_type,
                     group_id: uploadObj.group_id,
-                    assigned_to: `[{"id":${uploadObj.assigned_to}, "created_at":"${Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")}"}]`,
+                    assigned_to: uploadObj.assigned_to,//JSON.stringify()`[{"id":${uploadObj.assigned_to}, "created_at":"${Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")}"}]`,
+                    created_by: uploadObj.created_by,
                     created_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
                     updated_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
                 });

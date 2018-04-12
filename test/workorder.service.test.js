@@ -1,12 +1,13 @@
 /**
  * Created by paulex on 9/6/17.
  */
-
+require('dotenv').config();
 let API = require('../API');
 
 const config = require('../config.json');
 const Context = require('../core/Context');
-API = new API(new Context(config));
+const ctx = new Context(config);
+API = new API(ctx);
 
 let workOrder = null;
 
@@ -53,7 +54,7 @@ test("Test that we can't create a work order with an invalid group id", ()=> {
 });
 
 test('That we can retrieve a work order by a column', ()=> {
-    return API.workOrders().getWorkOrders('DROT-000004-468-02', 'work_order_no').then(res=> {
+    return API.workOrders().getWorkOrders('DROT00000417703', 'work_order_no').then(res => {
         console.log(res);
         expect(res).toEqual(
             expect.objectContaining({
@@ -68,7 +69,6 @@ test('That we can retrieve a work order by a column', ()=> {
 
 test("Retrieve list of work order", ()=> {
     return API.workOrders().getWorkOrders(`{"id":1}`, "assigned_to->[]").then(res=> {
-        // console.dir(res.data.data);
         expect(res).toEqual(
             expect.objectContaining({
                 code: expect.any(Number),
@@ -93,7 +93,7 @@ test("Retrieve list of work order that its relation id doesn't exist should be e
 });
 
 test("Retrieve list of work order within a specific date range", ()=> {
-    return API.workOrders().getWorkOrdersBetweenDates(1, 1, '2018-02-09', '2018-02-15', 0, 10, {group: 1})
+    return API.workOrders().getWorkOrdersBetweenDates(1, 1, '2018-04-07', '2018-04-15', 0, 10, {group: 1})
         .then(res=> {
             console.log(res);
             expect(res).toEqual(

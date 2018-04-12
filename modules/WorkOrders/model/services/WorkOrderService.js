@@ -47,7 +47,6 @@ class WorkOrderService extends ApiService {
         //is not for fetching just a single work order
         const isSingle = typeof value !== 'object';
 
-        // let executor = (resolve, reject) => {
         //Prepare the static data from persistence storage
         let {groups, workTypes} = [{}, {}];
         this.context.persistence.get("groups", (err, grps) => {
@@ -83,7 +82,7 @@ class WorkOrderService extends ApiService {
     async getWorkOrdersBetweenDates(userId, status, fromDate, toDate, offset = 0, limit = 10, who = {}) {
         offset = parseInt(offset);
         limit = parseInt(limit);
-        // let executor = (resolve, reject) => {
+
         //Prepare the static data from persistence storage
         let {groups, workTypes} = [{}, {}];
         this.context.persistence.get("groups", (err, grps) => {
@@ -107,7 +106,6 @@ class WorkOrderService extends ApiService {
 
         let workOrders = [];
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
-        console.log(workOrders);
         records.forEach(record => {
             let domain = new WorkOrder(record);
             domain.serialize(undefined, "client");

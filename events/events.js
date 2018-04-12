@@ -40,16 +40,11 @@ exports.init = function (context, io, API) {
                 clientSocs.push(socket.id);
                 this.sharedData.clients[user.id] = clientSocs;
                 this.sharedData.clients[socket.id] = user.id;
-                console.log(this.sharedData.clients);
+                console.log(`${user.username} connected with id:${socket.id}`);
             }
         });
 
-        socket.on("update_location", data => {
-            this.eventListeners.forEach(listener => listener.emit('update_location', data, socket))
-        });
-
         socket.on("disconnect", () => {
-            console.log("disconnection");
             const userId = this.sharedData.clients[socket.id];
             const clientSocs = this.sharedData.clients[userId];
             if (!userId) return;
@@ -57,22 +52,20 @@ exports.init = function (context, io, API) {
                 clientSocs.splice(clientSocs.indexOf(socket.id), 1);
                 this.sharedData.clients[userId] = clientSocs;
                 if (!this.sharedData.clients[userId].length) delete this.sharedData.clients[userId];
+                console.log(`user with ID:${userId} disconnected :${socket.id}`);
             }
             delete this.sharedData.clients[socket.id];
-            console.log(this.sharedData.clients);
         });
 
-
-        socket.on("notes_added", data => {
-            console.log(data);
+        /*
+        |---------------------------------------------------
+        | Listens for location updates
+        |---------------------------------------------------
+         */
+        socket.on("update_location", data => {
+            this.eventListeners.forEach(listener => listener.emit('update_location', data, socket))
         });
 
-        socket.on("message", (e) => {
-            console.log(e);
-            io.emit("update_location", "something happened");
-        });
-
-        console.log("I'm connected as i am");
     });
 };
 

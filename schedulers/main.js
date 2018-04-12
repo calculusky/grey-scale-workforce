@@ -7,6 +7,7 @@ const Excel = require('exceljs');
 const Utils = require('../core/Utility/Utils');
 const _ = require('lodash');
 let API = null;
+const Events = require('../events/events.js');
 
 
 module.exports = function main(context, Api) {
@@ -47,229 +48,190 @@ module.exports.createDelinquencyList = function () {
         const logMessages = [];
         const db = this.context.database;
 
+        //
+        const onComplete = (status, update = true) => {
+            deleteFile(currentFile);
+            this.lock.d = false;//release the lock here
+            Events.emit("upload_completed", "delinquency", status, fileName, (uploadData) ? uploadData.created_by : 0);
+            return (update) ? _updateUploadStatus(this, fileName, status, JSON.stringify(logMessages)) : true;
+        };
+
         const task = [
             Utils.getFromPersistent(this.context, "groups"),
-            db.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to']),
+            db.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to', 'created_by']),
             workbook.xlsx.readFile(file)
         ];
 
         //Fetch Groups and the Uploaded record before hand
-        let [groups, uploadData] = await Promise.all(task).catch(err => {
-            console.log(err);
-            deleteFile(file);
-            this.lock.d = false;//should in-case an error occurs we can release the lock to allow a retry
-            logMessages.push("There was an error reading the file");
-            return _updateUploadStatus(this, fileName, 3, logMessages);
+        let [groups, uploadData] = await Promise.all(task).catch(_ => {
+            return logMessages.push("There was an error reading the file") && onComplete(3);
         });
 
         //check that the uploaded data is intact.. if we can't find the uploaded record we can end this right now
-        if (!uploadData) {
-            logMessages.push("Couldn't find the uploaded record.");
-            this.lock.d = false;
-            return _updateUploadStatus(this, fileName, 4, logMessages) && deleteFile(file);
-        }
+        if (!uploadData.length) return logMessages.push("Couldn't find the uploaded record.") && onComplete(5, false);
 
         groups = JSON.parse(groups);
         uploadData = uploadData.shift();
 
         const workSheet = workbook.getWorksheet(1);
         let rowLen = workSheet.rowCount,
-            actualRowCount = rowLen,
+            actualRowCount = rowLen - 1,
             columnLen = workSheet.actualColumnCount,
             processed = 0,
-            processedDelinquencies = 0,
-            processedWorkOrders = 0;
+            processedDisc = 0,
+            processedWO = 0,
+            isBadTemplate = false,
+            total = 1;
 
         let colHeaderIndex = {};
 
         //if it is empty or just includes the column heads... lets delete the file and release lock
-        if (rowLen <= 1) {
-            deleteFile(file);
-            logMessages.push("The uploaded file is empty. Nothing to do.");
-            this.lock.d = false;//release the lock here
-            return _updateUploadStatus(this, fileName, 4, logMessages);
-        }
+        if (rowLen <= 1) return logMessages.push("Empty file uploaded.") && onComplete(5);
 
-        const endProcess = (recordsProcessed) => {
-            if (recordsProcessed === rowLen - 1) {
-                deleteFile(file);
-                logMessages.push(`${processedDelinquencies} of ${rowLen - 1}` +
-                    " delinquent records imported successfully"
-                );
-                logMessages.push(`${processedWorkOrders} work orders was generated for a total of` +
-                    ` ${processedDelinquencies}` + " delinquencies imported.");
 
-                let status = (processedDelinquencies === rowLen - 1) ? 4 : 5;
-                _updateUploadStatus(this, fileName, status, JSON.stringify(logMessages));
-                this.lock.d = false;
+        //Checks to see if the
+        const endProcess = (totalRowsVisited) => {
+            if (totalRowsVisited === rowLen) {
+                logMessages.push(`${processedDisc} of ${actualRowCount}` + " delinquent records imported successfully");
+                logMessages.push(`${processedWO ? processedWO : "No"} work order(s) was generated from the total of`
+                    + ` ${processedDisc}` + " delinquency record imported.");
                 console.log(logMessages);
+                return onComplete((processedDisc === actualRowCount) ? 4 : 5);
             }
-            return recordsProcessed === rowLen - 1;
+            return totalRowsVisited === rowLen;
         };
 
-        const processDelinquentRows = (row, rn) => {
-            let rowNum = rn;
-            if (rowNum === 1) {
+
+        workSheet.eachRow(async (row, rn) => {
+            if (isBadTemplate) return;
+            if (rn === 1) {
                 colHeaderIndex = getColumnsByNameIndex(row, columnLen);
-                if (_.difference(delinquentCols, Object.keys(colHeaderIndex)).length > 0) {
-                    deleteFile(file);
-                    this.lock.d = false;//release the lock here
-                    logMessages.push("Invalid delinquency template uploaded. Template doesn't contain either one of " +
-                        `this column heads; ${delinquentCols.join(', ')}`);
-                    return _updateUploadStatus(this, fileName, 3, JSON.stringify(logMessages));
-                }
+                if (!_.difference(delinquentCols, Object.keys(colHeaderIndex)).length) return;
+                logMessages.push("Invalid delinquency template uploaded. Template doesn't contain either one of " +
+                    `this column headers; ${delinquentCols.join(', ')}`);
+                return onComplete(3) && (isBadTemplate = true);
             }
-            else if (rowNum > 1) {
-                const accountCell = row.getCell(colHeaderIndex['account_no']);
-                const accountNo = (accountCell.value) ? accountCell.value.text || accountCell.value : null;
-                const cBill = row.getCell(colHeaderIndex['current_bill']).value;
-                const arrears = row.getCell(colHeaderIndex['net_arrears']).value;
-                const undertaking = row.getCell(colHeaderIndex['undertaking']).value;
-                const utIndex = row.getCell(colHeaderIndex['undertaking_index']).value;
-                const generate = row.getCell(colHeaderIndex['auto_generate_do']).value || "NO";
 
-                //check if the the row is empty
-                if (row.actualCellCount < delinquentCols.length) {
-                    --actualRowCount;
-                    return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
-                }
-                //We need to validate the rows.
-                //If the current row is empty quickly move to the next and log the error for the client
-                if (rn !== rowLen && (accountNo == null || !`${accountNo}`.length > 0
-                        || Number.isNaN(cBill)
-                        || Number.isNaN(arrears)
-                        || utIndex == null)) {
-                    //TODO make error messages
-                    return endProcess(++processed) || processDelinquentRows(workSheet.getRow(++rn), rn);
-                }
+            const accountCell = row.getCell(colHeaderIndex['account_no']);
+            const accountNo = (accountCell.value) ? accountCell.value.text || accountCell.value : null;
+            const cBill = row.getCell(colHeaderIndex['current_bill']).value;
+            const arrears = row.getCell(colHeaderIndex['net_arrears']).value;
+            const undertaking = row.getCell(colHeaderIndex['undertaking']).value;
+            const utIndex = row.getCell(colHeaderIndex['undertaking_index']).value;
+            const generate = row.getCell(colHeaderIndex['auto_generate_do']).value || "NO";
 
+            //check if the the row is empty
+            if (row.actualCellCount < delinquentCols.length) return --actualRowCount && endProcess(++total);
 
-                //Worst case scenario: if we can't find the hub an undertaking falls under
-                //lets assign it to the UT group itself
-                let hubGroup = {id: utIndex.result};
-                let hubManagerId = null;
+            //Worst case scenario: if we can't find the hub an undertaking falls under
+            //lets assign it to the UT group itself
+            let generateWO = generate.toUpperCase() === 'YES';
+            let hubGroup = {id: utIndex.result};
+            let hubManagerId = null;
 
-                //Get the technical hub that manages the Undertaking of the Delinquent customer
-                //Only if we are to generate work order for this delinquent customer automatically
-                if (generate.toUpperCase() === 'YES') {
-                    hubGroup = Utils.getGroupParent(groups[utIndex.result], "technical_hub") || hubGroup;
+            let assignedTo = uploadData.assigned_to[0];
+            assignedTo.created_at = Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s");
 
-                    //There is no need looking up for the hub manager if the UT doesn't belong to a hub
-                    if (hubGroup.id !== utIndex.result) {
-                        db.select(['users.id']).from("users")
-                            .innerJoin("role_users", "users.id", "role_users.user_id")
-                            .innerJoin("roles", "role_users.role_id", "roles.id")
-                            .innerJoin("user_groups", "user_groups.group_id", hubGroup.id)
-                            .where("roles.slug", "technical_hub")
-                            .then(userId => {
-                                hubManagerId = (userId.length) ? userId.shift().id : null;
-                            });
-                    } else {
-                        logMessages.push(`The undertaking(${undertaking}) specified in row(${rowNum})` +
-                            " doesn't belong to any Hub.");
-                    }
-                } else logMessages.push("Work order was not auto-generated for row(" + rowNum + ")");
+            const delinquency = {
+                "account_no": accountNo,
+                "current_bill": cBill,
+                "arrears": arrears,
+                "min_amount_payable": cBill + arrears,
+                "total_amount_payable": cBill + arrears + 2000,
+                "group_id": uploadData.group_id,
+                "created_by": assignedTo.id,
+                "assigned_to": JSON.stringify([assignedTo]),
+                "created_at": assignedTo.created_at,
+                "updated_at": assignedTo.created_at
+            };
 
-                let assignedTo = uploadData.assigned_to[0];
-                assignedTo.created_at = Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s");
-                //TODO what happens if the hubManagerID is null?
-                let delinquency = {
-                    "account_no": accountNo,
-                    "current_bill": cBill,
-                    "arrears": arrears,
-                    "min_amount_payable": cBill + arrears,
-                    "total_amount_payable": cBill + arrears + 2000,
-                    "group_id": uploadData.group_id,
-                    "created_by": assignedTo.id,
-                    "assigned_to": JSON.stringify([assignedTo]),
-                    "created_at": assignedTo.created_at,
-                    "updated_at": assignedTo.created_at
-                };
+            const inserted = await db.table(tableName).insert(delinquency).catch(_ => {
+                logMessages.push(`An error occurred while processing row(${rn})` + "." +
+                    " It could be that the account number doesn't exist.");
+                return null;
+            });
 
-                // Insert record to Database
-                db.table(tableName).insert(delinquency)
-                    .then(async res => {
-                        const discId = res.shift();
-                        ++processedDelinquencies;
+            if (!inserted) return ++processed && endProcess(++total);
 
-                        // We need to only call endProcess only when we are sure that all processes are completed
-                        // thus if we are creating a work order we can only call endProcess when it either passes
-                        // or fail. If we aren't creating a work-order then we can test endProcess
-                        let doWorkOrder = generate.toUpperCase() === 'YES';
+            ++processedDisc;
 
-                        if (!doWorkOrder) return endProcess(++processed);
+            const discId = inserted.shift();
 
-                        if (hubGroup.id === utIndex.result) {
-                            logMessages.push(`Couldn't create a work order for row(${rowNum})`
-                                + " because the undertaking doesn't belong to a hub; " +
-                                "however a delinquent record was created.");
-                            return endProcess(++processed);
-                        }
-
-                        const hasPending = await Utils.customerHasPendingWorkOrder(db, accountNo);
-                        console.log('HasPending', hasPending);
-
-                        if (hasPending) {
-                            logMessages.push(`Couldn't create a work order for customer (${accountNo}) in (${rowNum})`
-                                + ` because the customer still has a pending work order.`);
-                            return endProcess(++processed);
-                        }
-
-                        API.workOrders().createWorkOrder({
-                            type_id: 1,
-                            related_to: tableName,
-                            relation_id: `${discId}`,
-                            labels: '["work"]',
-                            summary: "Disconnect Customer!!!",
-                            status: '1',
-                            group_id: hubGroup.id,
-                            assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
-                            issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
-                            created_at: assignedTo.created_at,
-                            updated_at: assignedTo.created_at
-                        }).then(res => {
-                            //We need to get the work order id and relate it with the disconnection billing
-                            //Not necessary to wait for the return
-                            db.table('disconnection_billings').where('id', '=', discId)
-                                .update({
-                                    work_order_id: res.data.data.work_order_no,
-                                    assigned_to: JSON.stringify([assignedTo, {
-                                        "id": hubManagerId,
-                                        "created_at": assignedTo.created_at
-                                    }])
-                                }).then();
-
-                            ++processedWorkOrders;
-                            endProcess(++processed);
-                        }).catch(err => {
-                            console.log('CREATE_ERR', err);
-                            endProcess(++processed);
-                        });
-                    })
-                    .catch(err => {
-                        logMessages.push(`An error occurred while processing row(${rowNum})` + "." +
-                            " It could be that the account number doesn't exist.");
-                        endProcess(++processed);
-                    });
+            if (!generateWO) {
+                return logMessages.push("Work order was not auto-generated for row(" + rn + ")") && endProcess(++total);
             }
-            if (rn < rowLen) return setTimeout(() => processDelinquentRows(workSheet.getRow(++rn), rn), 20);
-        };
-        processDelinquentRows(workSheet.getRow(1), 1);
+
+            hubGroup = Utils.getGroupParent(groups[utIndex.result], "technical_hub") || hubGroup;
+            if (hubGroup.id === utIndex.result) {
+                logMessages.push(`Couldn't create a work order for row(${rn})` +
+                    ` because the undertaking (${undertaking}) doesn't belong to a hub.`);
+                return ++processed && endProcess(++total);
+            }
+
+            const [hubUser, hasPending] = await Promise.all([
+                db.select(['users.id']).from("users").innerJoin("role_users", "users.id", "role_users.user_id")
+                    .innerJoin("roles", "role_users.role_id", "roles.id")
+                    .innerJoin("user_groups", "user_groups.group_id", hubGroup.id)
+                    .where("roles.slug", "technical_hub"),
+                Utils.customerHasPendingWorkOrder(db, accountNo)
+            ]);
+
+            // If the customer has a pending work order we should create a new one
+            if (hasPending) {
+                logMessages.push(`Couldn't create a work order for customer (${accountNo}) in (${rn})`
+                    + ` because the customer still has a pending work order.`);
+                return ++processed && endProcess(++total);
+            }
+
+            if (!hubUser.length) {
+                logMessages.push(`Couldn't create a work order for row ${rn} because there was no hub manager for`
+                    + ` the undertaking (${undertaking}).`);
+                return ++processed && endProcess(++total);
+            }
+
+            hubManagerId = hubUser.shift().id;
+
+            return API.workOrders().createWorkOrder({
+                type_id: 1,
+                related_to: tableName,
+                relation_id: `${discId}`,
+                labels: '["work"]',
+                summary: "Disconnect Customer!!!",
+                status: '1',
+                group_id: hubGroup.id,
+                assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
+                issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
+                created_at: assignedTo.created_at,
+                updated_at: assignedTo.created_at
+            }).then(res => {
+                db.table('disconnection_billings').where('id', '=', discId)
+                    .update({
+                        work_order_id: res.data.data.work_order_no,
+                        assigned_to: JSON.stringify([assignedTo, {
+                            "id": hubManagerId,
+                            "created_at": assignedTo.created_at
+                        }])
+                    }).then();
+
+                ++processedWO;
+                return ++processed && endProcess(++total);
+            }).catch(err => {
+                console.log('CREATE_ERR', err);
+                return ++processed && endProcess(++total);
+            });
+        });
     };
     //if the lock is currently released we can start processing another file
     if (!this.lock.d) {
         return fs.readdir(directory, (err, files) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
+            if (err) return console.log(err);
             //start processing the files.. we are processing one file at a time from a specific folder
             //TODO check that this files are indeed excel files e.g xlsx or csv
             const fileName = files.shift();
             if (fileName) startProcessor(`${directory}/${fileName}`, fileName).catch(console.error);
         });
     }
-    console.log("Lock for delinquency list is held, i'll wait till it is released")
+    console.log("Lock for delinquency list is held, i'll wait till it is released");
 };
 
 /**
@@ -453,6 +415,7 @@ function _updateUploadStatus(ctx, fileName, status, message = "[]") {
             status: status, updated_at: Utils.date.dateToMysql(),
             message: message
         }).then(console.log);
+    return true;
 }
 
 
@@ -480,5 +443,5 @@ function getColumnsByNameIndex(row, colLen) {
 
 
 function deleteFile(file) {
-    fs.unlink(file, e => (e) ? console.log(`Error deleting file ${file}`, e) : `${file} DELETED`);
+    fs.unlink(file, e => (e) ? console.error(`Error deleting file ${file}`, e) : `${file} DELETED`);
 }

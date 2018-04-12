@@ -294,7 +294,7 @@ module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleNa
 
             //Lets add this up
             db.table('unit_counters').update({[moduleName]: unitCounter[unitName]}).where('unit_name', unitName)
-                .then(() => null);
+                .then(_ => (null));
 
             count = `${unitCounter[unitName]}`;
             let randomNo = Math.round(Math.random() * (999 - 100) + 100);
@@ -400,15 +400,14 @@ module.exports.customerHasPendingWorkOrder = async function (db, acctNo = "", tb
         return Promise.resolve(true);
     });
 
-    if (!dis.length || !dis[0]['work_order_id']) return false;
-
     const disc = dis.shift();
 
-    let wks = await db.table("work_orders").where("relation_to", tbl).where("relation_id", disc.id)
-        .select(['status']).catch(err => {
-            return Promise.resolve(true);
-        });
+    if (!disc || !disc['work_order_id']) return false;
 
+
+    let wks = await db.table("work_orders").where("relation_to", tbl).where("relation_id", disc.id)
+        .select(['status']).catch(_ => (Promise.resolve(true)));
+    console.log(wks);
     return (wks.length && wks.shift().status <= 4);
 };
 

@@ -32,7 +32,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postUploadInput'
      */
     app.post('/uploads', multiPart.array('files', 2), (req, res)=> {
-        API.uploads().uploadFile(req.body, req.who, req.files)
+        API.uploads().uploadFile(req.body, req.who, req.files, API)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
