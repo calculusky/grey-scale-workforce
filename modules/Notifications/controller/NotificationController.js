@@ -102,7 +102,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *    - $ref: '#/parameters/fault_id'
      */
     app.put('/notifications/:id', urlencodedParser, (req, res) => {
-        console.log(req.params.id);
         API.notifications().updateNotification(req.params.id, "id", req.body, req.who, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
