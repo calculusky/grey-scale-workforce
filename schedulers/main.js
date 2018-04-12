@@ -174,11 +174,11 @@ module.exports.createDelinquencyList = function () {
                     .innerJoin("user_groups", "user_groups.group_id", hubGroup.id)
                     .where("roles.slug", "technical_hub"),
                 Utils.customerHasPendingWorkOrder(db, accountNo)
-            ]);
+            ]).catch(err => console.error('something light', err));
 
             // If the customer has a pending work order we should create a new one
             if (hasPending) {
-                logMessages.push(`Couldn't create a work order for customer (${accountNo}) in (${rn})`
+                logMessages.push(`Couldn't create a work order for customer (${accountNo}) in row(${rn})`
                     + ` because the customer still has a pending work order.`);
                 return ++processed && endProcess(++total);
             }

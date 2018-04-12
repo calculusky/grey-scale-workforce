@@ -395,19 +395,19 @@ module.exports.paymentPlanProcessed = function (appStatus) {
 };
 
 module.exports.customerHasPendingWorkOrder = async function (db, acctNo = "", tbl = "disconnection_billings") {
-    const dis = await db.table(tbl).where("account_no", acctNo).orderBy('created_at', 'desc').limit(2).catch(err => {
-        console.error(err);
-        return Promise.resolve(true);
-    });
-
+    const dis = await db.table(tbl).where("account_no", acctNo)
+        .whereRaw('work_order_id IS NOT NULL')
+        .orderBy('created_at', 'desc').limit(2)
+        .catch(err => {
+            console.error(err);
+            return Promise.resolve(true);
+        });
     const disc = dis.shift();
 
-    if (!disc || !disc['work_order_id']) return false;
+    if (!disc) return false;
 
-
-    let wks = await db.table("work_orders").where("relation_to", tbl).where("relation_id", disc.id)
-        .select(['status']).catch(_ => (Promise.resolve(true)));
-    console.log(wks);
+    let wks = await db.table("work_orders").where("related_to", tbl).where("relation_id", disc.id).select(['status'])
+        .catch(_ => (Promise.resolve(true)));
     return (wks.length && wks.shift().status <= 4);
 };
 
