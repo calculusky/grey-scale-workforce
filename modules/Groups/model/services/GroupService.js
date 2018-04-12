@@ -98,6 +98,7 @@ class GroupService extends ApiService {
      */
     linkGroup(body = {}, who = {}) {
         //look for multiples
+        console.log(body);
         let multi = (body.multi) ? body.multi : [];
         delete body.multi;
 
@@ -106,34 +107,34 @@ class GroupService extends ApiService {
 
         let date = Utils.date.dateToMysql();
         multi = multi.map(item => {
-            if (item.parent_id === item.child_id) errors.push("parent_id and child_id cannot be the same");
             Utils.numericToInteger(item, "parent_id", "child_id");
-            let validator = new validate(item, {'parent_id': 'int', 'child_id': 'int'});
-            if (validator.passes())
+            let validator = new validate(item, {'parent_id': 'required|integer', 'child_id': 'required|integer'});
+            if (validator.passes()) {
+                if (item.parent_id === item.child_id) errors.push("parent_id and child_id cannot be the same");
                 return {
                     parent_group_id: item['parent_id'],
                     child_group_id: item['child_id'],
                     created_at: date,
                     updated_at: date,
                 };
+            }
             errors.push(validator.errors.all());
+            return undefined;
         }).filter(item => item !== undefined && (item.parent_group_id !== item.child_group_id));
 
         if (!multi.length) return Promise.reject(Utils.buildResponse({status: 'fail', data: errors.shift()}, 400));
 
         const executor = (resolve, reject) => {
-            return this.context.database('group_subs').insert(multi)
-                .then(r => {
-                    return resolve(Utils.buildResponse({data: r}));
-                })
-                .catch(err => {
-                    if (err.errno === 1062) return resolve(Utils.buildResponse({
-                            msg: "Record already exist",
-                            code: "DUPLICATE"
-                        })
-                    );
-                    return reject(Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400));
-                });
+            return this.context.database('group_subs').insert(multi).then(r => {
+                return resolve(Utils.buildResponse({data: r}));
+            }).catch(err => {
+                if (err.errno === 1062) return resolve(Utils.buildResponse({
+                        msg: "Record already exist",
+                        code: "DUPLICATE"
+                    })
+                );
+                return reject(Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400));
+            });
         };
         return new Promise(executor);
     }
@@ -193,7 +194,6 @@ class GroupService extends ApiService {
      */
     async updateUserGroup(userId, oldGroupId, body = {group_id: null}, who = {}, API) {
         if (body.group_id === oldGroupId) return true;
-        console.log(body.group_id, oldGroupId);
         const db = this.context.database;
         const user_groups = {'group_id': body.group_id, updated_at: Utils.date.dateToMysql()};
 
@@ -221,15 +221,16 @@ class GroupService extends ApiService {
         const Group = DomainFactory.build(DomainFactory.GROUP);
         const domain = new Group(body);
         const parent_group_id = (body['parent']) ? body['parent'] : null;
-
+        console.log('parent', parent_group_id);
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
         return GroupMapper.updateDomainRecord({value, domain}).then(() => {
             const db = this.context.database;
             domain.id = value;
             const backgroundTask = [API.workflows().updateGroup(Object.assign({}, domain))];
             if (parent_group_id) {
-                let update = db.table("group_subs").where('child_group_id', value).update({parent_group_id});
-                backgroundTask.push(update);
+                db.table("group_subs").where('child_group_id', value).update({parent_group_id}).then(updated => {
+                    if (!updated) this.linkGroup({child_id: domain.id, parent_id: parent_group_id}, who);
+                });
             }
             Promise.all(backgroundTask).catch(console.error);
             return Utils.buildResponse({data: domain});
