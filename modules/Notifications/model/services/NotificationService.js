@@ -51,7 +51,9 @@ class NotificationService {
      */
     async getNotifications(value, by = "to", who = {}, offset = 0, limit = 10) {
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
-        const {records: notifications} = await NotificationMapper.findDomainRecord({by, value}, offset, limit);
+        const {records: notifications} = await NotificationMapper.findDomainRecord(
+            {by, value}, offset, limit, "created_at", "desc"
+        );
 
         for (let notification of notifications) {
             const fromUser = await notification.fromUser();
