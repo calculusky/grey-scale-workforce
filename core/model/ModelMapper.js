@@ -218,6 +218,7 @@ class ModelMapper {
             return Promise.reject(error);
         }
         let updateData = filteredDomain.serialize(filteredDomain);
+        updateData.updated_at = Utils.date.dateToMysql();
 
         let resultSets = this.context.database.table(this.tableName).update(updateData);
 

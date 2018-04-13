@@ -77,13 +77,31 @@ class NotificationService {
     async updateNotification(value, by = "id", body = {}, who, API) {
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
         const Notification = DomainFactory.build(DomainFactory.NOTIFICATION);
+        const bulk = body['bulk'];
+
+        if (bulk && Array.isArray(bulk)) {
+            const promises = [], errors = [];
+            for (let item of bulk) {
+                const notification = new Notification(item);
+                const validator = new validate(notification, {"id": "required|integer"});
+                if (validator.passes()) {
+                    promises.push(NotificationMapper.updateDomainRecord({
+                        by,
+                        value: notification.id,
+                        domain: notification
+                    }));
+                } else errors.push(validator.errors.first('id'))
+            }
+            const [...updates] = await Promise.all(promises);
+            return Utils.buildResponse({data: {updates, errors}});
+        }
 
         const notification = new Notification(body);
-        const updated = await NotificationMapper.updateDomainRecord({by, value, domain: notification});
+        const [domain, itemsUpdated] = await NotificationMapper.updateDomainRecord({by, value, domain: notification});
+        // console.log(Utils.buildResponse({status: 'fail', data: domain}));
+        if (!itemsUpdated) return Promise.reject(Utils.buildResponse({status: 'fail', data: domain}));
 
-        if (!updated.length) return Utils.buildResponse({status: 'fail', data: updated.shift()}, 404);
-
-        return Utils.buildResponse({data: updated.shift()});
+        return Utils.buildResponse({data: domain});
     }
 
     /**
