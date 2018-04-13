@@ -99,7 +99,7 @@ class NotificationService {
         const notification = new Notification(body);
         const [domain, itemsUpdated] = await NotificationMapper.updateDomainRecord({by, value, domain: notification});
         // console.log(Utils.buildResponse({status: 'fail', data: domain}));
-        if (!itemsUpdated) return Promise.reject(Utils.buildResponse({status: 'fail', data: domain}));
+        if (!itemsUpdated) return Promise.reject(Utils.buildResponse({status: 'fail', data: domain}, 404));
 
         return Utils.buildResponse({data: domain});
     }
