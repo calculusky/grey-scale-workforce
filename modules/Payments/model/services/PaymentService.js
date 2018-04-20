@@ -3,6 +3,7 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Log = require('../../../../core/logger');
 const Utils = require('../../../../core/Utility/Utils');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
 const TAG = "PaymentService:";
 
@@ -51,11 +52,14 @@ class PaymentService {
      * @param API {API}
      */
     createPayment(body = {}, who = {}, API) {
+        console.log(body);
         const Payment = DomainFactory.build(DomainFactory.PAYMENT);
         let payment = new Payment(body);
 
         //If auto generate isn't specified, we'll generate it by default
-        body['auto_generate_rc'] = (body['auto_generate_rc'] === undefined) ? true : body['auto_generate_rc'];
+        const autoGenerateRC = body['auto_generate_rc'];
+        body['auto_generate_rc'] = (autoGenerateRC === undefined) ? true : autoGenerateRC;
+        if (typeof autoGenerateRC === 'string') body['auto_generate_rc'] = (autoGenerateRC === 'true');
 
         //Prepare the static data from persistence storage
         let {groups, workTypes} = [{}, {}];
@@ -72,13 +76,7 @@ class PaymentService {
         //enforce the validation
         let validator = new validate(payment, payment.rules(), payment.customErrorMessages());
 
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                data: validator.errors.all(),
-                code: 'VALIDATION_ERROR'
-            }, 400));
-        }
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure);
 
         payment.system_id = payment.system_id.replace(/-/g, "").toUpperCase();
         //check if the system exist

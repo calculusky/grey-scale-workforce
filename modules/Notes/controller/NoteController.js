@@ -12,7 +12,7 @@ const Log = require(`${__dirname}/../../../core/logger`);
  * @param multiPart
  */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
-    app.use('/notes', (req, res, next)=>API.recognitions().auth(req, res, next));
+    app.use('/notes', (req, res, next) => API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
@@ -37,14 +37,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        schema:
      *          $ref: '#/definitions/postNoteInput'
      */
-    app.post('/notes', multiPart.array("files", 5), (req, res)=> {
+    app.post('/notes', multiPart.array("files", 5), (req, res) => {
         console.log(req.body);
         API.notes().createNote(req.body, req.who, req.files, API)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 // console.log(data);
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 console.log(code, err);
                 return res.status(code).send(err);
             });
@@ -85,7 +85,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     //         });
     // });
 
-    
+
     /**
      * @swag
      * /notes/user/{user_id}/{offset}/{limit}:
@@ -107,12 +107,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/limit'
      *     - $ref: '#/parameters/user_id'
      */
-    app.get('/notes/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
+    app.get('/notes/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res) => {
         return API.notes().getNotes(req.params['user_id'], "note_by", req.who, req.params.offset, req.params.limit)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
@@ -165,12 +165,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/fault_id'
      */
-    app.delete('/notes/:id', urlencodedParser, (req, res)=> {
+    app.delete('/notes/:id', urlencodedParser, (req, res) => {
         API.notes().deleteNote("id", req.params.id)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });

@@ -149,9 +149,9 @@ class ModelMapper {
         let guardedErrors = [];
 
         let dbData = domainObjects.map(domain => {
-            let [valid, , cMsg] = Util.validatePayLoad(domain, domain.required());
+            let [valid, , cMsg] = Utils.validatePayLoad(domain, domain.required());
             if (!valid) validateErrors.push(cMsg);
-            let [filteredDomain, guardedKeys] = Util.validateGuarded(domain, domain.guard());
+            let [filteredDomain, guardedKeys] = Utils.validateGuarded(domain, domain.guard());
             if (Object.keys(filteredDomain).length === 0) {
                 guardedErrors.push(guardedKeys);
             } else {
@@ -206,7 +206,7 @@ class ModelMapper {
         if (!(domain instanceof DomainObject)) throw new TypeError("The parameter domainObject must be " +
             "an instance of DomainObject.");
 
-        let [filteredDomain, guardedKeys] = Util.validateGuarded(domain, domain.guard());
+        let [filteredDomain, guardedKeys] = Utils.validateGuarded(domain, domain.guard());
 
         if (Object.keys(filteredDomain).length === 0) {
             const error = Utils.buildResponse({

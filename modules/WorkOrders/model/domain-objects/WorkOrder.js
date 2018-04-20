@@ -77,10 +77,11 @@ class WorkOrder extends DomainObject {
     }
 
     /**
-     *
+     * Returns the notes for this work order
+     * @returns {Promise}
      */
-    workOrder() {
-        return this.relations().belongsTo("WorkOrder", "relation_id", "work_order_no");
+    notes() {
+        return this.relations().morphMany("Note", 'module', 'relation_id');
     }
 
     /**

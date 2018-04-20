@@ -2,6 +2,7 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
+
 /**
  * @name AttachmentService
  * Created by paulex on 8/22/17.
@@ -28,12 +29,12 @@ class AttachmentService extends ApiService {
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         const executor = (resolve, reject) => {
             AttachmentMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
-                .then(result=> {
+                .then(result => {
                     let attachments = result.records;
                     let processed = 0;
                     let rowLen = attachments.length;
-                    attachments.forEach(attachment=> {
-                        attachment.user().then(res=> {
+                    attachments.forEach(attachment => {
+                        attachment.user().then(res => {
                             attachment.user = res.records.shift() || {};
                             if (attachment.user) {
                                 delete attachment.user.password;
@@ -47,13 +48,13 @@ class AttachmentService extends ApiService {
                             }
                             if (++processed === rowLen)
                                 return resolve(Utils.buildResponse({data: {items: result.records}}));
-                        }).catch(err=> {
+                        }).catch(err => {
                             return reject(err)
                         })
                     });
                     if (!rowLen) return resolve(Utils.buildResponse({data: {items: attachments}}));
                 })
-                .catch(err=> {
+                .catch(err => {
                     return reject(err);
                 });
         };
@@ -71,7 +72,7 @@ class AttachmentService extends ApiService {
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
         let attachments = [];
         if (files.length) {
-            files.forEach(file=>attachments.push(new Attachment({
+            files.forEach(file => attachments.push(new Attachment({
                 module: `${body.module}`,
                 relation_id: `${body.relation_id}`,
                 file_name: file.filename,
@@ -79,7 +80,7 @@ class AttachmentService extends ApiService {
                 file_path: file.path,
                 file_type: file.mimetype,
                 created_by: who.sub,
-                group_id: who.group
+                group_id: (who.group.length) ? who.group.shift() : null
             })));
         } else {
             body['created_by'] = who.sub;
@@ -88,8 +89,8 @@ class AttachmentService extends ApiService {
         }
         //Get Mapper
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        return AttachmentMapper.createDomainRecord(null, attachments).then(attachment=> {
-            if (!attachment) return Promise.reject();
+        return AttachmentMapper.createDomainRecord(null, attachments).then(attachment => {
+            if (!attachment) return Promise.reject(false);
             return Utils.buildResponse({data: Array.isArray(attachment) ? attachment.pop() : attachment});
         });
     }
@@ -123,7 +124,7 @@ class AttachmentService extends ApiService {
 
         let attachments = [];
 
-        if (files.length) files.forEach(file=>attachments.push(new Attachment({
+        if (files.length) files.forEach(file => attachments.push(new Attachment({
             module: `${body.module}`,
             relation_id: `${this.context.getIncoming(requestId)}`,
             file_name: file.filename,
@@ -139,14 +140,14 @@ class AttachmentService extends ApiService {
             let rowLen = attachments.length;
             let attachmentIds = [];
             //TODO: Do a multiple insert here rather than call a for-loop
-            attachments.forEach(attachment=> {
-                this.createAttachment(attachment, who).then(response=> {
+            attachments.forEach(attachment => {
+                this.createAttachment(attachment, who).then(response => {
                     if (++processed === rowLen) {
                         attachmentIds.push(response.data.data.id);
                         this.context.deleteIncoming(requestId);
                         return resolve(Utils.buildResponse({data: true}));
                     }
-                }).catch(err=> {
+                }).catch(err => {
                     console.log(err);
                     return reject(err);
                 });
@@ -185,7 +186,7 @@ class AttachmentService extends ApiService {
     deleteAttachment(by = "id", value, module) {
         value = {[by]: value, module};
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        return AttachmentMapper.deleteDomainRecord({value}).then(count=> {
+        return AttachmentMapper.deleteDomainRecord({value}).then(count => {
             if (!count) {
                 return Promise.reject(Utils.buildResponse({
                     status: "fail",

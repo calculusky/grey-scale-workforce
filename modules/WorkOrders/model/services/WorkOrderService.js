@@ -145,15 +145,15 @@ class WorkOrderService extends ApiService {
             this.context.persistence.get("groups", (err, groups) => {
                 if (err) return;
                 groups = JSON.parse(groups);
-                let userGroup = groups[workOrder.group_id];
+                const group = groups[workOrder.group_id];
                 // If the group actually doesn't exist then we can return this as a false request
-                if (!userGroup) return Promise.reject(Utils.buildResponse(
+                if (!group) return Promise.reject(Utils.buildResponse(
                     {status: "fail", data: {message: "Group specified doesn't exist"}}, 400
                 ));
 
                 // If this current user group doesn't have business unit as parent
                 // then the user's current group or the specified group will be used.
-                let businessUnit = Utils.getGroupParent(userGroup, 'business_unit') || userGroup;
+                let businessUnit = Utils.getGroupParent(group, 'business_unit') || group;
 
                 Utils.generateUniqueSystemNumber(
                     getNumberPrefix(workOrder.type_id), businessUnit['short_name'], 'work_orders', this.context

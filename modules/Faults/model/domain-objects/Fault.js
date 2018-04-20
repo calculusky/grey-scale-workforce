@@ -22,7 +22,8 @@ class Fault extends DomainObject {
             'priority',
             'related_to',
             'relation_id',
-            'category_id'
+            'category_id',
+            'group_id'
         ];
     }
 
@@ -35,19 +36,21 @@ class Fault extends DomainObject {
 
     softDeletes() {
         return [
-            false,
-            "deleted",
+            true,
             "deleted_at"
         ];
     }
 
     rules() {
         return {
-            summary: String,
-            related_to: String,
-            relation_id: String,
-            category_id: 'numeric',
-            'status?': 'numeric'
+            summary: 'string|required',
+            related_to: 'string|required',
+            relation_id: 'string|required',
+            category_id: 'numeric|required',
+            status: 'numeric|required',
+            group_id: 'numeric|required',
+            priority: 'numeric|required',
+            issue_date: 'date|required'
         };
     }
 

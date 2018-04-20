@@ -2,7 +2,7 @@
  * @author Paul Okeke
  * Created by paulex on 7/5/17.
  */
-const Utils = require('../Utility/MapperUtil');
+const Utils = require('../Utility/Utils');
 const mapperStore = {};
 
 /**
