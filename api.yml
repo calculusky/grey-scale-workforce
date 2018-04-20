@@ -344,20 +344,37 @@ definitions:
     type: "object"
     description: "A new Fault Object"
     required:
-    - "asset_id"
+    - "related_to"
+    - "relation_id"
+    - "category_id"
     - "summary"
+    - "group_id"
     - "issue_date"
     properties:
-      asset_id:
-        description: "The Asset ID this fault is related to."
+      related_to:
+        description: "The entity this fault is related to."
+        type: string
+      relation_id:
+        description: "The related entity id"
+        type: string
+      category_id:
+        description: "The Category this fault falls under"
         type: integer
-      summary:
+      group_id:
         description: A brief description of the fault
         type: string
       issue_date:
         description: The issue date of this fault
         type: string
         format: date-time
+      summary:
+        description: A brief description of the fault
+        type: string
+      files:
+        type: array
+        items:
+          type: string
+          format: binary
 
   postFaultOutput:
     type: object
