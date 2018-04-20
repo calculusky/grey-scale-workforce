@@ -5,6 +5,7 @@ const config = require('../config.json');
 const Context = require('../core/Context');
 const ctx = new Context(config);
 API = new API(ctx);
+const Utils = require('../core/Utility/Utils');
 
 
 test("That createGroup is defined", () => {
@@ -72,6 +73,13 @@ describe("Update Groups", () => {
     });
 });
 
+test("Get Business Unit and Undertaking from group", async () => {
+    await ctx.loadStaticData();
+    const groups = await Utils.redisGet(ctx.persistence, "groups");
+    const [bu, ut] = Utils.getBUAndUT(groups['10'], groups);
+    console.log(bu, ut);
+    expect(bu).toBeDefined();
+});
 
 afterAll(() => {
     ctx.database.table("groups").where("name", "GroupUs").select("id").then(r => {

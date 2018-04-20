@@ -2,9 +2,14 @@
  * Created by paulex on 8/22/17.
  */
 
-const Log = require(`${__dirname}/../../../core/logger`);
-const RecognitionService = require('../../Users/model/services/RecognitionService');
 
+/**
+ *
+ * @param app
+ * @param API {API}
+ * @param jsonParser
+ * @param urlencodedParser
+ */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
     app.use('/assets*', (req, res, next)=>API.recognitions().auth(req, res, next));
 
@@ -132,7 +137,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/assets/:offset?/:limit?', urlencodedParser, (req, res)=> {
+    app.get('/assets/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
         console.log('/assets/offset/limit');
         return API.assets().getAssets({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code})=> {
@@ -194,7 +199,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/assets/search/:keyword/:offset?/:limit?', urlencodedParser, (req, res)=> {
+    app.get('/assets/search/:keyword/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
         console.log('/assets/search/keyword');
         return API.assets().searchAssets(req.params['keyword'])
             .then(({data, code})=> {

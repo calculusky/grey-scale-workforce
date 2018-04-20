@@ -1,6 +1,7 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
+
 /**
  * @name AssetService
  * Created by paulex on 8/22/17.
@@ -14,24 +15,24 @@ class AssetService {
 
     getAssets(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        const executor = (resolve, reject)=> {
+        const executor = (resolve, reject) => {
             AssetMapper.findDomainRecord({by, value}, offset, limit)
-                .then(result=> {
+                .then(result => {
                     let assets = result.records;
                     let processed = 0;
                     let rowLen = assets.length;
 
-                    assets.forEach(asset=> {
-                        asset.user().then(res=> {
+                    assets.forEach(asset => {
+                        asset.user().then(res => {
                             asset.user = res.records.shift();
                             if (++processed === rowLen)
                                 return resolve(Utils.buildResponse({data: {items: result.records}}));
-                        }).catch(err=> {
+                        }).catch(err => {
                             return reject(err)
                         })
                     })
                 })
-                .catch(err=> {
+                .catch(err => {
                     return reject(err);
                 });
         };
@@ -51,7 +52,7 @@ class AssetService {
 
         //Get Mapper
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        return AssetMapper.createDomainRecord(staff).then(staff=> {
+        return AssetMapper.createDomainRecord(staff).then(staff => {
             if (!staff) return Promise.reject();
             return Utils.buildResponse({data: staff});
         });
@@ -63,10 +64,10 @@ class AssetService {
      * @param keyword
      * @param offset
      * @param limit
-     * @returns {Promise.<Customer>}
+     * @returns {Promise.<*>}
      */
-    searchAssets(keyword, offset = 0, limit = 10) {
-        const Customer = DomainFactory.build(DomainFactory.ASSET);
+    async searchAssets(keyword, offset = 0, limit = 10) {
+        const Asset = DomainFactory.build(DomainFactory.ASSET);
         let fields = [
             'id',
             'asset_type',
@@ -77,16 +78,25 @@ class AssetService {
             'serial_no'
         ];
         let resultSets = this.context.database.select(fields).from('assets')
-            .where('asset_name', 'like', `%${keyword}%`).orWhere('asset_type_name', 'like', `%${keyword}%`);
-        resultSets = resultSets.limit(parseInt(limit)).offset(parseInt(offset)).orderBy('asset_name', 'asc');
-        
-        return resultSets.then(results=> {
-            let customers = [];
-            results.forEach(customer=>customers.push(new Customer(customer)));
-            return Utils.buildResponse({data: {items: customers}});
-        }).catch(err=> {
-            return Utils.buildResponse({status: "fail", data: err}, 500);
+            .where('asset_name', 'like', `%${keyword}%`)
+            .where("deleted_at", null)
+            .orWhere('asset_type_name', 'like', `%${keyword}%`)
+            .limit(parseInt(limit)).offset(parseInt(offset)).orderBy('asset_name', 'asc');
+
+        const groups = await Utils.redisGet(this.context.persistence, "groups");
+
+
+        const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
+        let assets = results.map(item => {
+            const asset = new Asset(item);
+            const group = groups[item.group_id];
+            const [bu, ut] = Utils.getBUAndUT(group, groups);
+            asset.group = group;
+            asset.business_unit = bu;
+            asset.undertaking = ut.shift() || null;
+            return asset;
         });
+        return Utils.buildResponse({data: {items: assets}});
     }
 
     /**
@@ -97,7 +107,7 @@ class AssetService {
      */
     deleteAsset(by = "id", value) {
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        return AssetMapper.deleteDomainRecord({by, value}).then(count=> {
+        return AssetMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }

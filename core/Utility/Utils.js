@@ -10,6 +10,19 @@ let unitCounter = {};
 module.exports = function Utils() {
 };
 
+module.exports.loadMapper = function (store = {}, path, key, context = null) {
+    if (store[key]) {
+        return store[key];
+    }
+    try {
+        let mapper = require(path);
+        if (mapper) store[key] = new mapper(context);
+    } catch (e) {
+        return;
+    }
+    return store[key];
+};
+
 String.prototype.ellipsize = function (limit = 50, suffix = "...") {
     return (this.length > limit) ? `${this.substring(0, limit)}${suffix}` : this.toString();
 };
@@ -48,12 +61,12 @@ module.exports.mapper = function () {
 };
 
 module.exports.validatePayLoad = function (payLoad, checks) {
-    var pKeys = Object.keys(payLoad);
+    const pKeys = Object.keys(payLoad);
     let valid = true;
     let missing = [];
     let clientMessage = {};
-    for (var i = 0; i < checks.length; i++) {
-        var key = checks[i];
+    for (let i = 0; i < checks.length; i++) {
+        const key = checks[i];
         //if the payload doesn't have the required keys lets bounce the request
         if (!pKeys.includes(key) || (payLoad[key] == null || payLoad[key].toString().trim() === '')) {
             valid = false;
@@ -67,9 +80,9 @@ module.exports.validatePayLoad = function (payLoad, checks) {
 
 module.exports.validateGuarded = function (payload, guarded = []) {
     //guarded: check for keys that shouldn't be in the payload and remove
-    var pKeys = Object.keys(payload);
+    const pKeys = Object.keys(payload);
     let guardedKeys = [];
-    for (var i = 0; i < guarded.length; i++) {
+    for (let i = 0; i < guarded.length; i++) {
         let key = guarded[i];
         if (pKeys.includes(key)) {
             guardedKeys.push(key);
@@ -231,7 +244,7 @@ module.exports.isMobile = function (userAgentFamily) {
 
 
 module.exports.getAndSet = function (redis, keys) {
-    let variables = [];
+    const variables = [];
     keys.forEach((key, i) => {
         redis.get(key, (err, v) => {
             console.log(v);
@@ -239,6 +252,51 @@ module.exports.getAndSet = function (redis, keys) {
         });
         if (i === (keys.length - 1)) return variables;
     });
+};
+
+module.exports.redisGet = function (redis, key, toJson = true) {
+    return new Promise((resolve, reject) => {
+        redis.get(key, (err, value) => {
+            if (err) return reject(err);
+            return (toJson) ? resolve(JSON.parse(value)) : resolve(value);
+        });
+    });
+};
+
+module.exports.getBUAndUT = function (group, groups) {
+    if (!group) return [null, []];
+    let bu, ut = [];
+    const type = group.type.toLowerCase();
+    const findUT = (item) => {
+        if (!item) return;
+        item.forEach(child => {
+            if ("undertaking" === child.type.toLowerCase()) {
+                delete child.parent;
+                delete child.children;
+                return ut.push(child);
+            } else return findUT(groups[child.id]['children']);
+        });
+    };
+    if (type === "business_unit") {
+        //downward movement
+        bu = group;
+        if (!bu.children) return [bu, []];
+        const children = bu.children;
+        delete bu.children;
+        findUT(children);
+    }
+    else if (type === "undertaking") {
+        //upward movement
+        bu = this.getGroupParent(group, "business_unit");
+        delete bu.parent;
+        delete bu.children;
+    } else {
+        bu = this.getGroupParent(group, "business_unit");
+        let ut1 = this.getGroupParent(group, "undertaking");
+        if (ut1) ut.push(ut1);
+        findUT(group.children);
+    }
+    return [bu, ut];
 };
 
 
@@ -298,7 +356,8 @@ module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleNa
 
             count = `${unitCounter[unitName]}`;
             let randomNo = Math.round(Math.random() * (999 - 100) + 100);
-            generated = `${generated}${count.padStart(6, '0')}${randomNo}${new Date().getMonth() + 1}`;
+            const month = `${'0' + (new Date().getMonth() + 1)}`.slice(-2);
+            generated = `${generated}${count.padStart(6, '0')}${randomNo}${month}`;
             // console.log(generated);
             return resolve(generated);
         }).catch(console.error);

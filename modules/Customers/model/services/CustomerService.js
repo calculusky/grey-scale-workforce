@@ -1,6 +1,7 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
+
 /**
  * @name CustomerService
  * Created by paulex on 09/4/17.
@@ -14,9 +15,9 @@ class CustomerService {
 
     getCustomers(value, by = "account_no", who = {api: -1}, offset = 0, limit = 10) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
-        const executor = (resolve, reject)=> {
+        const executor = (resolve, reject) => {
             CustomerMapper.findDomainRecord({by, value}, offset, limit)
-                .then(result=> {
+                .then(result => {
                     let customers = result.records;
                     let processed = 0;
                     let rowLen = customers.length;
@@ -31,7 +32,7 @@ class CustomerService {
                     //     })
                     // })
                 })
-                .catch(err=> {
+                .catch(err => {
                     return reject(err);
                 });
         };
@@ -51,7 +52,7 @@ class CustomerService {
 
         //Get Mapper
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
-        return CustomerMapper.createDomainRecord(customer).then(customer=> {
+        return CustomerMapper.createDomainRecord(customer).then(customer => {
             if (!customer) return Promise.reject();
             return Utils.buildResponse({data: customer});
         });
@@ -62,27 +63,45 @@ class CustomerService {
      * @param keyword
      * @param offset
      * @param limit
-     * @returns {Promise.<Customer>}
+     * @returns {Promise.<*>}
      */
-    searchCustomers(keyword, offset = 0, limit = 10) {
+    async searchCustomers(keyword, offset = 0, limit = 10) {
         const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
-        let fields = ['first_name', 'last_name', 'status', 'customer_type', 'meter_no', 'plain_address',
-            'account_no', 'old_account_no'];
+        let fields = [
+            'first_name',
+            'last_name',
+            'status',
+            'customer_type',
+            'meter_no',
+            'plain_address',
+            'account_no',
+            'old_account_no'
+        ];
         let resultSets = this.context.database.select(fields).from('customers')
-            .where('account_no', 'like', `%${keyword}%`).orWhere('meter_no', 'like', `%${keyword}%`);
-        resultSets = resultSets.limit(parseInt(limit)).offset(parseInt(offset)).orderBy('account_no', 'asc');
-        return resultSets.then(results=> {
-            let customers = [];
-            results.forEach(customer=> {
-                customer['customer_name'] = (customer['customer_name'])
-                    ? customer['customer_name']
-                    : `${customer.first_name} ${customer.last_name}`;
-                customers.push(new Customer(customer))
-            });
-            return Utils.buildResponse({data: {items: customers}});
-        }).catch(err=> {
-            return Utils.buildResponse({status: "fail", data: err}, 500);
+            .where('account_no', 'like', `%${keyword}%`)
+            .where("deleted_at", null)
+            .orWhere('meter_no', 'like', `%${keyword}%`)
+            .limit(parseInt(limit)).offset(parseInt(offset)).orderBy('account_no', 'asc');
+
+        const groups = await Utils.redisGet(this.context.persistence, "groups");
+
+        const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
+
+
+        let assets = results.map(item => {
+            const customer = new Customer(item);
+            customer['customer_name'] = (customer['customer_name'])
+                ? customer['customer_name']
+                : `${customer.first_name} ${customer.last_name}`;
+
+            const group = groups[item.group_id];
+            const [bu, ut] = Utils.getBUAndUT(group, groups);
+            customer.group = group;
+            customer.business_unit = bu;
+            customer.undertaking = ut.shift() || null;
+            return customer;
         });
+        return Utils.buildResponse({data: {items: assets}});
     }
 
     /**
@@ -93,7 +112,7 @@ class CustomerService {
      */
     deleteCustomer(by = "id", value) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
-        return CustomerMapper.deleteDomainRecord({by, value}).then(count=> {
+        return CustomerMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }

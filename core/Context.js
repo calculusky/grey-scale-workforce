@@ -4,7 +4,7 @@
  */
 const KNEX = require('knex');
 const MapperFactory = require('./factory/MapperFactory');
-var redis = require("redis"), client = redis.createClient();
+const redis = require("redis"), client = redis.createClient();
 let globalContext = null;
 
 //Private Fields
@@ -50,52 +50,54 @@ class Context {
     }
 
     //we are going load certain static data into memory
-    loadStaticData() {
+    async loadStaticData() {
+        const db = this.database;
         let findParents = (_groups, group, parentKey) => {
-            _groups.forEach(gp => {
-                if (gp.id === group[parentKey]) {
-                    group.parent = gp;
-                    if (gp[parentKey]) findParents(_groups, group.parent, parentKey);
-                }
-            });
+            for (let gp of _groups) {
+                if (gp.id !== group[parentKey]) continue;
+                group.parent = gp;
+                return (gp[parentKey]) ? findParents(_groups, group.parent, parentKey) : _groups;
+            }
         };
         //First lets load all groups and sub groups
-        let groupSubs = this.database.select(['id', 'name', 'type', 'short_name', 'parent_group_id'])
-            .from("groups")
-            .leftJoin('group_subs', 'groups.id', 'group_subs.child_group_id');
+        const iCols = ['id', 'name', 'type', 'short_name', 'parent_group_id'],
+            tCols = ['group_subs.parent_group_id as parent', db.raw('GROUP_CONCAT(child_group_id) AS children')],
+            leftJoin = ['group_subs', 'groups.id', 'group_subs.child_group_id'],
+            innerJoin = ['group_subs', 'groups.id', 'group_subs.parent_group_id'];
 
-        const groups = {};
-        groupSubs.then(results => {
-            results.forEach(group => {
-                //if parent_group_id and the parent_group_id isn't equals to the group_child_id
-                if (group['parent_group_id'] && group['parent_group_id'] !== group.id) {
-                    findParents(results, group, 'parent_group_id');
-                }
-                delete group['parent_group_id'];
-                groups[group.id] = group;
-            });
-            this.persistence.set("groups", JSON.stringify(groups));
-        }).catch(err => console.log(err));
+        const [dbGroups, groupChildren, woTypes, aTypes] = await Promise.all([
+            db.select(iCols).from("groups").leftJoin(...leftJoin).where('deleted_at', null),
+            db.select(tCols).from('groups').innerJoin(...innerJoin).where('deleted_at', null).groupBy('parent_group_id'),
+            db.select(['id', 'name']).from("work_order_types"),
+            db.select(['id', 'name']).from("asset_types"),
+        ]);
 
-        //Now lets get work order types
-        let wResultSets = this.database.select(['id', 'name']).from("work_order_types");
-        const workTypes = {};
-        wResultSets.then(results => {
-            results.forEach(type => {
-                workTypes[type.id] = type;
-            });
-            this.persistence.set("work:types", JSON.stringify(workTypes));
+        const groups = {}, workTypes = {}, assetTypes = {}, parentChild = {};
+
+        groupChildren.forEach(item => parentChild[item.parent] = item['children'].split(',').reverse());
+
+        woTypes.forEach(workType => workTypes[workType.id] = workType);
+        aTypes.forEach(assetType => assetTypes[assetType.id] = assetType);
+
+        for (let group of dbGroups) {
+            //if parent_group_id and the parent_group_id isn't equals to the group_child_id
+            const parentId = group['parent_group_id'];
+            if (parentId && parentId !== group.id) findParents(dbGroups, group, 'parent_group_id');
+            delete group['parent_group_id'] && (Object.assign(groups[group.id] = {}, group));
+        }
+
+        dbGroups.forEach(group => {
+            const children = parentChild[group.id];
+            if (!children) return;
+            groups[group.id]['children'] = children.map(id => {
+                const {parent, ...t} = groups[id] || {};
+                return (parent) ? t : null;
+            }).filter(i => i);
         });
-
-        //Lets load all assets types
-        let aResultSets = this.database.select(['id', 'name']).from("asset_types");
-        const assetTypes = {};
-        aResultSets.then(results => {
-            results.forEach(type => {
-                assetTypes[type.id] = type;
-            });
-            this.persistence.set("asset:types", JSON.stringify(assetTypes));
-        });
+        this.persistence.set("groups", JSON.stringify(groups));
+        this.persistence.set("work:types", JSON.stringify(workTypes));
+        this.persistence.set("asset:types", JSON.stringify(assetTypes));
+        return true;
     }
 
     setIncoming(requestId, relationId) {
@@ -136,7 +138,8 @@ if (!String.prototype.padStart) {
         else {
             targetLength = targetLength - this.length;
             if (targetLength > padString.length) {
-                padString += padString.repeat(targetLength / padString.length); //append to original to ensure we are longer than needed
+                //append to original to ensure we are longer than needed
+                padString += padString.repeat(targetLength / padString.length);
             }
             return padString.slice(0, targetLength) + String(this);
         }
