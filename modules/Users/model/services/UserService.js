@@ -255,12 +255,15 @@ class UserService extends ApiService {
 
         if (!Password.equals(body.token, reset.token)) return Promise.reject(Utils.buildResponse({status: "fail"}, 403));
 
+        const UserMapper = MapperFactory.build(MapperFactory.USER);
         const User = DomainFactory.build(DomainFactory.USER);
         const user = new User({});
+
+        db.table("password_resets").where("email", body.email).del().then();
+
         user.setPassword(Password.encrypt(body.password).hash.replace("$2a$", "$2y$"));
         user['wf_user_pass'] = Utils.encrypt(body.password, process.env.JWT_SECRET);
 
-        const UserMapper = MapperFactory.build(MapperFactory.USER);
         let update = await UserMapper.updateDomainRecord({by: "email", value: body.email, domain: user});
         update = update.slice(-1).shift();
         if (!update) return Promise.reject(Utils.buildResponse({status: 'fail', msg: "User doesn't exist"}, 400));
