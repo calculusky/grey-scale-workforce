@@ -76,7 +76,7 @@ class PaymentService {
         //enforce the validation
         let validator = new validate(payment, payment.rules(), payment.customErrorMessages());
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure);
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         payment.system_id = payment.system_id.replace(/-/g, "").toUpperCase();
         //check if the system exist

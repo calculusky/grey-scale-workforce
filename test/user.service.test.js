@@ -90,6 +90,16 @@ test("That we can register an fcm_token", () => {
     })
 });
 
+test("That we can reset a user password", () => {
+    const body = {
+        email: "donpaul120@gmail.com",
+        password_confirmation: "admin1234",
+        password: "admin1234",
+        token: "92c5a7dc4535b2ea326a9f4ef5e6735c5d1ed59a4ad7d22d0679f69bf3898a95",
+    };
+    return expect(API.users().resetPassword(body, API)).resolves.toBeDefined();
+});
+
 
 describe('Updating User', () => {
     test('Update a user', () => {

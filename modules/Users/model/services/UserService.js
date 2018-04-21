@@ -3,6 +3,7 @@ let MapperFactory = null;
 const ApiService = require('../../../ApiService');
 const Password = require('../../../../core/Utility/Password');
 const Utils = require('../../../../core/Utility/Utils');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
 
 /**
@@ -222,6 +223,53 @@ class UserService extends ApiService {
         });
     }
 
+
+    /**
+     *
+     * @param body
+     * @param API {API}
+     * @returns {Promise<*>}
+     */
+    async resetPassword(body = {}, API) {
+        const rules = {
+            email: 'email|required',
+            password_confirmation: "string|required",
+            password: "string|required",
+            token: "string|required"
+        };
+        const pass = body.password;
+        const validator = new validate(body, rules);
+
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+
+        //check that the password conf and password are same
+        if (pass !== body.password_confirmation) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+
+        const db = this.context.database;
+
+        let reset = await db.table("password_resets").where("email", body.email);
+
+        if (!reset.length) return Promise.reject(Utils.buildResponse({status: "fail"}, 403));
+
+        reset = reset.shift();
+
+        if (!Password.equals(body.token, reset.token)) return Promise.reject(Utils.buildResponse({status: "fail"}, 403));
+
+        const User = DomainFactory.build(DomainFactory.USER);
+        const user = new User({});
+        user.setPassword(Password.encrypt(body.password).hash.replace("$2a$", "$2y$"));
+        user['wf_user_pass'] = Utils.encrypt(body.password, process.env.JWT_SECRET);
+
+        const UserMapper = MapperFactory.build(MapperFactory.USER);
+        let update = await UserMapper.updateDomainRecord({by: "email", value: body.email, domain: user});
+        update = update.slice(-1).shift();
+        if (!update) return Promise.reject(Utils.buildResponse({status: 'fail', msg: "User doesn't exist"}, 400));
+
+        API.workflows().updateUser("email", body.email, {password: pass}).catch(console.error);
+
+        return Utils.buildResponse({});
+    }
+
     /**
      *
      * @param by
@@ -248,12 +296,12 @@ class UserService extends ApiService {
             }, 404);
         }
 
-        Utils.random((r) => {
-            const u = "username";
-            db.raw(`update users set ${u} = CONCAT(${u}, ?) where ${by} = ?`, [`_${r}_deleted`, value]).then(() => {
-                API.workflows().updateUser(by, value, {}).catch(console.error);
-            }).catch(console.error);
-        });
+        const rand = await Utils.random();
+        const u = "username", e = "email";
+        db.raw(`update users set ${u} = CONCAT(${u}, ?), ${e} = CONCAT(?, ${e}) where ${by} = ?`,
+            [`_${rand}_deleted`, `${rand}_deleted_`, value]).then(() => {
+            API.workflows().updateUser(by, value, {}).catch(console.error);
+        }).catch(console.error);
 
         return UserMapper.deleteDomainRecord({by, value}).then(() => {
             return Utils.buildResponse({data: {message: "User deleted"}});

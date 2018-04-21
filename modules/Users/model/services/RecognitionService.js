@@ -8,7 +8,7 @@
 let MapperFactory = null;
 const Password = require('../../../../core/Utility/Password');
 const jwt = require("jsonwebtoken");
-const Util = require('../../../../core/Utility/Utils');
+const Utils = require('../../../../core/Utility/Utils');
 const ProcessAPI = require('../../../../processes/ProcessAPI');
 const useragent = require('useragent');
 
@@ -28,14 +28,14 @@ class RecognitionService {
         //TODO make use of the device key sent along the request payload console.log(req.headers['device']);
         // const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-        let isMobile = Util.isMobile(userAgent.family);
+        let isMobile = Utils.isMobile(userAgent.family);
 
-        let [valid, , cMsg] = Util.validatePayLoad({username, password}, ["username", "password"]);
+        let [valid, , cMsg] = Utils.validatePayLoad({username, password}, ["username", "password"]);
 
-        if (!valid) return Promise.reject(Util.buildResponse({status: "fail", data: cMsg}, 400));
+        if (!valid) return Promise.reject(Utils.buildResponse({status: "fail", data: cMsg}, 400));
 
         if (typeof username !== 'string' || typeof password !== 'string') {
-            return Promise.reject(Util.buildResponse({
+            return Promise.reject(Utils.buildResponse({
                 status: "fail", data: {
                     message: "Unauthorized",
                     description: "Invalid format for username or password"
@@ -48,13 +48,19 @@ class RecognitionService {
             UserMapper.findDomainRecord({by: "*_and", value: {username}})
                 .then(async ({records}) => {
                     if (!records.length) {
-                        return reject(Util.buildResponse({status: "fail", data: Util.authFailData("AUTH_CRED")}, 401));
+                        return reject(Utils.buildResponse({
+                            status: "fail",
+                            data: Utils.authFailData("AUTH_CRED")
+                        }, 401));
                     }
 
                     const user = records.shift();
                     //checks to see that the password supplied matches
                     if (!Password.equals(password, user.password)) {
-                        return reject(Util.buildResponse({status: "fail", data: Util.authFailData("AUTH_CRED")}, 401));
+                        return reject(Utils.buildResponse({
+                            status: "fail",
+                            data: Utils.authFailData("AUTH_CRED")
+                        }, 401));
                     }
                     user.setPassword();
                     //For Mobile we are giving 4months before token will expire
@@ -91,10 +97,10 @@ class RecognitionService {
 
                     delete user.firebase_token;
 
-                    return resolve(Util.buildResponse({data: {token, user}}));
+                    return resolve(Utils.buildResponse({data: {token, user}}));
                 }).catch(err => {
                 console.log(err);
-                return reject(Util.buildResponse({
+                return reject(Utils.buildResponse({
                     status: "error", msg: "An internal server error occurred.", type: "Server",
                     code: `${err.errno || err.name} - ${err.code}`
                 }, 500));
@@ -117,7 +123,7 @@ class RecognitionService {
             //We somehow know this will definitely always be called
             this.context.persistence.del(token);
             if (fireBaseToken && fireBaseToken.trim().length > 0) API.users().unRegisterFcmToken(fireBaseToken);
-            return resolve(Util.buildResponse({data: {token, user: {id: who.sub}}}));
+            return resolve(Utils.buildResponse({data: {token, user: {id: who.sub}}}));
         };
         return new Promise(executor);
     }
@@ -148,12 +154,12 @@ class RecognitionService {
                  * So we should send 500 when there is an error
                  **/
                 if (err) return res.status(500).send();
-                if (!v || v !== 'true') return res.status(401).send(Util.buildResponse(unAuthMsg));
+                if (!v || v !== 'true') return res.status(401).send(Utils.buildResponse(unAuthMsg));
                 //Verify the JWT token
                 jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-                    if (err) return res.status(401).send(Util.buildResponse({
+                    if (err) return res.status(401).send(Utils.buildResponse({
                         status: 'fail',
-                        data: Util.jwtTokenErrorMsg(err),
+                        data: Utils.jwtTokenErrorMsg(err),
                         isRoute: false
                     }));
 
@@ -164,7 +170,7 @@ class RecognitionService {
                     });
                 });
             });
-        } else return res.status(401).send(Util.buildResponse(unAuthMsg));
+        } else return res.status(401).send(Utils.buildResponse(unAuthMsg));
     }
 }
 

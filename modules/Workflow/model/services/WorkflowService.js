@@ -70,6 +70,7 @@ class WorkflowService {
 
         body['wf_user_id'] = dbUser['wf_user_id'];
         body['username'] = dbUser['username'];
+        body['email'] = dbUser['email'];
 
         if (!body) return;
 
@@ -77,6 +78,7 @@ class WorkflowService {
 
         if (body['wf_user_id']) {
             const pmUser = toPMUser(body);
+            console.log(pmUser);
             response = await ProcessAPI.request(`/user/${body['wf_user_id']}`, pmUser, 'PUT', this.token).catch(err => {
                 console.log('PMToken', ProcessAPI['token']);
                 console.log("updateUser:", err);
@@ -416,6 +418,9 @@ function toPMUser(body) {
         newBody['usr_new_pass'] = body.password;
         newBody['usr_cnf_pass'] = body.password;
     }
+    Object.keys(newBody).forEach(key => {
+        if (newBody[key] === undefined) delete newBody[key]
+    });
     return newBody;
 }
 

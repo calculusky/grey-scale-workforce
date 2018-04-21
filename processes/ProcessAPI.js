@@ -74,7 +74,7 @@ exports.login = (username, password, options = {grantType: 'password'}) => {
 exports.request = (endPoint = "", data = {}, method = 'GET', token = null) => {
     // If the token is null, we can retry a re-login
     // but i assume we have to get the username and password --- hmmm
-    if (!this.token) {
+    if (!token) {
         //TODO re-authenticate
         console.log("Im not logged-in ooo");
     }

@@ -223,7 +223,41 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 console.log('success', data);
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
+                console.error('err', err);
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
+     * /users/password/reset:
+     *  put:
+     *   description: "Reset user password"
+     *   summary: "Reset user password"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: resetPassword
+     *   responses:
+     *     '200':
+     *       description: "User"
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - name: body
+     *       in: body
+     *       required: true
+     *       schema:
+     *         $ref: '#/definitions/postUserInput'
+     */
+    app.put("/users/password/reset", jsonParser, (req, res) => {
+        Log.info("resetPassword:", req.body);
+        API.users().resetPassword(req.body, API)
+            .then(({data, code = 200}) => {
+                console.log('success', data);
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
                 console.error('err', err);
                 return res.status(code).send(err);
             });

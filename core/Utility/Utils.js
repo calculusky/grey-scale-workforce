@@ -27,10 +27,12 @@ String.prototype.ellipsize = function (limit = 50, suffix = "...") {
     return (this.length > limit) ? `${this.substring(0, limit)}${suffix}` : this.toString();
 };
 
-module.exports.random = function (callback, length = 5) {
-    crypto.randomBytes(length, (err, buff) => {
-        if (err) return;
-        callback(buff.toString('hex'))
+module.exports.random = function (length = 5) {
+    return new Promise((resolve, reject) => {
+        crypto.randomBytes(length, (err, buff) => {
+            if (err) return reject(err);
+            return resolve(buff.toString('hex'));
+        });
     });
 };
 
