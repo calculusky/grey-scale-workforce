@@ -240,7 +240,6 @@ class UserService extends ApiService {
         const pass = body.password;
         const validator = new validate(body, rules);
 
-        console.log(validator.errors.all());
         if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         //check that the password conf and password are same

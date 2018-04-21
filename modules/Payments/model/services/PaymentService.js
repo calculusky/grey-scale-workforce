@@ -78,6 +78,8 @@ class PaymentService {
 
         if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
+        payment.payment_date = Utils.date.dateToMysql(payment.payment_date);
+
         payment.system_id = payment.system_id.replace(/-/g, "").toUpperCase();
         //check if the system exist
         let systemType = PaymentService.getPaymentType(payment.system);
@@ -194,7 +196,7 @@ class PaymentService {
                         PaymentMapper.createDomainRecord(payment).then(payment => {
                             if (!payment) return Promise.reject(false);
                             return resolve(Utils.buildResponse({data: payment}));
-                        });
+                        }).catch();
 
                         //Update work order status to payment received
                         db.table('work_orders').update({status: 5}).where(systemType.key, payment.system_id)

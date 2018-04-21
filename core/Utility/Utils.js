@@ -354,7 +354,7 @@ module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleNa
 
             //Lets add this up
             db.table('unit_counters').update({[moduleName]: unitCounter[unitName]}).where('unit_name', unitName)
-                .then(_ => (null));
+                .then(() => null);
 
             count = `${unitCounter[unitName]}`;
             let randomNo = Math.round(Math.random() * (999 - 100) + 100);
