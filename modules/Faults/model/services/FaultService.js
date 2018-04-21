@@ -57,7 +57,7 @@ class FaultService extends ApiService {
 
         const validator = new validate(fault, fault.rules(), fault.customErrorMessages());
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(data));
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         //Get Mapper
         const groups = await Utils.redisGet(redis, "groups").catch(_ => (Promise.reject(Error.InternalServerError)));
