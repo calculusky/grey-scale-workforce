@@ -77,8 +77,7 @@ class FaultService extends ApiService {
         if (files.length) {
             API.attachments().createAttachment({module: "faults", relation_id: record.id}, who, files, API).then();
         }
-
-        return Utils.buildResponse({data: fault});
+        return Utils.buildResponse({data: record});
     }
 
     /**
