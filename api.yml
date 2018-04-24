@@ -333,10 +333,10 @@ definitions:
         type: integer
       created_at:
         type: string
-        format: date
+        format: date-time
       updated_at:
         type: string
-        format: date
+        format: date-time
 
 
 
@@ -404,39 +404,72 @@ definitions:
       - status
 
   Fault:
-    description: A representation of a Work Order Object
-    allOf:
-      - $ref: '#/definitions/postFaultInput'
-      - type: object
-        properties:
-          id:
-            type: integer
-            description: The Fault ID
-          asset_id:
-            type: integer
-            description: The Asset ID
-          status:
-            type: integer
-            description: The Request Status
-            enum:
-              - 0
-              - 1
-              - 2
-          created_by:
-            type: integer
-            description: The User that created this Fault
-          issue_date:
-            type: string
-            format: date-time
-            description: The date this fault was issued
-          created_at:
-            type: string
-            format: date-time
-            description: The date this request was created
-          updated_at:
-            type: string
-            format: date-time
-            description: The date this request was updated
+    description: Fault Object
+    type: object
+    properties:
+      id:
+        type: integer
+        description: The Fault ID
+      related_to:
+        type: string
+        description: The name of the entity a fault relates to
+      relation_id:
+        type: string
+        description: The related entity primary identifier
+      labels:
+        type: array
+        items:
+          type: string
+      priority:
+        type: string
+        description: The priorty of this fault
+      status:
+        type: integer
+        description: The Request Status
+        enum:
+        - 0
+        - 1
+        - 2
+      category_id:
+        type: integer
+        description: The fault category primary identifier
+      summary:
+        type: string
+        description: The summary of the fault
+      resolution:
+        type: string
+        description: A brief description of how the fault was resolved
+      issue_date:
+        type: string
+        format: date-time
+        description: The date this fault was issued
+      completed_date:
+        type: string
+        format: date-time
+        description: The time this fault was resolved
+      source:
+        type: string
+        description: Where the fault emmanates from e.g crm, internal
+      source_id:
+        type: string
+        description: The reference id of the record in the source the fault sources from
+      assigned_to:
+        type: array
+        items:
+          type: object
+      created_by:
+        type: integer
+      group:
+        type: object
+        $ref: '#/definitions/Group'
+      created_at:
+        type: string
+        format: date-time
+        description: The date this request was created
+      updated_at:
+        type: string
+        format: date-time
+        description: The date this request was updated
 
   WorkOrder:
     properties:

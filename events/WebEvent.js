@@ -78,17 +78,17 @@ class WebEvent extends EventEmitter {
         });
     }
 
-    async onUploadComplete(type, status, fileName, createdBy) {
-        if (!createdBy || !(Array.isArray(createdBy) && createdBy.length)) return;
+    async onUploadComplete(type, status, fileName, createdBy, level = 3) {
+        if (!createdBy) return;
         //now we need to notify this guy who uploaded the record
-
         const notification = {
             type: "upload_complete",
             title: `Upload Complete`,
             message: `The ${type} record you uploaded is done processing.`,
             to: `[${createdBy}]`,
+            from: 1,
             group: '[]',
-            level: 3
+            level
         };
 
         const socketIds = this.sharedData.clients[createdBy];

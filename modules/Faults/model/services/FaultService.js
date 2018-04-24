@@ -66,7 +66,7 @@ class FaultService extends ApiService {
 
         if (!group) return Promise.reject(Error.GroupNotFound);
 
-        const bUnit = Utils.getGroupParent(group, 'business_unit') || group;
+        // const bUnit = Utils.getGroupParent(group, 'business_unit') || group;
 
         fault.fault_no = ``;//TODO generate fault no
 
