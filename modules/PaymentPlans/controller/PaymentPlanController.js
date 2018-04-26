@@ -39,7 +39,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *          $ref: '#/definitions/postPaymentPlanInput'
      */
     app.post('/payment_plans', jsonParser, (req, res) => {
-        console.log(req.body);
         API.paymentPlans().createPaymentPlan(req.body, req.who, API)
             .then(({data, code})=> {
                 console.log(data);

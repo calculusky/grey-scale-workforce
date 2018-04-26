@@ -47,6 +47,7 @@ module.exports.decrypt = function (value, secret = "") {
     const decipher = crypto.createDecipher(algorithm, secret);
     let dec = decipher.update(value, 'hex', 'utf8');
     dec += decipher.final('utf8');
+    console.log(dec);
     return dec;
 };
 
@@ -500,6 +501,10 @@ module.exports.processMakerError = function (err) {
         } else if (msg.includes("already exists")) {
             obj.msg = `The record ${msg.slice(msg.indexOf('"'), -1)}`;
             obj.code = "VALIDATION_ERROR";
+            return obj;
+        } else if (msg.includes("user is not assigned")) {
+            obj.msg = "You are currently not permitted to perform this action, because of your group. Please contact the system Administrator.";
+            obj.code = "PM_ERROR_NOT_ASSIGNED";
             return obj;
         }
     };

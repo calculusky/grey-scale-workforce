@@ -71,7 +71,6 @@ class PaymentPlanService extends ApiService {
         let validator = new validate(paymentPlan, paymentPlan.rules(), paymentPlan.customErrorMessages());
 
         ApiService.insertPermissionRights(paymentPlan, who);
-
         if (validator.fails()) {
             return Promise.reject(Utils.buildResponse({
                 status: "fail",
