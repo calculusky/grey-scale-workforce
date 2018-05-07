@@ -47,7 +47,6 @@ module.exports.decrypt = function (value, secret = "") {
     const decipher = crypto.createDecipher(algorithm, secret);
     let dec = decipher.update(value, 'hex', 'utf8');
     dec += decipher.final('utf8');
-    console.log(dec);
     return dec;
 };
 
@@ -475,6 +474,7 @@ module.exports.customerHasPendingWorkOrder = async function (db, acctNo = "", tb
 
 
 module.exports.processMakerError = function (err) {
+    // console.error('PM',err);
     if (!err.error) {
         return this.buildResponse({
             status: 'fail',
@@ -483,7 +483,7 @@ module.exports.processMakerError = function (err) {
         }, 500);
     }
     const error = err.error;
-    console.log(err);
+    // console.log(err);
     if (!error) return "";
     const processMessage = (msg, obj) => {
         if (msg.includes("permission")) {

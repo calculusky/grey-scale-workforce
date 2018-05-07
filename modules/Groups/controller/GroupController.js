@@ -86,6 +86,18 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
+    app.put('/groups/link/multi', jsonParser, (req, res) => {
+        API.groups().linkGroup(req.body, req.who)
+            .then(({data, code}) => {
+                console.log(data);
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
+                console.log(code, err);
+                return res.status(code).send(err);
+            });
+    });
+
 
     /**
      * @swagger
@@ -108,7 +120,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/limit'
      */
     app.get('/groups/:offset?/:limit?', urlencodedParser, (req, res) => {
-        console.log('/groups/offset/limit');
         return API.groups().getGroups({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code}) => {
                 return res.status(code).send(data);
