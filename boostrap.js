@@ -174,5 +174,5 @@ module.exports = function route(context) {
     //Register Plugins
     app.use(express.static('public'));
 
-    http.listen(9003, () => console.log("Started MrWorking API"));
+    http.listen(process.env.PORT || 9003, () => console.log("Started MrWorking API"));
 };
