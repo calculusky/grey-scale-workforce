@@ -159,7 +159,7 @@ module.exports = function route(context) {
      */
     swagger.config(app, {
         express: express,
-        host: "localhost:9003",
+        host: "localhost:" + process.env.PORT,
         swaggerUI: "swagger-ui/dist",
         apis: swaggerAPIs,
         info: {

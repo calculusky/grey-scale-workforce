@@ -16,8 +16,8 @@ class WorkflowService {
     constructor(context) {
         this.context = context;
         /*TODO username and password should be put in a secret file e.g .env*/
-        this.username = "admin@nogic.org";
-        this.password = "admin";
+        this.username = process.env.PM_ADMIN || "admin@nogic.org";
+        this.password = process.env.PM_PASS || "admin";
         this.token = null;
 
         ProcessAPI.init({
