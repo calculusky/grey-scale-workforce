@@ -221,7 +221,7 @@ class PaymentService {
                                 "issue_date": date
                             };
                             console.log(reconnectionOrder);
-                            API.workOrders().createWorkOrder(reconnectionOrder).catch(err => Log.e('PAYMENTS', err));
+                            API.workOrders().createWorkOrder(reconnectionOrder).catch(err => console.error('PAYMENTS', err));
                         };
                         //By default we create reconnection orders.
                         if (body['auto_generate_rc']) {
