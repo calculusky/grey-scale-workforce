@@ -4,7 +4,10 @@
  */
 const KNEX = require('knex');
 const MapperFactory = require('./factory/MapperFactory');
-const redis = require("redis"), client = redis.createClient();
+const redis = require("redis"), client = redis.createClient({
+    host: process.env.REDIS_HOST || "localhost",
+    port: process.env.REDIS_PORT || 6379
+});
 let globalContext = null;
 
 //Private Fields
