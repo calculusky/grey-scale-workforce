@@ -198,7 +198,7 @@ module.exports.createDelinquencyList = function () {
                 labels: '["work"]',
                 summary: "Disconnect Customer!!!",
                 status: '1',
-                group_id: hubGroup.id,
+                group_id: uploadData.group_id,
                 created_by: assignedTo.id,
                 assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
                 issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
