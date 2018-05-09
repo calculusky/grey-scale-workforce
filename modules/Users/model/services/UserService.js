@@ -17,7 +17,7 @@ class UserService extends ApiService {
         MapperFactory = this.context.modelMappers;
     }
 
-    getUsers(value = '?', by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    getUsers(value = '?', by = "id", who = {}, offset = 0, limit = 10) {
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         const executor = (resolve, reject) => {
             UserMapper.findDomainRecord({by, value})
@@ -301,8 +301,8 @@ class UserService extends ApiService {
         }
 
         const rand = await Utils.random();
-        const u = "username", e = "email";
-        db.raw(`update users set ${u} = CONCAT(${u}, ?), ${e} = CONCAT(?, ${e}) where ${by} = ?`,
+        const u = "username", e = "email", d = "deleted_by";
+        db.raw(`update users set ${u} = CONCAT(${u}, ?), ${e} = CONCAT(?, ${e}), ${d}=${who.sub} where ${by} = ?`,
             [`_${rand}_deleted`, `${rand}_deleted_`, value]).then(() => {
             API.workflows().updateUser(by, value, {}).catch(console.error);
         }).catch(console.error);

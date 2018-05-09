@@ -126,6 +126,7 @@ class WorkOrderService extends ApiService {
      * @returns {*}
      */
     createWorkOrder(body = {}, who = {}) {
+        console.log('body', body);
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         let workOrder = new WorkOrder(body);
 

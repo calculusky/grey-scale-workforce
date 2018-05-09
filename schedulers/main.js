@@ -172,7 +172,7 @@ module.exports.createDelinquencyList = function () {
                 db.select(['users.id']).from("users").innerJoin("role_users", "users.id", "role_users.user_id")
                     .innerJoin("roles", "role_users.role_id", "roles.id")
                     .innerJoin("user_groups", "user_groups.group_id", hubGroup.id)
-                    .where("roles.slug", "technical_hub"),
+                    .where("roles.slug", "technical_hub").where("users.deleted_at", null),
                 Utils.customerHasPendingWorkOrder(db, accountNo)
             ]).catch(err => console.error('something light', err));
 
@@ -199,6 +199,7 @@ module.exports.createDelinquencyList = function () {
                 summary: "Disconnect Customer!!!",
                 status: '1',
                 group_id: hubGroup.id,
+                created_by: assignedTo.id,
                 assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
                 issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
                 created_at: assignedTo.created_at,

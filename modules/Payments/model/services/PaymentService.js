@@ -170,7 +170,7 @@ class PaymentService {
                     let res = db.count('id as transactions').from("payments")
                         .where("transaction_id", payment.transaction_id).orWhere('system_id', payment.system_id);
 
-                    res.then(result => {
+                    return res.then(result => {
                         if (result.shift()['transactions']) {
                             //then lets tell the user that this transaction id already exist
                             return reject(Utils.buildResponse({
@@ -192,11 +192,10 @@ class PaymentService {
 
                         payment.assigned_to = JSON.stringify(workOrder.assigned_to);
 
-
                         PaymentMapper.createDomainRecord(payment).then(payment => {
                             if (!payment) return Promise.reject(false);
                             return resolve(Utils.buildResponse({data: payment}));
-                        }).catch();
+                        }).catch(console.error);
 
                         //Update work order status to payment received
                         db.table('work_orders').update({status: 5}).where(systemType.key, payment.system_id)
@@ -205,13 +204,12 @@ class PaymentService {
                         const createReconnectionOrder = (result) => {
                             //if it exist don't create a reconnection order
                             if (result.shift()['id']) return;
-                            /*
-                             * Generate a unique number for this work order
-                             **/
+
                             let reconnectionOrder = {
                                 "related_to": "disconnection_billings",
                                 "relation_id": workOrder.relation_id,
                                 "status": '1',
+                                "labels": '[]',
                                 "priority": '3',
                                 "summary": "Re-connect this Customer",
                                 "address_line": workOrder.address_line,
@@ -220,7 +218,7 @@ class PaymentService {
                                 "assigned_to": JSON.stringify(workOrder.assigned_to),
                                 "issue_date": date
                             };
-                            console.log(reconnectionOrder);
+                            console.log('Reconnection', reconnectionOrder);
                             API.workOrders().createWorkOrder(reconnectionOrder).catch(err => console.error('PAYMENTS', err));
                         };
                         //By default we create reconnection orders.
