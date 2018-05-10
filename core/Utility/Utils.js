@@ -318,6 +318,26 @@ module.exports.authFailData = function (code) {
     }
 };
 
+/**
+ * Retrieves all the nested children of a group
+ *
+ * @param group
+ * @param gType
+ * @returns {{children: Array, ids: any[]}}
+ */
+module.exports.getGroupChildren = function (group = {}, gType = null) {
+    const {children = []} = group, myChildren = [];
+    const loopChildren = (aChildren) => {
+        for (let {id, name, type, short_name, children = []} of aChildren) {
+            if (!gType || gType === type) myChildren.push({id, name, type, short_name});
+            if (children.length) loopChildren(children);
+        }
+    };
+    loopChildren(children);
+    return {children: myChildren, ids: myChildren.map(({id}) => id)};
+};
+
+
 module.exports.getGroupParent = function (group, type = 'business_unit') {
     if (group == null) return null;
     if (!type) return group.parent;
@@ -401,13 +421,14 @@ module.exports.numericToInteger = function (body, ...keys) {
  *
  * @param context {Context}
  * @param key
+ * @param toJson
  * @returns {Promise}
  */
-module.exports.getFromPersistent = function (context, key) {
+module.exports.getFromPersistent = function (context, key, toJson = false) {
     return new Promise((resolve, reject) => {
         context.persistence.get(key, (err, value) => {
             if (err) return reject(err);
-            return resolve(value)
+            return resolve((toJson) ? JSON.parse(value) : value)
         });
     });
 };
@@ -453,6 +474,19 @@ module.exports.paymentPlanProcessed = function (appStatus) {
         }, 400);
     }
     return this.buildResponse({msg: "The current state of this payment plan is unknown."});
+};
+
+module.exports.planPeriod = (period) => {
+    return period.replace(/[a-zA-Z]/g, (s) => {
+        switch (s.toLowerCase()) {
+            case "m":
+                return " Month(s)";
+            case "y":
+                return " Year(s)";
+            default:
+                return "--"
+        }
+    });
 };
 
 module.exports.customerHasPendingWorkOrder = async function (db, acctNo = "", tbl = "disconnection_billings") {
