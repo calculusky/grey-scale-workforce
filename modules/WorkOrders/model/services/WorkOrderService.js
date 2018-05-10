@@ -48,14 +48,10 @@ class WorkOrderService extends ApiService {
         const isSingle = typeof value !== 'object';
 
         //Prepare the static data from persistence storage
-        let {groups, workTypes} = [{}, {}];
-        this.context.persistence.get("groups", (err, grps) => {
-            if (!err) groups = JSON.parse(grps);
-        });
-
-        this.context.persistence.get("work:types", (err, types) => {
-            if (!err) workTypes = JSON.parse(types);
-        });
+        let [groups, workTypes] = await Promise.all([
+            Utils.getFromPersistent(this.context, "groups", true),
+            Utils.getFromPersistent(this.context, "work:types", true)
+        ]);
 
         const results = await WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
             .catch(err => {
@@ -84,14 +80,10 @@ class WorkOrderService extends ApiService {
         limit = parseInt(limit);
 
         //Prepare the static data from persistence storage
-        let {groups, workTypes} = [{}, {}];
-        this.context.persistence.get("groups", (err, grps) => {
-            if (!err) groups = JSON.parse(grps)
-        });
-
-        this.context.persistence.get("work:types", (err, types) => {
-            if (!err) workTypes = JSON.parse(types);
-        });
+        let [groups, workTypes] = await Promise.all([
+            Utils.getFromPersistent(this.context, "groups", true),
+            Utils.getFromPersistent(this.context, "work:types", true)
+        ]);
 
         let resultSet = this.context.database.select(['*']).from("work_orders");
         if (fromDate && toDate) resultSet = resultSet.whereBetween('start_date', [fromDate, toDate]);

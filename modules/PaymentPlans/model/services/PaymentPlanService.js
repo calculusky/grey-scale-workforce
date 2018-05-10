@@ -4,6 +4,7 @@ let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
 const Events = require('../../../../events/events');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 
 /**
  * @name PaymentPlanService
@@ -71,13 +72,8 @@ class PaymentPlanService extends ApiService {
         let validator = new validate(paymentPlan, paymentPlan.rules(), paymentPlan.customErrorMessages());
 
         ApiService.insertPermissionRights(paymentPlan, who);
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                data: validator.errors.all(),
-                code: 'VALIDATION_ERROR'
-            }, 400));
-        }
+
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
         const tblName = PaymentPlanMapper.tableName;
@@ -134,8 +130,9 @@ class PaymentPlanService extends ApiService {
     async approvePaymentPlan(planId, {comments = ""}, who, API) {
         const db = this.context.database;
 
-        let plan = await db.table("payment_plans").where('id', planId)
-            .select(['wf_case_id', 'assigned_to', 'approval_status']);
+        const planCols = ['wf_case_id', 'assigned_to', 'approval_status'];
+
+        let plan = await db.table("payment_plans").where('id', planId).select(planCols);
 
         if (!plan.length) {
             const res = Utils.buildResponse({status: "fail", data: {message: "Payment Plan doesn't exist"}}, 400);
@@ -187,7 +184,10 @@ class PaymentPlanService extends ApiService {
      */
     async rejectPaymentPlan(planId, {comments}, who, API) {
         const db = this.context.database;
-        let plan = await db.table("payment_plans").where('id', planId).select(['wf_case_id', 'assigned_to']);
+
+        const planCols = ['wf_case_id', 'assigned_to', 'approval_status'];
+
+        let plan = await db.table("payment_plans").where('id', planId).select(planCols);
 
         if (!plan.length) {
             const res = Utils.buildResponse({status: "fail", data: {message: "Payment Plan doesn't exist"}}, 400);

@@ -1,8 +1,11 @@
 const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
-let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
+const Events = require('../../../../events/events');
+let MapperFactory = null;
+
 
 /**
  * @name GroupService
@@ -63,13 +66,7 @@ class GroupService extends ApiService {
 
         let validator = new validate(group, group.rules(), group.customErrorMessages());
 
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                data: validator.errors.all(),
-                code: 'VALIDATION_ERROR'
-            }, 400));
-        }
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         ApiService.insertPermissionRights(group, who);
 
@@ -87,6 +84,8 @@ class GroupService extends ApiService {
         });
 
         if (body['parent']) this.linkGroup({parent_id: body['parent'], child_id: group.id}).catch(console.error);
+
+        Events.emit("update_groups");
 
         return Utils.buildResponse({data: dbGroup});
     }
@@ -156,13 +155,8 @@ class GroupService extends ApiService {
         Utils.numericToInteger(body, "user_id", "group_id");
 
         const validator = new validate(body, {'user_id': 'integer|required', 'group_id': 'integer|required'});
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({
-                status: 'fail',
-                data: validator.errors.all(),
-                code: 'VALIDATION_ERROR'
-            }, 400));
-        }
+
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         if (body.wf_user_id) await API.workflows().addUserToGroup(body.wf_user_id, body.group_id).catch(Promise.reject);
         else {
@@ -221,7 +215,6 @@ class GroupService extends ApiService {
         const Group = DomainFactory.build(DomainFactory.GROUP);
         const domain = new Group(body);
         const parent_group_id = (body['parent']) ? body['parent'] : null;
-        console.log('parent', parent_group_id);
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
         return GroupMapper.updateDomainRecord({value, domain}).then(() => {
             const db = this.context.database;
@@ -233,8 +226,21 @@ class GroupService extends ApiService {
                 });
             }
             Promise.all(backgroundTask).catch(console.error);
+            Events.emit("update_groups");
             return Utils.buildResponse({data: domain});
         });
+    }
+
+    /**
+     * Get all the children of a group
+     *
+     * @param groupId
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getGroupChildren(groupId) {
+        const groups = await Utils.getFromPersistent(this.context, "groups", true);
+        const {children: items, ids} = Utils.getGroupChildren(groups[groupId]);
+        return Utils.buildResponse({data: {items, ids}});
     }
 
 
@@ -259,6 +265,7 @@ class GroupService extends ApiService {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
+            Events.emit("update_groups");
             return Utils.buildResponse({data: {by, message: "Group deleted"}});
         });
     }

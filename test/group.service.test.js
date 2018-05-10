@@ -81,6 +81,10 @@ test("Get Business Unit and Undertaking from group", async () => {
     expect(bu).toBeDefined();
 });
 
+test("Get Groups Children", async () => {
+    expect(API.groups().getGroupChildren(259)).resolves.toBeInstanceOf(Array);
+});
+
 afterAll(() => {
     ctx.database.table("groups").where("name", "GroupUs").select("id").then(r => {
         let t = r.shift();

@@ -12,7 +12,8 @@ exports.init = function (context, io, API) {
         const eventListenersPath = [
             './LocationEvent',
             './EmailEvent',
-            './WebEvent'
+            './WebEvent',
+            './ApplicationEvent'
         ];
 
         eventListenersPath.forEach(listener => {

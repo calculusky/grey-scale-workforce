@@ -32,6 +32,11 @@ test("That it resolves after supplying the right fields", () => {
         }));
 });
 
+test("Reformat the payment plan period", () => {
+    const Utils = require('../core/Utility/Utils');
+    return expect(Utils.planPeriod("2M")).toEqual("2 Month(s)")
+});
+
 test("Payment Plan Approval", () => {
     return expect(API.paymentPlans().approvePaymentPlan(4, {comments: "kkkk"}, {sub: 1}, API)).resolves.toEqual({});
 });

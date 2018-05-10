@@ -2,6 +2,7 @@
  * Created by paulex on 9/6/17.
  */
 
+require('dotenv').config();
 let API = require('../API');
 
 const config = require('../config.json');
@@ -18,9 +19,9 @@ test('Test that createPayment without no input data rejects with a defined value
 test('test that createPayment is defined', ()=> {
     return expect(API.payments().createPayment({
         "system": "work_orders",
-        "system_id": "DOSO00000135301",
-        "amount": 200,
-        "transaction_id": "string",
+        "system_id": "DROT00000582703",
+        "amount": 76000,
+        "transaction_id": "gross",
         "payer": "string",
         "channel": "string",
         "payment_date": "2018-02-06T01:36:18.118Z"
