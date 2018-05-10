@@ -5,6 +5,7 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 let MapperFactory = null;
 
 /**
@@ -124,13 +125,8 @@ class WorkOrderService extends ApiService {
 
         //enforce the validation
         let validator = new validate(workOrder, workOrder.rules(), workOrder.customErrorMessages());
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                data: validator.errors.all(),
-                code: 'VALIDATION_ERROR'
-            }, 400));
-        }
+
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         ApiService.insertPermissionRights(workOrder, who);
 
