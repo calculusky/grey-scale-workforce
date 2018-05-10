@@ -10,6 +10,7 @@ const Password = require('../../../../core/Utility/Password');
 const jwt = require("jsonwebtoken");
 const Utils = require('../../../../core/Utility/Utils');
 const ProcessAPI = require('../../../../processes/ProcessAPI');
+const _ = require('lodash');
 const useragent = require('useragent');
 
 /**
@@ -42,6 +43,8 @@ class RecognitionService {
                 }
             }, 400));
         }
+
+        const groups = await Utils.getFromPersistent(this.context, "groups", true);
 
         const executor = (resolve, reject) => {
             const UserMapper = MapperFactory.build(MapperFactory.USER);
@@ -87,17 +90,18 @@ class RecognitionService {
 
                     console.log(tokenOpt);
 
+                    //Get the permitted group this user belongs to
+                    const permitted_groups = _.flatten(tokenOpt.group.map(id => ((({ids}) => ids)(Utils.getGroupChildren(groups[id])))));
+
                     let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
                     const persistence = this.context.persistence;
                     //Set up the token on redis server
                     persistence.set(token, true, 'EX', tokenExpiry);
-                    persistence.set(`permissions:${user.id}`, (permissions)
-                        ? permissions
-                        : "{}", 'EX', tokenExpiry);
+                    persistence.set(`permissions:${user.id}`, (permissions) ? permissions : "{}", 'EX', tokenExpiry);
 
                     delete user.firebase_token;
 
-                    return resolve(Utils.buildResponse({data: {token, user}}));
+                    return resolve(Utils.buildResponse({data: {token, user, permitted_groups}}));
                 }).catch(err => {
                 console.log(err);
                 return reject(Utils.buildResponse({

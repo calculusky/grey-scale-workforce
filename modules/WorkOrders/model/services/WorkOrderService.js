@@ -287,7 +287,7 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, g
                 case "disconnection_billings":
                     const [customer, plan] = await Promise.all([relatedModel.customer(), relatedModel.paymentPlan()]);
                     workOrder['customer'] = customer.records.shift() || {};
-                    workOrder['payment_plan'] = plan.records.shift() || {};
+                    workOrder['payment_plans'] = plan.records;
                     break;
                 case "faults":
 
