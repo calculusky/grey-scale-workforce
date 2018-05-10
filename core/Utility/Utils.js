@@ -508,7 +508,6 @@ module.exports.customerHasPendingWorkOrder = async function (db, acctNo = "", tb
 
 
 module.exports.processMakerError = function (err) {
-    // console.error('PM',err);
     if (!err.error) {
         return this.buildResponse({
             status: 'fail',
@@ -543,6 +542,7 @@ module.exports.processMakerError = function (err) {
         } else if (msg.includes("assigned to another user")) {
             obj.msg = "You are currently not permitted to perform this action. This task was assigned to a different user";
             obj.code = "PM_ERROR_NOT_ASSIGNED";
+            return obj;
         }
     };
     switch (error.code) {

@@ -146,7 +146,7 @@ class PaymentPlanService extends ApiService {
         const _command = {"COMMAND": "APPROVE"};
 
         const approve = await API.workflows().resume(plan.wf_case_id, comments, _command, who).catch(err => {
-            console.log('PaymentPlanApproval', Utils.processMakerError(err));
+            console.log('PaymentPlanApproval', err);
             return Promise.reject(Utils.processMakerError(err));
         });
         // If the task has already been completed or a task doesn't exist
@@ -201,7 +201,7 @@ class PaymentPlanService extends ApiService {
         const _command = {"COMMAND": "REJECT"};
 
         const reject = await API.workflows().resume(plan.wf_case_id, comments, _command, who).catch(err => {
-            console.log('PaymentPlanRejection', Utils.processMakerError(err));
+            console.log('PaymentPlanRejection', err);
             return Promise.reject(Utils.processMakerError(err));
         });
         // If the task has already been completed or a task doesn't exist
