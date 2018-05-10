@@ -540,7 +540,7 @@ module.exports.processMakerError = function (err) {
             obj.msg = "You are currently not permitted to perform this action, because of your group. Please contact the system Administrator.";
             obj.code = "PM_ERROR_NOT_ASSIGNED";
             return obj;
-        } else if (msg.includes("This case is assigned to another user")) {
+        } else if (msg.includes("assigned to another user")) {
             obj.msg = "You are currently not permitted to perform this action. This task was assigned to a different user";
             obj.code = "PM_ERROR_NOT_ASSIGNED";
         }
