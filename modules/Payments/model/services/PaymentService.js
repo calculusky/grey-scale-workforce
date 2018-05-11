@@ -84,14 +84,8 @@ class PaymentService {
         //check if the system exist
         let systemType = PaymentService.getPaymentType(payment.system);
 
-        if (systemType == null) {
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                msg: "Invalid System Name Specified",
-                code: "INVALID_SYSTEM_NAME",
-                desc: `The system name you specified '${payment.system}' doesn't exist or is currently not being handled`
-            }, 400));
-        }
+        if (systemType == null) return Promise.reject(Error.InvalidSystemName(payment.system));
+
         const executor = (resolve, reject) => {
             const db = this.context.database;
             const columns = ['id', 'status', 'work_order_no', 'assigned_to', 'group_id', 'type_id', 'address_line',
@@ -100,67 +94,37 @@ class PaymentService {
             const resultSet = db.table(systemType.table).select(columns).where(systemType.key, payment.system_id);
 
             resultSet.then(result => {
-                if (!result.length) {
-                    return reject(Utils.buildResponse({
-                        status: "fail",
-                        msg: "Invalid Work Order Number",
-                        code: "INVALID_WORK_ORDER_NO",
-                        desc: `The Work Order Number specified '${payment.system_id}' does not exist or it is invalid`
-                    }, 400));
-                }
+                if (!result.length) return reject(Error.InvalidWorkOrderNo(payment.system_id));
 
                 //get the domain
                 const Domain = systemType.domain;
                 const workOrder = new Domain(result.shift());
                 //check the type is valid for payments
                 let typeName = workTypes[workOrder.type_id].name.toLowerCase();
-                if (!typeName.includes("disconnections")) {
-                    //lets bounce this guy back because he cannot be paying for anything other than disconnection
-                    return reject(Utils.buildResponse({
-                        status: "fail",
-                        msg: "Work order cannot acknowledge payments",
-                        code: "NOT_DISCONNECTION",
-                        desc: `Payment to this type of work order '${payment.system_id}' isn't supported`
-                    }, 403));
-                }
-                //check status : only accept payment for work order in disconnected state
-                if (workOrder.status !== 3) {
-                    //this disconnection order isn't in a disconnection state
-                    return reject(Utils.buildResponse({
-                        status: "fail",
-                        msg: "Invalid state to acknowledge payment",
-                        code: "INVALID_ACK_STATE",
-                        desc: "The work order is not in the right state to acknowledge payments. " +
-                        "Only when the status is disconnected can payments be acknowledged"
-                    }, 403));
-                }
 
-                workOrder.relatedTo().then(results => {
+                if (!typeName.includes("disconnections")) return reject(Error.NotDisconnection(payment.system_id));
+
+                //check status : only accept payment for work order in disconnected state
+                if (workOrder.status !== 3) return reject(Error.InvalidAckState);
+
+                workOrder.relatedTo().then(async results => {
                     let disconnection = results.records.shift();
                     const minAmountAccepted = parseFloat(disconnection.min_amount_payable);
-                    //Check if this disconnection order has a payment plan
-                    //thus use the amount on the payment plan
-                    if (!disconnection['has_plan'] && (payment.amount < minAmountAccepted)) {
-                        return reject(Utils.buildResponse({
-                            status: "fail",
-                            msg: "The amount is not acceptable",
-                            code: "INVALID_AMOUNT",
-                            desc: `The amount must be equal to or above the minimum amount payable (${minAmountAccepted})`
-                        }, 400));
-                    } else if (disconnection['has_plan']) {
-                        //Get the payment plan
-                        return disconnection.paymentPlan().then(res => {
-                            let paymentPlan = res.records.shift();
-                            if (!paymentPlan || payment.amount < paymentPlan.amount) {
-                                return reject(Utils.buildResponse({
-                                    status: "fail",
-                                    msg: "The amount is not acceptable",
-                                    code: "INVALID_PLANNED_AMOUNT",
-                                    desc: `The amount paid is lower than the amount specified on the payment plan (${paymentPlan.amount})`
-                                }, 400));
-                            }
-                            return beginTransaction();
-                        });
+                    const amountIsLesser = payment.amount < minAmountAccepted;
+                    //Check if this disconnection order has a payment plan; then use the amount on the payment plan
+                    if (disconnection['has_plan']) {
+                        let res = await disconnection.paymentPlan();//.then(res => {
+                        const paymentPlan = res.records.pop();
+                        if (paymentPlan && (paymentPlan.approval_status === -1 && amountIsLesser)) {
+                            return reject(Error.InvalidDisconnectionAmount(minAmountAccepted));
+                        }
+                        else if (!paymentPlan || (payment.amount < paymentPlan.amount)) {
+                            return reject(Error.InvalidPaymentPlanAmount(paymentPlan.amount));
+                        }
+                        return beginTransaction();
+                    }
+                    if (amountIsLesser) {
+                        return reject(Error.InvalidDisconnectionAmount(minAmountAccepted));
                     }
                     return beginTransaction();
                 }).catch(reject);
@@ -171,15 +135,8 @@ class PaymentService {
                         .where("transaction_id", payment.transaction_id).orWhere('system_id', payment.system_id);
 
                     return res.then(result => {
-                        if (result.shift()['transactions']) {
-                            //then lets tell the user that this transaction id already exist
-                            return reject(Utils.buildResponse({
-                                status: "fail",
-                                msg: "Duplicate Transaction",
-                                code: "TRANSACTION_ALREADY_EXIST",
-                                desc: `The work order has previously been acknowledged.`
-                            }, 403));
-                        }
+                        if (result.shift()['transactions']) return reject(Error.TransactionAlreadyExist);
+
                         //Now that everything is fine... lets now create the payment
                         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
                         //however let set the group and assigned to value
