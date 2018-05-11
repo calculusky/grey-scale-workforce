@@ -12,6 +12,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const ProcessAPI = require('../../../../processes/ProcessAPI');
 const _ = require('lodash');
 const useragent = require('useragent');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 
 /**
  * @name RecognitionService
@@ -50,21 +51,12 @@ class RecognitionService {
             const UserMapper = MapperFactory.build(MapperFactory.USER);
             UserMapper.findDomainRecord({by: "*_and", value: {username}})
                 .then(async ({records}) => {
-                    if (!records.length) {
-                        return reject(Utils.buildResponse({
-                            status: "fail",
-                            data: Utils.authFailData("AUTH_CRED")
-                        }, 401));
-                    }
+                    if (!records.length) return reject(Error.InvalidLogin);
 
                     const user = records.shift();
                     //checks to see that the password supplied matches
-                    if (!Password.equals(password, user.password)) {
-                        return reject(Utils.buildResponse({
-                            status: "fail",
-                            data: Utils.authFailData("AUTH_CRED")
-                        }, 401));
-                    }
+                    if (!Password.equals(password, user.password)) return reject(Error.InvalidLogin);
+
                     user.setPassword();
                     //For Mobile we are giving 4months before token will expire
                     //but this token must be tied to the same user-agent and device
@@ -90,8 +82,12 @@ class RecognitionService {
 
                     console.log(tokenOpt);
 
-                    //Get the permitted group this user belongs to
-                    const permitted_groups = _.flatten(tokenOpt.group.map(id => ((({ids}) => ids)(Utils.getGroupChildren(groups[id])))));
+                    //Get the permitted group this user can have access to records
+                    const permitted_groups = _.flatten(tokenOpt.group.map(id => {
+                        return (({ids}) => ids)(Utils.getGroupChildren(groups[id]))
+                    }));
+                    permitted_groups.push(...tokenOpt.group);
+
 
                     let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
                     const persistence = this.context.persistence;
@@ -100,6 +96,8 @@ class RecognitionService {
                     persistence.set(`permissions:${user.id}`, (permissions) ? permissions : "{}", 'EX', tokenExpiry);
 
                     delete user.firebase_token;
+                    delete user.wf_user_id;
+                    delete user.wf_user_pass;
 
                     return resolve(Utils.buildResponse({data: {token, user, permitted_groups}}));
                 }).catch(err => {

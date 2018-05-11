@@ -48,5 +48,9 @@ module.exports = function () {
             code: "TRANSACTION_ALREADY_EXIST",
             desc: `The work order has previously been acknowledged.`
         }, 403),
+        InvalidLogin: Utils.buildResponse({
+            status: "fail",
+            data: Utils.authFailData("AUTH_CRED")
+        }, 401)
     }
 };
