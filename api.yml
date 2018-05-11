@@ -203,6 +203,9 @@ definitions:
       gender:
         type: string
         enum: ['M', 'F', 'O']
+      avatar:
+        type: file
+        description: The user profile image
 
 
   postUserOutput:

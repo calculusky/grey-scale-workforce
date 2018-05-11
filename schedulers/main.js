@@ -40,37 +40,37 @@ module.exports.createDelinquencyList = function () {
     let currentFile = null;
     const delinquentCols = ['account_no', 'current_bill', 'net_arrears', 'undertaking', 'undertaking_index', 'auto_generate_do'];
     const tableName = "disconnection_billings";
+
     //This function processes the excel document
     const startProcessor = async (file/*.xlsx*/, fileName) => {
         this.lock.d = true;
         currentFile = file;
         const currDate = new Date();
-        const logMessages = [];
+        const logMgs = [];
         const db = this.context.database;
 
-        //
+        //onComplete is called when the file is done processing
         const onComplete = (status, update = true) => {
             deleteFile(currentFile);
             this.lock.d = false;//release the lock here
             Events.emit("upload_completed", "delinquency", status, fileName, (uploadData) ? uploadData.created_by : 0);
-            return (update) ? _updateUploadStatus(this, fileName, status, JSON.stringify(logMessages)) : true;
+            return (update) ? _updateUploadStatus(this, fileName, status, JSON.stringify(logMgs)) : true;
         };
 
         const task = [
-            Utils.getFromPersistent(this.context, "groups"),
+            Utils.getFromPersistent(this.context, "groups", true),
             db.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to', 'created_by']),
             workbook.xlsx.readFile(file)
         ];
 
         //Fetch Groups and the Uploaded record before hand
         let [groups, uploadData] = await Promise.all(task).catch(_ => {
-            return logMessages.push("There was an error reading the file") && onComplete(3);
+            return logMgs.push("There was an error reading the file") && onComplete(3);
         });
 
         //check that the uploaded data is intact.. if we can't find the uploaded record we can end this right now
-        if (!uploadData.length) return logMessages.push("Couldn't find the uploaded record.") && onComplete(5, false);
+        if (!uploadData.length) return logMgs.push("Couldn't find the uploaded record.") && onComplete(5, false);
 
-        groups = JSON.parse(groups);
         uploadData = uploadData.shift();
 
         const workSheet = workbook.getWorksheet(1);
@@ -85,17 +85,17 @@ module.exports.createDelinquencyList = function () {
 
         let colHeaderIndex = {};
 
-        //if it is empty or just includes the column heads... lets delete the file and release lock
-        if (rowLen <= 1) return logMessages.push("Empty file uploaded.") && onComplete(5);
+        //if the file is empty or just includes the column heads... lets delete the file and release lock
+        if (rowLen <= 1) return logMgs.push("Empty file uploaded.") && onComplete(5);
 
 
-        //Checks to see if the
+        //Determines if onComplete should be called or not depending on the number of rows processed
         const endProcess = (totalRowsVisited) => {
             if (totalRowsVisited === rowLen) {
-                logMessages.push(`${processedDisc} of ${actualRowCount}` + " delinquent records imported successfully");
-                logMessages.push(`${processedWO ? processedWO : "No"} work order(s) was generated from the total of`
+                logMgs.push(`${processedDisc} of ${actualRowCount}` + " delinquent records imported successfully");
+                logMgs.push(`${processedWO ? processedWO : "No"} work order(s) was generated from the total of`
                     + ` ${processedDisc}` + " delinquency record imported.");
-                console.log(logMessages);
+                console.log(logMgs);
                 return onComplete((processedDisc === actualRowCount) ? 4 : 5);
             }
             return totalRowsVisited === rowLen;
@@ -107,7 +107,7 @@ module.exports.createDelinquencyList = function () {
             if (rn === 1) {
                 colHeaderIndex = getColumnsByNameIndex(row, columnLen);
                 if (!_.difference(delinquentCols, Object.keys(colHeaderIndex)).length) return;
-                logMessages.push("Invalid delinquency template uploaded. Template doesn't contain either one of " +
+                logMgs.push("Invalid delinquency template uploaded. Template doesn't contain either one of " +
                     `this column headers; ${delinquentCols.join(', ')}`);
                 return onComplete(3) && (isBadTemplate = true);
             }
@@ -132,12 +132,36 @@ module.exports.createDelinquencyList = function () {
             let assignedTo = uploadData.assigned_to[0];
             assignedTo.created_at = Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s");
 
+            /*-----------------------------------------------------------------------------------------
+            | Checks if the customer exist
+            | Checks also if the customer specified belongs to the undertaking specified in the excel file
+            |-------------------------------------------------------------------------------------------
+             */
+            let customer = await db.table("customers").where("account_no", accountNo).select(['group_id', 'tariff']);
+            customer = customer.pop();
+
+            if (!customer) {
+                logMgs.push(`The specified account no (${accountNo}) in row(${rn}) does not exist.`);
+                return ++processed && endProcess(++total);
+            }
+
+            let reconnection_fee = await db.table("rc_fees").where("name", customer.tariff).select(['amount']);
+            reconnection_fee = (reconnection_fee[0]) ? reconnection_fee[0].amount : 3000;
+
+            const customerUT = Utils.getGroupParent(groups[customer.group_id], "undertaking");
+
+            if (customerUT.id !== utIndex.result) {
+                logMgs.push(`The customer (${accountNo}) does not belong to the undertaking (${undertaking}) specified in row(${rn}).`);
+                return ++processed && endProcess(++total);
+            }
+
             const delinquency = {
                 "account_no": accountNo,
                 "current_bill": cBill,
                 "arrears": arrears,
                 "min_amount_payable": cBill + arrears,
-                "total_amount_payable": cBill + arrears + 2000,
+                "total_amount_payable": cBill + arrears + reconnection_fee,
+                reconnection_fee,
                 "group_id": uploadData.group_id,
                 "created_by": assignedTo.id,
                 "assigned_to": JSON.stringify([assignedTo]),
@@ -146,7 +170,7 @@ module.exports.createDelinquencyList = function () {
             };
 
             const inserted = await db.table(tableName).insert(delinquency).catch(_ => {
-                logMessages.push(`An error occurred while processing row(${rn})` + "." +
+                logMgs.push(`An error occurred while processing row(${rn})` + "." +
                     " It could be that the account number doesn't exist.");
                 return null;
             });
@@ -158,12 +182,12 @@ module.exports.createDelinquencyList = function () {
             const discId = inserted.shift();
 
             if (!generateWO) {
-                return logMessages.push("Work order was not auto-generated for row(" + rn + ")") && endProcess(++total);
+                return logMgs.push("Work order was not auto-generated for row(" + rn + ")") && endProcess(++total);
             }
 
             hubGroup = Utils.getGroupParent(groups[utIndex.result], "technical_hub") || hubGroup;
             if (hubGroup.id === utIndex.result) {
-                logMessages.push(`Couldn't create a work order for row(${rn})` +
+                logMgs.push(`Couldn't create a work order for row(${rn})` +
                     ` because the undertaking (${undertaking}) doesn't belong to a hub.`);
                 return ++processed && endProcess(++total);
             }
@@ -178,13 +202,13 @@ module.exports.createDelinquencyList = function () {
 
             // If the customer has a pending work order we should create a new one
             if (hasPending) {
-                logMessages.push(`Couldn't create a work order for customer (${accountNo}) in row(${rn})`
+                logMgs.push(`Couldn't create a work order for customer (${accountNo}) in row(${rn})`
                     + ` because the customer still has a pending work order.`);
                 return ++processed && endProcess(++total);
             }
 
             if (!hubUser.length) {
-                logMessages.push(`Couldn't create a work order for row ${rn} because there was no hub manager for`
+                logMgs.push(`Couldn't create a work order for row ${rn} because there was no hub manager for`
                     + ` the undertaking (${undertaking}).`);
                 return ++processed && endProcess(++total);
             }
