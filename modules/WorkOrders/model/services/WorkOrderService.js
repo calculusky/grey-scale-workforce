@@ -199,7 +199,8 @@ class WorkOrderService extends ApiService {
 }
 
 function getNumberPrefix(typeId) {
-    switch (typeId) {
+    if (!typeId) return "W";
+    switch (parseInt(typeId)) {
         case 1:
             return "D";
         case 2:
