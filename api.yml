@@ -48,6 +48,14 @@ parameters:
     in: path
     description: Status ID
 
+  typeId:
+    name: typeId
+    type: integer
+    required: true
+    in: path
+    description: Type ID
+
+
   user_id:
     name: user_id
     type: integer

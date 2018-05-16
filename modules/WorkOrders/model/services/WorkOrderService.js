@@ -75,8 +75,9 @@ class WorkOrderService extends ApiService {
      * @param who
      * @param offset
      * @param limit
+     * @param type
      */
-    async getWorkOrdersBetweenDates(userId, status, fromDate, toDate, offset = 0, limit = 10, who = {}) {
+    async getWorkOrdersBetweenDates(userId, status, fromDate, toDate, offset = 0, limit = 10, who = {}, type = 0) {
         offset = parseInt(offset);
         limit = parseInt(limit);
 
@@ -90,6 +91,7 @@ class WorkOrderService extends ApiService {
         if (fromDate && toDate) resultSet = resultSet.whereBetween('start_date', [fromDate, toDate]);
         if (userId) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${userId}}')`);
         if (status) resultSet = resultSet.where('status', status);
+        if (type) resultSet = resultSet.where("type_id", type);
         resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
 
         const records = await resultSet.catch(err => {
@@ -290,7 +292,13 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, g
                     workOrder['payment_plans'] = plan.records;
                     break;
                 case "faults":
-
+                    if (relatedModel.related_to.toLowerCase() === "assets") {
+                        const asset = await relatedModel.asset();
+                        workOrder['faults']['asset'] = asset.records.shift() || {};
+                    } else if (relatedModel.related_to.toLowerCase() === "customers") {
+                        const cus = await relatedModel.customer();
+                        workOrder['faults']['customer'] = cus.records.shift() || {};
+                    }
                     break;
             }
         }

@@ -152,6 +152,7 @@ module.exports.createDelinquencyList = function () {
 
             if (customerUT.id !== utIndex.result) {
                 logMgs.push(`The customer (${accountNo}) does not belong to the undertaking (${undertaking}) specified in row(${rn}).`);
+                if (customerUT.name === undertaking) logMgs.push("The template you are using might be the problem.");
                 return ++processed && endProcess(++total);
             }
 

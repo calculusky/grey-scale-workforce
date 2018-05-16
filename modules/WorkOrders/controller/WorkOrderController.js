@@ -9,8 +9,8 @@
  * @param urlencodedParser
  */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
-    app.use('/work_orders*', (req, res, next)=>API.recognitions().auth(req, res, next));
-    
+    app.use('/work_orders*', (req, res, next) => API.recognitions().auth(req, res, next));
+
     /**
      * @swagger
      * /work_orders:
@@ -34,12 +34,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      schema:
      *        $ref: '#/definitions/postWorkOrderInput'
      */
-    app.post('/work_orders', jsonParser, (req, res)=> {
+    app.post('/work_orders', jsonParser, (req, res) => {
         API.workOrders().createWorkOrder(req.body, req.who)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
@@ -69,7 +69,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *         schema:
      *           $ref: '#/definitions/postWorkOrderInput'
      */
-    app.put('/work_orders/:id', jsonParser, (req, res)=> {
+    app.put('/work_orders/:id', jsonParser, (req, res) => {
         res.send("Not yet implemented");
         // API.workOrders().getTravelRequests(req.body, req.who)
         //     .then(({data, code})=>{
@@ -102,12 +102,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/work_order_id'
      */
-    app.get('/work_orders/:id', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/:id', urlencodedParser, (req, res) => {
         API.workOrders().getWorkOrders(req.params.id, undefined, req.who)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
@@ -134,12 +134,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/account_no'
      */
-    app.get('/work_orders/customer/:account_no', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/customer/:account_no', urlencodedParser, (req, res) => {
         API.workOrders().getWorkOrders(req.params.account_no, 'relation_id', req.who, 0, 100)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
@@ -169,12 +169,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      - $ref: '#/parameters/offset'
      *      - $ref: '#/parameters/limit'
      */
-    app.get('/work_orders/status/:statusId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/status/:statusId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
         API.workOrders().getWorkOrders(req.params['statusId'], "status", req.who)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
@@ -204,12 +204,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      - $ref: '#/parameters/offset'
      *      - $ref: '#/parameters/limit'
      */
-    app.put('/work_orders/:id/status/:statusId', urlencodedParser, (req, res)=> {
+    app.put('/work_orders/:id/status/:statusId', urlencodedParser, (req, res) => {
         API.workOrders().changeWorkOrderStatus(req.params['id'], req.params['statusId'])
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
@@ -240,15 +240,58 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      - $ref: '#/parameters/offset'
      *      - $ref: '#/parameters/limit'
      */
-    app.get('/work_orders/user/:userId/status/:statusId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/user/:userId/status/:statusId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
         const service = API.workOrders().getWorkOrders({
             'assigned_to->[]': `{"id":${req.params['userId']}}`,
             'status': req.params['statusId']
         }, undefined, req.who, req.params.offset || 0, req.params.limit || 10);
 
-        return service.then(({data, code})=> {
+        return service.then(({data, code}) => {
             return res.status(code).send(data);
-        }).catch(({err, code})=> {
+        }).catch(({err, code}) => {
+            return res.status(code).send(err);
+        });
+    });
+
+
+    /**
+     * @swagger
+     * /work_orders/user/{user_id}/status/{statusId}/{typeId}/{offset}/{limit}:
+     *  get:
+     *    summary: "List Work Orders by User, by Status and by the work order type"
+     *    description: "Retrieves Work Order by specifying the user id and the status id. e.g Say we want to
+     *                    retrieve all fault(type) work_order that belongs to UserA that is currently Disconnected,
+     *                    this route a perfect fit
+     *                    for such."
+     *    tags: ['Work Orders']
+     *    produces:
+     *    - application/json
+     *    operationId: "getRequestByUserAndStatus"
+     *    responses:
+     *      '200':
+     *        description: 'Returns a list of Work Order Object'
+     *        schema:
+     *          type: array
+     *          items:
+     *            $ref: '#/definitions/getWorkOrderOutput'
+     *    parameters:
+     *      - $ref: '#/parameters/sessionId'
+     *      - $ref: '#/parameters/user_id'
+     *      - $ref: '#/parameters/statusId'
+     *      - $ref: '#/parameters/typeId'
+     *      - $ref: '#/parameters/offset'
+     *      - $ref: '#/parameters/limit'
+     */
+    app.get('/work_orders/user/:userId/status/:statusId/:typeId(\\d+)/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
+        const service = API.workOrders().getWorkOrders({
+            'assigned_to->[]': `{"id":${req.params['userId']}}`,
+            'status': req.params['statusId'],
+            'type_id': req.params['typeId'],
+        }, undefined, req.who, req.params.offset || 0, req.params.limit || 10);
+
+        return service.then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code}) => {
             return res.status(code).send(err);
         });
     });
@@ -276,17 +319,55 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/offset'
      *    - $ref: '#/parameters/limit'
      */
-    app.get('/work_orders/user/:userId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/user/:userId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
         // console.log(req.params);
         API.workOrders().getWorkOrders(`{"id":${req.params['userId']}}`, "assigned_to->[]", req.who,
             req.params.offset || 0, req.params.limit || 10)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
+
+
+    /**
+     * @swagger
+     * /work_orders/user/{user_id}/{typeId}/{offset}/{limit}:
+     *  get:
+     *    description: 'Retrieves a list of Work Order by a specific type that is assigned to a particular
+     *          User as specified by the userId path parameter'
+     *    summary: 'List Work Order by User and Type'
+     *    tags: ['Work Orders']
+     *    produces:
+     *    - application/json
+     *    operationId: "getWorkOrderByUser"
+     *    responses:
+     *      '200':
+     *        description: "A list of Work Order by user and type"
+     *        schema:
+     *          $ref: '#/definitions/getWorkOrderOutput'
+     *    parameters:
+     *    - $ref: '#/parameters/sessionId'
+     *    - $ref: '#/parameters/user_id'
+     *    - $ref: '#/parameters/typeId'
+     *    - $ref: '#/parameters/offset'
+     *    - $ref: '#/parameters/limit'
+     */
+    app.get('/work_orders/user/:userId/:typeId/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
+        console.log(req.params);
+        API.workOrders().getWorkOrders({
+            "assigned_to->[]": `{"id":${req.params['userId']}}`,
+            "type_id": req.params['typeId']
+        }, undefined, req.who, req.params.offset || 0, req.params.limit || 10).then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code}) => {
+            return res.status(code).send(err);
+        });
+    });
+
+
 
     /**
      * @swagger
@@ -313,12 +394,12 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/work_orders/user/:userId/:fromDate/:toDate/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/user/:userId/:fromDate/:toDate/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
         API.workOrders().getWorkOrdersBetweenDates(req.params['userId'], undefined, req.params['fromDate'],
             req.params['toDate'], req.params.offset || 0, req.params.limit || 10, req.who)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
-            }).catch(({err, code})=> {
+            }).catch(({err, code}) => {
             return res.status(code).send(err);
         });
     });
@@ -326,7 +407,44 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /work_orders/user/{user_id}/{statusId}/{fromDate}/{toDate}/{offset}/{limit}:
+     * /work_orders/user/{user_id}/{typeId}/{fromDate}/{toDate}/{offset}/{limit}:
+     *   get:
+     *     description: "Returns list of work orders of a user by type within a specific date range"
+     *     summary: "List Work Order of a User within a date range"
+     *     tags: ['Work Orders']
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: "getWorkOrdersBetweenDates"
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getWorkOrderOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/user_id'
+     *     - $ref: '#/parameters/typeId'
+     *     - $ref: '#/parameters/fromDate'
+     *     - $ref: '#/parameters/toDate'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/work_orders/user/:userId/:typeId/:fromDate/:toDate/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
+        API.workOrders().getWorkOrdersBetweenDates(req.params['userId'], undefined, req.params['fromDate'],
+            req.params['toDate'], req.params.offset || 0, req.params.limit || 10, req.who, req.params['typeId'])
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            }).catch(({err, code}) => {
+            return res.status(code).send(err);
+        });
+    });
+
+
+    /**
+     * @swagger
+     * /work_orders/user/{user_id}/{statusId}/{typeId}/{fromDate}/{toDate}/{offset}/{limit}:
      *   get:
      *     description: "Returns a Specific Work Order by the given ID"
      *     summary: "List Work Order of a User within a date range"
@@ -344,18 +462,19 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/user_id'
+     *     - $ref: '#/parameters/typeId'
      *     - $ref: '#/parameters/statusId'
      *     - $ref: '#/parameters/fromDate'
      *     - $ref: '#/parameters/toDate'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/work_orders/user/:userId/:status/:fromDate/:toDate/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/user/:userId/:status/:typeId/:fromDate/:toDate/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
         API.workOrders().getWorkOrdersBetweenDates(req.params['userId'], req.params['status'], req.params['fromDate'],
-            req.params['toDate'], req.params.offset || 0, req.params.limit || 10, req.who)
-            .then(({data, code})=> {
+            req.params['toDate'], req.params.offset || 0, req.params.limit || 10, req.who, req.params['typeId'])
+            .then(({data, code}) => {
                 return res.status(code).send(data);
-            }).catch(({err, code})=> {
+            }).catch(({err, code}) => {
             return res.status(code).send(err);
         });
     });
@@ -382,13 +501,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/work_orders/:id/notes/:offset?/:limit?', urlencodedParser, (req, res)=> {
+    app.get('/work_orders/:id/notes/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
         console.log("Fetch note");
         return API.notes().getNotes(req.params['id'], "work_orders", "relation_id", req.who, req.params.offset || 0, req.params.limit || 10)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
             })
-            .catch(({err, code})=> {
+            .catch(({err, code}) => {
                 return res.status(code).send(err);
             });
     });
@@ -414,7 +533,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/work_order_id'
      *    - $ref: '#/parameters/statusId'
      */
-    app.put('/work_orders/:id/status/:statusId', urlencodedParser, (req, res)=> {
+    app.put('/work_orders/:id/status/:statusId', urlencodedParser, (req, res) => {
         res.send("Not yet implemented");
     });
 
@@ -435,11 +554,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/work_order_id'
      */
-    app.delete('/work_orders/:id', (req, res)=> {
+    app.delete('/work_orders/:id', (req, res) => {
         API.workOrders().deleteWorkOrder("id", req.params.id, req.who)
-            .then(({data, code})=> {
+            .then(({data, code}) => {
                 return res.status(code).send(data);
-            }).catch(({err, code})=> {
+            }).catch(({err, code}) => {
             return res.status(code).send(err);
         });
     });

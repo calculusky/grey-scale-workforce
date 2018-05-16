@@ -11,6 +11,7 @@ const Log = require(`${__dirname}/../../../core/logger`);
  * @param API {API}
  * @param jsonParser
  * @param urlencodedParser
+ * @param multiPart
  */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
     app.use(['/users*', '/logout'], (req, res, next) => API.recognitions().auth(req, res, next));
