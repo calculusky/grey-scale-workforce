@@ -533,6 +533,7 @@ module.exports.processMakerError = function (err) {
             return obj;
         } else if (msg.includes("already exists")) {
             obj.msg = `The record ${msg.slice(msg.indexOf('"'), -1)}`;
+            if (msg.includes("USR_USERNAME")) obj.data = {"username": [obj.msg]};
             obj.code = "VALIDATION_ERROR";
             return obj;
         } else if (msg.includes("user is not assigned")) {
