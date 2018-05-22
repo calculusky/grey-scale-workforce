@@ -53,7 +53,7 @@ module.exports.decrypt = function (value, secret = "") {
 
 module.exports.getAssignees = function (assignedTo = [], db, cols = ["id", "username", "first_name", "last_name"]) {
     let filtered = assignedTo.filter(i => i.id);
-    return db.table("users").whereIn("id", filtered.map(({id}) => id)).select(cols);
+    return db.table("users").whereIn("id", filtered.map(({id}) => id)).where("deleted_at", null).select(cols);
 };
 
 module.exports.date = DateUtils;
