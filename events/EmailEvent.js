@@ -89,7 +89,7 @@ class EmailEvent extends EventEmitter {
 
             //Generate a one time token
             let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
-            this.context.persistence.set(token, true, 'EX', 180000);
+            this.context.persistence.set(token, true, 'EX', 3241999);
 
             this.email.send({
                 template: 'payment_plan',
