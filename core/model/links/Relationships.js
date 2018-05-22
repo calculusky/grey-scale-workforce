@@ -121,7 +121,8 @@ class Relationships {
             return Promise.resolve({records: [{}]});
         }
 
-        let resultSets = KNEX.select(['*']).from(foreignTable).where(parentKey, this.domainObject[foreignKey]);
+        let resultSets = KNEX.select(['*']).from(foreignTable)
+            .where(parentKey, this.domainObject[foreignKey]).where(`${foreignTable}.deleted_at`, null);
         // console.log(resultSets.toString());
 
         const executor = (resolve, reject)=> {
