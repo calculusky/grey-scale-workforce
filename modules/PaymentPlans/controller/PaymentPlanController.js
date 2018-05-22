@@ -117,6 +117,35 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
+     * /payment_plans/{id}/disconnection:
+     *   get:
+     *     summary: Retrieves a Single PaymentPlan and it related Disconnection
+     *     description: ''
+     *     tags: [PaymentPlans]
+     *     produces:
+     *     - application/json
+     *     operationId: getPaymentPlan
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getPaymentPlanOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/asset_id'
+     */
+    app.get('/payment_plans/:id/disconnection', urlencodedParser, (req, res) => {
+        return API.paymentPlans().getPaymentPlans(req.params['id'], undefined, req.who, 0, 10, {disconnection:true})
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
      * /payment_plans/{id}/approve:
      *   put:
      *     summary: Use to approve a payment plan

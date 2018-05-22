@@ -18,7 +18,7 @@ class PaymentPlanService extends ApiService {
     }
 
 
-    getPaymentPlans(value, by = "id", who = {}, offset = 0, limit = 10) {
+    getPaymentPlans(value, by = "id", who = {}, offset = 0, limit = 10, relation = {disconnection: true}) {
         const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
         const db = this.context.database;
         const executor = (resolve, reject) => {
@@ -26,22 +26,29 @@ class PaymentPlanService extends ApiService {
                 .then(result => {
                     let paymentPlans = result.records, processed = 0, rowLen = paymentPlans.length;
                     paymentPlans.forEach(async plan => {
-                        const task = [plan.disconnection(), plan.createdBy(), plan.approvedBy()];
+                        const task = [
+                            (relation.disconnection) ? plan.disconnection() : {records: []},
+                            plan.createdBy(),
+                            plan.approvedBy()
+                        ];
+
                         task.push(Utils.getAssignees(plan.assigned_to, db));
 
-                        const [disconnection, {records: [{id, username, first_name, last_name}]}, approvedBy, assignee]
-                            = await Promise.all(task);
+                        const [disconnection, createdBy, approvedBy, assignee] = await Promise.all(task);
 
                         const disc = disconnection.records.shift() || {};
+
+                        plan["disconnection"] = disc;
 
                         if (Object.keys(disc).length > 0) {
                             disc['work_order_id'] = Utils.humanizeUniqueSystemNumber(disc['work_order_id']);
                             const {records: [{customer_name, mobile_no, plain_address}]} = await disc.customer();
-                            plan['customer'] = {customer_name, mobile_no, plain_address};
+                            plan["disconnection"]['customer'] = {customer_name, mobile_no, plain_address};
                         }
-                        plan["disconnection"] = disc;
+
                         plan['assigned_to'] = assignee || [];
-                        plan['created_by'] = {id, username, first_name, last_name};
+                        plan['created_by'] = createdBy.records.map(i=>({id:i.id, username:i.username})).pop() || {};
+                        plan['approved_by'] = approvedBy.records.map(i=>({id:i.id, username:i.username})).pop() || {};
                         plan['for'] = plan.assigned_to.find(u => (u.id === who.sub)) || {};
                         if (++processed === rowLen) return resolve(Utils.buildResponse({data: {items: paymentPlans}}));
                     });
@@ -52,6 +59,41 @@ class PaymentPlanService extends ApiService {
         };
         return new Promise(executor);
     }
+
+    // getPaymentPlansWithDisconnection(value, by = "id", who = {}, offset = 0, limit = 10) {
+    //     const PaymentPlanMapper = MapperFactory.build(MapperFactory.PAYMENT_PLAN);
+    //     const db = this.context.database;
+    //     const executor = (resolve, reject) => {
+    //         PaymentPlanMapper.findDomainRecord({by, value}, offset, limit)
+    //             .then(result => {
+    //                 let paymentPlans = result.records, processed = 0, rowLen = paymentPlans.length;
+    //                 paymentPlans.forEach(async plan => {
+    //                     const task = [plan.disconnection(), plan.createdBy(), plan.approvedBy()];
+    //                     task.push(Utils.getAssignees(plan.assigned_to, db));
+    //
+    //                     const [disconnection, {records: [{id, username, first_name, last_name}]}, approvedBy, assignee]
+    //                         = await Promise.all(task);
+    //
+    //                     const disc = disconnection.records.shift() || {};
+    //
+    //                     if (Object.keys(disc).length > 0) {
+    //                         disc['work_order_id'] = Utils.humanizeUniqueSystemNumber(disc['work_order_id']);
+    //                         const {records: [{customer_name, mobile_no, plain_address}]} = await disc.customer();
+    //                         plan['customer'] = {customer_name, mobile_no, plain_address};
+    //                     }
+    //                     plan["disconnection"] = disc;
+    //                     plan['assigned_to'] = assignee || [];
+    //                     plan['created_by'] = {id, username, first_name, last_name};
+    //                     plan['for'] = plan.assigned_to.find(u => (u.id === who.sub)) || {};
+    //                     if (++processed === rowLen) return resolve(Utils.buildResponse({data: {items: paymentPlans}}));
+    //                 });
+    //             })
+    //             .catch(err => {
+    //                 return reject(Utils.buildResponse({status: "fail", data: err}, 500));
+    //             });
+    //     };
+    //     return new Promise(executor);
+    // }
 
     /**
      * Creates a payment plan
@@ -83,7 +125,7 @@ class PaymentPlanService extends ApiService {
         let planExist = await db.table(PaymentPlanMapper.tableName)
             .where('disc_order_id', paymentPlan.disc_order_id).where(function () {
                 this.where('approval_status', 0).orWhere('approval_status', 1);
-            }).select(['approval_status']);
+            }).where("deleted_at", null).select(['approval_status']);
 
         if (planExist.length) {
             const approvalStatus = planExist.shift()['approval_status'];
