@@ -28,7 +28,9 @@ class WorkflowService {
             "apiVersion": process.env.PM_API_VERSION
         }).login(this.username, this.password).then(token => {
             this.token = token;
-
+            setInterval(() => {
+                ProcessAPI.refreshToken(this.token['refresh_token']).then(tk => (this.token = tk))
+            }, 86400 * 1000);
         }).catch(console.error);
     }
 

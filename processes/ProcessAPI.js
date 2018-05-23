@@ -64,6 +64,31 @@ exports.login = (username, password, options = {grantType: 'password'}) => {
     return new Promise(executor);
 };
 
+
+exports.refreshToken = (refresh_token) => {
+    const payload = {
+        url: `${this.baseUrl}/${this.workSpace}/oauth2/token`,
+        json: {
+            client_id: this.clientId,
+            client_secret: this.clientSecret,
+            grant_type: "refresh_token",
+            refresh_token
+        }
+    };
+
+    const executor = (resolve, reject) => {
+        request.post(payload, (err, res, body) => {
+            if (err) return reject(err);//TODO we should actually handle the error here
+            //The api should persist the token for the user
+            if (res.statusCode !== 200) return reject(body);
+            else if (body.error) return reject(body.error);
+            console.log(body);
+            return resolve(body);
+        });
+    };
+    return new Promise(executor);
+};
+
 /**
  *
  * @param endPoint
