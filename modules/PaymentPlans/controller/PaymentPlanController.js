@@ -3,7 +3,6 @@
  */
 
 const Log = require(`${__dirname}/../../../core/logger`);
-const RecognitionService = require('../../Users/model/services/RecognitionService');
 
 /**
  *
