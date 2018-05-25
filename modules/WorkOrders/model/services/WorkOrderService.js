@@ -66,6 +66,38 @@ class WorkOrderService extends ApiService {
     }
 
     /**
+     *
+     * @param by
+     * @param value
+     * @param body
+     * @param who
+     * @param file
+     * @param API
+     * @returns {Promise<void>|*}
+     */
+    async updateWorkOrder(by, value, body = {}, who, file, API) {
+        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+
+        let model = await this.context.database.table("work_orders").where(by, value).select(['assigned_to']);
+
+        if (!model.length) return Utils.buildResponse({
+            status: "fail",
+            data: {message: "Work Order doesn't exist"}
+        }, 400);
+
+        model = new WorkOrder(model.shift());
+
+        const workOrder = new WorkOrder(body);
+
+        workOrder.assigned_to = Utils.updateAssignedTo(model.assigned_to, Utils.serializeAssignedTo(workOrder.assigned_to));
+
+        return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}).then(result => {
+            return Utils.buildResponse({data: result.shift()});
+        });
+    }
+
+    /**
      * Gets list of work orders by date. However this can be used to get work-orders regardless of supplying
      * the dates.
      * @param userId
@@ -124,6 +156,8 @@ class WorkOrderService extends ApiService {
         console.log('body', body);
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         let workOrder = new WorkOrder(body);
+
+        workOrder.assigned_to = Utils.serializeAssignedTo(workOrder.assigned_to);
 
         //enforce the validation
         let validator = new validate(workOrder, workOrder.rules(), workOrder.customErrorMessages());

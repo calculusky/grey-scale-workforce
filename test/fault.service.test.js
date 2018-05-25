@@ -28,3 +28,24 @@ test("Test that createFault is resolves with a value", () => {
     };
     return expect(API.faults().createFault(fault, {}, [], API)).resolves.toBeDefined()
 });
+
+
+test("Test that we can update faults", () => {
+    const fault = {
+        category_id: 1,
+        related_to: "assets",
+        relation_id: "1",
+        status: 1,
+        summary: "Creeping",
+        group_id: 1,
+        priority: 1,
+        assigned_to: '["2", "3"]'
+    };
+
+    return expect(API.faults().updateFault("id", 1, fault, {}, [], API)).resolves.toEqual({});
+});
+
+// test("toAssignedTo", ()=>{
+//    const Utils = require('../core/Utility/Utils');
+//    return expect(Utils.toAssignedTo('["1"]')).toEqual([{"id":1}]);
+// });

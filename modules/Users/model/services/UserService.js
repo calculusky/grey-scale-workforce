@@ -206,7 +206,7 @@ class UserService extends ApiService {
                 if (role_id) {
                     let roles = await user.roles(), role = roles.records.shift();
                     if (role) API.roles().updateUserRole(user.id, role.id, {role_id}, who, API).catch(console.error);
-                    else API.roles().addUserToRole(role_id, user.id).catch(this.console.error);
+                    else API.roles().addUserToRole(role_id, user.id).catch(console.error);
                 }
                 if (group_id) {
                     let userGroups = await user.userGroups(), group = userGroups.records.pop();

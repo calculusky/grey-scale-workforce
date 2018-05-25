@@ -30,13 +30,12 @@ class FaultService extends ApiService {
      * @param limit
      * @returns {Promise}
      */
-    getFaults(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    async getFaults(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
 
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
-        const executor = (resolve, reject) => {
+        const faults = await FaultMapper.findDomainRecord({by, value}, offset, limit);
 
-        };
-        return new Promise(executor)
+        return Utils.buildResponse({data: {items: faults}});
     }
 
     /**
@@ -50,6 +49,8 @@ class FaultService extends ApiService {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const redis = this.context.persistence;
         const fault = new Fault(body);
+
+        fault.assigned_to = Utils.serializeAssignedTo(fault.assigned_to);
 
         ApiService.insertPermissionRights(fault, who);
 
@@ -78,6 +79,35 @@ class FaultService extends ApiService {
             API.attachments().createAttachment({module: "faults", relation_id: record.id}, who, files, API).then();
         }
         return Utils.buildResponse({data: record});
+    }
+
+    /**
+     *
+     * @param by
+     * @param value
+     * @param body
+     * @param who
+     * @param file
+     * @param API {API}
+     * @returns {Promise<void>|*}
+     */
+    async updateFault(by, value, body = {}, who, file = [], API) {
+        const Fault = DomainFactory.build(DomainFactory.FAULT);
+        const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
+
+        let model = await this.context.database.table("faults").where(by, value).select(['assigned_to']);
+
+        if (!model.length) return Utils.buildResponse({status: "fail", data: {message: "Fault doesn't exist"}}, 400);
+
+        model = new Fault(model.shift());
+
+        const fault = new Fault(body);
+
+        fault.assigned_to = Utils.updateAssignedTo(model.assigned_to, Utils.serializeAssignedTo(fault.assigned_to));
+
+        return FaultMapper.updateDomainRecord({value, domain: fault}).then(result => {
+            return Utils.buildResponse({data: result.shift()});
+        });
     }
 
     /**

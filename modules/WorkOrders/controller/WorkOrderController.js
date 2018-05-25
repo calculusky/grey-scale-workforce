@@ -8,7 +8,7 @@
  * @param jsonParser
  * @param urlencodedParser
  */
-module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
+module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
     app.use('/work_orders*', (req, res, next) => API.recognitions().auth(req, res, next));
 
     /**
@@ -69,15 +69,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *         schema:
      *           $ref: '#/definitions/postWorkOrderInput'
      */
-    app.put('/work_orders/:id', jsonParser, (req, res) => {
-        res.send("Not yet implemented");
-        // API.workOrders().getTravelRequests(req.body, req.who)
-        //     .then(({data, code})=>{
-        //         return res.status(code).send(data);
-        //     })
-        //     .catch(({err, code})=>{
-        //         return res.status(code).send(err);
-        //     });
+    app.put('/work_orders/:id', multiPart.array("files"), (req, res) => {
+        API.workOrders().updateWorkOrder('id', req.params['id'], req.body, req.who, req.files, API)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
+                return res.status(code).send(err);
+            });
     });
 
 
@@ -366,7 +365,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             return res.status(code).send(err);
         });
     });
-
 
 
     /**

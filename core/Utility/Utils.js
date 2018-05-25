@@ -56,6 +56,43 @@ module.exports.getAssignees = function (assignedTo = [], db, cols = ["id", "user
     return db.table("users").whereIn("id", filtered.map(({id}) => id)).where("deleted_at", null).select(cols);
 };
 
+module.exports.serializeAssignedTo = function (assignedTo = "[]") {
+    let assigned_to = [];
+    try {
+        assignedTo = JSON.parse(assignedTo);
+        if (Array.isArray(assignedTo)) {
+            assigned_to = assignedTo.map(t => {
+                if (!Number.isNaN(t)) {
+                    return {id: parseInt(t), created_at: this.date.dateToMysql()};
+                }
+                return t;
+            });
+        }
+        return JSON.stringify(assigned_to);
+    } catch (e) {
+        console.log(e);
+    }
+    return assigned_to;
+};
+
+module.exports.updateAssignedTo = function (oldAssignee = [], newAssignee = []) {
+    if (!Array.isArray(newAssignee)) newAssignee = JSON.parse(newAssignee);
+    const filtered = [];
+    for (let i = 0, len = newAssignee.length; i < len; i++) {
+        let found = false, newItem = newAssignee[i];
+        for (let j = 0; j < oldAssignee.length; j++) {
+            console.log(newItem.id, oldAssignee[j]['id']);
+            if (parseInt(newItem.id) === oldAssignee[j]['id']) {
+                found = true;
+                filtered.push(oldAssignee[j]);
+                break;
+            }
+        }
+        if (!found) filtered.push(newItem);
+    }
+    return JSON.stringify(filtered);
+};
+
 module.exports.date = DateUtils;
 
 module.exports.mapper = function () {
