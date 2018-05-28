@@ -102,8 +102,6 @@ class FaultService extends ApiService {
 
         model = new Fault(model.shift());
 
-        console.log(JSON.stringify(model));
-
         const fault = new Fault(body);
 
         if (fault.assigned_to)
