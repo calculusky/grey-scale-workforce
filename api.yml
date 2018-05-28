@@ -24,14 +24,14 @@ parameters:
     name: offset
     description: "The starting position to query from or the amount of records(rows) to skip. Default is 0."
     in: path
-    required: true
+    required: false
     type: integer
 
   limit:
     name: limit
     description: "The total amount of records to retrieve. Default is 10."
     in: path
-    required: true
+    required: false
     type: integer
 
   keyword:

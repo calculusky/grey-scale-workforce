@@ -97,13 +97,17 @@ class FaultService extends ApiService {
 
         let model = await this.context.database.table("faults").where(by, value).select(['assigned_to']);
 
+
         if (!model.length) return Utils.buildResponse({status: "fail", data: {message: "Fault doesn't exist"}}, 400);
 
         model = new Fault(model.shift());
 
+        console.log(JSON.stringify(model));
+
         const fault = new Fault(body);
 
-        fault.assigned_to = Utils.updateAssignedTo(model.assigned_to, Utils.serializeAssignedTo(fault.assigned_to));
+        if (fault.assigned_to)
+            fault.assigned_to = Utils.updateAssigned(model.assigned_to, Utils.serializeAssignedTo(fault.assigned_to));
 
         return FaultMapper.updateDomainRecord({value, domain: fault}).then(result => {
             return Utils.buildResponse({data: result.shift()});

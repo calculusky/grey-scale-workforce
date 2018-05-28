@@ -75,7 +75,7 @@ module.exports.serializeAssignedTo = function (assignedTo = "[]") {
     return assigned_to;
 };
 
-module.exports.updateAssignedTo = function (oldAssignee = [], newAssignee = []) {
+module.exports.updateAssigned = function (oldAssignee = [], newAssignee = []) {
     if (!Array.isArray(newAssignee)) newAssignee = JSON.parse(newAssignee);
     const filtered = [];
     for (let i = 0, len = newAssignee.length; i < len; i++) {

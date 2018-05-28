@@ -90,7 +90,8 @@ class WorkOrderService extends ApiService {
 
         const workOrder = new WorkOrder(body);
 
-        workOrder.assigned_to = Utils.updateAssignedTo(model.assigned_to, Utils.serializeAssignedTo(workOrder.assigned_to));
+        if (workOrder.assigned_to)
+            workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, Utils.serializeAssignedTo(workOrder.assigned_to));
 
         return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}).then(result => {
             return Utils.buildResponse({data: result.shift()});
