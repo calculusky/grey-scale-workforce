@@ -1,8 +1,7 @@
 {
   "id": "id",
-  "material_id": "material_id",
+  "materials": "materials",
   "work_order_id": "work_order_id",
-  "quantity": "quantity",
   "status": "status",
   "requested_by": "requested_by",
   "description": "description",

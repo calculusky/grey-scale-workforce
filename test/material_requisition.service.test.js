@@ -11,5 +11,14 @@ API = new API(new Context(config));
 
 
 it("Should fail when passed empty data", () => {
-    return expect(API.materialRequisition().createMaterialRequisition({}, {})).rejects.toEqual({});
+    return expect(API.materialRequisition().createMaterialRequisition({}, {})).rejects.toBeDefined();
+});
+
+
+test("That materialRequisition is created", () => {
+    return expect(API.materialRequisition().createMaterialRequisition({
+        materials: {"1": 20},
+        requested_by: 1,
+        status: 1
+    }, {})).resolves.toBeDefined();
 });

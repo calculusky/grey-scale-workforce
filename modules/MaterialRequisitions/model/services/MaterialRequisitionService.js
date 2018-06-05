@@ -41,7 +41,7 @@ class MaterialRequisitionService extends ApiService {
         //Get Mapper
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);
         return MaterialRequisitionMapper.createDomainRecord(materialReq).then(materialRequisition => {
-            if (!materialRequisition) return Promise.reject();
+            if (!materialRequisition) return Promise.reject(false);
             return Utils.buildResponse({data: materialRequisition});
         });
     }
