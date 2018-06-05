@@ -55,6 +55,14 @@ class Fault extends DomainObject {
     }
 
     /**
+     *
+     * @returns {*}
+     */
+    relatedTo() {
+        return this.relations().morphTo('related_to', 'relation_id');
+    }
+
+    /**
      * Returns the User that owns the fault
      * @returns {Promise}
      */

@@ -1,0 +1,14 @@
+{
+  "id": "id",
+  "material_id": "material_id",
+  "quantity": "quantity",
+  "type": "type",
+  "who": "who",
+  "assigned_to": "assigned_to",
+  "created_by": "created_by",
+  "group_id": "group_id",
+  "deleted_at": "deleted_at",
+  "deleted_by": "deleted_by",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}

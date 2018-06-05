@@ -1,0 +1,14 @@
+{
+  "id": "id",
+  "name": "name",
+  "unit_of_measurement": "unit_of_measurement",
+  "unit_price": "unit_price",
+  "total_quantity": "total_quantity",
+  "description": "description",
+  "assigned_to": "assigned_to",
+  "created_by": "created_by",
+  "group_id": "group_id",
+  "deleted_at": "deleted_at",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}

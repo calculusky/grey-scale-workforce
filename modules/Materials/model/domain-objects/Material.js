@@ -5,7 +5,7 @@ const map = require('./map.json');
 
 /**
  * @author Paul Okeke
- * Created by paulex on 8/22/17.
+ * Created by paulex on 06/02/18.
  * @name Asset
  */
 class Asset extends DomainObject {
@@ -17,9 +17,8 @@ class Asset extends DomainObject {
 
     required() {
         return [
-            'asset_name',
-            'asset_type',
-            'serial_no'
+            'name',
+            'unit_of_measurement'
         ];
     }
 
@@ -39,7 +38,8 @@ class Asset extends DomainObject {
 
     rules() {
         return {
-            asset_name: 'string|required'
+            name: 'string|required',
+            unit_of_measurement: "numeric|required"
         };
     }
 

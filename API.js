@@ -84,7 +84,35 @@ class API {
      * @returns {WorkOrderService|*}
      */
     workOrders() {
-        return API._(this)['services']['WorkOrderService']
+        return API._(this)['services']['WorkOrderService'];
+    }
+
+    /**
+     * @returns {MaterialLocationService|*}
+     */
+    materialLocations() {
+        return API._(this)['services']['MaterialLocationService'];
+    }
+
+    /**
+     * @returns {MaterialService|*}
+     */
+    materials() {
+        return API._(this)['services']['MaterialService'];
+    }
+
+    /**
+     * @returns {MaterialRequisitionService|*}
+     */
+    materialRequisition() {
+        return API._(this)['services']['MaterialRequisitionService'];
+    }
+
+    /**
+     * @returns {StockMovementService|*}
+     */
+    stockMovements() {
+        return API._(this)['services']['StockMovementService'];
     }
 
     /**

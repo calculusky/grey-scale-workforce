@@ -5,10 +5,10 @@ const map = require('./map.json');
 
 /**
  * @author Paul Okeke
- * Created by paulex on 8/22/17.
- * @name Asset
+ * Created by paulex on 6/05/18.
+ * @name StockMovement
  */
-class Asset extends DomainObject {
+class StockMovement extends DomainObject {
 
     constructor(data) {
         super(data, map);
@@ -16,16 +16,11 @@ class Asset extends DomainObject {
     }
 
     required() {
-        return [
-            'asset_name',
-            'asset_type',
-            'serial_no'
-        ];
+        return [];
     }
 
     guard() {
         return [
-            'api_instance_id',
             'id'
         ];
     }
@@ -39,7 +34,11 @@ class Asset extends DomainObject {
 
     rules() {
         return {
-            asset_name: 'string|required'
+            material_id: 'numeric|required',
+            group_id: 'numeric|required',
+            quantity: 'numeric|required',
+            type: 'string|required',
+            who: 'string|required',
         };
     }
 
@@ -50,4 +49,4 @@ class Asset extends DomainObject {
 }
 
 //noinspection JSUnresolvedVariable
-module.exports = Asset;
+module.exports = StockMovement;

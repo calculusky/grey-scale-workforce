@@ -454,6 +454,23 @@ module.exports.numericToInteger = function (body, ...keys) {
     }
 };
 
+module.exports.upsert = function (db, table, data, update) {
+    if (!update) update = data;
+    let insertSQL = db.insert(data).into(table).toString();
+    let updateSQL = db.table(table).update(update).toString().replace(/^update .* set /i, '');
+    console.log(db.raw(insertSQL + ' on duplicate key update ' + updateSQL).toString());
+    return db.raw(insertSQL + ' on duplicate key update ' + updateSQL);
+};
+
+module.exports.upsertIncrement = function (db, table, data, cols = []) {
+    let insertSQL = db.insert(data).into(table).toString();
+    let updateSQL = cols.map(f => `${f}=${f}+${data[f]}`).join(",");
+
+    updateSQL += `, updated_at='${this.date.dateToMysql()}'`;
+    console.log(db.raw(insertSQL + ' on duplicate key update ' + updateSQL).toString());
+    return db.raw(insertSQL + ' on duplicate key update ' + updateSQL);
+};
+
 /**
  *
  * @param context {Context}

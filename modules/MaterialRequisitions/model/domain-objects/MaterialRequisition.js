@@ -17,15 +17,13 @@ class Asset extends DomainObject {
 
     required() {
         return [
-            'asset_name',
-            'asset_type',
-            'serial_no'
+            'material_id',
+            'work_order_id'
         ];
     }
 
     guard() {
         return [
-            'api_instance_id',
             'id'
         ];
     }
@@ -39,14 +37,13 @@ class Asset extends DomainObject {
 
     rules() {
         return {
-            asset_name: 'string|required'
+            material_id: 'numeric|required',
+            work_order_id: 'numeric|required',
+            quantity: 'numeric|required',
+            requested_by: 'numeric|required'
         };
     }
 
-
-    user() {
-        return this.relations().belongsTo("User", "assigned_to");
-    }
 }
 
 //noinspection JSUnresolvedVariable

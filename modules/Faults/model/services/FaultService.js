@@ -30,11 +30,23 @@ class FaultService extends ApiService {
      * @param limit
      * @returns {Promise}
      */
-    async getFaults(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
-
+    async getFaults(value, by = "id", who = {}, offset = 0, limit = 10) {
+        const db = this.context.database;
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
-        const faults = await FaultMapper.findDomainRecord({by, value}, offset, limit);
 
+        let [faults, groups] = await Promise.all([
+            FaultMapper.findDomainRecord({by, value}, offset, limit),
+            Utils.getFromPersistent(this.context, "groups", true)
+        ]);
+
+        faults = faults.records;
+
+        for (let fault of faults) {
+            const [relatedTo, assignedTo] = await Promise.all([fault.relatedTo(), Utils.getAssignees(fault.assigned_to, db)]);
+            fault['group'] = groups[fault['group_id']];
+            fault[fault.related_to] = relatedTo.records.shift() || {};
+            fault['assigned_to'] = assignedTo;
+        }
         return Utils.buildResponse({data: {items: faults}});
     }
 

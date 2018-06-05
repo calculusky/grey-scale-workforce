@@ -24,40 +24,7 @@ class MapperFactory {
      * @returns {UserMapper|AssetMapper}
      */
     static build(mapperName = "", path = "", context = null) {
-        switch (mapperName) {
-            case MapperFactory.USER:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.WORK_ORDER:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.FAULT:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.ASSET:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.NOTE:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.ATTACHMENT:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.CUSTOMER:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.METER_READING:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.NOTIFICATION:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.UPLOAD:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.DISCONNECTION_ORDER:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.PAYMENT:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.PAYMENT_PLAN:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.ACTIVATION:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.GROUP:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-            case MapperFactory.ROLE:
-                return Utils.loadMapper(mapperStore, path, mapperName, context);
-        }
+        return Utils.loadMapper(mapperStore, path, mapperName, context);
     }
 }
 
@@ -77,6 +44,10 @@ MapperFactory.PAYMENT_PLAN = "PaymentPlan";
 MapperFactory.ACTIVATION = "Activation";
 MapperFactory.GROUP = "Group";
 MapperFactory.ROLE = "Role";
+MapperFactory.MATERIAL = "Material";
+MapperFactory.MATERIAL_LOCATION = "MaterialLocation";
+MapperFactory.MATERIAL_REQUISITION = "MaterialRequisition";
+MapperFactory.STOCK_MOVEMENT = "StockMovement";
 
 
 module.exports = MapperFactory;

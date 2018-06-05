@@ -18,7 +18,7 @@ class DomainFactory {
      * @param options
      */
     static build(domainName = "", ...options) {
-        try{
+        try {
             switch (domainName) {
                 case DomainFactory.USER:
                     return require('./Users/model/domain-objects/User');
@@ -52,9 +52,17 @@ class DomainFactory {
                     return require('./Groups/model/domain-objects/Group');
                 case DomainFactory.ROLE:
                     return require('./Roles/model/domain-objects/Role');
+                case DomainFactory.MATERIAL:
+                    return require('./Materials/model/domain-objects/Material');
+                case DomainFactory.MATERIAL_REQUISITION:
+                    return require('./MaterialRequisitions/model/domain-objects/MaterialRequisition');
+                case DomainFactory.MATERIAL_LOCATION:
+                    return require('./MaterialLocations/model/domain-objects/MaterialLocation');
+                case DomainFactory.STOCK_MOVEMENT:
+                    return require('./StockMovements/model/domain-objects/StockMovement');
             }
-        }catch (e){
-            if(e.code==="MODULE_NOT_FOUND"){
+        } catch (e) {
+            if (e.code === "MODULE_NOT_FOUND") {
                 return null;
             }
         }
@@ -79,5 +87,9 @@ DomainFactory.PAYMENT_PLAN = "PaymentPlan";
 DomainFactory.ACTIVATION = "Activation";
 DomainFactory.GROUP = "Group";
 DomainFactory.ROLE = "Role";
+DomainFactory.MATERIAL = "Material";
+DomainFactory.MATERIAL_REQUISITION = "MaterialRequisition";
+DomainFactory.MATERIAL_LOCATION = "MaterialLocation";
+DomainFactory.STOCK_MOVEMENT = "StockMovement";
 
 module.exports = DomainFactory;

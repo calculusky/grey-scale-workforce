@@ -39,6 +39,10 @@
     "PaymentPlan:../../modules/PaymentPlans/model/mappers/PaymentPlanMapper",
     "Activation:../../modules/Activations/model/mappers/ActivationMapper",
     "Group:../../modules/Groups/model/mappers/GroupMapper",
-    "Role:../../modules/Roles/model/mappers/RoleMapper"
+    "Role:../../modules/Roles/model/mappers/RoleMapper",
+    "Material:../../modules/Materials/model/mappers/MaterialMapper",
+    "MaterialRequisition:../../modules/MaterialRequisitions/model/mappers/MaterialRequisitionMapper",
+    "MaterialLocation:../../modules/MaterialLocations/model/mappers/MaterialLocationMapper",
+    "StockMovement:../../modules/StockMovements/model/mappers/StockMovementMapper"
   ]
 }
