@@ -75,6 +75,8 @@ class PaymentPlanService extends ApiService {
         //Because of the issue with form data that sends numeric-strings
         Utils.numericToInteger(paymentPlan, 'waive_percentage', 'amount', 'disc_order_id', 'balance');
 
+        paymentPlan.assigned_to = Utils.serializeAssignedTo(paymentPlan.assigned_to);
+
         //enforce the validation
         let validator = new validate(paymentPlan, paymentPlan.rules(), paymentPlan.customErrorMessages());
 

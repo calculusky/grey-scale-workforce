@@ -50,6 +50,8 @@ class UserService extends ApiService {
         let user = new User(body);
         user.firebase_token = '[]';
 
+        user.assigned_to = Utils.serializeAssignedTo(user.assigned_to);
+
         //enforce the validation
         let validator = new validate(user, user.rules(), user.customErrorMessages());
 

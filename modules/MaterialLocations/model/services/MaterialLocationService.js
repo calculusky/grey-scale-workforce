@@ -42,6 +42,8 @@ class MaterialLocationService extends ApiService {
         const MaterialLocation = DomainFactory.build(DomainFactory.MATERIAL_LOCATION);
         let materialLocation = new MaterialLocation(body);
 
+        materialLocation.assigned_to = Utils.serializeAssignedTo(materialLocation.assigned_to);
+
         let validator = new validate(materialLocation, materialLocation.rules(), materialLocation.customErrorMessages());
 
         ApiService.insertPermissionRights(materialLocation, who);

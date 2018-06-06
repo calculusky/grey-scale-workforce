@@ -24,6 +24,7 @@ class MaterialRequisitionService extends ApiService {
     }
 
     /**
+     * Matrimony - Wale ft Usher
      *
      * @param body
      * @param who
@@ -31,6 +32,8 @@ class MaterialRequisitionService extends ApiService {
     createMaterialRequisition(body = {}, who = {}) {
         const MaterialRequisition = DomainFactory.build(DomainFactory.MATERIAL_REQUISITION);
         let materialReq = new MaterialRequisition(body);
+
+        materialReq.assigned_to = Utils.serializeAssignedTo(materialReq.assigned_to);
 
         let validator = new validate(materialReq, materialReq.rules(), materialReq.customErrorMessages());
 
