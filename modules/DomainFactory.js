@@ -60,6 +60,8 @@ class DomainFactory {
                     return require('./MaterialLocations/model/domain-objects/MaterialLocation');
                 case DomainFactory.STOCK_MOVEMENT:
                     return require('./StockMovements/model/domain-objects/StockMovement');
+                case DomainFactory.MATERIAL_UTILIZATION:
+                    return require('./MaterialUtilizations/model/domain-objects/MaterialUtilization');
             }
         } catch (e) {
             if (e.code === "MODULE_NOT_FOUND") {
@@ -91,5 +93,6 @@ DomainFactory.MATERIAL = "Material";
 DomainFactory.MATERIAL_REQUISITION = "MaterialRequisition";
 DomainFactory.MATERIAL_LOCATION = "MaterialLocation";
 DomainFactory.STOCK_MOVEMENT = "StockMovement";
+DomainFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
 
 module.exports = DomainFactory;

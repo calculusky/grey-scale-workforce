@@ -1,0 +1,14 @@
+{
+  "id": "id",
+  "work_order_id": "work_order_id",
+  "material_id": "material_id",
+  "quantity": "quantity",
+  "location": "location",
+  "description": "description",
+  "assigned_to": "assigned_to",
+  "created_by": "created_by",
+  "group_id": "group_id",
+  "deleted_at": "deleted_at",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}

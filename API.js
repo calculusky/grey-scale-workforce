@@ -104,8 +104,15 @@ class API {
     /**
      * @returns {MaterialRequisitionService|*}
      */
-    materialRequisition() {
+    materialRequisitions() {
         return API._(this)['services']['MaterialRequisitionService'];
+    }
+
+    /**
+     * @returns {MaterialUtilizationService|*}
+     */
+    materialUtilizations() {
+        return API._(this)['services']['MaterialUtilizationService'];
     }
 
     /**

@@ -52,8 +52,14 @@ module.exports.decrypt = function (value, secret = "") {
 
 
 module.exports.getAssignees = function (assignedTo = [], db, cols = ["id", "username", "first_name", "last_name"]) {
+    if (assignedTo === null) assignedTo = [];
     let filtered = assignedTo.filter(i => i.id);
     return db.table("users").whereIn("id", filtered.map(({id}) => id)).where("deleted_at", null).select(cols);
+};
+
+module.exports.getModels = function (db, table, argsObj = [], cols = [], key = "id") {
+    let filtered = argsObj.filter(i => i[key]);
+    return db.table(table).whereIn(key, filtered.map(({id}) => id)).where("deleted_at", null).select(cols);
 };
 
 module.exports.serializeAssignedTo = function (assignedTo = "[]") {

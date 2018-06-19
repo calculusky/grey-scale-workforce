@@ -75,7 +75,9 @@ class MaterialLocationService extends ApiService {
         const MaterialLocation = DomainFactory.build(DomainFactory.MATERIAL_LOCATION);
         const db = this.context.database;
 
-        if (!Array.isArray(materialLocations)) return Promise.reject(Utils.buildResponse({status: "fail"}));
+        if (!Array.isArray(materialLocations)) return Promise.reject(Utils.buildResponse({
+            status: "fail", msg: "Expected an array of material locations."
+        }));
 
         materialLocations = materialLocations.map(loc => (new MaterialLocation(loc)));
 

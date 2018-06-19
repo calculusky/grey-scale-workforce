@@ -5,10 +5,10 @@ const map = require('./map.json');
 
 /**
  * @author Paul Okeke
- * Created by paulex on 06/02/18.
- * @name Material
+ * Created by paulex on 06/17/18.
+ * @name MaterialUtilization
  */
-class Material extends DomainObject {
+class MaterialUtilization extends DomainObject {
 
     constructor(data) {
         super(data, map);
@@ -17,14 +17,12 @@ class Material extends DomainObject {
 
     required() {
         return [
-            'name',
-            'unit_of_measurement'
+            'material_id'
         ];
     }
 
     guard() {
         return [
-            'api_instance_id',
             'id'
         ];
     }
@@ -38,16 +36,17 @@ class Material extends DomainObject {
 
     rules() {
         return {
-            name: 'string|required',
-            unit_of_measurement: "numeric|required"
+            material_id: 'numeric|required',
+            work_order_id: 'numeric|required',
+            quantity: 'numeric|required',
+            description: 'string|required'
         };
     }
 
-
-    user() {
-        return this.relations().belongsTo("User", "assigned_to");
+    materialModel() {
+        return this.relations().belongsTo("Material", "material_id");
     }
 }
 
 //noinspection JSUnresolvedVariable
-module.exports = Material;
+module.exports = MaterialUtilization;

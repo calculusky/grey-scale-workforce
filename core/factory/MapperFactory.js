@@ -48,6 +48,7 @@ MapperFactory.MATERIAL = "Material";
 MapperFactory.MATERIAL_LOCATION = "MaterialLocation";
 MapperFactory.MATERIAL_REQUISITION = "MaterialRequisition";
 MapperFactory.STOCK_MOVEMENT = "StockMovement";
+MapperFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
 
 
 module.exports = MapperFactory;

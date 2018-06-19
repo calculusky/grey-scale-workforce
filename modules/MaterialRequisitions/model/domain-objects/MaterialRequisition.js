@@ -42,6 +42,17 @@ class MaterialRequisition extends DomainObject {
         };
     }
 
+    requestedBy() {
+        return this.relations().belongsTo("User", "requested_by", ['id', 'username', 'first_name', 'last_name']);
+    }
+
+    approvedBy() {
+        return this.relations().belongsTo("User", "approved_by", ['id', 'username', 'first_name', 'last_name']);
+    }
+
+    workOrder() {
+        return this.relations().belongsTo("WorkOrder", "work_order_id");
+    }
 }
 
 //noinspection JSUnresolvedVariable

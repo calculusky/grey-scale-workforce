@@ -23,14 +23,14 @@ parameters:
   offset:
     name: offset
     description: "The starting position to query from or the amount of records(rows) to skip. Default is 0."
-    in: path
+    in: query
     required: false
     type: integer
 
   limit:
     name: limit
     description: "The total amount of records to retrieve. Default is 10."
-    in: path
+    in: query
     required: false
     type: integer
 
@@ -127,19 +127,19 @@ parameters:
     description: The payment plan id
 
   fromDate:
-    name: fromDate
+    name: from_date
     type: string
     format: date
     required: true
-    in: path
+    in: query
     description: The date to start from
 
   toDate:
-    name: toDate
+    name: to_date
     type: string
     format: date
     required: true
-    in: path
+    in: query
     description: The date to end
 
   report_time:

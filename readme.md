@@ -12,9 +12,9 @@ The API currently supports the below functionality:
 
 #### Prerequisites
 
-* NPM/NodeJs
-* MySQL
-* Redis
+* NPM/NodeJs (Version. 9.2.0)
+* MySQL (Version. 5.7.20~)
+* Redis (Version. 4.0.2)
 * Process Maker Configuration
 
 **NOTE:** You most likely will need to have the web

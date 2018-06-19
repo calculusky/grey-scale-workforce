@@ -25,7 +25,6 @@ class WorkOrderService extends ApiService {
             '2': {id: 2, name: 'Re-connections'},
             '3': {id: 3, name: 'Faults'}
         };
-
     }
 
     /**
@@ -37,7 +36,7 @@ class WorkOrderService extends ApiService {
      * @param limit
      * @returns {Promise}
      */
-    async getWorkOrders(value = '?', by = "id", who = {}, offset, limit) {
+    async getWorkOrder(value = '?', by = "id", who = {}, offset, limit) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         //check if it is a work order number that is supplied
         if (by === 'id' && (typeof value !== 'object' && Utils.isWorkOrderNo(value))) {
@@ -101,18 +100,19 @@ class WorkOrderService extends ApiService {
     /**
      * Gets list of work orders by date. However this can be used to get work-orders regardless of supplying
      * the dates.
-     * @param userId
-     * @param status
-     * @param fromDate
-     * @param toDate
+     * @param query
      * @param who
-     * @param offset
-     * @param limit
-     * @param type
      */
-    async getWorkOrdersBetweenDates(userId, status, fromDate, toDate, offset = 0, limit = 10, who = {}, type = 0) {
-        offset = parseInt(offset);
-        limit = parseInt(limit);
+    async getWorkOrders(query, who = {}) {
+        const offset = parseInt(query.offset || "0"),
+            limit = parseInt(query.limit || "10"),
+            assignedTo = query['assigned_to'],
+            createdBy = query['created_by'],
+            fromDate = query['from_date'],
+            toDate = query['to_date'],
+            type = query['type_id'],
+            status = query['status'];
+
 
         //Prepare the static data from persistence storage
         let [groups, workTypes] = await Promise.all([
@@ -122,14 +122,16 @@ class WorkOrderService extends ApiService {
 
         let resultSet = this.context.database.select(['*']).from("work_orders");
         if (fromDate && toDate) resultSet = resultSet.whereBetween('start_date', [fromDate, toDate]);
-        if (userId) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${userId}}')`);
+
+        if (assignedTo) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assignedTo}}')`);
         if (status) resultSet = resultSet.where('status', status);
         if (type) resultSet = resultSet.where("type_id", type);
-        resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
+        if (createdBy) resultSet = resultSet.where("created_by", createdBy);
 
+        resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
+        console.log(resultSet.toString());
         const records = await resultSet.catch(err => {
-            const error = Utils.buildResponse(Utils.getMysqlError(err), 400);
-            return Promise.reject(error);
+            return Promise.reject(Utils.buildResponse(Utils.getMysqlError(err), 400));
         });
 
         let workOrders = [];

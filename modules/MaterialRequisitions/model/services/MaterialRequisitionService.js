@@ -17,9 +17,67 @@ class MaterialRequisitionService extends ApiService {
         MapperFactory = this.context.modelMappers;
     }
 
-    async getMaterialRequisitions(value, by = "id", who = {}, offset = 0, limit = 10) {
+    /**
+     *
+     * @param value
+     * @param by
+     * @param who
+     * @param offset
+     * @param limit
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getMaterialRequisition(value, by = "id", who = {}, offset = 0, limit = 10) {
+        const db = this.context.database;
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);
-        const materialRequisitions = await MaterialRequisitionMapper.findDomainRecord({by, value}, offset, limit);
+        const results = await MaterialRequisitionMapper.findDomainRecord({by, value}, offset, limit);
+
+        const materialRequisitions = await __doMaterialRequisitionList(db, results.records);
+
+        return Utils.buildResponse({data: {items: materialRequisitions}});
+    }
+
+
+    /**
+     *
+     * @param query
+     * @param who
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getMaterialRequisitions(query, who = {}) {
+        const offset = parseInt(query.offset || "0"),
+            limit = parseInt(query.limit || "10"),
+            status = query.status,
+            workOrderId = query['work_order_id'],
+            assignedTo = query['assigned_to'],
+            requestedBy = query['requested_by'];
+
+        const db = this.context.database;
+        let materialRequisitions = [];
+
+        let resultSet = this.context.database.select(['*']).from("material_requisitions");
+        if (assignedTo) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assignedTo}}')`);
+        if (status) resultSet = resultSet.where('status', status);
+        if (workOrderId) resultSet = resultSet.where('work_order_id', workOrderId);
+        if (requestedBy) resultSet = resultSet.where('requested_by', requestedBy);
+
+        resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
+
+        const records = await resultSet.catch(err => {
+            return Promise.reject(Utils.buildResponse(Utils.getMysqlError(err), 400));
+        });
+
+        const MaterialRequisition = DomainFactory.build(DomainFactory.MATERIAL_REQUISITION);
+
+        records.forEach(record => {
+            const domain = new MaterialRequisition(record);
+            domain.serialize(undefined, "client");
+            materialRequisitions.push(domain);
+        });
+
+        if (!records.length) return Utils.buildResponse({data: {items: materialRequisitions}});
+
+        materialRequisitions = await __doMaterialRequisitionList(db, materialRequisitions);
+
         return Utils.buildResponse({data: {items: materialRequisitions}});
     }
 
@@ -51,6 +109,7 @@ class MaterialRequisitionService extends ApiService {
 
 
     /**
+     *
      *
      * @param by
      * @param value
@@ -98,6 +157,25 @@ class MaterialRequisitionService extends ApiService {
             return Utils.buildResponse({data: {by, message: "Material Requisition deleted"}});
         });
     }
+}
+
+async function __doMaterialRequisitionList(db, materialRequisitions) {
+    for (const materialReq of materialRequisitions) {
+        const task = [
+            Utils.getAssignees(materialReq.assigned_to || [], db),
+            Utils.getModels(db, "materials", materialReq['materials'], ['id', 'name']),
+            materialReq.requestedBy(),
+        ];
+        const [assignedTo, materials, reqBy] = await Promise.all(task);
+
+        materialReq.assigned_to = assignedTo;
+        materialReq.materials = materials.map((mat, i) => {
+            mat.qty = materialReq.materials[i]['qty'];
+            return mat;
+        });
+        materialReq.requested_by = reqBy.records.shift() || {};
+    }
+    return materialRequisitions;
 }
 
 module.exports = MaterialRequisitionService;

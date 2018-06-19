@@ -1,5 +1,5 @@
 /**
- * Created by paulex on 8/22/17.
+ * Created by paulex on 06/17/18.
  */
 
 
@@ -11,20 +11,20 @@
  * @param urlencodedParser
  */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) {
-    app.use('/material_requisitions*', (req, res, next) => API.recognitions().auth(req, res, next));
+    app.use('/material_utilizations*', (req, res, next) => API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
-     * /material_requisitions:
+     * /material_utilizations:
      *   post:
-     *     summary: Creates an MaterialRequisition
+     *     summary: Creates an MaterialUtilization
      *     description: ''
-     *     tags: [MaterialRequisitions]
+     *     tags: [MaterialUtilizations]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: createMaterialRequisition
+     *     operationId: createMaterialUtilization
      *     responses:
      *       '200':
      *         description: Successfully Added
@@ -34,11 +34,46 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        name: 'asset'
      *        required: true
      *        schema:
-     *          $ref: '#/definitions/postMaterialRequisitionInput'
+     *          $ref: '#/definitions/postMaterialUtilizationInput'
      */
-    app.post('/material_requisitions', jsonParser, (req, res) => {
+    app.post('/material_utilizations', jsonParser, (req, res) => {
         console.log(req.body);
-        API.materialRequisitions().createMaterialRequisition(req.body, req.who)
+        API.materialUtilizations().createMaterialUtilization(req.body, req.who)
+            .then(({data, code}) => {
+                console.log(data);
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
+                console.log(code, err);
+                return res.status(code).send(err);
+            });
+    });
+
+
+    /**
+     * @swagger
+     * /material_utilizations:
+     *   patch:
+     *     summary: Update/Creates MaterialLocation in bulk
+     *     description: ''
+     *     tags: [MaterialLocations]
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: createMultipleMaterialLocation
+     *     responses:
+     *       '200':
+     *         description: Successfully Added
+     *     parameters:
+     *      - $ref: '#/parameters/sessionId'
+     *      - in: body
+     *        schema:
+     *          $ref: '#/definitions/postMaterialLocationInput'
+     */
+    app.patch('/material_utilizations', jsonParser, (req, res) => {
+        console.log(req.body);
+        API.materialUtilizations().createMultipleMaterialUtilization(req.body, req.who, API)
             .then(({data, code}) => {
                 console.log(data);
                 return res.status(code).send(data);
@@ -51,16 +86,16 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /material_requisitions:
+     * /material_utilizations:
      *   put:
-     *     summary: Updates a MaterialRequisition
+     *     summary: Updates a MaterialUtilization
      *     description: ''
-     *     tags: [MaterialRequisitions]
+     *     tags: [MaterialUtilizations]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: updateMaterialRequisition
+     *     operationId: updateMaterialUtilization
      *     responses:
      *       '200':
      *         description: Successfully Added
@@ -70,10 +105,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        name: 'asset'
      *        required: true
      *        schema:
-     *          $ref: '#/definitions/postMaterialRequisitionInput'
+     *          $ref: '#/definitions/postMaterialUtilizationInput'
      */
-    app.put('/material_requisitions', jsonParser, (req, res) => {
-        API.materialRequisitions().updateMaterialRequisition(req.body, req.who)
+    app.put('/material_utilizations', jsonParser, (req, res) => {
+        API.materialUtilizations().updateMaterialUtilization(req.body, req.who)
             .then(({data, code}) => {
                 console.log(data);
                 return res.status(code).send(data);
@@ -86,26 +121,26 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /material_requisitions:
+     * /material_utilizations:
      *   get:
-     *     summary: Retrieves a List of material_requisitions
+     *     summary: Retrieves a List of material_utilizations
      *     description: ''
-     *     tags: [MaterialRequisitions]
+     *     tags: [MaterialUtilizations]
      *     produces:
      *     - application/json
-     *     operationId: getMaterialRequisitions
+     *     operationId: getMaterialUtilizations
      *     responses:
      *       '200':
      *         description: Successful
      *         schema:
-     *           $ref: '#/definitions/getMaterialRequisitionOutput'
+     *           $ref: '#/definitions/getMaterialUtilizationOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/material_requisitions', urlencodedParser, (req, res) => {
-        return API.materialRequisitions().getMaterialRequisitions(req.query, req.who)
+    app.get('/material_utilizations', urlencodedParser, (req, res) => {
+        return API.materialUtilizations().getMaterialUtilizations(req.query, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -117,25 +152,25 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /material_requisitions/{id}:
+     * /material_utilizations/{id}:
      *   get:
-     *     summary: Retrieves a Single MaterialRequisition
+     *     summary: Retrieves a Single MaterialUtilization
      *     description: ''
-     *     tags: [MaterialRequisitions]
+     *     tags: [MaterialUtilizations]
      *     produces:
      *     - application/json
-     *     operationId: getMaterialRequisition
+     *     operationId: getMaterialUtilization
      *     responses:
      *       '200':
      *         description: Successful
      *         schema:
-     *           $ref: '#/definitions/getMaterialRequisitionOutput'
+     *           $ref: '#/definitions/getMaterialUtilizationOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/asset_id'
      */
-    app.get('/material_requisitions/:id', urlencodedParser, (req, res) => {
-        return API.materialRequisitions().getMaterialRequisition(req.params['id'], undefined, req.who)
+    app.get('/material_utilizations/:id', urlencodedParser, (req, res) => {
+        return API.materialUtilizations().getMaterialUtilization(req.params['id'], undefined, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -147,14 +182,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /material_requisitions/{id}:
+     * /material_utilizations/{id}:
      *  delete:
-     *    summary: Deletes a MaterialRequisition
-     *    description: "Deletes a MaterialRequisition"
-     *    tags: [MaterialRequisitions]
+     *    summary: Deletes a MaterialUtilization
+     *    description: "Deletes a MaterialUtilization"
+     *    tags: [MaterialUtilizations]
      *    produces:
      *    - application/json
-     *    operationId: deleteMaterialRequisition
+     *    operationId: deleteMaterialUtilization
      *    responses:
      *      '200':
      *        description: Returns true with the id of the request deleted
@@ -162,8 +197,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/sessionId'
      *    - $ref: '#/parameters/asset_id'
      */
-    app.delete('/material_requisitions/:id', urlencodedParser, (req, res) => {
-        API.materialRequisitions().deleteMaterialRequisition("id", req.params.id)
+    app.delete('/material_utilizations/:id', urlencodedParser, (req, res) => {
+        API.materialUtilizations().deleteMaterialUtilization("id", req.params.id)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
