@@ -105,6 +105,12 @@ test("Retrieve list of work order within a specific date range", ()=> {
         });
 });
 
+test("Retrieve material requisition that belongs to a work order", () => {
+    return API.workOrders().getWorkOrderMaterialRequisitions(6, {includeOnly: "materials"}).then(r => {
+        expect(r).toEqual({});
+    })
+});
+
 
 afterAll(()=> {
     return API.workOrders().deleteWorkOrder("relation_id", "12");

@@ -6,6 +6,7 @@ const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
+const _ = require("lodash");
 let MapperFactory = null;
 
 /**
@@ -121,12 +122,11 @@ class WorkOrderService extends ApiService {
         ]);
 
         let resultSet = this.context.database.select(['*']).from("work_orders");
-        if (fromDate && toDate) resultSet = resultSet.whereBetween('start_date', [fromDate, toDate]);
-
-        if (assignedTo) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assignedTo}}')`);
-        if (status) resultSet = resultSet.where('status', status);
-        if (type) resultSet = resultSet.where("type_id", type);
-        if (createdBy) resultSet = resultSet.where("created_by", createdBy);
+        if (fromDate && toDate) resultSet.whereBetween('start_date', [fromDate, toDate]);
+        if (assignedTo) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assignedTo}}')`);
+        if (status) resultSet.whereIn('status', status.split(","));
+        if (type) resultSet.whereIn("type_id", type.split(","));
+        if (createdBy) resultSet.where("created_by", createdBy);
 
         resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
         console.log(resultSet.toString());
@@ -148,6 +148,50 @@ class WorkOrderService extends ApiService {
         return _doWorkOrderList(workOrders, this.context, this.moduleName, false, groups, workTypes || this.fallBackType)
             .catch(console.error);
     }
+
+
+    /**
+     *
+     * @param workOrderId
+     * @param query
+     * @param who
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getWorkOrderMaterialRequisitions(workOrderId, query = {}, who = {}) {
+        const db = this.context.database;
+        const records = await db.table("material_requisitions").where("work_order_id", workOrderId);
+        const MaterialRequisition = DomainFactory.build(DomainFactory.MATERIAL_REQUISITION);
+        const materialCols = [
+            'id', 'name', 'unit_of_measurement',
+            'unit_price', 'total_quantity',
+            'created_at', 'updated_at', 'assigned_to'
+        ], requisitions = [];
+
+        for (let requisition of records) {
+            requisition = new MaterialRequisition(requisition);
+            const [materials, assignedTo] = await Promise.all([
+                Utils.getModels(db, "materials", requisition['materials'], materialCols),
+                Utils.getAssignees(requisition.assigned_to || [], db)
+            ]);
+            requisition.materials = materials.map((mat, i) => {
+                mat.qty = requisition.materials[i]['qty'];
+                return mat;
+            });
+            requisition.assigned_to = assignedTo;
+            requisitions.push(requisition);
+        }
+
+        let response = requisitions;
+
+        if (query['includeOnly'] && query['includeOnly'] === "materials") {
+            response = [];
+            requisitions.forEach(req => response.push(req.materials));
+            response = _.flattenDeep(response);
+            return Utils.buildResponse({data: {items: response, work_order_id: workOrderId}});
+        }
+        return Utils.buildResponse({data: {items: response}});
+    }
+
 
     /**
      *

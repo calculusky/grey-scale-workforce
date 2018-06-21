@@ -145,6 +145,38 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
+
+    /**
+     * @swagger
+     * /work_orders/{id}/material_requisition:
+     *   get:
+     *     description: "Returns Material Requisitions of this work order"
+     *     summary: "Fetch Work Order"
+     *     tags: ['Work Orders']
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: "getWorkOrder"
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getWorkOrderOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/work_order_id'
+     */
+    app.get('/work_orders/:id/material_requisitions', urlencodedParser, (req, res) => {
+        API.workOrders().getWorkOrderMaterialRequisitions(req.params.id, req.query, req.who)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
+                return res.status(code).send(err);
+            });
+    });
+
     /**
      * @swagger
      * /work_orders/{id}/status/{statusId}:

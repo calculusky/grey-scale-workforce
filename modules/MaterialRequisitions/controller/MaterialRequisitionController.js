@@ -144,7 +144,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
-
     /**
      * @swagger
      * /material_requisitions/{id}:
