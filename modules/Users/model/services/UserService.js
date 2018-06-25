@@ -252,11 +252,11 @@ class UserService extends ApiService {
 
         let reset = await db.table("password_resets").where("email", body.email);
 
-        if (!reset.length) return Promise.reject(Utils.buildResponse({status: "fail"}, 403));
+        if (!reset.length) return Promise.reject(Utils.buildResponse({status: "fail", msg:"Invalid Password Reset"}, 403));
 
         reset = reset.shift();
 
-        if (!Password.equals(body.token, reset.token)) return Promise.reject(Utils.buildResponse({status: "fail"}, 403));
+        if (!Password.equals(body.token, reset.token)) return Promise.reject(Utils.buildResponse({status: "fail", msg:"Invalid Token or Token has expired"}, 403));
 
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         const User = DomainFactory.build(DomainFactory.USER);
