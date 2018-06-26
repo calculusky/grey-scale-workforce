@@ -57,7 +57,7 @@ class User extends DomainObject {
             gender: ['required', {'in': ['M', 'F', 'O']}],
             mobile_no: 'numeric|required',
             username: 'string|required',
-            assigned_to: 'array'
+            assigned_to: 'string|required'
         }
     }
 
