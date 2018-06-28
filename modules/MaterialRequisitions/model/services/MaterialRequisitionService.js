@@ -5,6 +5,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
 const Events = require('../../../../events/events');
 const Error = require('../../../../core/Utility/ErrorUtils')();
+const _ = require("lodash");
 
 /**
  * @name MaterialRequisitionService
@@ -76,7 +77,7 @@ class MaterialRequisitionService extends ApiService {
 
         if (!records.length) return Utils.buildResponse({data: {items: materialRequisitions}});
 
-        materialRequisitions = await __doMaterialRequisitionList(db, materialRequisitions);
+        materialRequisitions = await __doMaterialRequisitionList(db, materialRequisitions, query);
 
         return Utils.buildResponse({data: {items: materialRequisitions}});
     }
@@ -103,6 +104,7 @@ class MaterialRequisitionService extends ApiService {
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);
         return MaterialRequisitionMapper.createDomainRecord(materialReq).then(materialRequisition => {
             if (!materialRequisition) return Promise.reject(false);
+            materialRequisition.assigned_to = JSON.parse(materialRequisition.assigned_to);
             return Utils.buildResponse({data: materialRequisition});
         });
     }
@@ -159,11 +161,16 @@ class MaterialRequisitionService extends ApiService {
     }
 }
 
-async function __doMaterialRequisitionList(db, materialRequisitions) {
+async function __doMaterialRequisitionList(db, materialRequisitions, query = {}) {
+    const materialCols = [
+        'id', 'name', 'unit_of_measurement',
+        'unit_price', 'total_quantity',
+        'created_at', 'updated_at', 'assigned_to'
+    ];
     for (const materialReq of materialRequisitions) {
         const task = [
             Utils.getAssignees(materialReq.assigned_to || [], db),
-            Utils.getModels(db, "materials", materialReq['materials'], ['id', 'name']),
+            Utils.getModels(db, "materials", materialReq['materials'], materialCols),
             materialReq.requestedBy(),
         ];
         const [assignedTo, materials, reqBy] = await Promise.all(task);
@@ -175,7 +182,16 @@ async function __doMaterialRequisitionList(db, materialRequisitions) {
         });
         materialReq.requested_by = reqBy.records.shift() || {};
     }
-    return materialRequisitions;
+
+    let response = materialRequisitions;
+
+    if (query['includeOnly'] && query['includeOnly'] === "materials") {
+        response = [];
+        materialRequisitions.forEach(req => response.push(req.materials));
+        response = _.flattenDeep(response);
+    }
+
+    return response;
 }
 
 module.exports = MaterialRequisitionService;

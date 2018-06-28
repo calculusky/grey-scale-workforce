@@ -78,7 +78,6 @@ class WorkOrderService extends ApiService {
     async updateWorkOrder(by, value, body = {}, who, file, API) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-
         let model = await this.context.database.table("work_orders").where(by, value).select(['assigned_to']);
 
         if (!model.length) return Utils.buildResponse({
