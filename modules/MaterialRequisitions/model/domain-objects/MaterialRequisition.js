@@ -37,7 +37,7 @@ class MaterialRequisition extends DomainObject {
     rules() {
         return {
             materials: 'string|required',
-            work_order_id: 'numeric',
+            work_order_id: 'string',
             requested_by: 'numeric|required'
         };
     }
