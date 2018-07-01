@@ -326,7 +326,7 @@ function sweepWorkOrderResponsePayload(workOrder) {
  * @param workTypes
  * @private
  */
-async function _doWorkOrderList(workOrders, context, module, isSingle = false, groups, workTypes) {
+async function  _doWorkOrderList(workOrders, context, module, isSingle = false, groups, workTypes) {
     const db = context.database;
     for (let workOrder of workOrders) {
         let promises = [];
