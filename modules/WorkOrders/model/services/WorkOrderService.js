@@ -49,10 +49,13 @@ class WorkOrderService extends ApiService {
         const isSingle = typeof value !== 'object';
 
         //Prepare the static data from persistence storage
-        let [groups, workTypes] = await Promise.all([
+        let [groups, workTypes, faultCategories] = await Promise.all([
             Utils.getFromPersistent(this.context, "groups", true),
-            Utils.getFromPersistent(this.context, "work:types", true)
+            Utils.getFromPersistent(this.context, "work:types", true),
+            Utils.getFromPersistent(this.context, "fault:categories", true)
         ]);
+
+        workTypes = (workTypes) ? workTypes : this.fallBackType;
 
         const results = await WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
             .catch(err => {
@@ -62,7 +65,8 @@ class WorkOrderService extends ApiService {
 
         if (!workOrders.length) return Utils.buildResponse({data: {items: results.records}});
 
-        return _doWorkOrderList(workOrders, this.context, this.moduleName, isSingle, groups, workTypes || this.fallBackType);
+        const extras = {groups, workTypes, faultCategories};
+        return _doWorkOrderList(workOrders, this.context, this.moduleName, isSingle, extras);
     }
 
     /**
@@ -115,9 +119,10 @@ class WorkOrderService extends ApiService {
 
 
         //Prepare the static data from persistence storage
-        let [groups, workTypes] = await Promise.all([
+        let [groups, workTypes, faultCategories] = await Promise.all([
             Utils.getFromPersistent(this.context, "groups", true),
-            Utils.getFromPersistent(this.context, "work:types", true)
+            Utils.getFromPersistent(this.context, "work:types", true),
+            Utils.getFromPersistent(this.context, "fault:categories", true)
         ]);
 
         let resultSet = this.context.database.select(['*']).from("work_orders");
@@ -128,7 +133,6 @@ class WorkOrderService extends ApiService {
         if (createdBy) resultSet.where("created_by", createdBy);
 
         resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
-        console.log(resultSet.toString());
         const records = await resultSet.catch(err => {
             return Promise.reject(Utils.buildResponse(Utils.getMysqlError(err), 400));
         });
@@ -144,8 +148,8 @@ class WorkOrderService extends ApiService {
         if (!records.length) return Utils.buildResponse({data: {items: workOrders}});
 
         // Process the work order list
-        return _doWorkOrderList(workOrders, this.context, this.moduleName, false, groups, workTypes || this.fallBackType)
-            .catch(console.error);
+        const extras = {groups, workTypes, faultCategories};
+        return _doWorkOrderList(workOrders, this.context, this.moduleName, false, extras).catch(console.error);
     }
 
 
@@ -324,11 +328,14 @@ function sweepWorkOrderResponsePayload(workOrder) {
  * @param isSingle
  * @param groups
  * @param workTypes
+ * @param faultCategories
  * @private
  */
-async function _doWorkOrderList(workOrders, context, module, isSingle = false, groups, workTypes) {
+async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories}) {
     const db = context.database;
+
     for (let workOrder of workOrders) {
+
         let promises = [];
 
         let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
@@ -339,17 +346,16 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, g
 
         //If we're loading for a list view let's get the counts of notes, attachments etc.
         if (!isSingle) {
-            let countNotes = db.count('note as notes_count').from("notes")
+            let nNotes = db.count('note as notes_count').from("notes")
                 .where("module", module).where("relation_id", workOrder.id);
 
-            let countAttachments = db.count('id as attachments_count').from("attachments")
+            let nAttachments = db.count('id as attachments_count').from("attachments")
                 .where("module", module).where("relation_id", workOrder.id);
 
-            promises.push(countNotes, countAttachments);
+            promises.push(nNotes, nAttachments);
         }
 
         const [relatedToRecord, notesCount, attachmentCount] = await Promise.all(promises).catch(err => {
-            console.log(err);
             return Promise.reject(err);
         });
         //its compulsory that we check that a record exist
@@ -380,6 +386,8 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, g
                         const cus = await relatedModel.customer();
                         workOrder['faults']['customer'] = cus.records.shift() || {};
                     }
+                    workOrder['faults']['category'] = faultCategories[workOrder['faults']['category_id']];
+                    delete workOrder['faults']['category_id'];
                     break;
             }
         }

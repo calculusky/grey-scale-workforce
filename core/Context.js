@@ -68,19 +68,21 @@ class Context {
             leftJoin = ['group_subs', 'groups.id', 'group_subs.child_group_id'],
             innerJoin = ['group_subs', 'groups.id', 'group_subs.parent_group_id'];
 
-        const [dbGroups, groupChildren, woTypes, aTypes] = await Promise.all([
+        const [dbGroups, groupChildren, woTypes, aTypes, fCategories] = await Promise.all([
             db.select(iCols).from("groups").leftJoin(...leftJoin).where('deleted_at', null),
             db.select(tCols).from('groups').innerJoin(...innerJoin).where('deleted_at', null).groupBy('parent_group_id'),
             db.select(['id', 'name']).from("work_order_types"),
             db.select(['id', 'name']).from("asset_types"),
+            db.select(['id', 'name', 'type', 'weight']).from("fault_categories").where("deleted_at", null)
         ]);
 
-        const groups = {}, workTypes = {}, assetTypes = {}, parentChild = {};
+        const groups = {}, workTypes = {}, assetTypes = {}, faultCategories = {}, parentChild = {};
 
         groupChildren.forEach(item => parentChild[item.parent] = item['children'].split(',').reverse());
 
         woTypes.forEach(workType => workTypes[workType.id] = workType);
         aTypes.forEach(assetType => assetTypes[assetType.id] = assetType);
+        fCategories.forEach(fCategory => faultCategories[fCategory.id] = fCategory);
 
         for (let group of dbGroups) {
             //if parent_group_id and the parent_group_id isn't equals to the group_child_id
@@ -100,6 +102,7 @@ class Context {
         this.persistence.set("groups", JSON.stringify(groups));
         this.persistence.set("work:types", JSON.stringify(workTypes));
         this.persistence.set("asset:types", JSON.stringify(assetTypes));
+        this.persistence.set("fault:categories", JSON.stringify(faultCategories));
         return true;
     }
 
