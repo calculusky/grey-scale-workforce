@@ -148,8 +148,7 @@ class MaterialUtilizationService extends ApiService {
             ApiService.insertPermissionRights(materialUtil, who);
         }
         const errors = [];
-        await db.table("material_utilizations").insert(materialUtilizations)
-            .catch(err => errors.push(Utils.getMysqlError(err)));
+        await db.table("material_utilizations").insert(materialUtilizations).catch(err => errors.push(Utils.getMysqlError(err)));
         materialUtilizations.forEach(i => {
             if(i.assigned_to) i.assigned_to = JSON.parse(i.assigned_to)
         });
