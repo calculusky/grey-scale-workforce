@@ -369,7 +369,7 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
         if (relatedToRecord && relatedToRecord.records.length) {
             let relatedModel = relatedToRecord.records.shift();
             if (relatedModel) {
-                delete relatedModel['created_at'];
+                // delete relatedModel['created_at'];
                 delete relatedModel['updated_at'];
             }
             workOrder[workType.toLowerCase()] = relatedModel;
