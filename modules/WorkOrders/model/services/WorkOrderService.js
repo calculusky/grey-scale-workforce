@@ -100,11 +100,12 @@ class WorkOrderService extends ApiService {
         if (workOrder.assigned_to) workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignedTo);
 
         return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}).then(result => {
+            console.log('DIFF:',_.differenceBy(JSON.parse(workOrder.assigned_to), [], 'id'));
+            const assignees = _.differenceBy(JSON.parse(workOrder.assigned_to), model.assigned_to, 'id');
             Events.emit("assign_work_order",
                 {id: model.id, work_order_no: model.work_order_no, summary: model.summary},
-                _.differenceBy(workOrder.assigned_to, model.assigned_to, 'id'),
-                who
-            );
+                (assignees.length) ?  assignees : workOrder.assigned_to,
+                who);
             return Utils.buildResponse({data: result.shift()});
         });
     }
@@ -381,7 +382,6 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
                 delete relatedModel['updated_at'];
             }
             workOrder[workType.toLowerCase()] = relatedModel;
-            console.log(workOrder);
             switch (workOrder.related_to.toLowerCase()) {
                 case "disconnection_billings":
                     const [customer, plan] = await Promise.all([relatedModel.customer(), relatedModel.paymentPlan()]);
