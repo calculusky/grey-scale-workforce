@@ -5,6 +5,7 @@ const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
 const validate = require('validatorjs');
 const request = require('request');
 const _ = require("lodash");
+const Error = require('../../../../core/Utility/ErrorUtils')();
 
 /**
  * @author Paul Okeke
@@ -117,13 +118,9 @@ class NotificationService {
         const notification = new Notification(body);
         const validator = new validate(notification, notification.rules(), notification.customErrorMessages());
 
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                data: validator.errors.all(),
-                code: 'VALIDATION_ERROR'
-            }, 400));
-        }
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+
+        console.log(validator.errors.all());
 
         let userIds = [];
         //The to column is an array

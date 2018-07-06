@@ -7,6 +7,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const _ = require("lodash");
+const Events = require('../../../../events/events');
 let MapperFactory = null;
 
 /**
@@ -82,7 +83,8 @@ class WorkOrderService extends ApiService {
     async updateWorkOrder(by, value, body = {}, who, file, API) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        let model = await this.context.database.table("work_orders").where(by, value).select(['assigned_to']);
+        const cols = ['id', 'assigned_to', 'work_order_no', 'summary'];
+        let model = await this.context.database.table("work_orders").where(by, value).select(cols);
 
         if (!model.length) return Utils.buildResponse({
             status: "fail",
@@ -93,10 +95,16 @@ class WorkOrderService extends ApiService {
 
         const workOrder = new WorkOrder(body);
 
-        if (workOrder.assigned_to)
-            workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, Utils.serializeAssignedTo(workOrder.assigned_to));
+        const newAssignedTo = Utils.serializeAssignedTo(workOrder.assigned_to);
+
+        if (workOrder.assigned_to) workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignedTo);
 
         return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}).then(result => {
+            Events.emit("assign_work_order",
+                {id: model.id, work_order_no: model.work_order_no, summary: model.summary},
+                _.differenceBy(workOrder.assigned_to, model.assigned_to, 'id'),
+                who
+            );
             return Utils.buildResponse({data: result.shift()});
         });
     }
@@ -238,6 +246,7 @@ class WorkOrderService extends ApiService {
                     const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
                     WorkOrderMapper.createDomainRecord(workOrder).then(workOrder => {
                         if (!workOrder) return reject();
+                        Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
                         return resolve(Utils.buildResponse({data: workOrder}));
                     }).catch(err => {
                         return reject(err);
@@ -334,7 +343,6 @@ function sweepWorkOrderResponsePayload(workOrder) {
 
 async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories}) {
     const db = context.database;
-
     for (let workOrder of workOrders) {
 
         let promises = [];
@@ -373,6 +381,7 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
                 delete relatedModel['updated_at'];
             }
             workOrder[workType.toLowerCase()] = relatedModel;
+            console.log(workOrder);
             switch (workOrder.related_to.toLowerCase()) {
                 case "disconnection_billings":
                     const [customer, plan] = await Promise.all([relatedModel.customer(), relatedModel.paymentPlan()]);

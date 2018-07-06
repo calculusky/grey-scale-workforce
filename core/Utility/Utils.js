@@ -4,6 +4,7 @@
 const DateUtils = require('./DateUtils');
 const MapperUtils = require('./MapperUtil');
 const crypto = require('crypto'), algorithm = 'aes192';
+const _ = require("lodash");
 let unitCounter = {};
 
 
@@ -65,7 +66,7 @@ module.exports.getModels = function (db, table, argsObj = [], cols = [], key = "
 module.exports.serializeAssignedTo = function (assignedTo = "[]") {
     let assigned_to = [];
     try {
-        assignedTo = JSON.parse(assignedTo);
+        assignedTo = (Array.isArray(assignedTo)) ? assignedTo : JSON.parse(assignedTo);
         if (Array.isArray(assignedTo)) {
             assigned_to = assignedTo.map(t => {
                 if (!Number.isNaN(t)) {
@@ -87,7 +88,6 @@ module.exports.updateAssigned = function (oldAssignee = [], newAssignee = []) {
     for (let i = 0, len = newAssignee.length; i < len; i++) {
         let found = false, newItem = newAssignee[i];
         for (let j = 0; j < oldAssignee.length; j++) {
-            console.log(newItem.id, oldAssignee[j]['id']);
             if (parseInt(newItem.id) === oldAssignee[j]['id']) {
                 found = true;
                 filtered.push(oldAssignee[j]);
@@ -96,7 +96,7 @@ module.exports.updateAssigned = function (oldAssignee = [], newAssignee = []) {
         }
         if (!found) filtered.push(newItem);
     }
-    return JSON.stringify(filtered);
+    return JSON.stringify(_.uniqBy(filtered, "id"));
 };
 
 module.exports.date = DateUtils;
