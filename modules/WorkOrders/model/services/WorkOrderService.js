@@ -248,7 +248,7 @@ class WorkOrderService extends ApiService {
                         if (!workOrder) return reject();
                         Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
                         return resolve(Utils.buildResponse({data: workOrder}));
-                    }).catch(err => {
+                    })  .catch(err => {
                         return reject(err);
                     });
                 });

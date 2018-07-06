@@ -146,6 +146,7 @@ class NotificationService {
             data: {
                 type: notification.type
             },
+            ttl: 3600,
             registration_ids: _.flatten(fcmTokens.map(({fire_base_token}) => fire_base_token))
         };
         if (payload.registration_ids.length) this.push(payload, API).catch(console.error);
