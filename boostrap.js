@@ -52,7 +52,8 @@ module.exports = function route(context) {
             return res.status(400).send({
                 status: 'fail',
                 message: 'Invalid body payload format',
-                description: "Ensure that the data payload sent is in correct format"
+                description: "Ensure that the data payload sent is in correct format",
+                error: error
             });
         } else {
             next();
