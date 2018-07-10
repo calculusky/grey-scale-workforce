@@ -44,6 +44,7 @@
     "MaterialRequisition:../../modules/MaterialRequisitions/model/mappers/MaterialRequisitionMapper",
     "MaterialLocation:../../modules/MaterialLocations/model/mappers/MaterialLocationMapper",
     "StockMovement:../../modules/StockMovements/model/mappers/StockMovementMapper",
-    "MaterialUtilization:../../modules/MaterialUtilizations/model/mappers/MaterialUtilizationMapper"
+    "MaterialUtilization:../../modules/MaterialUtilizations/model/mappers/MaterialUtilizationMapper",
+    "FaultCategory:../../modules/FaultCategories/model/mappers/FaultCategoryMapper"
   ]
 }

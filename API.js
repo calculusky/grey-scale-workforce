@@ -201,6 +201,12 @@ class API {
         return API._(this)['services']['GroupService'];
     }
 
+    /**
+     * @returns {FaultCategoryService|*}
+     */
+    faultCategories() {
+        return API._(this)['services']['FaultCategoryService'];
+    }
 
     /**
      * @returns {RoleService|*}

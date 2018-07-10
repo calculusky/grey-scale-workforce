@@ -94,5 +94,6 @@ DomainFactory.MATERIAL_REQUISITION = "MaterialRequisition";
 DomainFactory.MATERIAL_LOCATION = "MaterialLocation";
 DomainFactory.STOCK_MOVEMENT = "StockMovement";
 DomainFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
+DomainFactory.FAULT_CATEGORY = "FaultCategory";
 
 module.exports = DomainFactory;

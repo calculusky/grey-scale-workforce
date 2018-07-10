@@ -59,46 +59,66 @@ class Context {
             for (let gp of _groups) {
                 if (gp.id !== group[parentKey]) continue;
                 group.parent = gp;
-                return (gp[parentKey]) ? findParents(_groups, group.parent, parentKey) : _groups;
+                //Disable child being parent to themselves thus: if(group.parent[parentKey] !== gp[parentKey])
+                return (gp[parentKey] && group.parent[parentKey] !== gp[parentKey])
+                    ? findParents(_groups, group.parent, parentKey)
+                    : _groups;
             }
         };
         //First lets load all groups and sub groups
         const iCols = ['id', 'name', 'type', 'short_name', 'parent_group_id'],
             tCols = ['group_subs.parent_group_id as parent', db.raw('GROUP_CONCAT(child_group_id) AS children')],
-            leftJoin = ['group_subs', 'groups.id', 'group_subs.child_group_id'],
-            innerJoin = ['group_subs', 'groups.id', 'group_subs.parent_group_id'];
+            gLeftJoin = ['group_subs', 'groups.id', 'group_subs.child_group_id'],
+            gInnerJoin = ['group_subs', 'groups.id', 'group_subs.parent_group_id'],
+            fCols1 = ['id', 'name', 'type', 'weight', 'parent_category_id'],
+            fCols = ['fault_categories_subs.parent_category_id as parent', db.raw('GROUP_CONCAT(child_category_id) AS children')],
+            fLeftJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.child_category_id'],
+            fInnerJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.parent_category_id'];
 
-        const [dbGroups, groupChildren, woTypes, aTypes, fCategories] = await Promise.all([
-            db.select(iCols).from("groups").leftJoin(...leftJoin).where('deleted_at', null),
-            db.select(tCols).from('groups').innerJoin(...innerJoin).where('deleted_at', null).groupBy('parent_group_id'),
+        const [dbGroups, groupChildren, woTypes, aTypes, dbFCategories, fCatChildren] = await Promise.all([
+            db.select(iCols).from("groups").leftJoin(...gLeftJoin).where('deleted_at', null),
+            db.select(tCols).from('groups').innerJoin(...gInnerJoin).where('deleted_at', null).groupBy('parent_group_id'),
             db.select(['id', 'name']).from("work_order_types"),
             db.select(['id', 'name']).from("asset_types"),
-            db.select(['id', 'name', 'type', 'weight']).from("fault_categories").where("deleted_at", null)
+            db.select(fCols1).from("fault_categories").leftJoin(...fLeftJoin).where("fault_categories.deleted_at", null),
+            db.select(fCols).from("fault_categories").innerJoin(...fInnerJoin).where("fault_categories.deleted_at", null).groupBy('parent_category_id')
         ]);
 
-        const groups = {}, workTypes = {}, assetTypes = {}, faultCategories = {}, parentChild = {};
+        const groups = {}, groupParentChild = {}, workTypes = {}, assetTypes = {},
+            faultCategories = {}, fCatParentChild = {};
 
-        groupChildren.forEach(item => parentChild[item.parent] = item['children'].split(',').reverse());
+        groupChildren.forEach(item => groupParentChild[item.parent] = item['children'].split(',').reverse());
+        fCatChildren.forEach(item => fCatParentChild[item.parent] = item['children'].split(',').reverse());
 
         woTypes.forEach(workType => workTypes[workType.id] = workType);
         aTypes.forEach(assetType => assetTypes[assetType.id] = assetType);
-        fCategories.forEach(fCategory => faultCategories[fCategory.id] = fCategory);
 
-        for (let group of dbGroups) {
-            //if parent_group_id and the parent_group_id isn't equals to the group_child_id
-            const parentId = group['parent_group_id'];
-            if (parentId && parentId !== group.id) findParents(dbGroups, group, 'parent_group_id');
-            delete group['parent_group_id'] && (Object.assign(groups[group.id] = {}, group));
-        }
+        const mergeParent = (dataList, parentKey, store) => {
+            for (let data of dataList) {
+                const parentId = data[parentKey];
+                if (parentId && parentId !== data.id) findParents(dataList, data, parentKey);
+                delete data[parentKey] && (Object.assign(store[data.id] = {}, data));
+            }
+        };
 
-        dbGroups.forEach(group => {
-            const children = parentChild[group.id];
-            if (!children) return;
-            groups[group.id]['children'] = children.map(id => {
-                const {parent, ...t} = groups[id] || {};
-                return (parent) ? t : null;
-            }).filter(i => i);
-        });
+        const mergeChildren = (dataList, parentOffspring, store)=>{
+            dataList.forEach(data => {
+                const children = parentOffspring[data.id];
+                console.log(children);
+                if (!children) return;
+                store[data.id]['children'] = children.map(id => {
+                    const {parent, ...t} = store[id] || {};
+                    return (parent) ? t : null;
+                }).filter(i => i);
+            });
+        };
+
+        mergeParent(dbGroups, 'parent_group_id', groups);
+        mergeParent(dbFCategories, 'parent_category_id', faultCategories);
+
+        mergeChildren(dbGroups, groupParentChild, groups);
+        mergeChildren(dbFCategories, fCatParentChild, faultCategories);
+
         this.persistence.set("groups", JSON.stringify(groups));
         this.persistence.set("work:types", JSON.stringify(workTypes));
         this.persistence.set("asset:types", JSON.stringify(assetTypes));
