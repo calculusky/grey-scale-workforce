@@ -36,7 +36,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/limit'
      */
     app.get('/fault_categories', urlencodedParser, (req, res) => {
-        console.log(req.query);
         API.faultCategories().getFaultCategories(req.query, req.who).then(({data, code}) => {
             return res.status(code).send(data);
         }).catch(({err, code}) => {

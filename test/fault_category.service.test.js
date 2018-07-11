@@ -13,7 +13,7 @@ API = new API(ctx);
 
 
 test('Testlar', () => {
-    API.faultCategories().getFaultCategories({type: "test"}).then(d => {
+    API.faultCategories().getFaultCategories({type: "LT FAULT"}).then(d => {
         expect(d).toEqual({});
     });
 });
