@@ -20,11 +20,12 @@ test("Test that createFault is resolves with a value", () => {
     const fault = {
         category_id: 1,
         related_to: "assets",
-        relation_id: "1",
+        relation_id: "M11",
         status: 1,
         summary: "test",
         group_id: 1,
         priority: 1,
+        source:"crm"
     };
     return expect(API.faults().createFault(fault, {}, [], API)).resolves.toBeDefined()
 });

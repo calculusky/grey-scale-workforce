@@ -104,7 +104,6 @@ class Context {
         const mergeChildren = (dataList, parentOffspring, store)=>{
             dataList.forEach(data => {
                 const children = parentOffspring[data.id];
-                console.log(children);
                 if (!children) return;
                 store[data.id]['children'] = children.map(id => {
                     const {parent, ...t} = store[id] || {};

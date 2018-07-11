@@ -82,6 +82,21 @@ module.exports.serializeAssignedTo = function (assignedTo = "[]") {
     return assigned_to;
 };
 
+module.exports.findSourceRelated = async function (db, domain) {
+    if (domain.source.toLowerCase() === "crm") {
+        switch (domain.related_to) {
+            case "assets": {
+                let asset = await db.table(domain.related_to).where('id', domain.relation_id)
+                    .orWhere('ext_code', domain.relation_id).select(['id']);
+                asset = asset.shift();
+                if (asset) domain.relation_id = asset.id;
+                else return false;
+            }
+        }
+    }
+    return true;
+};
+
 module.exports.updateAssigned = function (oldAssignee = [], newAssignee = []) {
     if (!Array.isArray(newAssignee)) newAssignee = JSON.parse(newAssignee);
     const filtered = [];

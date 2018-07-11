@@ -62,6 +62,10 @@ class FaultService extends ApiService {
         const redis = this.context.persistence;
         const fault = new Fault(body);
 
+        //If this fault is created from an external source then we should verify the relation_id
+        const related = await Utils.findSourceRelated(this.context.database, fault);
+        if (!related) return Promise.reject(Error.ValidationFailure({relation_id: ["The related record doesn't exist."]}));
+
         fault.assigned_to = Utils.serializeAssignedTo(fault.assigned_to);
 
         ApiService.insertPermissionRights(fault, who);
