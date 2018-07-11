@@ -89,7 +89,7 @@ module.exports.findSourceRelated = async function (db, domain) {
                 let asset = await db.table(domain.related_to).where('id', domain.relation_id)
                     .orWhere('ext_code', domain.relation_id).select(['id']);
                 asset = asset.shift();
-                if (asset) domain.relation_id = asset.id;
+                if (asset) domain.relation_id = `${asset.id}`;
                 else return false;
             }
         }
