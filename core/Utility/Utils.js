@@ -82,8 +82,8 @@ module.exports.serializeAssignedTo = function (assignedTo = "[]") {
     return assigned_to;
 };
 
-module.exports.findSourceRelated = async function (db, domain) {
-    if (domain.source.toLowerCase() === "crm") {
+module.exports.verifyRelatedSource = async function (db, domain) {
+    if (domain.source  && domain.source.toLowerCase() === "crm") {
         switch (domain.related_to) {
             case "assets": {
                 let asset = await db.table(domain.related_to).where('id', domain.relation_id)
