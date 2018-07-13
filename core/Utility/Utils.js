@@ -17,7 +17,11 @@ module.exports.loadMapper = function (store = {}, path, key, context = null) {
     }
     try {
         let mapper = require(path);
-        if (mapper) store[key] = new mapper(context);
+        if (mapper) {
+            mapper = new mapper(context);
+            key = (mapper.mapperName) ? mapper.mapperName : (mapper.domainName) ? mapper.domainName : key;
+            if (key !== "" && key.trim().length > 0) store[key] = mapper;
+        }
     } catch (e) {
         return;
     }
@@ -83,7 +87,7 @@ module.exports.serializeAssignedTo = function (assignedTo = "[]") {
 };
 
 module.exports.verifyRelatedSource = async function (db, domain) {
-    if (domain.source  && domain.source.toLowerCase() === "crm") {
+    if (domain.source && domain.source.toLowerCase() === "crm") {
         switch (domain.related_to) {
             case "assets": {
                 let asset = await db.table(domain.related_to).where('id', domain.relation_id)

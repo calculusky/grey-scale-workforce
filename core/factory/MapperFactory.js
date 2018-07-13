@@ -16,14 +16,19 @@ class MapperFactory {
 
     }
 
+    static initialize(path, context = null) {
+
+    }
+
     /**
      *
      * @param mapperName
      * @param context
      * @param path
-     * @returns {UserMapper|AssetMapper}
+     * @returns {UserMapper|AssetMapper|FaultCategoryMapper}
      */
     static build(mapperName = "", path = "", context = null) {
+        console.log(mapperName);
         return Utils.loadMapper(mapperStore, path, mapperName, context);
     }
 }
@@ -38,7 +43,7 @@ MapperFactory.CUSTOMER = "Customer";
 MapperFactory.METER_READING = "MeterReading";
 MapperFactory.NOTIFICATION = "Notification";
 MapperFactory.UPLOAD = "Upload";
-MapperFactory.DISCONNECTION_ORDER = "DisconnectionBilling";
+MapperFactory.DISCONNECTION_ORDER = "DisconnectionOrder";
 MapperFactory.PAYMENT = "Payment";
 MapperFactory.PAYMENT_PLAN = "PaymentPlan";
 MapperFactory.ACTIVATION = "Activation";

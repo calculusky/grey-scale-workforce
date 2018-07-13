@@ -118,6 +118,24 @@ module.exports = function route(context) {
         }
     });
 
+
+    /**
+     * Load all module mappers here
+     */
+    const mappersPath = `${__dirname}/modules`;
+    fs.readdirSync(mappersPath).forEach(dir => {
+        if (fs.statSync(`${mappersPath}/${dir}`).isDirectory()) {
+            let filePath = `${mappersPath}/${dir}/model/mappers`;
+            if (fs.existsSync(filePath)) {
+                fs.readdirSync(filePath).forEach(mapper => {
+                    if (mapper) {
+                        context.modelMappers.build(mapper.replace(/mapper.js/i, ""),`${filePath}/${mapper}`, context);
+                    }
+                });
+            }
+        }
+    });
+
     /*-------------------------------------
     | Initialize Events - Socket IO
     *--------------------------------------*/
