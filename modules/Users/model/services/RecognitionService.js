@@ -146,7 +146,6 @@ class RecognitionService {
             },
             isRoute: false
         };
-        console.log(req.headers);
         if (token) {
             const persistence = this.context.persistence;
             persistence.get(token, (err, v) => {
