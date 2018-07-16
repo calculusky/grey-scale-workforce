@@ -96,8 +96,8 @@ class UploadService extends ApiService {
                     group_id: uploadObj.group_id,
                     assigned_to: uploadObj.assigned_to,//JSON.stringify()`[{"id":${uploadObj.assigned_to}, "created_at":"${Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")}"}]`,
                     created_by: uploadObj.created_by,
-                    created_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
-                    updated_at: Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
+                    created_at: Utils.date.dateToMysql(),
+                    updated_at: Utils.date.dateToMysql()
                 });
                 //Get Mapper
                 UploadMapper.createDomainRecord(upload).then(upload => {
