@@ -16,11 +16,14 @@ module.exports = function main(context, Api) {
     API = Api;
 
     //lock.d for delinquency list, lock.c for customer
-    this.lock = {d: false};
+    this.lock = {d: false, g: false};
     //all cron jobs
     console.log('* * * * * * Registered CronJobs');
     //schedule job for running createDelinquencyList
     cron.scheduleJob('*/2 * * * *', main.createDelinquencyList.bind(this));
+
+    //schedule job for running updateAssetLocation
+    cron.scheduleJob('*/2 * * * *', main.updateAssetLocation.bind(this));
 
     //schedule job for creating meter readings
     cron.scheduleJob('*/1 * * * *', main.createMeterReadings.bind(this));
@@ -258,6 +261,115 @@ module.exports.createDelinquencyList = function () {
         });
     }
     console.log("Lock for delinquency list is held, i'll wait till it is released");
+};
+
+
+module.exports.updateAssetLocation = function () {
+    //lets retrieve the path where asset locations list is saved
+    const directory = `${this.context.config.storage.path}/uploads/assets_location`;
+    const workbook = new Excel.Workbook();
+    let currentFile = null;
+    const cols = ['asset_id', 'lat', 'lng'];
+    const tableName = "assets";
+
+
+    //This function processes the excel document
+    const startProcessor = async (file/*.xlsx*/, fileName) => {
+        this.lock.g = true;
+        currentFile = file;
+        // const currDate = new Date();
+        const logMgs = [];
+        const db = this.context.database;
+
+
+        //onComplete is called when the file is done processing
+        const onComplete = (status, update = true) => {
+            deleteFile(currentFile);
+            this.lock.g = false;//release the lock here
+            Events.emit("upload_completed", "asset location", status, fileName, (uploadData) ? uploadData.created_by : 0);
+            return (update) ? _updateUploadStatus(this, fileName, status, JSON.stringify(logMgs)) : true;
+        };
+
+        const task = [
+            // Utils.getFromPersistent(this.context, "groups", true),
+            db.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to', 'created_by']),
+            workbook.xlsx.readFile(file)
+        ];
+
+        //Fetch Groups and the Uploaded record before hand
+        let [uploadData] = await Promise.all(task).catch(_ => {
+            return logMgs.push("There was an error reading the file") && onComplete(3);
+        });
+
+        //check that the uploaded data is intact.. if we can't find the uploaded record we can end this right now
+        if (!uploadData.length) return logMgs.push("Couldn't find the uploaded record.") && onComplete(5, false);
+
+        uploadData = uploadData.shift();
+
+        const workSheet = workbook.getWorksheet(1);
+        let rowLen = workSheet.rowCount,
+            actualRowCount = rowLen - 1,
+            columnLen = workSheet.actualColumnCount,
+            processed = 0,
+            processedAsset = 0,
+            isBadTemplate = false,
+            total = 1;
+
+        let colHeaderIndex = {};
+
+        //if the file is empty or just includes the column heads... lets delete the file and release lock
+        if (rowLen <= 1) return logMgs.push("Empty file uploaded.") && onComplete(5);
+
+        //Determines if onComplete should be called or not depending on the number of rows processed
+        const endProcess = (totalRowsVisited) => {
+            console.log(totalRowsVisited, rowLen);
+            if (totalRowsVisited === rowLen) {
+                logMgs.push(`${processedAsset} of ${actualRowCount}` + " assets location updated successfully");
+                console.log(logMgs);
+                return onComplete((processedAsset === actualRowCount) ? 4 : 5);
+            }
+            return totalRowsVisited === rowLen;
+        };
+
+        workSheet.eachRow(async (row, rn) => {
+            if (isBadTemplate) return;
+            if (rn === 1) {
+                colHeaderIndex = getColumnsByNameIndex(row, columnLen);
+                if (!_.difference(cols, Object.keys(colHeaderIndex)).length) return;
+                logMgs.push("Invalid asset location template uploaded. Template doesn't contain either one of " +
+                    `these column headers; ${cols.join(', ')}`);
+                return onComplete(3) && (isBadTemplate = true);
+            }
+            const assetID = row.getCell(colHeaderIndex['asset_id']).value;
+            const lat = row.getCell(colHeaderIndex['lat']).value;
+            const lng = row.getCell(colHeaderIndex['lng']).value;
+
+            //check if the the row is empty
+            if (row.actualCellCount < cols.length) return --actualRowCount && endProcess(++total);
+            if (typeof lat === "object" || typeof lng === "object") return endProcess(++total);
+
+            const data = {location: db.raw(`POINT(${lat}, ${lng})`)};
+            db.table(tableName).where("serial_no", `${assetID}`.trim()).update(data).then(res => {
+                if (res === 0) return logMgs.push(`Asset specified in row(${rn}) doesn't exist.`) && endProcess(++total);
+                else return ++processedAsset && endProcess(++total);
+            }).catch(err => {
+                console.error("AssetLOC:", err);
+                return endProcess(++total);
+            });
+        });
+    };
+
+    //if the lock is currently released we can start processing another file
+    if (!this.lock.g) {
+        return fs.readdir(directory, (err, files) => {
+            if (err) return console.log(err);
+            //start processing the files.. we are processing one file at a time from a specific folder
+            //TODO check that this files are indeed excel files e.g xlsx or csv
+            const fileName = files.shift();
+            if (fileName) startProcessor(`${directory}/${fileName}`, fileName).catch(console.error);
+        });
+    }
+    console.log("Lock for asset locations list is held, i'll wait till it is released");
 };
 
 /**

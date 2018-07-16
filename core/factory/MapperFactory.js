@@ -16,10 +16,6 @@ class MapperFactory {
 
     }
 
-    static initialize(path, context = null) {
-
-    }
-
     /**
      *
      * @param mapperName
@@ -28,7 +24,6 @@ class MapperFactory {
      * @returns {UserMapper|AssetMapper|FaultCategoryMapper}
      */
     static build(mapperName = "", path = "", context = null) {
-        console.log(mapperName);
         return Utils.loadMapper(mapperStore, path, mapperName, context);
     }
 }
