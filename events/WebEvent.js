@@ -78,6 +78,15 @@ class WebEvent extends EventEmitter {
         });
     }
 
+    /**
+     *
+     * @param type
+     * @param status - The status of the upload that determines if it the upload completed or it failed
+     * @param fileName
+     * @param createdBy
+     * @param level
+     * @returns {Promise<void>}
+     */
     async onUploadComplete(type, status, fileName, createdBy, level = 3) {
         if (!createdBy) return;
         //now we need to notify this guy who uploaded the record

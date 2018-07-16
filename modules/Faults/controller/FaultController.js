@@ -39,15 +39,13 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postFaultInput'
      */
     app.post('/faults', multiPart.array("files", 5), (req, res) => {
-        API.faults().createFault(req.body, req.who, req.files, API)
-            .then(({data, code}) => {
-                console.log(data);
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                console.log(code, err);
-                return res.status(code).send(err);
-            });
+        API.faults().createFault(req.body, req.who, req.files, API).then(({data, code}) => {
+            console.log(data);
+            return res.status(code).send(data);
+        }).catch(({err, code}) => {
+            console.log(code, err);
+            return res.status(code).send(err);
+        });
     });
 
     /**
@@ -74,122 +72,21 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postFaultInput'
      */
     app.put('/faults/:id', jsonParser, (req, res) => {
-        API.faults().updateFault('id', req.params['id'], req.body, req.who)
-            .then(({data, code}) => {
-                console.log(data);
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                console.log(code, err);
-                return res.status(code).send(err);
-            });
+        API.faults().updateFault('id', req.params['id'], req.body, req.who).then(({data, code}) => {
+            console.log(data);
+            return res.status(code).send(data);
+        }).catch(({err, code}) => {
+            console.log(code, err);
+            return res.status(code).send(err);
+        });
     });
 
 
     /**
      * @swagger
-     * /faults/user/{user_id}/{offset}/{limit}:
+     * /faults:
      *   get:
-     *     summary: Gets faults assigned to a user
-     *     description: ''
-     *     tags: [Faults]
-     *     produces:
-     *     - application/json
-     *     operationId: getFaultsByUser
-     *     responses:
-     *       '200':
-     *         description: Successful
-     *         schema:
-     *           $ref: '#/definitions/getFaultOutput'
-     *     parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/user_id'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
-     */
-    app.get('/faults/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res) => {
-        // let assignedTo = {id: req.params['user_id']};
-        return API.faults().getFaults(`{"id":${req.params['user_id']}}`, "assigned_to->[]", req.who, req.params.offset || 0, req.params.limit || 10)
-            .then(({data, code}) => {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                return res.status(code).send(err);
-            });
-    });
-
-
-    /**
-     * @swagger
-     * /faults/{id}/notes/{offset}/{limit}:
-     *   get:
-     *     summary: Gets Notes for a Fault
-     *     description: ''
-     *     tags: [Faults]
-     *     produces:
-     *     - application/json
-     *     operationId: getFaultNotes
-     *     responses:
-     *       '200':
-     *         description: Successful
-     *         schema:
-     *           $ref: '#/definitions/getNoteOutput'
-     *     parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/id'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
-     */
-    app.get('/faults/:id/notes/:offset?/:limit?', urlencodedParser, (req, res) => {
-        console.log("called");
-        return API.notes().getNotes(req.params['id'], "faults", "relation_id", req.who, req.params.offset, req.params.limit)
-            .then(({data, code}) => {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                return res.status(code).send(err);
-            });
-    });
-
-
-    /**
-     * @swagger
-     * /faults/{id}/attachments/{offset}/{limit}:
-     *   get:
-     *     summary: Gets Attachments for a Fault
-     *     description: ''
-     *     tags: [Faults]
-     *     produces:
-     *     - application/json
-     *     operationId: getFaultAttachments
-     *     responses:
-     *       '200':
-     *         description: Successful
-     *         schema:
-     *           $ref: '#/definitions/getAttachmentOutput'
-     *     parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/id'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
-     */
-    app.get('/faults/:id/attachments/:offset?/:limit?', urlencodedParser, (req, res) => {
-        console.log("called");
-        return API.attachments().getAttachments(req.params['id'], "faults", "relation_id", req.who, req.params.offset, req.params.limit)
-            .then(({data, code}) => {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                return res.status(code).send(err);
-            });
-    });
-
-
-    /**
-     * @swagger
-     * /faults/{offset}/{limit}:
-     *   get:
-     *     summary: Gets List of faults
+     *     summary: Get a list of faults
      *     description: ''
      *     tags: [Faults]
      *     produces:
@@ -202,17 +99,41 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getFaultOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/faults', urlencodedParser, (req, res) => {
+        return API.faults().getFaults(req.query, req.who).then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code}) => {
+            return res.status((code) ? code : 500).send((err) ? err : "Internal Server Error")
+        });
+    });
+
+
+    /**
+     * @swagger
+     * /faults/{id}:
+     *   get:
+     *     summary: Get a fault
+     *     description: ''
+     *     tags: [Faults]
+     *     produces:
+     *     - application/json
+     *     operationId: getFaults
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getFaultOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/fault_id'
      */
     app.get('/faults/:id', urlencodedParser, (req, res) => {
-        return API.faults().getFaults(req.params['id'], "id")
-            .then(({data, code}) => {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                return res.status((code) ? code : 500).send((err) ? err : "Internal Server Error")
-            });
+        return API.faults().getFaults({"id": req.params['id']}, req.who).then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code}) => {
+            return res.status((code) ? code : 500).send((err) ? err : "Internal Server Error")
+        });
     });
 
     /**

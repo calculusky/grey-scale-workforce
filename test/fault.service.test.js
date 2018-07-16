@@ -5,6 +5,7 @@ const config = require('../config.json');
 const Context = require('../core/Context');
 const ctx = new Context(config);
 API = new API(ctx);
+require("../boostrap")(ctx);
 
 
 test("Test that createFault is defined", () => {
@@ -20,7 +21,7 @@ test("Test that createFault is resolves with a value", () => {
     const fault = {
         category_id: 1,
         related_to: "assets",
-        relation_id: "M11",
+        relation_id: "64",
         status: 1,
         summary: "test",
         group_id: 1,

@@ -41,8 +41,8 @@ module.exports.random = function (length = 5) {
     });
 };
 
-module.exports.encrypt = function (value, secret = "") {
-    const cipher = crypto.createCipher(algorithm, secret);
+module.exports.encrypt = function (value, secret = "", algo = null) {
+    const cipher = crypto.createCipher(algo || algorithm, secret);
     let crypted = cipher.update(value, 'utf8', 'hex');
     crypted += cipher.final('hex');
     return crypted;
@@ -91,8 +91,10 @@ module.exports.verifyRelatedSource = async function (db, domain) {
         switch (domain.related_to) {
             case "assets": {
                 let asset = await db.table(domain.related_to).where('id', domain.relation_id)
-                    .orWhere('ext_code', domain.relation_id).select(['id']);
+                    .orWhere('ext_code', domain.relation_id).select(['id', 'group_id']);
                 asset = asset.shift();
+                //Next lets find the OMC this fault should be related to
+                //select from users innerJoin role where user.group_id = group_id and role.slug = omc
                 if (asset) domain.relation_id = `${asset.id}`;
                 else return false;
             }
@@ -566,6 +568,34 @@ module.exports.planPeriod = (period) => {
                 return "--"
         }
     });
+};
+
+module.exports.requestPromise = (options, method = 'GET', headers = {}) => {
+    const request = require("request");
+    const executor = (resolve, reject) => {
+
+        switch (method.toUpperCase().trim()) {
+            case 'POST':
+                break;
+            case 'GET':
+                break;
+            case 'PUT':
+                break;
+            case 'DELETE':
+                break;
+            default:
+                throw new TypeError(`HttpMethod: ${method}, is not supported!.`)
+        }
+        console.log(options);
+        request[method.toLowerCase()](options, (err, res, body) => {
+            if (err || ![200, 201, 202].includes(res.statusCode)) {
+                return reject(err || body);
+            }
+            return resolve(body || true);
+        });
+
+    };
+    return new Promise(executor);
 };
 
 module.exports.customerHasPendingWorkOrder = async function (db, acctNo = "", tbl = "disconnection_billings") {
