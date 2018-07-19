@@ -8,6 +8,7 @@ const config = require('../config.json');
 const Context = require('../core/Context');
 const ctx = new Context(config);
 API = new API(ctx);
+require("../boostrap")(ctx);
 
 let workOrder = null;
 
@@ -19,7 +20,7 @@ beforeAll(()=> {
     //     labels: '["work"]',
     //     summary: "Fix it",
     //     status: '1',
-    //     assigned_to: `[{"id": 1, "created_at": "18:02:14 12:0227"}]`,
+    //     assigned_to: `["1"]`,
     //     'issue_date': '2017/10/5'
     // }, {group: 1}).then(data=> {
     //     workOrder = data.data.data;
@@ -33,6 +34,19 @@ beforeAll(()=> {
 //     return expect(API.workOrders().getWorkOrders()).resolves.toBeDefined();
 // });
 
+test("Test that we can create a work order", ()=> {
+    return expect(API.workOrders().createWorkOrder({
+        type_id: 1,
+        related_to: "disconnection_billings",
+        relation_id: "2",
+        labels: '["work"]',
+        summary: "Fix it",
+        assigned_to: `["1"]`,
+        status: '1',
+        group_id:1,
+        'issue_date': '2017/10/5'
+    }, {group: 1})).rejects.toEqual("");
+});
 
 test("Test that we can't create a work order with an invalid group id", ()=> {
     return expect(API.workOrders().createWorkOrder({
@@ -41,7 +55,7 @@ test("Test that we can't create a work order with an invalid group id", ()=> {
         relation_id: "2",
         labels: '["work"]',
         summary: "Fix it",
-        assigned_to: `[{"id": 1, "created_at": "18:02:14 12:0227"}]`,
+        assigned_to: `["1"]`,
         status: '1',
         'issue_date': '2017/10/5'
     }, {group: 100000})).rejects.toThrow({

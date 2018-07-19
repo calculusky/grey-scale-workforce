@@ -43,7 +43,8 @@ class WorkOrder extends DomainObject {
             relation_id: 'string|required',
             status: 'numeric|required',
             summary: 'string|required',
-            issue_date: 'date'
+            issue_date: 'date|required',
+            group_id:'numeric|required'
         }
     }
 
@@ -64,8 +65,8 @@ class WorkOrder extends DomainObject {
      * Returns the customer this Work Order was created for
      * @returns {*}
      */
-    customer() {
-        return this.relations().belongsTo("Customer", 'relation_id', 'account_no');
+    customer(cols=['account_no', 'old_account_no', 'email','meter_no', 'customer_name', 'mobile_no', 'plain_address', 'customer_type']) {
+        return this.relations().belongsTo("Customer", 'relation_id', 'account_no', cols);
     }
 
     /**
@@ -90,6 +91,10 @@ class WorkOrder extends DomainObject {
      */
     payment() {
         return this.relations().belongsTo("Payment", "work_order_no", "system_id");
+    }
+
+    createdBy(cols=["id", "username", "first_name", "last_name"]) {
+        return this.relations().belongsTo("User", "created_by", cols);
     }
 }
 

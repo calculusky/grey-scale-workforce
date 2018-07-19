@@ -103,7 +103,7 @@ class WorkOrderService extends ApiService {
             const assignees = _.differenceBy(JSON.parse(workOrder.assigned_to), model.assigned_to, 'id');
             Events.emit("assign_work_order",
                 {id: model.id, work_order_no: model.work_order_no, summary: model.summary},
-                (assignees.length) ?  assignees : workOrder.assigned_to,
+                (assignees.length) ? assignees : workOrder.assigned_to,
                 who);
             return Utils.buildResponse({data: result.shift()});
         });
@@ -118,12 +118,16 @@ class WorkOrderService extends ApiService {
     async getWorkOrders(query, who = {}) {
         const offset = parseInt(query.offset || "0"),
             limit = parseInt(query.limit || "10"),
+            relationId = query['relation_id'],
             assignedTo = query['assigned_to'],
             createdBy = query['created_by'],
             fromDate = query['from_date'],
             toDate = query['to_date'],
             type = query['type_id'],
             status = query['status'];
+
+        let includes = query['include'] || ["fault", "billing"];//by default we'd request for fault and billing
+        if (typeof includes === "string") includes = includes.split(',');
 
 
         //Prepare the static data from persistence storage
@@ -139,6 +143,7 @@ class WorkOrderService extends ApiService {
         if (status) resultSet.whereIn('status', status.split(","));
         if (type) resultSet.whereIn("type_id", type.split(","));
         if (createdBy) resultSet.where("created_by", createdBy);
+        if (relationId) resultSet.where("relation_id", relationId);
 
         resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
         const records = await resultSet.catch(err => {
@@ -156,7 +161,7 @@ class WorkOrderService extends ApiService {
         if (!records.length) return Utils.buildResponse({data: {items: workOrders}});
 
         // Process the work order list
-        const extras = {groups, workTypes, faultCategories};
+        const extras = {groups, workTypes, faultCategories, includes};
         return _doWorkOrderList(workOrders, this.context, this.moduleName, false, extras).catch(console.error);
     }
 
@@ -248,7 +253,7 @@ class WorkOrderService extends ApiService {
                         if (!workOrder) return reject();
                         Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
                         return resolve(Utils.buildResponse({data: workOrder}));
-                    })  .catch(err => {
+                    }).catch(err => {
                         return reject(err);
                     });
                 });
@@ -306,27 +311,10 @@ function getNumberPrefix(typeId) {
 
 function sweepWorkOrderResponsePayload(workOrder) {
     let keys = Object.keys(workOrder);
-    keys.forEach(key => {
-        if (workOrder[key] == null) {
-            delete workOrder[key]
-        }
-        if (key === 'customer') {
-            delete workOrder['customer']['first_name'];
-            delete workOrder['customer']['last_name'];
-            delete workOrder['customer']['status'];
-            delete workOrder['customer']['deleted_at'];
-            delete workOrder['customer']['created_at'];
-            delete workOrder['customer']['updated_at'];
-            delete workOrder['customer']['meter_type'];
-            delete workOrder['customer']['meter_status'];
-            delete workOrder['customer']['tariff'];
-            delete workOrder['customer']['address_id'];
-            delete workOrder['customer']['group_id'];
-        }
-    });
-    if (workOrder['request_id']) {
-        delete workOrder['request_id'];
-    }
+    keys.forEach(key => (workOrder[key] == null) ? delete workOrder[key] : undefined);
+    if (workOrder['request_id']) delete workOrder['request_id'];
+    if (workOrder['group']['children']) delete workOrder['group']['children'];
+    if (workOrder['group']['parent']) delete workOrder['group']['parent'];
 }
 
 /**
@@ -338,10 +326,11 @@ function sweepWorkOrderResponsePayload(workOrder) {
  * @param groups
  * @param workTypes
  * @param faultCategories
+ * @param includes
  * @private
  */
 
-async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories}) {
+async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories, includes}) {
     const db = context.database;
     for (let workOrder of workOrders) {
 
@@ -351,7 +340,12 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
         workOrder['group'] = groups[workOrder['group_id']];
 
         //Get the entity related to this work order
-        promises.push(workOrder.relatedTo());
+        if ((workOrder.related_to === "faults" && includes.includes("fault"))
+            || (workOrder.related_to === "disconnection_billings" && includes.includes("billing"))) {
+            promises.push(workOrder.relatedTo())
+        } else promises.push(null);
+
+        promises.push(Utils.getAssignees(workOrder.assigned_to, db), workOrder.createdBy());
 
         //If we're loading for a list view let's get the counts of notes, attachments etc.
         if (!isSingle) {
@@ -364,7 +358,7 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
             promises.push(nNotes, nAttachments);
         }
 
-        const [relatedToRecord, notesCount, attachmentCount] = await Promise.all(promises).catch(err => {
+        const [relatedTo, assignedTo, createdBy, notesCount, attachmentCount] = await Promise.all(promises).catch(err => {
             return Promise.reject(err);
         });
         //its compulsory that we check that a record exist
@@ -373,9 +367,12 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
             workOrder['attachments_count'] = attachmentCount.shift()['attachments_count'];
         }
 
+        if (assignedTo) workOrder.assigned_to = assignedTo;
+        if (createdBy) workOrder.created_by = createdBy.records.shift();
+
         //First thing lets get the work order type details
-        if (relatedToRecord && relatedToRecord.records.length) {
-            let relatedModel = relatedToRecord.records.shift();
+        if (relatedTo && relatedTo.records.length) {
+            let relatedModel = relatedTo.records.shift();
             if (relatedModel) {
                 // delete relatedModel['created_at'];
                 delete relatedModel['updated_at'];
