@@ -5,7 +5,7 @@ const DomainObject = require('../../../../core/model/DomainObject');
 //noinspection JSUnresolvedFunction
 const map = require('./map.json');
 
-class DisconnectionOrder extends DomainObject {
+class DisconnectionBilling extends DomainObject {
     constructor(data) {
         super(data, map);
         /*PLEASE DON'T PUT instance fields here that are not mapped to DB*/
@@ -43,12 +43,12 @@ class DisconnectionOrder extends DomainObject {
         });
     }
     
-    customer(){
-        return this.relations().belongsTo('Customer', 'account_no', 'account_no');
+    customer(cols=['account_no', 'old_account_no', 'email','meter_no', 'customer_name', 'mobile_no', 'plain_address', 'customer_type']){
+        return this.relations().belongsTo('Customer', 'account_no', 'account_no', cols);
     }
 
 
 }
 
 //noinspection JSUnresolvedVariable
-module.exports = DisconnectionOrder;
+module.exports = DisconnectionBilling;

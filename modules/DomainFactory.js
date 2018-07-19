@@ -41,7 +41,7 @@ class DomainFactory {
                 case DomainFactory.UPLOAD:
                     return require('./Uploads/model/domain-objects/Upload');
                 case DomainFactory.DISCONNECTION_ORDER:
-                    return require('./DisconnectionOrders/model/domain-objects/DisconnectionOrder');
+                    return require('./DisconnectionBillings/model/domain-objects/DisconnectionBilling');
                 case DomainFactory.PAYMENT:
                     return require('./Payments/model/domain-objects/Payment');
                 case DomainFactory.PAYMENT_PLAN:
@@ -83,7 +83,7 @@ DomainFactory.CUSTOMER = "Customer";
 DomainFactory.METER_READING = "MeterReading";
 DomainFactory.NOTIFICATION = "Notification";
 DomainFactory.UPLOAD = "Upload";
-DomainFactory.DISCONNECTION_ORDER = "DisconnectionOrder";
+DomainFactory.DISCONNECTION_ORDER = "DisconnectionBilling";
 DomainFactory.PAYMENT = "Payment";
 DomainFactory.PAYMENT_PLAN = "PaymentPlan";
 DomainFactory.ACTIVATION = "Activation";

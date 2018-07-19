@@ -4,13 +4,13 @@
 const ModelMapper = require('../../../../core/model/ModelMapper');
 
 
-class DisconnectionOrderMapper extends ModelMapper{
+class DisconnectionBillingMapper extends ModelMapper{
     constructor(context) {
         super(context);
         this.primaryKey = "id";
         this.tableName = "disconnection_billings";
-        this.domainName = "DisconnectionOrder";
+        this.domainName = "DisconnectionBilling";
     }
 }
 
-module.exports = DisconnectionOrderMapper;
+module.exports = DisconnectionBillingMapper;

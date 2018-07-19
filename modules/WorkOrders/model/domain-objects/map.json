@@ -22,6 +22,7 @@
   "start_date": "start_date",
   "completed_date": "completed_date",
   "request_id": "request_id",
+  "created_by": "created_by",
   "deleted_at": "deleted_at",
   "created_at": "created_at",
   "updated_at": "updated_at"
