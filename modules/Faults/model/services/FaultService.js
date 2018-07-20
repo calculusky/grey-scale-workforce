@@ -45,14 +45,13 @@ class FaultService extends ApiService {
             task.push(resultSet);
         }
 
-
         let [groups, faults] = await Promise.all(task);
         faults = (faults.records) ? faults.records : faults;
-
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         for (let fault of faults) {
-            if (!fault instanceof Fault) fault = new Fault(fault);
+            if (!(fault instanceof Fault)) fault = new Fault(fault);
             const [relatedTo, assignedTo] = await Promise.all([fault.relatedTo(), Utils.getAssignees(fault.assigned_to, db)]);
+            console.log(assignedTo);
             fault['group'] = groups[fault['group_id']];
             fault[fault.related_to] = relatedTo.records.shift() || {};
             fault['assigned_to'] = assignedTo;
