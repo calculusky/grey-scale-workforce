@@ -42,13 +42,12 @@ class FaultService extends ApiService {
             if (assigned_to) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assigned_to}}')`);
             if (created_by) resultSet.where("created_by", created_by);
             if (from_date && to_date) resultSet.whereBetween('start_date', [from_date, to_date]);
-
             task.push(resultSet);
         }
 
-        let [groups, faults] = await Promise.all(task);
 
-        faults = faults.records;
+        let [groups, faults] = await Promise.all(task);
+        faults = (faults.records) ? faults.records : faults;
 
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         for (let fault of faults) {

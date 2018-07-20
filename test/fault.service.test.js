@@ -46,6 +46,16 @@ test("Test that we can update faults", () => {
     return expect(API.faults().updateFault("id", 1, fault, {}, [], API)).resolves.toEqual({});
 });
 
+test("Test Faults", ()=>{
+    return API.faults().getFaults({assigned_to:1}).then(res => {
+        expect(res).toEqual(
+            expect.objectContaining({
+                code: expect.any(Number),
+                data: expect.any(Object)
+            })
+        );
+    });
+});
 // test("toAssignedTo", ()=>{
 //    const Utils = require('../core/Utility/Utils');
 //    return expect(Utils.toAssignedTo('["1"]')).toEqual([{"id":1}]);
