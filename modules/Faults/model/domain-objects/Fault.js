@@ -58,24 +58,26 @@ class Fault extends DomainObject {
      *
      * @returns {*}
      */
-    relatedTo() {
-        return this.relations().morphTo('related_to', 'relation_id');
+    relatedTo(related_to = "assets", cols = (related_to === "assets")
+        ? ['id', 'asset_name','status', 'asset_type', 'serial_no', 'group_id', 'location']
+        : ['*']) {
+        return this.relations().morphTo('related_to', 'relation_id', cols);
     }
 
     /**
      * Returns the User that owns the fault
      * @returns {Promise}
      */
-    user() {
-        return this.relations().belongsTo("User", "assigned_to");
+    createdBy(cols = ["id", "username", "first_name", "last_name"]) {
+        return this.relations().belongsTo("User", "created_by", cols);
     }
 
     /**
      * Returns the associated Asset for this fault
      * @returns {Promise}
      */
-    asset() {
-        return this.relations().belongsTo("Asset", 'relation_id');
+    asset(cols = ['id', 'asset_name', 'asset_type', 'status', 'location']) {
+        return this.relations().belongsTo("Asset", 'relation_id', cols);
     }
 
     /**

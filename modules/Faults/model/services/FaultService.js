@@ -32,7 +32,11 @@ class FaultService extends ApiService {
         const db = this.context.database;
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
         const {id, status, priority, category_id, offset, limit, assigned_to, created_by, from_date, to_date} = query;
-        const task = [Utils.getFromPersistent(this.context, "groups", true)];
+        const task = [
+            Utils.getFromPersistent(this.context, "groups", true),
+            Utils.getFromPersistent(this.context, "fault:categories", true)
+        ];
+
         if (id) task.push(FaultMapper.findDomainRecord({by: "id", value: id}, offset, limit));
         else {
             const resultSet = db.table("faults").select(["*"]).where("deleted_at", null);
@@ -45,16 +49,29 @@ class FaultService extends ApiService {
             task.push(resultSet);
         }
 
-        let [groups, faults] = await Promise.all(task);
+        let [groups, categories, faults] = await Promise.all(task);
         faults = (faults.records) ? faults.records : faults;
         const Fault = DomainFactory.build(DomainFactory.FAULT);
+        let i = 0;
         for (let fault of faults) {
-            if (!(fault instanceof Fault)) fault = new Fault(fault);
-            const [relatedTo, assignedTo] = await Promise.all([fault.relatedTo(), Utils.getAssignees(fault.assigned_to, db)]);
-            console.log(assignedTo);
+            if (!(fault instanceof Fault)) {
+                let f = new Fault();
+                f.serialize(fault, "client");
+                fault = f;
+            }
+            const task = [fault.relatedTo(), fault.createdBy(), Utils.getAssignees(fault.assigned_to, db)];
+            const [relatedTo, createdBy, assignedTo] = await Promise.all(task);
+            fault['category'] = categories[fault['category_id']];
+            fault.created_by = createdBy.records.shift() || {};
             fault['group'] = groups[fault['group_id']];
             fault[fault.related_to] = relatedTo.records.shift() || {};
             fault['assigned_to'] = assignedTo;
+
+            if (fault['group']['children']) delete fault['group']['children'];
+            if (fault['group']['parent']) delete fault['group']['parent'];
+
+            faults[i] = fault;
+            i++;
         }
         return Utils.buildResponse({data: {items: faults}});
     }
@@ -124,7 +141,7 @@ class FaultService extends ApiService {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
 
-        let model = await this.context.database.table("faults").where(by, value).select(['assigned_to','id']);
+        let model = await this.context.database.table("faults").where(by, value).select(['assigned_to', 'id']);
 
 
         if (!model.length) return Utils.buildResponse({status: "fail", data: {message: "Fault doesn't exist"}}, 400);
