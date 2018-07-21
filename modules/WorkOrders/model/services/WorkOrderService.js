@@ -247,7 +247,7 @@ class WorkOrderService extends ApiService {
                     getNumberPrefix(workOrder.type_id), businessUnit['short_name'], 'work_orders', this.context
                 ).then(uniqueNo => {
                     //Get Mapper
-                    workOrder.work_order_no = uniqueNo;
+                    workOrder.work_order_no = uniqueNo.toUpperCase();
                     const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
                     WorkOrderMapper.createDomainRecord(workOrder).then(workOrder => {
                         if (!workOrder) return reject();
@@ -342,7 +342,7 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
         //Get the entity related to this work order
         if ((workOrder.related_to === "faults" && includes.includes("fault"))
             || (workOrder.related_to === "disconnection_billings" && includes.includes("billing"))) {
-            promises.push(workOrder.relatedTo())
+            promises.push(workOrder.relatedTo(workOrder.related_to))
         } else promises.push(null);
 
         promises.push(Utils.getAssignees(workOrder.assigned_to, db), workOrder.createdBy());
