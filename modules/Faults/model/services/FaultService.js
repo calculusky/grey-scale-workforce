@@ -64,7 +64,7 @@ class FaultService extends ApiService {
             fault['category'] = categories[fault['category_id']];
             fault.created_by = createdBy.records.shift() || {};
             fault['group'] = groups[fault['group_id']];
-            fault[fault.related_to] = relatedTo.records.shift() || {};
+            fault[fault.related_to.slice(0, -1)] = relatedTo.records.shift() || {};
             fault['assigned_to'] = assignedTo;
 
             if (fault['group']['children']) delete fault['group']['children'];
