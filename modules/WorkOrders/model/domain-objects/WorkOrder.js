@@ -43,13 +43,21 @@ class WorkOrder extends DomainObject {
             relation_id: 'string|required',
             status: 'numeric|required',
             summary: 'string|required',
-            issue_date: 'date|required',
-            group_id:'numeric|required'
+            issue_date: 'date|required'
         }
     }
 
-    relatedTo() {
-        return this.relations().morphTo('related_to', 'relation_id');
+    relatedTo(related_to = "", cols = []) {
+        switch (related_to) {
+            case "faults": {
+                if (cols.length) break;
+                cols.push('id', 'related_to', 'relation_id', 'fault_category_id', 'labels', 'priority', 'status', 'summary', 'issue_date');
+                break;
+            }
+            default:
+                cols.push('*')
+        }
+        return this.relations().morphTo('related_to', 'relation_id', cols);
     }
 
     /**
@@ -65,7 +73,7 @@ class WorkOrder extends DomainObject {
      * Returns the customer this Work Order was created for
      * @returns {*}
      */
-    customer(cols=['account_no', 'old_account_no', 'email','meter_no', 'customer_name', 'mobile_no', 'plain_address', 'customer_type']) {
+    customer(cols = ['account_no', 'old_account_no', 'email', 'meter_no', 'customer_name', 'mobile_no', 'plain_address', 'customer_type']) {
         return this.relations().belongsTo("Customer", 'relation_id', 'account_no', cols);
     }
 
@@ -93,7 +101,7 @@ class WorkOrder extends DomainObject {
         return this.relations().belongsTo("Payment", "work_order_no", "system_id");
     }
 
-    createdBy(cols=["id", "username", "first_name", "last_name"]) {
+    createdBy(cols = ["id", "username", "first_name", "last_name"]) {
         return this.relations().belongsTo("User", "created_by", cols);
     }
 }
