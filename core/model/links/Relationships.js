@@ -151,7 +151,7 @@ class Relationships {
     }
 
 
-    morphTo(modelNameColumn, modelIdColumn) {
+    morphTo(modelNameColumn, modelIdColumn, cols=['*']) {
         //TODO test if the modelNameCol is not selected
         if (!this.domainObject[modelNameColumn] || !this.domainObject[modelIdColumn]) {
             throw new ReferenceError(`The columns[${modelNameColumn},${modelIdColumn}] 
@@ -182,7 +182,7 @@ class Relationships {
             throw new ReferenceError(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
         }
 
-        let resultSets = KNEX.select(['*']).from(DomainMapper.tableName)
+        let resultSets = KNEX.select(cols).from(DomainMapper.tableName)
             .where(DomainMapper.primaryKey, this.domainObject[modelIdColumn]);
 
         let executor = (resolve, reject) => {
