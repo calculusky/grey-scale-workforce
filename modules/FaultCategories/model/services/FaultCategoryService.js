@@ -1,9 +1,6 @@
 const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
-// const Error = require('../../../../core/Utility/ErrorUtils')();
-// const validate = require('validatorjs');
-// const Events = require('../../../../events/events');
 let MapperFactory = null;
 
 
@@ -36,7 +33,7 @@ class FaultCategoryService extends ApiService {
         let items = [];
         Object.entries(faultCategories).forEach(([key, value]) => {
             if (value.hasOwnProperty("children")) delete  value['children'];
-            if (type && value['type'].toLowerCase() !== type.toLowerCase()) return;
+            if (type && `${value['type']}`.toLowerCase() !== type.toLowerCase()) return;
             if (weight && value['weight'] !== weight) return;
             items.push(value);
         });

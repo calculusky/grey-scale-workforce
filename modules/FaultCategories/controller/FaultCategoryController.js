@@ -19,7 +19,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /fault_categories:
      *   get:
-     *     summary: Retrieves a List of groups
+     *     summary: Retrieves a List of Fault Categories
      *     description: ''
      *     tags: [Groups]
      *     produces:
@@ -29,7 +29,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *       '200':
      *         description: Successful
      *         schema:
-     *           $ref: '#/definitions/getGroupOutput'
+     *           $ref: '#/definitions/getFaultCategories'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/offset'
