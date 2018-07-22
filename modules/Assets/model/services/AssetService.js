@@ -91,6 +91,9 @@ class AssetService {
             const asset = new Asset(item);
             const group = groups[item.group_id];
             const [bu, ut] = Utils.getBUAndUT(group, groups);
+            if (group['children']) delete group['children'];
+            if (bu['children']) delete bu['children'];
+            if (ut['children']) delete ut['children'];
             asset.group = group;
             asset.business_unit = bu;
             asset.undertaking = ut.shift() || null;
