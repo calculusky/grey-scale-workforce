@@ -32,8 +32,8 @@ class FaultCategoryService extends ApiService {
 
         let items = [];
         Object.entries(faultCategories).forEach(([key, value]) => {
-            if (value.hasOwnProperty("children")) delete  value['children'];
-            if (type && `${value['type']}`.toLowerCase() !== type.toLowerCase()) return;
+            if (value.hasOwnProperty("children")) delete value['children'];
+            if (type && !type.split(",").map(i => i.toLowerCase()).includes(`${value['type']}`.toLowerCase())) return;
             if (weight && value['weight'] !== weight) return;
             items.push(value);
         });
