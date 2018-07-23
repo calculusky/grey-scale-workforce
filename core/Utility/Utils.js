@@ -337,32 +337,41 @@ module.exports.getBUAndUT = function (group, groups) {
         if (!item) return;
         item.forEach(child => {
             if ("undertaking" === child.type.toLowerCase()) {
-                delete child.parent;
-                delete child.children;
+                if (child['parent']) delete child.parent;
+                if (child['children']) delete child.children;
                 return ut.push(child);
-            } else return findUT(groups[child.id]['children']);
+            } else {
+                return findUT(groups[child.id]['children']);
+            }
         });
     };
-    if (type === "business_unit") {
-        //downward movement
-        bu = group;
-        if (!bu.children) return [bu, []];
-        const children = bu.children;
-        delete bu.children;
-        findUT(children);
+    try {
+        if (type === "business_unit") {
+            //downward movement
+            bu = group;
+            if (!bu.children) return [bu, []];
+            const children = bu.children;
+            if (bu['children']) delete bu.children;
+            findUT(children);
+        }
+        else if (type === "undertaking") {
+            //upward movement
+            bu = this.getGroupParent(group, "business_unit");
+            if (bu && bu.parent) delete bu.parent;
+            if (bu && bu.children) delete bu.children;
+        } else {
+            bu = this.getGroupParent(group, "business_unit");
+            let ut1 = this.getGroupParent(group, "undertaking");
+            if (ut1) ut.push(ut1);
+            findUT(group.children);
+        }
+    } catch (e) {
+        console.log(e);
     }
-    else if (type === "undertaking") {
-        //upward movement
-        bu = this.getGroupParent(group, "business_unit");
-        delete bu.parent;
-        delete bu.children;
-    } else {
-        bu = this.getGroupParent(group, "business_unit");
-        let ut1 = this.getGroupParent(group, "undertaking");
-        if (ut1) ut.push(ut1);
-        findUT(group.children);
-    }
-    return [bu, ut];
+    let businessUnit = {}, undertaking = [];
+    Object.assign(businessUnit, bu);
+    Object.assign(undertaking, ut);
+    return [businessUnit, undertaking];
 };
 
 
