@@ -90,21 +90,17 @@ class AssetService {
             const asset = new Asset(item);
             let group = groups[asset.group_id];
             const [bu, ut] = Utils.getBUAndUT(group, groups);
-            let businessUnit = {}, undertaking = [], grp = {};
+            let grp = {};
 
             Object.assign(grp, group);
-            Object.assign(businessUnit, bu);
-            Object.assign(undertaking, ut);
 
             if (grp['children']) delete grp['children'];
-            if (businessUnit['children']) delete businessUnit['children'];
-            if (businessUnit['parent']) delete businessUnit['parent'];
-            if (undertaking['children']) delete undertaking['children'];
-            if (undertaking['parent']) delete undertaking['parent'];
+            if (bu['children']) delete bu['children'];
+            if (ut['parent']) delete ut['parent'];
 
             asset.group = grp;
-            asset.business_unit = businessUnit;
-            asset.undertaking = undertaking.shift() || null;
+            asset.business_unit = bu;
+            asset.undertaking = ut.shift() || null;
             return asset;
         });
         return Utils.buildResponse({data: {items: assets}});
