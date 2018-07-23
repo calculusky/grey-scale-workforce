@@ -85,20 +85,26 @@ class AssetService {
 
         const groups = await Utils.redisGet(this.context.persistence, "groups");
 
-
         const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
         let assets = results.map(item => {
             const asset = new Asset(item);
-            const group = groups[item.group_id];
+            let group = groups[asset.group_id];
             const [bu, ut] = Utils.getBUAndUT(group, groups);
-            if (group['children']) delete group['children'];
-            if (bu['children']) delete bu['children'];
-            if (bu['parent']) delete bu['parent'];
-            if (ut['children']) delete ut['children'];
-            if (ut['parent']) delete ut['parent'];
-            asset.group = group;
-            asset.business_unit = bu;
-            asset.undertaking = ut.shift() || null;
+            let businessUnit = {}, undertaking = [], grp = {};
+
+            Object.assign(grp, group);
+            Object.assign(businessUnit, bu);
+            Object.assign(undertaking, ut);
+
+            if (grp['children']) delete grp['children'];
+            if (businessUnit['children']) delete businessUnit['children'];
+            if (businessUnit['parent']) delete businessUnit['parent'];
+            if (undertaking['children']) delete undertaking['children'];
+            if (undertaking['parent']) delete undertaking['parent'];
+
+            asset.group = grp;
+            asset.business_unit = businessUnit;
+            asset.undertaking = undertaking.shift() || null;
             return asset;
         });
         return Utils.buildResponse({data: {items: assets}});
