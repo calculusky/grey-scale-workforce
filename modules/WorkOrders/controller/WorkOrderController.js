@@ -98,14 +98,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/getWorkOrderOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/user_id'
      *     - $ref: '#/parameters/fromDate'
      *     - $ref: '#/parameters/toDate'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
+     *     - $ref: '#/parameters/workOrderInclude'
      */
     app.get('/work_orders', urlencodedParser, (req, res) => {
-        console.log(req.query);
         API.workOrders().getWorkOrders(req.query, req.who).then(({data, code}) => {
             return res.status(code).send(data);
         }).catch(({err, code}) => {

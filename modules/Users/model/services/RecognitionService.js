@@ -70,7 +70,6 @@ class RecognitionService {
                     const pmToken = await ProcessAPI.login(username, password).catch(e => {
                         console.error('UserPMLogin', e);
                     });
-                    //TODO add permissions
                     const tokenOpt = {
                         sub: user.id,
                         aud: `${userAgent.family}`,
@@ -98,7 +97,6 @@ class RecognitionService {
                     delete user.firebase_token;
                     delete user.wf_user_id;
                     delete user.wf_user_pass;
-
                     return resolve(Utils.buildResponse({data: {token, user, permitted_groups}}));
                 }).catch(err => {
                 console.log(err);
