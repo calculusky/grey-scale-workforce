@@ -20,7 +20,11 @@ class UserService extends ApiService {
     getUsers(value = '?', by = "id", who = {}, offset = 0, limit = 10) {
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         const executor = (resolve, reject) => {
-            UserMapper.findDomainRecord({by, value})
+            const fields = ['id', 'username', 'email', 'first_name', 'last_name', 'middle_name',
+                'gender', 'mobile_no', 'alt_mobile_no', 'user_type', 'avatar', 'address_id',
+                'last_login', 'assigned_to', 'created_by', 'created_at', 'deleted_at', 'group_id', 'location'
+            ];
+            UserMapper.findDomainRecord({by, value, fields})
                 .then(result => {
                     //remove the password
                     let users = result.records;
@@ -105,6 +109,23 @@ class UserService extends ApiService {
         Promise.all(backgroundTask).catch(err => console.error('CreateUser', JSON.stringify(err)));
         delete dbUser.password;
         return Utils.buildResponse({data: dbUser});
+    }
+
+
+    async updateUserPermissions(permissions, who = {}) {
+
+    }
+
+    /**
+     * Get User Permissions
+     *
+     * @param userId
+     * @param who
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getUserPermissions(userId, who = {}) {
+        const permission = await Utils.getFromPersistent(this.context, `permissions:${userId}`, true);
+        return Utils.buildResponse({data: permission});
     }
 
     /**
@@ -252,11 +273,17 @@ class UserService extends ApiService {
 
         let reset = await db.table("password_resets").where("email", body.email);
 
-        if (!reset.length) return Promise.reject(Utils.buildResponse({status: "fail", msg:"Invalid Password Reset"}, 403));
+        if (!reset.length) return Promise.reject(Utils.buildResponse({
+            status: "fail",
+            msg: "Invalid Password Reset"
+        }, 403));
 
         reset = reset.shift();
 
-        if (!Password.equals(body.token, reset.token)) return Promise.reject(Utils.buildResponse({status: "fail", msg:"Invalid Token or Token has expired"}, 403));
+        if (!Password.equals(body.token, reset.token)) return Promise.reject(Utils.buildResponse({
+            status: "fail",
+            msg: "Invalid Token or Token has expired"
+        }, 403));
 
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         const User = DomainFactory.build(DomainFactory.USER);

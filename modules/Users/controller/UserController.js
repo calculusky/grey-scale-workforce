@@ -41,7 +41,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *
      */
     app.post('/login', jsonParser, urlencodedParser, (req, res) => {
-        // Log.info('/login', req.body);
+        Log.info('/login', req.body);
         API.recognitions().login(req.body.username, req.body.password, req)
             .then(({data, code}) => {
                 // console.log(data);
@@ -157,40 +157,37 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
     });
 
 
-    // /**
-    //  * @swagger
-    //  * /users/{offset}/{limit}:
-    //  *  get:
-    //  *   description: "Retrieves a list of users by a given offset and limit.
-    //  *                    A very good use-case is when implementing a pagination."
-    //  *   summary: "Retrieves a list of users"
-    //  *   tags: [Users]
-    //  *   produces:
-    //  *   - application/json
-    //  *   operationId: getUsers
-    //  *   responses:
-    //  *     '200':
-    //  *       description: "A List of users"
-    //  *       schema:
-    //  *         type: array
-    //  *         items:
-    //  *           $ref: '#/definitions/getUserOutput'
-    //  *   parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  *
-    //  */
-    // app.get("/users/:offset?/:limit?", urlencodedParser, (req, res)=> {
-    //     Log.info(req.params);
-    //     API.users().getUsers(req.params.id, undefined, req.who)
-    //         .then(({data, code=200})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status(code).send(err);
-    //         });
-    // });
+    /**
+     * @swagger
+     * /users/{id}/permissions:
+     *  get:
+     *   description: "Get a user permissions"
+     *   summary: "Fetches a user permissions"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: "getUserPermissions"
+     *   responses:
+     *     '200':
+     *       description: "A Permission Object"
+     *       schema:
+     *         $ref: '#/definitions/getUserPermission'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - name: id
+     *       description: The ID of the user
+     *       in: path
+     *       required: true
+     *       type: integer
+     */
+    app.get("/users/:id/permissions", urlencodedParser, (req, res) => {
+        API.users().getUserPermissions(req.params.id, req.who).then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code = 500}) => {
+            return res.status(code).send(err);
+        });
+    });
+
 
     /**
      * @swagger
