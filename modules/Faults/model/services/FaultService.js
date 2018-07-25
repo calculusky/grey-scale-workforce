@@ -31,7 +31,7 @@ class FaultService extends ApiService {
     async getFaults(query = {}, who = {}) {
         const db = this.context.database;
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
-        const {id, status, priority, category_id, offset, limit, assigned_to, created_by, from_date, to_date} = query;
+        const {id, status, priority, category_id, offset=0, limit=10, assigned_to, created_by, from_date, to_date} = query;
         const task = [
             Utils.getFromPersistent(this.context, "groups", true),
             Utils.getFromPersistent(this.context, "fault:categories", true)
@@ -46,6 +46,7 @@ class FaultService extends ApiService {
             if (assigned_to) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assigned_to}}')`);
             if (created_by) resultSet.where("created_by", created_by);
             if (from_date && to_date) resultSet.whereBetween('start_date', [from_date, to_date]);
+            resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
             task.push(resultSet);
         }
 
