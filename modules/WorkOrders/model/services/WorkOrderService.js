@@ -116,8 +116,8 @@ class WorkOrderService extends ApiService {
      * @param who
      */
     async getWorkOrders(query, who = {}) {
-        const offset = parseInt(query.offset || "0"),
-            limit = parseInt(query.limit || "10"),
+        const offset = query.offset || 0,
+            limit = query.limit || 10,
             relationId = query['relation_id'],
             assignedTo = query['assigned_to'],
             createdBy = query['created_by'],
@@ -145,7 +145,7 @@ class WorkOrderService extends ApiService {
         if (createdBy) resultSet.where("created_by", createdBy);
         if (relationId) resultSet.where("relation_id", relationId);
 
-        resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
+        resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
         const records = await resultSet.catch(err => {
             return Promise.reject(Utils.buildResponse(Utils.getMysqlError(err), 400));
         });

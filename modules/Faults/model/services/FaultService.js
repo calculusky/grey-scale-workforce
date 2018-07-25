@@ -46,7 +46,7 @@ class FaultService extends ApiService {
             if (assigned_to) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assigned_to}}')`);
             if (created_by) resultSet.where("created_by", created_by);
             if (from_date && to_date) resultSet.whereBetween('start_date', [from_date, to_date]);
-            resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
+            resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
             task.push(resultSet);
         }
 
