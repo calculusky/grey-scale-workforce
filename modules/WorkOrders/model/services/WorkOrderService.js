@@ -103,8 +103,7 @@ class WorkOrderService extends ApiService {
             const assignees = _.differenceBy(JSON.parse(workOrder.assigned_to), model.assigned_to, 'id');
             Events.emit("assign_work_order",
                 {id: model.id, work_order_no: model.work_order_no, summary: model.summary},
-                (assignees.length) ? assignees : workOrder.assigned_to,
-                who);
+                (assignees.length) ? assignees : workOrder.assigned_to, who);
             return Utils.buildResponse({data: result.shift()});
         });
     }
