@@ -31,7 +31,7 @@ class FaultService extends ApiService {
     async getFaults(query = {}, who = {}) {
         const db = this.context.database;
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
-        const {id, status, priority, category_id, offset=0, limit=10, assigned_to, created_by, from_date, to_date} = query;
+        const {id, status, priority, category_id, offset = 0, limit = 10, assigned_to, created_by, from_date, to_date} = query;
         const task = [
             Utils.getFromPersistent(this.context, "groups", true),
             Utils.getFromPersistent(this.context, "fault:categories", true)
@@ -39,7 +39,7 @@ class FaultService extends ApiService {
 
         if (id) task.push(FaultMapper.findDomainRecord({by: "id", value: id}, offset, limit));
         else {
-            const resultSet = db.table("faults").select(["*"]).where("deleted_at", null);
+            const resultSet = db.table("faults").select(["*"]);
             if (status) resultSet.whereIn('status', status.split(","));
             if (category_id) resultSet.whereIn("fault_category_id", category_id.split(","));
             if (priority) resultSet.whereIn("priority", priority.split(","));
@@ -54,6 +54,7 @@ class FaultService extends ApiService {
         faults = (faults.records) ? faults.records : faults;
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         let i = 0;
+
         for (let fault of faults) {
             if (!(fault instanceof Fault)) {
                 let f = new Fault();
@@ -61,12 +62,22 @@ class FaultService extends ApiService {
                 fault = f;
             }
             const task = [fault.relatedTo(), fault.createdBy(), Utils.getAssignees(fault.assigned_to, db)];
-            const [relatedTo, createdBy, assignedTo] = await Promise.all(task);
+            task.push(
+                db.count('note as notes_count').from("notes").where("module", "faults").where("relation_id", fault.id),
+                db.count('note as attachments_count').from("notes").where("module", "attachments").where("relation_id", fault.id)
+            );
+
+            const [relatedTo, createdBy, assignedTo, notesCount, attachmentCount] = await Promise.all(task);
             fault['category'] = categories[fault['category_id']];
             fault.created_by = createdBy.records.shift() || {};
             fault['group'] = groups[fault['group_id']];
             fault[fault.related_to.slice(0, -1)] = relatedTo.records.shift() || {};
             fault['assigned_to'] = assignedTo;
+
+            if (notesCount && attachmentCount) {
+                fault['notes_count'] = notesCount.shift()['notes_count'];
+                fault['attachments_count'] = attachmentCount.shift()['attachments_count'];
+            }
 
             if (fault['group']['children']) delete fault['group']['children'];
             if (fault['group']['parent']) delete fault['group']['parent'];
