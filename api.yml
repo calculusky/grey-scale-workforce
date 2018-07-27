@@ -71,7 +71,7 @@ parameters:
     description: The group id
 
   fault_id:
-    name: fault_id
+    name: id
     type: integer
     required: true
     in: path
@@ -130,7 +130,7 @@ parameters:
     name: from_date
     type: string
     format: date
-    required: true
+    required: false
     in: query
     description: The date to start from
 
@@ -138,7 +138,7 @@ parameters:
     name: to_date
     type: string
     format: date
-    required: true
+    required: false
     in: query
     description: The date to end
 
@@ -148,6 +148,13 @@ parameters:
     required: true
     in: path
     description: time of record to fetch
+
+  workOrderInclude:
+    name: include
+    type: string
+    required: false
+    in: query
+    description: Use this to specify the closed entities you will like to receive, e.g ?include=fault,billing
 
 #----------------------Definitions-------------------------------
 definitions:
@@ -242,6 +249,14 @@ definitions:
     required:
       - data
       - status
+
+  getUserPermission:
+    type: object
+    properties:
+      status:
+        type: string
+      data:
+        type: object
 
   User:
     required:

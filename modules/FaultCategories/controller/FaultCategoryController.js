@@ -21,7 +21,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *   get:
      *     summary: Retrieves a List of Fault Categories
      *     description: ''
-     *     tags: [Groups]
+     *     tags: [Faults]
      *     produces:
      *     - application/json
      *     operationId: getGroups

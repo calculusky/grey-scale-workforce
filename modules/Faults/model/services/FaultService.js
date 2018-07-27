@@ -129,6 +129,8 @@ class FaultService extends ApiService {
 
         const record = await FaultMapper.createDomainRecord(fault).catch(err => (Promise.reject(err)));
 
+        Utils.convertDataKeyToJson(record, "labels", "assigned_to");
+
         if (files.length) {
             API.attachments().createAttachment({module: "faults", relation_id: record.id}, who, files, API).then();
         }

@@ -75,6 +75,8 @@ module.exports.serializeAssignedTo = function (assignedTo = "[]") {
             assigned_to = assignedTo.map(t => {
                 if (!Number.isNaN(t)) {
                     return {id: parseInt(t), created_at: this.date.dateToMysql()};
+                } else {
+                    //check if it is an object
                 }
                 return t;
             });
@@ -84,6 +86,28 @@ module.exports.serializeAssignedTo = function (assignedTo = "[]") {
         console.log(e);
     }
     return assigned_to;
+};
+
+module.exports.convertDataKeyToJson = function (data, ...keys) {
+    keys.forEach(i => {
+        if (!data[i]) return;
+        let [isValid, json] = this.isJson(data[i]);
+        if (isValid) data[i] = json;
+    });
+};
+
+module.exports.isJson = function (str) {
+    if (typeof str !== "string" || `${str}`.length === 0) return [false, str];
+    let json = "";
+    let isValid = false;
+    try {
+        json = JSON.parse(str);
+        isValid = true;
+    } catch (e) {
+        isValid = false
+    }
+    if (!json || typeof json !== "object") isValid = false;
+    return [isValid, json]
 };
 
 module.exports.verifyRelatedSource = async function (db, domain) {
