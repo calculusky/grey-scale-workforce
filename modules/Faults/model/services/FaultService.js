@@ -98,7 +98,6 @@ class FaultService extends ApiService {
      */
     async createFault(body = {}, who = {}, files = [], API) {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
-        const redis = this.context.persistence;
         const fault = new Fault(body);
 
         //If this fault is created from an external source then we should verify the relation_id
@@ -115,13 +114,11 @@ class FaultService extends ApiService {
 
         if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
-        const groups = await Utils.redisGet(redis, "groups").catch(_ => (Promise.reject(Error.InternalServerError)));
+        const groups = await Utils.getFromPersistent(this.context, "groups", true).catch(_ => (Promise.reject(Error.InternalServerError)));
 
         const group = groups[fault.group_id];
 
         if (!group) return Promise.reject(Error.GroupNotFound);
-
-        // const bUnit = Utils.getGroupParent(group, 'business_unit') || group;
 
         fault.fault_no = ``;//TODO generate fault no
 
@@ -130,6 +127,7 @@ class FaultService extends ApiService {
         const record = await FaultMapper.createDomainRecord(fault).catch(err => (Promise.reject(err)));
 
         Utils.convertDataKeyToJson(record, "labels", "assigned_to");
+        record['created_by'] = {id: who.sub, username: who.name};
 
         if (files.length) {
             API.attachments().createAttachment({module: "faults", relation_id: record.id}, who, files, API).then();

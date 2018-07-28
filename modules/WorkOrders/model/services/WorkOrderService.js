@@ -214,7 +214,7 @@ class WorkOrderService extends ApiService {
      * @param who
      * @returns {*}
      */
-    createWorkOrder(body = {}, who = {}) {
+    async createWorkOrder(body = {}, who = {}) {
         console.log('body', body);
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         let workOrder = new WorkOrder(body);
@@ -228,37 +228,29 @@ class WorkOrderService extends ApiService {
 
         ApiService.insertPermissionRights(workOrder, who);
 
-        const executor = (resolve, reject) => {
-            this.context.persistence.get("groups", (err, groups) => {
-                if (err) return;
-                groups = JSON.parse(groups);
-                const group = groups[workOrder.group_id];
-                // If the group actually doesn't exist then we can return this as a false request
-                if (!group) return Promise.reject(Utils.buildResponse(
-                    {status: "fail", data: {message: "Group specified doesn't exist"}}, 400
-                ));
+        const groups = await Utils.getFromPersistent(this.context, "groups", true).catch(_ => (Promise.reject(Error.InternalServerError)));
 
-                // If this current user group doesn't have business unit as parent
-                // then the user's current group or the specified group will be used.
-                let businessUnit = Utils.getGroupParent(group, 'business_unit') || group;
+        const group = groups[workOrder.group_id];
 
-                Utils.generateUniqueSystemNumber(
-                    getNumberPrefix(workOrder.type_id), businessUnit['short_name'], 'work_orders', this.context
-                ).then(uniqueNo => {
-                    //Get Mapper
-                    workOrder.work_order_no = uniqueNo.toUpperCase();
-                    const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-                    WorkOrderMapper.createDomainRecord(workOrder).then(workOrder => {
-                        if (!workOrder) return reject();
-                        Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
-                        return resolve(Utils.buildResponse({data: workOrder}));
-                    }).catch(err => {
-                        return reject(err);
-                    });
-                });
-            });
-        };
-        return new Promise(executor);
+        if (!group) return Promise.reject(Error.GroupNotFound);
+
+        let bu = Utils.getGroupParent(group, 'business_unit') || group;
+
+        const uniqueNo = await Utils.generateUniqueSystemNumber(
+            getNumberPrefix(workOrder.type_id), bu['short_name'], 'work_orders', this.context
+        ).catch(Promise.reject(Error.InternalServerError));
+
+        workOrder.work_order_no = uniqueNo.toUpperCase();
+
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+
+        workOrder = await WorkOrderMapper.createDomainRecord(workOrder).catch(err => (Promise.reject(err)));
+
+        Utils.convertDataKeyToJson(workOrder, "labels", "assigned_to");
+
+        Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
+
+        return Utils.buildResponse({data: workOrder});
     }
 
     /**

@@ -12,7 +12,7 @@ require("../boostrap")(ctx);
 
 let workOrder = null;
 
-beforeAll(()=> {
+beforeAll(() => {
     // return API.workOrders().createWorkOrder({
     //     type_id: 1,
     //     related_to: "disconnection_billings",
@@ -34,7 +34,7 @@ beforeAll(()=> {
 //     return expect(API.workOrders().getWorkOrders()).resolves.toBeDefined();
 // });
 
-test("Test that we can create a work order", ()=> {
+test("Test that we can create a work order", () => {
     return expect(API.workOrders().createWorkOrder({
         type_id: 1,
         related_to: "disconnection_billings",
@@ -43,12 +43,12 @@ test("Test that we can create a work order", ()=> {
         summary: "Fix it",
         assigned_to: `["1"]`,
         status: '1',
-        group_id:1,
+        group_id: 1,
         'issue_date': '2017/10/5'
-    }, {group: 1})).rejects.toEqual("");
+    }, {group: 1})).resolves.toEqual({});
 });
 
-test("Test that we can't create a work order with an invalid group id", ()=> {
+test("Test that we can't create a work order with an invalid group id", () => {
     return expect(API.workOrders().createWorkOrder({
         type_id: 1,
         related_to: "disconnection_billings",
@@ -58,16 +58,16 @@ test("Test that we can't create a work order with an invalid group id", ()=> {
         assigned_to: `["1"]`,
         status: '1',
         'issue_date': '2017/10/5'
-    }, {group: 100000})).rejects.toThrow({
+    }, {group: 100000})).rejects.toEqual({
         err: {
             status: 'fail',
-            data: {message: 'Group specified doesn\'t exist'}
+            data: {group_id: ["The group_id doesn't exist."]}
         },
         code: 400
     });
 });
 
-test('That we can retrieve a work order by a column', ()=> {
+test('That we can retrieve a work order by a column', () => {
     return API.workOrders().getWorkOrder('DROT00000417703', 'work_order_no').then(res => {
         console.log(res);
         expect(res).toEqual(
@@ -81,7 +81,7 @@ test('That we can retrieve a work order by a column', ()=> {
 });
 
 
-test("Retrieve list of work order", ()=> {
+test("Retrieve list of work order", () => {
     return API.workOrders().getWorkOrder(`{"id":1}`, "assigned_to->[]").then(res => {
         expect(res).toEqual(
             expect.objectContaining({
@@ -92,11 +92,11 @@ test("Retrieve list of work order", ()=> {
     });
 });
 
-test("Retrieve list of work order that its relation id doesn't exist should be excluded", ()=> {
+test("Retrieve list of work order that its relation id doesn't exist should be excluded", () => {
     return API.workOrders().getWorkOrder({
         'assigned_to->[]': `{"id":1}`,
         'status': 1
-    }, undefined, {group: 1}, 0, 10).then(res=> {
+    }, undefined, {group: 1}, 0, 10).then(res => {
         expect(res).toEqual(
             expect.objectContaining({
                 code: expect.any(Number),
@@ -106,9 +106,9 @@ test("Retrieve list of work order that its relation id doesn't exist should be e
     });
 });
 
-test("Retrieve list of work order within a specific date range", ()=> {
+test("Retrieve list of work order within a specific date range", () => {
     return API.workOrders().getWorkOrders(1, 1, '2018-04-07', '2018-04-15', 0, 10, {group: 1})
-        .then(res=> {
+        .then(res => {
             console.log(res);
             expect(res).toEqual(
                 expect.objectContaining({
@@ -126,6 +126,6 @@ test("Retrieve material requisition that belongs to a work order", () => {
 });
 
 
-afterAll(()=> {
+afterAll(() => {
     return API.workOrders().deleteWorkOrder("relation_id", "12");
 });

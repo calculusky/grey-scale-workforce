@@ -46,7 +46,6 @@ class MessageEvent extends EventEmitter {
             from: who.sub,
             to: userIds
         };
-        console.log(body);
         await this.api.notifications().sendNotification(body, who, this.api).catch(err=>{
             console.log('MessageEvent:', JSON.stringify(err));
         });
