@@ -12,6 +12,7 @@
   "resolution": "resolution",
   "issue_date": "issue_date",
   "completed_date": "completed_date",
+  "permit_no":"permit_no",
   "source": "source",
   "source_id": "source_id",
   "request_id": "request_id",

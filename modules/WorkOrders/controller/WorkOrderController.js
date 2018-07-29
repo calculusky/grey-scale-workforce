@@ -198,8 +198,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *      - $ref: '#/parameters/offset'
      *      - $ref: '#/parameters/limit'
      */
-    app.put('/work_orders/:id/status/:statusId', urlencodedParser, (req, res) => {
-        API.workOrders().changeWorkOrderStatus(req.params['id'], req.params['statusId'])
+    app.put('/work_orders/:id/status/:statusId', multiPart.array("files", 10), (req, res) => {
+        let {id, statusId} = req.params;
+        API.workOrders().changeWorkOrderStatus(id, statusId, req.body, req.files, req.who, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -241,30 +242,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-    /**
-     * @swagger
-     * /work_orders/{id}/status/{statusId}:
-     *  put:
-     *    summary: "Updates the status of a Work Order"
-     *    description: "This can be used to update a  work_order to either of the following :
-     *                    Approved, Pending or Rejected"
-     *    tags: ['Work Orders']
-     *    produces:
-     *    - application/json
-     *    operationId: "updateRequestStatus"
-     *    responses:
-     *      '200':
-     *        description: 'The updated  work_order'
-     *        schema:
-     *          $ref: '#/definitions/getWorkOrderOutput'
-     *    parameters:
-     *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/work_order_id'
-     *    - $ref: '#/parameters/statusId'
-     */
-    app.put('/work_orders/:id/status/:statusId', urlencodedParser, (req, res) => {
-        res.send("Not yet implemented");
-    });
 
     /**
      * @swagger

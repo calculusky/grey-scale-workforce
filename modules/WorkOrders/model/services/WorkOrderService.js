@@ -65,7 +65,6 @@ class WorkOrderService extends ApiService {
         const workOrders = results.records;
 
         if (!workOrders.length) return Utils.buildResponse({data: {items: results.records}});
-
         const extras = {groups, workTypes, faultCategories};
         return _doWorkOrderList(workOrders, this.context, this.moduleName, isSingle, extras);
     }
@@ -257,13 +256,20 @@ class WorkOrderService extends ApiService {
      *
      * @param orderId
      * @param status
+     * @param note
+     * @param files
+     * @param who
+     * @param API {API}
      * @returns {Promise.<WorkOrder>|*}
      */
-    changeWorkOrderStatus(orderId, status) {
+    changeWorkOrderStatus(orderId, status, note, files = [], who = {}, API) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         let workOrder = new WorkOrder();
 
         workOrder.status = status;
+
+        //if there a note lets
+        if (note) API.notes().createNote(note, who, files, API);
 
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         return WorkOrderMapper.updateDomainRecord({value: orderId, domain: workOrder}).then(result => {
@@ -321,7 +327,7 @@ function sweepWorkOrderResponsePayload(workOrder) {
  * @private
  */
 
-async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories, includes}) {
+async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories, includes=[]}) {
     const db = context.database;
     for (let workOrder of workOrders) {
 
@@ -338,6 +344,8 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
 
         promises.push(Utils.getAssignees(workOrder.assigned_to, db), workOrder.createdBy());
 
+        console.log("test");
+
         //If we're loading for a list view let's get the counts of notes, attachments etc.
         if (!isSingle) {
             let nNotes = db.count('note as notes_count').from("notes")
@@ -346,16 +354,20 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
             let nAttachments = db.count('id as attachments_count').from("attachments")
                 .where("module", module).where("relation_id", workOrder.id);
 
-            promises.push(nNotes, nAttachments);
+            let utilizedCount = db.count("id as mat_count").from("material_utilizations")
+                .where("work_order_id", workOrder.id);
+
+            promises.push(nNotes, nAttachments, utilizedCount);
         }
 
-        const [relatedTo, assignedTo, createdBy, notesCount, attachmentCount] = await Promise.all(promises).catch(err => {
+        const [relatedTo, assignedTo, createdBy, nCount, aCount, mCount] = await Promise.all(promises).catch(err => {
             return Promise.reject(err);
         });
         //its compulsory that we check that a record exist
-        if (notesCount && attachmentCount) {
-            workOrder['notes_count'] = notesCount.shift()['notes_count'];
-            workOrder['attachments_count'] = attachmentCount.shift()['attachments_count'];
+        if (nCount && aCount) {
+            workOrder['notes_count'] = nCount.shift()['notes_count'];
+            workOrder['attachments_count'] = aCount.shift()['attachments_count'];
+            workOrder['materials_utilized_count'] = 1;//mCount.shift()['mat_count'];
         }
 
         if (assignedTo) workOrder.assigned_to = assignedTo;
