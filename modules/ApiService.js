@@ -26,7 +26,7 @@ class ApiService {
                 {id: who.sub, 'created_at': Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s')}
             ]);
         };
-        if (typeof assignedTo === "string" && assignedTo === "[]" || assignedTo.length === 0) setDefaultAssignedTo();
+        if (typeof assignedTo === "string" && (assignedTo === "[]" || assignedTo.length === 0)) setDefaultAssignedTo();
         else if (!assignedTo || assignedTo.length === 0) setDefaultAssignedTo();
     }
 }
