@@ -36,16 +36,6 @@ class AttachmentService extends ApiService {
                     attachments.forEach(attachment => {
                         attachment.user().then(res => {
                             attachment.user = res.records.shift() || {};
-                            if (attachment.user) {
-                                delete attachment.user.password;
-                                delete attachment.user.permissions;
-                                delete attachment.user.firebase_token;
-                                delete attachment.user.location;
-                                delete attachment.user.middle_name;
-                                delete attachment.user.email;
-                                delete attachment.user.created_at;
-                                delete attachment.user.updated_at;
-                            }
                             if (++processed === rowLen)
                                 return resolve(Utils.buildResponse({data: {items: result.records}}));
                         }).catch(err => {

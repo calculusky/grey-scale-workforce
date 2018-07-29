@@ -52,8 +52,8 @@ class Attachment extends DomainObject {
     }
 
 
-    user() {
-        return this.relations().belongsTo("User", "created_by");
+    user(cols = ["id", "username", "first_name", "last_name"]) {
+        return this.relations().belongsTo("User", "created_by", cols);
     }
 }
 
