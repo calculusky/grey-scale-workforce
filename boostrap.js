@@ -79,19 +79,20 @@ module.exports = function route(context) {
             let routePaths = context.config.storage['routeStorage'];
             let saveAt = parentPath;
             let routePath = routePaths[path];
+            let body = req.body;
+
             if (routePath) {
                 saveAt = (routePath.use_parent) ? `${saveAt}${routePath.path}` : routePath.path;
             } else {
-                if (path === "attachments") {
-                    const body = req.body;
-                    saveAt = `${saveAt}/attachments/${body.module}`
-                } else if (path === 'uploads') {
-                    //for uploads the upload type is important
-                    saveAt = `${saveAt}/uploads/${req.body['upload_type']}`;
-                } else if (req.method === "PUT" && path.toLowerCase() === "users") {
+                if (path === "attachments") saveAt = `${saveAt}/attachments/${body.module}`;
+                else if (path === 'uploads') saveAt = `${saveAt}/uploads/${req.body['upload_type']}`;
+                else if (req.method === "PUT" && path.toLowerCase() === "users") {
                     const userFolderPath = `${saveAt}/profile/${req.params['id']}`;
                     if (!fs.existsSync(userFolderPath)) fs.mkdirSync(`${saveAt}/profile/${req.params['id']}`);
                     saveAt = `${saveAt}/profile/${req.params['id']}`
+                } else if (path === "work_orders") {
+                    if (req.method === 'PUT' && req.path.includes("status")) saveAt = `${saveAt}/attachments/notes`;
+                    else saveAt = `${saveAt}/attachments/work_orders`
                 }
             }
             cb(null, saveAt);
@@ -129,7 +130,7 @@ module.exports = function route(context) {
             if (fs.existsSync(filePath)) {
                 fs.readdirSync(filePath).forEach(mapper => {
                     if (mapper) {
-                        context.modelMappers.build(mapper.replace(/mapper.js/i, ""),`${filePath}/${mapper}`, context);
+                        context.modelMappers.build(mapper.replace(/mapper.js/i, ""), `${filePath}/${mapper}`, context);
                     }
                 });
             }
