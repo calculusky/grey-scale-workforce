@@ -50,7 +50,9 @@ class Fault extends DomainObject {
             status: 'numeric|required',
             group_id: 'numeric|required',
             priority: 'numeric|required',
-            issue_date: 'date|required'
+            issue_date: 'date|required',
+            labels: 'string-array',//please note that this are customer-validators
+            assigned_to:'string-array'
         };
     }
 
@@ -59,7 +61,7 @@ class Fault extends DomainObject {
      * @returns {*}
      */
     relatedTo(related_to = "assets", cols = (related_to === "assets")
-        ? ['id', 'asset_name','status', 'asset_type', 'serial_no', 'group_id', 'location']
+        ? ['id', 'asset_name', 'status', 'asset_type', 'serial_no', 'group_id', 'location']
         : ['*']) {
         return this.relations().morphTo('related_to', 'relation_id', cols);
     }

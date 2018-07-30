@@ -3,7 +3,9 @@
  * Created by paulex on 7/5/17.
  */
 const KNEX = require('knex');
+const Validator = require("validatorjs");
 const MapperFactory = require('./factory/MapperFactory');
+const Utils = require("../core/Utility/Utils");
 const redis = require("redis"), client = redis.createClient({
     host: process.env.REDIS_HOST || "localhost",
     port: process.env.REDIS_PORT || 6379
@@ -31,9 +33,22 @@ class Context {
             }
         });
 
+        this.registerCustomValidators();
+
         this.persistence.on('ready', () => this.loadStaticData());
         // this.persistence.init({dir: this.config.storage.persistence.path}).then(i=>this.loadStaticData(i));
         this._(this).incoming_store = {};
+
+
+        this._(this).registerCustomValidators = () => {
+            Validator.register("string-array", (value, req, attr) => {
+                const [isValid, obj] = Utils.isJson(value);
+                return (isValid) ? Array.isArray(obj) : false;
+            }, "The :attribute must be a string-array or an array");
+        };
+
+
+        this._(this).registerCustomValidators();
 
         //load the modelMappers here into memory
         // this._(this).buildModelMappers = () => {
@@ -51,7 +66,8 @@ class Context {
         Context.globalContext = this;
     }
 
-    //we are going load certain static data into memory
+
+//we are going load certain static data into memory
     async loadStaticData() {
         const db = this.database;
         let findParents = (_groups, group, parentKey) => {
@@ -74,14 +90,15 @@ class Context {
             fLeftJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.child_category_id'],
             fInnerJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.parent_category_id'];
 
-        const [dbGroups, groupChildren, woTypes, aTypes, dbFCategories, fCatChildren] = await Promise.all([
-            db.select(iCols).from("groups").leftJoin(...gLeftJoin).where('deleted_at', null),
-            db.select(tCols).from('groups').innerJoin(...gInnerJoin).where('deleted_at', null).groupBy('parent_group_id'),
-            db.select(['id', 'name']).from("work_order_types"),
-            db.select(['id', 'name']).from("asset_types"),
-            db.select(fCols1).from("fault_categories").leftJoin(...fLeftJoin).where("fault_categories.deleted_at", null),
-            db.select(fCols).from("fault_categories").innerJoin(...fInnerJoin).where("fault_categories.deleted_at", null).groupBy('parent_category_id')
-        ]);
+        const [dbGroups, groupChildren, woTypes, aTypes, dbFCategories, fCatChildren] = await
+            Promise.all([
+                db.select(iCols).from("groups").leftJoin(...gLeftJoin).where('deleted_at', null),
+                db.select(tCols).from('groups').innerJoin(...gInnerJoin).where('deleted_at', null).groupBy('parent_group_id'),
+                db.select(['id', 'name']).from("work_order_types"),
+                db.select(['id', 'name']).from("asset_types"),
+                db.select(fCols1).from("fault_categories").leftJoin(...fLeftJoin).where("fault_categories.deleted_at", null),
+                db.select(fCols).from("fault_categories").innerJoin(...fInnerJoin).where("fault_categories.deleted_at", null).groupBy('parent_category_id')
+            ]);
 
         const groups = {}, groupParentChild = {}, workTypes = {}, assetTypes = {},
             faultCategories = {}, fCatParentChild = {};
@@ -100,7 +117,7 @@ class Context {
             }
         };
 
-        const mergeChildren = (dataList, parentOffspring, store)=>{
+        const mergeChildren = (dataList, parentOffspring, store) => {
             dataList.forEach(data => {
                 const children = parentOffspring[data.id];
                 if (!children) return;

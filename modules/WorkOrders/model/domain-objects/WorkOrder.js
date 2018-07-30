@@ -43,7 +43,9 @@ class WorkOrder extends DomainObject {
             relation_id: 'string|required',
             status: 'numeric|required',
             summary: 'string|required',
-            issue_date: 'date|required'
+            issue_date: 'date|required',
+            labels: 'string-array',
+            assigned_to: 'string-array'
         }
     }
 
