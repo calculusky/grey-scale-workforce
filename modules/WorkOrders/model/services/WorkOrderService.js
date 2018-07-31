@@ -127,7 +127,6 @@ class WorkOrderService extends ApiService {
         let includes = query['include'] || ["fault", "billing"];//by default we'd request for fault and billing
         if (typeof includes === "string") includes = includes.split(',');
 
-
         //Prepare the static data from persistence storage
         let [groups, workTypes, faultCategories] = await Promise.all([
             Utils.getFromPersistent(this.context, "groups", true),
@@ -136,6 +135,7 @@ class WorkOrderService extends ApiService {
         ]);
 
         let resultSet = this.context.database.select(['*']).from("work_orders");
+
         if (fromDate && toDate) resultSet.whereBetween('start_date', [fromDate, toDate]);
         if (assignedTo) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assignedTo}}')`);
         if (status) resultSet.whereIn('status', status.split(","));
@@ -143,10 +143,12 @@ class WorkOrderService extends ApiService {
         if (createdBy) resultSet.where("created_by", createdBy);
         if (relationId) resultSet.where("relation_id", relationId);
 
+
         resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
         const records = await resultSet.catch(err => {
             return Promise.reject(Utils.buildResponse(Utils.getMysqlError(err), 400));
         });
+
 
         let workOrders = [];
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
@@ -327,7 +329,7 @@ function sweepWorkOrderResponsePayload(workOrder) {
  * @private
  */
 
-async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories, includes=[]}) {
+async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories, includes = []}) {
     const db = context.database;
     for (let workOrder of workOrders) {
 
@@ -367,7 +369,7 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
         if (nCount && aCount) {
             workOrder['notes_count'] = nCount.shift()['notes_count'];
             workOrder['attachments_count'] = aCount.shift()['attachments_count'];
-            workOrder['materials_utilized_count'] = 1;//mCount.shift()['mat_count'];
+            workOrder['materials_utilized_count'] = mCount.shift()['mat_count'];
         }
 
         if (assignedTo) workOrder.assigned_to = assignedTo;

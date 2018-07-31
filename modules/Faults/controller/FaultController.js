@@ -157,7 +157,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/fault_id'
      */
     app.get('/faults/:id/work_orders', urlencodedParser, (req, res) => {
-        const query = {relation_id: req.params['id'], type_id: 3, include: ""};
+        const query = {relation_id: req.params['id'], type_id: "3"};
         return API.workOrders().getWorkOrders(query, req.who).then(({data, code}) => {
             return res.status(code).send(data);
         }).catch(({err, code}) => {

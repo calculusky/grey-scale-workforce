@@ -26,7 +26,7 @@ test("Test that createFault is resolves with a value", () => {
         summary: "test",
         group_id: 1,
         priority: 1,
-        labels:"---"
+        labels:[]
     };
     return expect(API.faults().createFault(fault, {}, [], API)).resolves.toBeDefined()
 });
