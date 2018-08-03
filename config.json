@@ -1,13 +1,13 @@
 {
   "storage": {
-    "path": "/var/www/html/fsm/storage/app/public",
+    "path": "/var/www/html/mrworking-web/storage/app/public",
     "routeStorage": {
       "meter_readings": {
         "path": "/attachments/meter_readings",
         "use_parent": true
       },
       "faults": {
-        "path": "/faults",
+        "path": "/attachments/faults",
         "use_parent": true
       },
       "notes": {
