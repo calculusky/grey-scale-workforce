@@ -177,6 +177,38 @@ class WorkOrderService extends ApiService {
 
 
     /**
+     * We are majorly searching for work order
+     * @param keyword
+     * @param offset
+     * @param limit
+     * @returns {Promise.<*>}
+     */
+    async searchWorkOrders(keyword="", offset = 0, limit = 10) {
+        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
+        let fields = [
+            'id',
+            'work_order_no',
+            'related_to',
+            'relation_id',
+            'type_id',
+            'labels',
+            'status'
+        ];
+        keyword = keyword.replace(/g/, "");
+        let resultSets = this.context.database.select(fields).from('work_orders')
+            .where('work_order_no', 'like', `%${keyword}%`).where("deleted_at", null)
+            .limit(parseInt(limit)).offset(parseInt(offset)).orderBy('work_order_no', 'asc');
+
+        const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
+        let workOrders = results.map(item => {
+            return new WorkOrder(item);
+        });
+        return Utils.buildResponse({data: {items: workOrders}});
+    }
+
+
+
+    /**
      *
      * @param workOrderId
      * @param query

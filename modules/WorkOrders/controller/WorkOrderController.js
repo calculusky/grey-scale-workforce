@@ -145,6 +145,39 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
+     * /work_orders/search/{keyword}:
+     *   get:
+     *     summary: Search for a work order
+     *     description: ''
+     *     tags: ['Work Orders']
+     *     produces:
+     *     - application/json
+     *     operationId: searchWorkOrders
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getWorkOrderOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/keyword'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/work_orders/search/:keyword', urlencodedParser, (req, res) => {
+        console.log('/work_orders/search/keyword');
+        return API.workOrders().searchWorkOrders(req.params['keyword'], req.query['offset'], req.query['limit'])
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+
+    /**
+     * @swagger
      * /work_orders/{id}/material_requisition:
      *   get:
      *     description: "Returns Material Requisitions of this work order"
