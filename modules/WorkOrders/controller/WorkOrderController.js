@@ -34,8 +34,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *      schema:
      *        $ref: '#/definitions/postWorkOrderInput'
      */
-    app.post('/work_orders', jsonParser, (req, res) => {
-        API.workOrders().createWorkOrder(req.body, req.who)
+    app.post('/work_orders', [multiPart.array("files"), jsonParser], (req, res) => {
+        API.workOrders().createWorkOrder(req.body, req.who, req.files, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -69,7 +69,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *         schema:
      *           $ref: '#/definitions/postWorkOrderInput'
      */
-    app.put('/work_orders/:id', multiPart.array("files"), (req, res) => {
+    app.put('/work_orders/:id', [multiPart.array("files"), jsonParser], (req, res) => {
         API.workOrders().updateWorkOrder('id', req.params['id'], req.body, req.who, req.files, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
@@ -90,7 +90,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: "getWorkOrdersBetweenDates"
+     *     operationId: "getWorkOrders"
      *     responses:
      *       '200':
      *         description: Successful
