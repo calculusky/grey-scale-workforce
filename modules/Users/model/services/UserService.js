@@ -194,6 +194,38 @@ class UserService extends ApiService {
 
     /**
      *
+     * @param keyword
+     * @param offset
+     * @param limit
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async searchUsers(keyword, offset = 0, limit = 10) {
+        const User = DomainFactory.build(DomainFactory.USER);
+        let fields = [
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'gender',
+            'avatar'
+        ];
+        let resultSets = this.context.database.select(fields).from('users')
+            .where('username', 'like', `%${keyword}%`)
+            .where("deleted_at", null)
+            .orWhere('first_name', 'like', `%${keyword}%`)
+            .orWhere('last_name', 'like', `%${keyword}%`)
+            .orWhere('middle_name', 'like', `%${keyword}%`)
+            .limit(parseInt(limit)).offset(parseInt(offset)).orderBy('first_name', 'asc');
+
+        const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
+
+        const users = results.map(item => new User(item));
+        return Utils.buildResponse({data: {items: users}});
+    }
+
+
+    /**
+     *
      * @param by
      * @param value
      * @param body
