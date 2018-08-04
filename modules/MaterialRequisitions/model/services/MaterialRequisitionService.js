@@ -84,7 +84,7 @@ class MaterialRequisitionService extends ApiService {
 
     /**
      * Matrimony - Wale ft Usher
-     *
+     * //TODO Validate material request: Closed work order should not have material requisition
      * @param body
      * @param who
      */
@@ -97,6 +97,8 @@ class MaterialRequisitionService extends ApiService {
         let validator = new validate(materialReq, materialReq.rules(), materialReq.customErrorMessages());
 
         ApiService.insertPermissionRights(materialReq, who);
+
+        materialReq.work_order_id = materialReq.work_order_id.replace(/-/g, "");
 
         if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
