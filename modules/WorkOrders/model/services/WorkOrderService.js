@@ -151,8 +151,7 @@ class WorkOrderService extends ApiService {
         if (type) resultSet.whereIn("type_id", type.split(","));
         if (createdBy) resultSet.where("created_by", createdBy);
         if (relationId) resultSet.where("relation_id", relationId);
-        if (workOderNo) resultSet.where("work_order_no", workOderNo);
-
+        if (workOderNo) resultSet.where('work_order_no', 'like', `%${workOderNo}%`);
 
         resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
         const records = await resultSet.catch(err => {
@@ -183,7 +182,7 @@ class WorkOrderService extends ApiService {
      * @param limit
      * @returns {Promise.<*>}
      */
-    async searchWorkOrders(keyword="", offset = 0, limit = 10) {
+    async searchWorkOrders(keyword = "", offset = 0, limit = 10) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         let fields = [
             'id',
@@ -205,7 +204,6 @@ class WorkOrderService extends ApiService {
         });
         return Utils.buildResponse({data: {items: workOrders}});
     }
-
 
 
     /**
