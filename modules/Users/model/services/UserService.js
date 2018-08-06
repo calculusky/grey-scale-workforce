@@ -211,10 +211,10 @@ class UserService extends ApiService {
         ];
         let resultSets = this.context.database.select(fields).from('users')
             .where('username', 'like', `%${keyword}%`)
-            .where("deleted_at", null)
             .orWhere('first_name', 'like', `%${keyword}%`)
             .orWhere('last_name', 'like', `%${keyword}%`)
             .orWhere('middle_name', 'like', `%${keyword}%`)
+            .where("deleted_at", null)
             .limit(parseInt(limit)).offset(parseInt(offset)).orderBy('first_name', 'asc');
 
         const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
