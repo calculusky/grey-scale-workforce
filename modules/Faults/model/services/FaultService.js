@@ -145,16 +145,15 @@ class FaultService extends ApiService {
      * @param value
      * @param body
      * @param who
-     * @param file
+     * @param files
      * @param API {API}
      * @returns {Promise<void>|*}
      */
-    async updateFault(by, value, body = {}, who, file = [], API) {
+    async updateFault(by, value, body = {}, who, files = [], API) {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
 
         let model = await this.context.database.table("faults").where(by, value).select(['assigned_to', 'id']);
-
 
         if (!model.length) return Utils.buildResponse({status: "fail", data: {message: "Fault doesn't exist"}}, 400);
 
@@ -164,6 +163,10 @@ class FaultService extends ApiService {
 
         if (fault.assigned_to)
             fault.assigned_to = Utils.updateAssigned(model.assigned_to, Utils.serializeAssignedTo(fault.assigned_to));
+
+        if (files.length) {
+            API.attachments().createAttachment({module: "faults", relation_id: fault.id}, who, files, API).then();
+        }
 
         return FaultMapper.updateDomainRecord({value, domain: fault}).then(result => {
             //Send updated fault to other services.

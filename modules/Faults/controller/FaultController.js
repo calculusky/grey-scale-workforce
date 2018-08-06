@@ -71,7 +71,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        schema:
      *          $ref: '#/definitions/postFaultInput'
      */
-    app.put('/faults/:id', jsonParser, (req, res) => {
+    app.put('/faults/:id', [multiPart.array("files", 5), jsonParser], (req, res) => {
         API.faults().updateFault('id', req.params['id'], req.body, req.who).then(({data, code}) => {
             console.log(data);
             return res.status(code).send(data);
@@ -129,7 +129,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/fault_id'
      */
-    app.get('/faults/:id', urlencodedParser, (req, res) => {
+    app.get('/faults/:id(\\d+)', urlencodedParser, (req, res) => {
+        console.log(req.params['id']);
         return API.faults().getFaults({"id": req.params['id']}, req.who).then(({data, code}) => {
             return res.status(code).send(data);
         }).catch(({err, code}) => {
