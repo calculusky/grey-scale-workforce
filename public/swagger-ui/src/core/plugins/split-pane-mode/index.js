@@ -1,4 +1,4 @@
-import * as components from "./components"
+import * as components from "./components/index"
 
 export default function SplitPaneModePlugin() {
   return {
