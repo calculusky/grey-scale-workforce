@@ -159,6 +159,44 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
+     * /users/search/keyword:
+     *  get:
+     *   description: "Search for users. The keyword is matched against username, first name, last name and middle name"
+     *   summary: "Searches for a user that matches the :keyword supplied"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: "searchUsers"
+     *   responses:
+     *     '200':
+     *       description: "A List of User Object"
+     *       schema:
+     *         $ref: '#/definitions/getUserOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - name: keyword
+     *       description: A value to match against the user details
+     *       in: path
+     *       required: true
+     *       type: string
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get("/users/search/:keyword", urlencodedParser, (req, res) => {
+        Log.info('/users/search/keyword', `/users/search/:${req.params.keyword}`);
+        API.users().searchUsers(req.params['keyword'], req.query['offset'], req.query['limit'])
+            .then(({data, code}) => {
+                console.log('RES', data);
+                return res.status(code).send(data);
+            }).catch(({err, code = 500}) => {
+            console.log(err);
+            return res.status(code).send(err);
+        });
+    });
+
+
+    /**
+     * @swagger
      * /users/{id}/permissions:
      *  get:
      *   description: "Get a user permissions"

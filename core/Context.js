@@ -33,8 +33,6 @@ class Context {
             }
         });
 
-        this.registerCustomValidators();
-
         this.persistence.on('ready', () => this.loadStaticData());
         // this.persistence.init({dir: this.config.storage.persistence.path}).then(i=>this.loadStaticData(i));
         this._(this).incoming_store = {};
@@ -47,21 +45,8 @@ class Context {
             }, "The :attribute must be a string-array or an array");
         };
 
-
         this._(this).registerCustomValidators();
 
-        //load the modelMappers here into memory
-        // this._(this).buildModelMappers = () => {
-        //     let mappers = this.config['mappers'];
-        //     if (mappers) {
-        //         mappers.forEach(mapper => {
-        //             let mapperName = mapper.substring(0, mapper.indexOf(":"));
-        //             let mapperPath = mapper.substring(mapper.indexOf(":") + 1, mapper.length);
-        //             MapperFactory.build(mapperName, mapperPath, this);
-        //         });
-        //     }
-        // };
-        // this._(this).buildModelMappers();
         this.modelMappers = MapperFactory;
         Context.globalContext = this;
     }

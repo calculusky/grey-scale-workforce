@@ -75,11 +75,11 @@ class WorkOrderService extends ApiService {
      * @param value
      * @param body
      * @param who
-     * @param file
+     * @param files
      * @param API
      * @returns {Promise<void>|*}
      */
-    async updateWorkOrder(by, value, body = {}, who, file, API) {
+    async updateWorkOrder(by, value, body = {}, who, files = [], API) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const cols = ['id', 'assigned_to', 'work_order_no', 'summary'];
@@ -103,6 +103,14 @@ class WorkOrderService extends ApiService {
             Events.emit("assign_work_order",
                 {id: model.id, work_order_no: model.work_order_no, summary: model.summary},
                 (assignees.length) ? assignees : workOrder.assigned_to, who);
+
+            if (files.length) {
+                API.attachments().createAttachment({
+                    module: "work_orders",
+                    relation_id: workOrder.id
+                }, who, files, API).then();
+            }
+
             return Utils.buildResponse({data: result.shift()});
         });
     }
@@ -116,6 +124,7 @@ class WorkOrderService extends ApiService {
     async getWorkOrders(query, who = {}) {
         const offset = query.offset || 0,
             limit = query.limit || 10,
+            workOderNo = query['work_order_no'],
             relationId = query['relation_id'],
             assignedTo = query['assigned_to'],
             createdBy = query['created_by'],
@@ -127,7 +136,6 @@ class WorkOrderService extends ApiService {
         let includes = query['include'] || ["fault", "billing"];//by default we'd request for fault and billing
         if (typeof includes === "string") includes = includes.split(',');
 
-
         //Prepare the static data from persistence storage
         let [groups, workTypes, faultCategories] = await Promise.all([
             Utils.getFromPersistent(this.context, "groups", true),
@@ -136,17 +144,20 @@ class WorkOrderService extends ApiService {
         ]);
 
         let resultSet = this.context.database.select(['*']).from("work_orders");
+
         if (fromDate && toDate) resultSet.whereBetween('start_date', [fromDate, toDate]);
         if (assignedTo) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assignedTo}}')`);
         if (status) resultSet.whereIn('status', status.split(","));
         if (type) resultSet.whereIn("type_id", type.split(","));
         if (createdBy) resultSet.where("created_by", createdBy);
         if (relationId) resultSet.where("relation_id", relationId);
+        if (workOderNo) resultSet.where('work_order_no', 'like', `%${workOderNo}%`);
 
         resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
         const records = await resultSet.catch(err => {
             return Promise.reject(Utils.buildResponse(Utils.getMysqlError(err), 400));
         });
+
 
         let workOrders = [];
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
@@ -161,6 +172,37 @@ class WorkOrderService extends ApiService {
         // Process the work order list
         const extras = {groups, workTypes, faultCategories, includes};
         return _doWorkOrderList(workOrders, this.context, this.moduleName, false, extras).catch(console.error);
+    }
+
+
+    /**
+     * We are majorly searching for work order
+     * @param keyword
+     * @param offset
+     * @param limit
+     * @returns {Promise.<*>}
+     */
+    async searchWorkOrders(keyword = "", offset = 0, limit = 10) {
+        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
+        let fields = [
+            'id',
+            'work_order_no',
+            'related_to',
+            'relation_id',
+            'type_id',
+            'labels',
+            'status'
+        ];
+        keyword = keyword.replace(/g/, "");
+        let resultSets = this.context.database.select(fields).from('work_orders')
+            .where('work_order_no', 'like', `%${keyword}%`).where("deleted_at", null)
+            .limit(parseInt(limit)).offset(parseInt(offset)).orderBy('work_order_no', 'asc');
+
+        const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
+        let workOrders = results.map(item => {
+            return new WorkOrder(item);
+        });
+        return Utils.buildResponse({data: {items: workOrders}});
     }
 
 
@@ -211,9 +253,11 @@ class WorkOrderService extends ApiService {
      *
      * @param body
      * @param who
+     * @param files
+     * @param API {API}
      * @returns {*}
      */
-    async createWorkOrder(body = {}, who = {}) {
+    async createWorkOrder(body = {}, who = {}, files = [], API) {
         console.log('body', body);
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         let workOrder = new WorkOrder(body);
@@ -248,6 +292,13 @@ class WorkOrderService extends ApiService {
         Utils.convertDataKeyToJson(workOrder, "labels", "assigned_to");
 
         Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
+
+        if (files.length) {
+            API.attachments().createAttachment({
+                module: "work_orders",
+                relation_id: workOrder.id
+            }, who, files, API).then();
+        }
 
         return Utils.buildResponse({data: workOrder});
     }
@@ -327,7 +378,7 @@ function sweepWorkOrderResponsePayload(workOrder) {
  * @private
  */
 
-async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories, includes=[]}) {
+async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories, includes = []}) {
     const db = context.database;
     for (let workOrder of workOrders) {
 
@@ -367,7 +418,7 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
         if (nCount && aCount) {
             workOrder['notes_count'] = nCount.shift()['notes_count'];
             workOrder['attachments_count'] = aCount.shift()['attachments_count'];
-            workOrder['materials_utilized_count'] = 1;//mCount.shift()['mat_count'];
+            workOrder['materials_utilized_count'] = mCount.shift()['mat_count'];
         }
 
         if (assignedTo) workOrder.assigned_to = assignedTo;
