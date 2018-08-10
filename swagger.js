@@ -42,6 +42,8 @@ Swagger.prototype.config = function (app, config) {
         res.send(swaggerSpec);
     });
 
-    console.log(`Access Swagger API at : ${config.host}/api`);
-    console.log(`Swagger Json file can be accessed at : ${config.host}/api-docs.json`);
+    if (process.env.NODE_ENV !== "test") {
+        console.log(`Access Swagger API at : ${config.host}/api`);
+        console.log(`Swagger Json file can be accessed at : ${config.host}/api-docs.json`);
+    }
 };
