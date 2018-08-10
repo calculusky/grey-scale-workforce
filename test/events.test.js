@@ -1,9 +1,5 @@
-require('dotenv').config();
-let API = require('../API');
 
-const config = require('../config.json');
-const Context = require('../core/Context');
-const ctx = new Context(config);
+const API = require('../index').test();
 // API = new API(ctx);
 
 const EmailEvent = require('../events/EmailEvent');

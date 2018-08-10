@@ -180,7 +180,7 @@ module.exports = function route(context) {
     swagger.config(app, {
         express: express,
         host: "localhost:" + process.env.PORT,
-        swaggerUI: "swagger-ui/dist",
+        swaggerUI: "public/swagger-ui/dist",
         apis: swaggerAPIs,
         info: {
             title: "IForce API.",
@@ -194,5 +194,8 @@ module.exports = function route(context) {
     //Register Plugins
     app.use(express.static('public'));
 
-    http.listen(process.env.PORT || 9003, () => console.log("Started MrWorking API"));
+    if (process.env.NODE_ENV !== "test")
+        http.listen(process.env.PORT || 9003, () => console.log("Started MrWorking API"));
+
+    return API;
 };

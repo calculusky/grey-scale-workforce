@@ -188,6 +188,13 @@ class API {
     }
 
     /**
+     * @returns {ActivityService|*}
+     */
+    activities() {
+        return API._(this)['services']['ActivityService'];
+    }
+
+    /**
      * @returns {WorkflowService|*}
      */
     workflows() {

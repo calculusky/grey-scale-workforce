@@ -1,12 +1,7 @@
 /**
  * Created by paulex on 7/11/17.
  */
-require('dotenv').config();
-let API = require('../API');
-
-const config = require('../config.json');
-const Context = require('../core/Context');
-API = new API(new Context(config));
+const API = require('../index').test();
 
 // beforeAll(() => {
 //     return API.users().createUser({
@@ -115,7 +110,7 @@ test("Delete a user", () => {
     return expect(API.users().deleteUser('id', 51, {}, API)).resolves.toBeDefined();
 });
 
-//
-// afterAll(() => {
-//     API.users().deleteUser("username", "banky1").then(t => console.log(t)).catch(err => console.log(err));
-// });
+
+afterAll(() => {
+    API.users().deleteUser("username", "cco_user").then(t => console.log(t)).catch(err => console.log(err));
+});

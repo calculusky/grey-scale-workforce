@@ -7,13 +7,18 @@
     "mrworking": "./commands/index.js"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest --forceExit",
+    "start":"node index.js"
   },
   "jest": {
     "testMatch": [
-      "**/travels/test/**/*.js?(x)",
       "**/?(*.)(spec|test).js?(x)"
     ],
+    "testPathIgnorePatterns":[
+      "/setup/g"
+    ],
+    "setupTestFrameworkScriptFile":"./test/setup/setupTestFramework.js",
+    "verbose": true,
     "automock": false
   },
   "author": "Paul Okeke",

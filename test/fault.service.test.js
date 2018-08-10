@@ -1,11 +1,5 @@
-require('dotenv').config();
-let API = require('../API');
 
-const config = require('../config.json');
-const Context = require('../core/Context');
-const ctx = new Context(config);
-API = new API(ctx);
-require("../boostrap")(ctx);
+const API = require('../index').test();
 
 
 test("Test that createFault is defined", () => {

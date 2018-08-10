@@ -2,12 +2,7 @@
  * Created by paulex on 6/02/18.
  */
 
-require('dotenv').config();
-let API = require('../API');
-
-const config = require('../config.json');
-const Context = require('../core/Context');
-API = new API(new Context(config));
+const API = require('../index').test();
 
 
 it("Should fail when you try to create a material location with empty data", () => {

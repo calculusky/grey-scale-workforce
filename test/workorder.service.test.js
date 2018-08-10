@@ -1,14 +1,7 @@
 /**
  * Created by paulex on 9/6/17.
  */
-require('dotenv').config();
-let API = require('../API');
-
-const config = require('../config.json');
-const Context = require('../core/Context');
-const ctx = new Context(config);
-API = new API(ctx);
-require("../boostrap")(ctx);
+let API = require('../index').test();
 
 let workOrder = null;
 
@@ -36,7 +29,7 @@ beforeAll(() => {
 
 test("Test that we can create a work order", () => {
     return expect(API.workOrders().createWorkOrder({
-        type_id: 1,
+        type_id: 3,
         related_to: "disconnection_billings",
         relation_id: "2",
         labels: '["work"]',
@@ -46,6 +39,25 @@ test("Test that we can create a work order", () => {
         group_id: 1,
         'issue_date': '2017/10/5'
     }, {group: 1})).resolves.toEqual({});
+});
+
+it("Should fail if an invalid type_id is supplied", ()=>{
+    return expect(API.workOrders().createWorkOrder({
+        type_id: 550,
+        related_to: "disconnection_billings",
+        relation_id: "2",
+        labels: '["work"]',
+        summary: "Fix it",
+        assigned_to: `["1"]`,
+        status: '1',
+        group_id: 1,
+        'issue_date': '2017/10/5'
+    }, {group: 1})).rejects.toEqual(expect.objectContaining({
+        code: 400,
+        err: expect.objectContaining({
+            code: "VALIDATION_ERROR"
+        })
+    }));
 });
 
 test("Test that we can't create a work order with an invalid group id", () => {
@@ -65,6 +77,19 @@ test("Test that we can't create a work order with an invalid group id", () => {
         },
         code: 400
     });
+});
+
+it("Should update a work order", () => {
+    return API.workOrders().updateWorkOrder("id", 3, {
+        summary: "Change"
+    }).then(res => {
+        expect(res).toEqual(
+            expect.objectContaining({
+                code: expect.any(Number),
+                data: expect.any(Object)
+            })
+        );
+    })
 });
 
 test('That we can retrieve a work order by a column', () => {

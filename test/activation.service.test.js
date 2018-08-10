@@ -1,8 +1,5 @@
-let API = require('../API');
 
-const config = require('../config.json');
-const Context = require('../core/Context');
-API = new API(new Context(config));
+const API = require('../index').test();
 
 it("Activation activateUser should be defined", () => {
     return expect(API.activations().activateUser(1)).toBeDefined();

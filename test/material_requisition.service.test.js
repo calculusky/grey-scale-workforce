@@ -2,16 +2,19 @@
  * Created by paulex on 6/02/18.
  */
 
-require('dotenv').config();
-let API = require('../API');
-
-const config = require('../config.json');
-const Context = require('../core/Context');
-API = new API(new Context(config));
+/**
+ * @type API {API}
+ */
+let API = require('../index').test();
 
 
 it("Should fail when passed empty data", () => {
-    return expect(API.materialRequisitions().createMaterialRequisition({}, {})).rejects.toBeDefined();
+    return expect(API.materialRequisitions().createMaterialRequisition({}, {})).rejects.toEqual(expect.objectContaining({
+        code: 400,
+        err: expect.objectContaining({
+            code: "VALIDATION_ERROR"
+        })
+    }));
 });
 
 test("That materialRequisition is created", () => {
@@ -19,7 +22,10 @@ test("That materialRequisition is created", () => {
         materials: '[{"id": "20","qty":"10"}]',
         requested_by: 1,
         status: 1
-    }, {})).resolves.toBeDefined();
+    }, {})).resolves.toEqual(expect.objectContaining({
+        "code": 200,
+        data: expect.any(Object)
+    }));
 });
 
 test("Get material requisitions by id", () => {
@@ -30,4 +36,8 @@ test("That we can filter material requisitions", () => {
     return expect(API.materialRequisitions().getMaterialRequisitions({
         assigned_to: 1
     }, {})).resolves.toBeDefined();
+});
+
+afterAll(i=>{
+    API.materialRequisitions().deleteMaterialRequisition();
 });

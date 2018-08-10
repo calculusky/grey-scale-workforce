@@ -2,9 +2,11 @@
  * Created by paulex on 9/17/17.
  */
 
-let API = require('../API');
-API = new API();
+const API = require('../index').test();
+
 const Attachment = require('../modules/Attachments/model/domain-objects/Attachment.js');
+
+
 test("Should Fail Without the file details", ()=> {
     return expect(
         API.attachments().createAttachment({

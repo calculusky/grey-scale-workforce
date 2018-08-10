@@ -98,9 +98,10 @@ class MaterialRequisitionService extends ApiService {
 
         ApiService.insertPermissionRights(materialReq, who);
 
-        materialReq.work_order_id = materialReq.work_order_id.replace(/-/g, "");
-
         if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+
+        if(materialReq.work_order_id)
+            materialReq.work_order_id = materialReq.work_order_id.replace(/-/g, "");
 
         //Get Mapper
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);

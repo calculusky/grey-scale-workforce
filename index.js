@@ -4,4 +4,8 @@
 require('dotenv').config();
 const Context = require('./core/Context.js');
 const ctx = new Context(require('./config.json'));
-require("./boostrap")(ctx);
+const API = require("./boostrap")(ctx);
+
+
+//For test purpose only
+if (process.env.NODE_ENV === "test") exports.test = () => API;

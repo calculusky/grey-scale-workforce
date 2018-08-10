@@ -1,8 +1,5 @@
-let API = require('../API');
 
-const config = require('../config.json');
-const Context = require('../core/Context');
-API = new API(new Context(config));
+const API = require('../index').test();
 
 
 test("createRole is defined", () => {

@@ -18,6 +18,7 @@ exports.init = function (config, options = {autoLogin: false}) {
     this.apiVersion = config.apiVersion;
 
     //We don't need a slash at the end of the baseUrl
+    if (!this.baseUrl) return console.error(`The baseUrl for Process Maker isn't configured`);
     if (this.baseUrl.charAt(this.baseUrl.length) === '/')
         this.baseUrl = this.baseUrl.substring(0, this.baseUrl.length - 1);
 
@@ -57,7 +58,7 @@ exports.login = (username, password, options = {grantType: 'password'}) => {
             //The api should persist the token for the user
             if (res.statusCode !== 200) return reject(body);
             else if (body.error) return reject(body.error);
-            console.log(body);
+            if (process.env.NODE_ENV === "test") console.log(body);
             return resolve(body);
         });
     };
