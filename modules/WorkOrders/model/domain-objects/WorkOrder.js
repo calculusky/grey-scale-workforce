@@ -38,8 +38,8 @@ class WorkOrder extends DomainObject {
 
     rules() {
         return {
-            type_id: 'integer|required',
-            related_to: 'string|required',
+            type_id: 'integer|required|in:1,2,3',
+            related_to: 'string|required|in:faults,disconnection_billings',
             relation_id: 'string|required',
             status: 'numeric|required',
             summary: 'string|required',

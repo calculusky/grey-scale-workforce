@@ -41,7 +41,7 @@ class Note extends DomainObject {
     rules() {
         return {
             relation_id: 'numeric|required',
-            module: 'string|required',
+            module: 'string|required|in:work_orders,faults',
             note: 'string|required',
             created_by: 'integer|required'
         };
