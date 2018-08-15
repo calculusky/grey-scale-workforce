@@ -13,6 +13,32 @@ parameters:
     required: false
     type: string
 
+  assigned_to:
+    name: assigned_to
+    description: The user id a record was assigned to
+    in: query
+    required: false
+    type: integer
+
+  relation_id:
+    name: relation_id
+    description: The id of the related record
+    in: query
+    required: false
+    type: string
+
+  module:
+    name: module
+    description: The module of the record
+    in: query
+    required: false
+    type: string
+
+
+  activity_by:
+    name: activity_by
+    description:
+
   id:
     name: id
     description: The id of this model
