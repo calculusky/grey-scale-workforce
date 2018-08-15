@@ -98,6 +98,8 @@ class WorkOrderService extends ApiService {
 
         if (workOrder.assigned_to) workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignedTo);
 
+        //Check Work Order Status
+
         return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}).then(result => {
             const assignees = _.differenceBy((workOrder.assigned_to) ? JSON.parse(workOrder.assigned_to) : [], model.assigned_to, 'id');
             Events.emit("assign_work_order",

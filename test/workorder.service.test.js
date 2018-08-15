@@ -81,7 +81,8 @@ test("Test that we can't create a work order with an invalid group id", () => {
 
 it("Should update a work order", () => {
     return API.workOrders().updateWorkOrder("id", 3, {
-        summary: "Changerrrrr"
+        summary: "Changerrrrr",
+        status: 5
     }, {sub: 1}).then(res => {
         expect(res).toEqual(
             expect.objectContaining({

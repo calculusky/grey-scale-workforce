@@ -750,12 +750,13 @@ module.exports.getFaultPriority = function (key) {
 };
 
 module.exports.getWorkStatuses = function (type, key = null) {
+    console.log(type, key);
     //Assumptions of the type are 1: Disconnection, 2: Reconnection , 3: Faults
-    if (!key && !isNaN(type)) return [];
-    if ((key && !isNaN(type)) || !isNaN(key)) return "/invalid-status";
+    if (!key && isNaN(type)) return [];
+    if ((key && isNaN(type)) || isNaN(key)) return "/invalid-status";
 
     const status = {
-        1: {
+        "1": {
             1: "New",
             2: "Assigned",
             3: "Disconnected",
@@ -765,14 +766,14 @@ module.exports.getWorkStatuses = function (type, key = null) {
             7: "Customer Already Paid",
             8: "Regulatory Issues"
         },
-        2: {
+        "2": {
             1: "New",
             2: "Assigned",
             3: "Reconnected",
             4: "Escalated",
             5: "Closed"
         },
-        3: {
+        "3": {
             1: "New",
             2: "Assigned",
             3: "Open",
