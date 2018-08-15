@@ -1,0 +1,19 @@
+{
+  "id": "id",
+  "relation_id": "relation_id",
+  "module": "module",
+  "activity_type": "activity_type",
+  "model_type": "model_type",
+  "description": "description",
+  "service_name": "service_name",
+  "ip_address": "ip_address",
+  "source": "source",
+  "source_id": "source_id",
+  "source_name": "source_name",
+  "assigned_to": "assigned_to",
+  "activity_by": "activity_by",
+  "group_id": "group_id",
+  "deleted_at": "deleted_at",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}

@@ -1,5 +1,5 @@
 
-const API = require('../index').test();
+    const API = require('../index').test();
 
 
 test("Test that createFault is defined", () => {
@@ -31,14 +31,14 @@ test("Test that we can update faults", () => {
         category_id: 1,
         related_to: "assets",
         relation_id: "1",
-        status: 1,
+        status: 3,
         summary: "Creeping",
         group_id: 1,
-        priority: 1,
+        priority: 3,
         assigned_to: '["2", "3"]'
     };
 
-    return expect(API.faults().updateFault("id", 1, fault, {}, [], API)).resolves.toEqual({});
+    return expect(API.faults().updateFault("id", 1, fault, {sub:1}, [], API)).resolves.toEqual({});
 });
 
 test("Test Faults", ()=>{

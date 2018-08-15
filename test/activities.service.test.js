@@ -1,10 +1,7 @@
-
-const API = require('../index').test();
-
 /**
- *
  * @type {API}
  */
+const API = require('../index').test();
 
 it("Should create an activity:", () => {
     return expect(API.activities().createActivity({
@@ -21,4 +18,17 @@ it("Should create an activity:", () => {
             data: expect.any(Object)
         })
     );
+});
+
+test("That we can get activities by query", () => {
+    expect.assertions(1);
+    return API.activities().getActivities({
+        module: "work_orders",
+        relation_id: 3,
+    }, {}, API).then(res => {
+        expect(res).toEqual(expect.objectContaining({
+            code: expect.any(Number),
+            data: expect.any(Object)
+        }))
+    })
 });

@@ -89,6 +89,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /assets/user/{user_id}/{offset}/{limit}:
      *   get:
+     *     deprecated:
+     *       description: No longer maintained
      *     summary: Gets assets assigned to a user
      *     description: ''
      *     tags: [Assets]
@@ -199,9 +201,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/assets/search/:keyword/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
+    app.get('/assets/search/:keyword', urlencodedParser, (req, res) => {
         console.log('/assets/search/keyword');
-        return API.assets().searchAssets(req.params['keyword'])
+        return API.assets().searchAssets(req.params['keyword'], req.query['offset'], req.query['limit'])
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

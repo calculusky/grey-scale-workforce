@@ -41,7 +41,7 @@ test("Test that we can create a work order", () => {
     }, {group: 1})).resolves.toEqual({});
 });
 
-it("Should fail if an invalid type_id is supplied", ()=>{
+it("Should fail if an invalid type_id is supplied", () => {
     return expect(API.workOrders().createWorkOrder({
         type_id: 550,
         related_to: "disconnection_billings",
@@ -81,8 +81,8 @@ test("Test that we can't create a work order with an invalid group id", () => {
 
 it("Should update a work order", () => {
     return API.workOrders().updateWorkOrder("id", 3, {
-        summary: "Change"
-    }).then(res => {
+        summary: "Changerrrrr"
+    }, {sub: 1}).then(res => {
         expect(res).toEqual(
             expect.objectContaining({
                 code: expect.any(Number),

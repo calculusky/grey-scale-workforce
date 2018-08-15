@@ -52,7 +52,7 @@ class Fault extends DomainObject {
             priority: 'numeric|required',
             issue_date: 'date|required',
             labels: 'string-array',//please note that this are customer-validators
-            assigned_to:'string-array'
+            assigned_to: 'string-array'
         };
     }
 

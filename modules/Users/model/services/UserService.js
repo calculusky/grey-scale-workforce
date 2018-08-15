@@ -11,7 +11,6 @@ const validate = require('validatorjs');
  */
 
 class UserService extends ApiService {
-
     constructor(context) {
         super(context);
         MapperFactory = this.context.modelMappers;

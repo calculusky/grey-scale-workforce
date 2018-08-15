@@ -7,6 +7,7 @@
  * @param API {API}
  * @param jsonParser
  * @param urlencodedParser
+ * @param multiPart
  */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
     app.use('/work_orders*', (req, res, next) => API.recognitions().auth(req, res, next));
@@ -147,6 +148,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      * @swagger
      * /work_orders/search/{keyword}:
      *   get:
+     *     deprecated: Use /work_orders?work_order_no=ff...
      *     summary: Search for a work order
      *     description: ''
      *     tags: ['Work Orders']

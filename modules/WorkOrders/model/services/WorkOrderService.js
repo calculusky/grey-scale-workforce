@@ -82,7 +82,7 @@ class WorkOrderService extends ApiService {
     async updateWorkOrder(by, value, body = {}, who, files = [], API) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        const cols = ['id', 'assigned_to', 'work_order_no', 'summary'];
+        const cols = ['*'];
         let model = await this.context.database.table("work_orders").where(by, value).select(cols);
 
         if (!model.length) return Utils.buildResponse({
@@ -103,6 +103,8 @@ class WorkOrderService extends ApiService {
             Events.emit("assign_work_order",
                 {id: model.id, work_order_no: model.work_order_no, summary: model.summary},
                 (assignees.length) ? assignees : workOrder.assigned_to, who);
+
+            Events.emit("work_order_updated", workOrder, who, model);
 
             if (files.length) {
                 API.attachments().createAttachment({
@@ -291,7 +293,9 @@ class WorkOrderService extends ApiService {
 
         Utils.convertDataKeyToJson(workOrder, "labels", "assigned_to");
 
+        Events.emit("work_order_added", workOrder, who);
         Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
+
 
         if (files.length) {
             API.attachments().createAttachment({
@@ -313,7 +317,7 @@ class WorkOrderService extends ApiService {
      * @param API {API}
      * @returns {Promise.<WorkOrder>|*}
      */
-    changeWorkOrderStatus(orderId, status, note, files = [], who = {}, API) {
+    async changeWorkOrderStatus(orderId, status, note, files = [], who = {}, API) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         let workOrder = new WorkOrder();
 
@@ -340,6 +344,18 @@ class WorkOrderService extends ApiService {
             }
             return Utils.buildResponse({data: {message: "Work Order deleted"}});
         });
+    }
+
+
+    async attributesToValues(colName, values = [], ctx, modelType = 1) {
+        switch (colName) {
+            case "priority":
+                return values.map(i => Utils.getWorkPriorities(modelType, i));
+            case "status":
+                return values.map(i => Utils.getWorkStatuses(modelType, i));
+            default:
+                return values;
+        }
     }
 
 }

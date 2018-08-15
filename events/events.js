@@ -14,7 +14,8 @@ exports.init = function (context, io, API) {
             './EmailEvent',
             './WebEvent',
             './ApplicationEvent',
-            './MessageEvent'
+            './MessageEvent',
+            './AuditEvent'
         ];
 
         eventListenersPath.forEach(listener => {

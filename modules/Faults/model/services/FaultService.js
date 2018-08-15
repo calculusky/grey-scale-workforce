@@ -153,7 +153,7 @@ class FaultService extends ApiService {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
 
-        let model = await this.context.database.table("faults").where(by, value).select(['assigned_to', 'id']);
+        let model = await this.context.database.table("faults").where(by, value).select(['*']);
 
         if (!model.length) return Utils.buildResponse({status: "fail", data: {message: "Fault doesn't exist"}}, 400);
 
@@ -170,7 +170,8 @@ class FaultService extends ApiService {
 
         return FaultMapper.updateDomainRecord({value, domain: fault}).then(result => {
             //Send updated fault to other services.
-            Events.emit("fault_updated", value, who);
+            fault.id = model.id;
+            Events.emit("fault_updated", fault, who, model);
             return Utils.buildResponse({data: result.shift()});
         });
     }
@@ -189,6 +190,20 @@ class FaultService extends ApiService {
             }
             return Utils.buildResponse({data: {by, message: "Fault deleted"}});
         });
+    }
+
+    async attributesToValues(colName, values = [], ctx, modelType = null) {
+        switch (colName) {
+            case "priority":
+                return values.map(i => Utils.getFaultPriority(i));
+            case "status":
+                return values.map(i => Utils.getFaultStatus(i));
+            case "category_id" || "fault_category_id":
+                const categories = await Utils.getFromPersistent(ctx, "fault:categories", true);
+                return values.map(i => categories[i]);
+            default:
+                return values;
+        }
     }
 }
 

@@ -69,11 +69,11 @@ class WebEvent extends EventEmitter {
     /**
      * TODO
      *
-     * @param faultId
+     * @param uFault
      * @param who
      * @returns {Promise<void>}
      */
-    async onFaultUpdated(faultId, who) {
+    async onFaultUpdated(uFault, who) {
         const db = this.context.database;
         const fCols = [
             "id",
@@ -87,7 +87,7 @@ class WebEvent extends EventEmitter {
             "resolution"
         ];
 
-        const fault = await db.table("faults").where("id", faultId).select(fCols);
+        const fault = await db.table("faults").where("id", uFault.id).select(fCols);
 
         if (!fault.length) return;
 

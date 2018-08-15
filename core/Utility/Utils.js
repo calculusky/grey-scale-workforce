@@ -141,6 +141,7 @@ module.exports.updateAssigned = function (oldAssignee = [], newAssignee = []) {
         }
         if (!found) filtered.push(newItem);
     }
+    //TODO return both the json object and the stringified
     return JSON.stringify(_.uniqBy(filtered, "id"));
 };
 
@@ -514,6 +515,25 @@ module.exports.numericToInteger = function (body, ...keys) {
     }
 };
 
+module.exports.spotDifferenceInRecord = function (newRecord = {}, oldRecord = {}) {
+    let isDifferent = false;
+    let changeSummary = [];
+    for (let [key, value] of Object.entries(newRecord)) {
+        let oldRecordValue = oldRecord[key];
+        if (oldRecordValue && (oldRecordValue != value)) {
+            //check for keys like assigned_to
+            if (typeof oldRecordValue !== "object") {
+                changeSummary.push(`${key}:${oldRecord[key]}__::::__${newRecord[key]}`);
+                isDifferent = true;
+            } else if (typeof oldRecordValue === 'object') {
+                //We'd need to check this object
+
+            }
+        }
+    }
+    return [isDifferent, changeSummary];
+};
+
 module.exports.upsert = function (db, table, data, update) {
     if (!update) update = data;
     let insertSQL = db.insert(data).into(table).toString();
@@ -696,4 +716,100 @@ module.exports.processMakerError = function (err) {
         default:
             return this.buildResponse(processMessage(error.message, {status: 'fail'}), 500);
     }
+};
+
+
+module.exports.getFaultStatus = function (key) {
+    switch (key) {
+        case '1':
+            return "Pending";
+        case '2':
+            return "Overdue";
+        case '3':
+            return "Resolved";
+        case '4':
+            return "Closed";
+        default:
+            return "/Unknown";
+    }
+};
+
+module.exports.getFaultPriority = function (key) {
+    switch (key) {
+        case '0':
+            return "Low";
+        case '1':
+            return "Medium";
+        case '2':
+            return "High";
+        case '3':
+            return "Urgent";
+        default:
+            return "/Unknown";
+    }
+};
+
+module.exports.getWorkStatuses = function (type, key = null) {
+    //Assumptions of the type are 1: Disconnection, 2: Reconnection , 3: Faults
+    if (!key && !isNaN(type)) return [];
+    if ((key && !isNaN(type)) || !isNaN(key)) return "/invalid-status";
+
+    const status = {
+        1: {
+            1: "New",
+            2: "Assigned",
+            3: "Disconnected",
+            4: "Escalated",
+            5: "Payment Received",
+            6: "Closed",
+            7: "Customer Already Paid",
+            8: "Regulatory Issues"
+        },
+        2: {
+            1: "New",
+            2: "Assigned",
+            3: "Reconnected",
+            4: "Escalated",
+            5: "Closed"
+        },
+        3: {
+            1: "New",
+            2: "Assigned",
+            3: "Open",
+            4: "Pending",
+            5: "Closed"
+        }
+    };
+    if (key !== null && status[type][key]) return status[type][key];
+    else if (key !== null && !status[type][key]) return '/unknown';
+    else if (type && status[type]) return status[type];
+    else if (type && !status[type]) return [];
+    else return ""
+};
+
+
+module.exports.getWorkPriorities = function (type, key = null) {
+    if (!key && !isNaN(type)) return [];
+    if (key && (!isNaN(type) || !isNaN(key))) return "/invalid-priority";
+
+    const priorities = {
+        1: {
+            0: "Low",
+            1: "Medium",
+            2: "High",
+            3: "Urgent"
+        },
+        2: {},
+        3: {
+            1: "Low",
+            2: "Medium",
+            3: "High",
+            4: "Urgent"
+        }
+    };
+    if (key !== null && priorities[type][key]) return priorities[type][key];
+    else if (key !== null && !priorities[type][key]) return '/unknown';
+    else if (type && priorities[type]) return priorities[type];
+    else if (type && !priorities[type]) return [];
+    else return ""
 };

@@ -104,6 +104,10 @@ class DomainObject {
         }
         return store;
     }
+
+    async attributesToValues(colName, value, ctx){
+        return value;
+    }
 }
 
 module.exports = DomainObject;

@@ -50,6 +50,7 @@ MapperFactory.MATERIAL_REQUISITION = "MaterialRequisition";
 MapperFactory.STOCK_MOVEMENT = "StockMovement";
 MapperFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
 MapperFactory.FAULT_CATEGORY = "FaultCategory";
+MapperFactory.ACTIVITY = "Activity";
 
 
 module.exports = MapperFactory;

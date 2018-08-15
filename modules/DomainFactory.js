@@ -2,9 +2,8 @@
  * @author Paul Okeke
  * Created by paulex on 7/5/17.
  */
-// const User = require('./Users/model/domain-objects/User');
-// const TravelRequest = require('./TravelRequests/model/domain-objects/TravelRequest');
 
+//TODO this class is a factory class for object, would be nice if we can automate it
 class DomainFactory {
 
     constructor() {
@@ -62,6 +61,8 @@ class DomainFactory {
                     return require('./StockMovements/model/domain-objects/StockMovement');
                 case DomainFactory.MATERIAL_UTILIZATION:
                     return require('./MaterialUtilizations/model/domain-objects/MaterialUtilization');
+                case DomainFactory.ACTIVITY:
+                    return require('./Activities/model/domain-objects/Activity');
             }
         } catch (e) {
             if (e.code === "MODULE_NOT_FOUND") {
@@ -95,5 +96,6 @@ DomainFactory.MATERIAL_LOCATION = "MaterialLocation";
 DomainFactory.STOCK_MOVEMENT = "StockMovement";
 DomainFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
 DomainFactory.FAULT_CATEGORY = "FaultCategory";
+DomainFactory.ACTIVITY = "Activity";
 
 module.exports = DomainFactory;

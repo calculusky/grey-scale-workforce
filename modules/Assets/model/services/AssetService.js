@@ -75,7 +75,8 @@ class AssetService {
             'asset_name',
             'status',
             'group_id',
-            'serial_no'
+            'serial_no',
+            'location'
         ];
         let resultSets = this.context.database.select(fields).from('assets')
             .where('asset_name', 'like', `%${keyword}%`)
