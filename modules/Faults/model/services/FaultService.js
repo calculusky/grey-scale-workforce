@@ -65,7 +65,7 @@ class FaultService extends ApiService {
             task.push(
                 db.count('note as notes_count').from("notes").where("module", "faults").where("relation_id", fault.id),
                 db.count('id as attachments_count').from("notes").where("module", "attachments").where("relation_id", fault.id),
-                db.count('id as works_count').from("work_orders").where("module", "faults").where("relation_id", fault.id)
+                db.count('id as works_count').from("work_orders").where("related_to", "faults").where("relation_id", fault.id)
             );
 
             const [relatedTo, createdBy, assignedTo, notesCount, attachmentCount, wCount] = await Promise.all(task);

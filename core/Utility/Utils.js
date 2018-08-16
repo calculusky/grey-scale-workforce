@@ -25,7 +25,7 @@ module.exports.loadMapper = function (store = {}, path, key, context = null) {
     } catch (e) {
         return;
     }
-    return store[key];
+    return null;
 };
 
 String.prototype.ellipsize = function (limit = 50, suffix = "...") {

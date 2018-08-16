@@ -60,10 +60,8 @@ class Fault extends DomainObject {
      *
      * @returns {*}
      */
-    relatedTo(related_to = "assets", cols = (related_to === "assets")
-        ? ['id', 'asset_name', 'status', 'asset_type', 'serial_no', 'group_id', 'location']
-        : ['*']) {
-        return this.relations().morphTo('related_to', 'relation_id', cols);
+    relatedTo() {
+        return this.relations().morphTo("related_to", 'relation_id', ["*"]);
     }
 
     /**
