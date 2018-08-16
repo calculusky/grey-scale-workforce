@@ -94,6 +94,7 @@ module.exports.convertDataKeyToJson = function (data, ...keys) {
         let [isValid, json] = this.isJson(data[i]);
         if (isValid) data[i] = json;
     });
+    return data;
 };
 
 module.exports.isJson = function (str) {

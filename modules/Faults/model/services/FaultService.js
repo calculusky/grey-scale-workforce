@@ -169,12 +169,12 @@ class FaultService extends ApiService {
         if (files.length) {
             API.attachments().createAttachment({module: "faults", relation_id: fault.id}, who, files, API).then();
         }
-        Utils.convertDataKeyToJson(fault, "labels", "assigned_to");
+
         return FaultMapper.updateDomainRecord({value, domain: fault}).then(result => {
             //Send updated fault to other services.
             fault.id = model.id;
             Events.emit("fault_updated", fault, who, model);
-            return Utils.buildResponse({data: result.shift()});
+            return Utils.buildResponse({data: Utils.convertDataKeyToJson(result.shift(), "labels", "assigned_to")});
         });
     }
 
