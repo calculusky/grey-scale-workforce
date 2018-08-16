@@ -65,7 +65,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/id'
      */
     app.get('/activities/:id', urlencodedParser, (req, res) => {
-        return API.activities().getActivities(req.params['id'], undefined, req.who)
+        return API.activities().getActivities(req.params['id'], req.who, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

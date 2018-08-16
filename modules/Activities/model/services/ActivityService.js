@@ -89,7 +89,7 @@ class ActivityService extends ApiService {
             activities[i] = activity;
             i++;
         }
-
+        console.log(activities);
         return Utils.buildResponse({data: {items: activities}});
     }
 }
