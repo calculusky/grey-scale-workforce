@@ -64,10 +64,11 @@ class FaultService extends ApiService {
             const task = [fault.relatedTo(), fault.createdBy(), Utils.getAssignees(fault.assigned_to, db)];
             task.push(
                 db.count('note as notes_count').from("notes").where("module", "faults").where("relation_id", fault.id),
-                db.count('note as attachments_count').from("notes").where("module", "attachments").where("relation_id", fault.id)
+                db.count('id as attachments_count').from("notes").where("module", "attachments").where("relation_id", fault.id),
+                db.count('id as works_count').from("work_orders").where("module", "faults").where("relation_id", fault.id)
             );
 
-            const [relatedTo, createdBy, assignedTo, notesCount, attachmentCount] = await Promise.all(task);
+            const [relatedTo, createdBy, assignedTo, notesCount, attachmentCount, wCount] = await Promise.all(task);
             fault['category'] = categories[fault['category_id']];
             fault.created_by = createdBy.records.shift() || {};
             fault['group'] = groups[fault['group_id']];
@@ -78,6 +79,7 @@ class FaultService extends ApiService {
                 fault['notes_count'] = notesCount.shift()['notes_count'];
                 fault['attachments_count'] = attachmentCount.shift()['attachments_count'];
             }
+            fault['wo_count'] = wCount.shift()['works_count'];
 
             if (fault['group']['children']) delete fault['group']['children'];
             if (fault['group']['parent']) delete fault['group']['parent'];
@@ -167,7 +169,7 @@ class FaultService extends ApiService {
         if (files.length) {
             API.attachments().createAttachment({module: "faults", relation_id: fault.id}, who, files, API).then();
         }
-
+        Utils.convertDataKeyToJson(fault, "labels", "assigned_to");
         return FaultMapper.updateDomainRecord({value, domain: fault}).then(result => {
             //Send updated fault to other services.
             fault.id = model.id;

@@ -8,16 +8,16 @@
   },
   "scripts": {
     "test": "jest --forceExit",
-    "start":"node index.js"
+    "start": "node index.js"
   },
   "jest": {
     "testMatch": [
       "**/?(*.)(spec|test).js?(x)"
     ],
-    "testPathIgnorePatterns":[
+    "testPathIgnorePatterns": [
       "/setup/g"
     ],
-    "setupTestFrameworkScriptFile":"./test/setup/setupTestFramework.js",
+    "setupTestFrameworkScriptFile": "./test/setup/setupTestFramework.js",
     "verbose": true,
     "automock": false
   },

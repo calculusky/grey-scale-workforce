@@ -520,7 +520,7 @@ module.exports.spotDifferenceInRecord = function (newRecord = {}, oldRecord = {}
     let changeSummary = [];
     for (let [key, value] of Object.entries(newRecord)) {
         let oldRecordValue = oldRecord[key];
-        if (oldRecordValue && (oldRecordValue != value)) {
+        if ((oldRecordValue || oldRecordValue === "") && (oldRecordValue != value)) {
             //check for keys like assigned_to
             if (typeof oldRecordValue !== "object") {
                 changeSummary.push(`${key}:${oldRecord[key]}__::::__${newRecord[key]}`);

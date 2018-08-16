@@ -55,6 +55,7 @@ class ApplicationEvent extends EventEmitter {
             const completedDate = {
                 completed_date: Utils.date.dateToMysql()
             };
+            //Broadcast to the UI that a work order has been closed
             await this.api.workOrders()
                 .updateWorkOrder("id", workOrder.id || oldRecord.id, completedDate, who, [], this.api);
         }

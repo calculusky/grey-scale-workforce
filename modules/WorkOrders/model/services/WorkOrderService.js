@@ -65,7 +65,8 @@ class WorkOrderService extends ApiService {
         const workOrders = results.records;
 
         if (!workOrders.length) return Utils.buildResponse({data: {items: results.records}});
-        const extras = {groups, workTypes, faultCategories};
+
+        const extras = {groups, workTypes, faultCategories, includes: ["fault", "billing"]};
         return _doWorkOrderList(workOrders, this.context, this.moduleName, isSingle, extras);
     }
 
