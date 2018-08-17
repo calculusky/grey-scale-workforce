@@ -119,8 +119,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/groups/:offset?/:limit?', urlencodedParser, (req, res) => {
-        return API.groups().getGroups({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
+    app.get('/groups', urlencodedParser, (req, res) => {
+        return API.groups().getGroups(req.query, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -150,7 +150,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/group_id'
      */
     app.get('/groups/:id', urlencodedParser, (req, res) => {
-        return API.groups().getGroups(req.params['id'], undefined, req.who)
+        return API.groups().getGroup(req.params['id'], undefined, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

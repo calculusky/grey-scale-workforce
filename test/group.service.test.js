@@ -76,6 +76,15 @@ test("Get Business Unit and Undertaking from group", async () => {
     expect(bu).toBeDefined();
 });
 
+test("Fetch Groups with query", async () => {
+    return expect(API.groups().getGroups({
+        type:"business_unit"
+    })).resolves.toEqual(expect.objectContaining({
+        code: expect.any(Number),
+        data: expect.any(Object)
+    }));
+});
+
 test("Get Groups Children", async () => {
     expect(API.groups().getGroupChildren(259)).resolves.toBeInstanceOf(Array);
 });

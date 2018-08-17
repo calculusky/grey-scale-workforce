@@ -27,7 +27,7 @@ class GroupService extends ApiService {
      * @param offset
      * @param limit
      */
-    getGroups(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    getGroup(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
         const executor = (resolve, reject) => {
             GroupMapper.findDomainRecord({by, value}, offset, limit)
@@ -229,6 +229,19 @@ class GroupService extends ApiService {
             Events.emit("update_groups");
             return Utils.buildResponse({data: domain});
         });
+    }
+
+    async getGroups(query={}, who={}){
+        const {type, offset = 0, limit = 10} = query;
+        const groups = await Utils.getFromPersistent(this.context, "groups", true);
+
+        let items = [];
+        Object.entries(groups).forEach(([key, value])=>{
+            if(type && !type.split(",").map(i => i.toLowerCase()).includes(`${value['type']}`.toLowerCase())) return;
+            items.push(value);
+        });
+        if (offset || limit) items = items.slice(offset, offset + limit);
+        return Utils.buildResponse({data: {items: items}});
     }
 
     /**

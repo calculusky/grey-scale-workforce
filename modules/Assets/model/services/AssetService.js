@@ -13,30 +13,38 @@ class AssetService {
         MapperFactory = this.context.modelMappers;
     }
 
-    getAssets(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    async getAsset(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        const executor = (resolve, reject) => {
-            AssetMapper.findDomainRecord({by, value}, offset, limit)
-                .then(result => {
-                    let assets = result.records;
-                    let processed = 0;
-                    let rowLen = assets.length;
+        const results = await AssetMapper.findDomainRecord({by, value}, offset, limit);
+        const groups = await Utils.redisGet(this.context.persistence, "groups");
+        const assets = AssetService.addBUAndUTAttributes(results.records, groups);
+        return Utils.buildResponse({data: {items: assets}});
+    }
 
-                    assets.forEach(asset => {
-                        asset.user().then(res => {
-                            asset.user = res.records.shift();
-                            if (++processed === rowLen)
-                                return resolve(Utils.buildResponse({data: {items: result.records}}));
-                        }).catch(err => {
-                            return reject(err)
-                        })
-                    })
-                })
-                .catch(err => {
-                    return reject(err);
-                });
-        };
-        return new Promise(executor)
+    async getAssets(query = {}, who = {}) {
+        const Asset = DomainFactory.build(DomainFactory.ASSET);
+        const {group_id, offset = 0, limit = 10} = query;
+        let fields = [
+            'id',
+            'asset_type',
+            'asset_type_name',
+            'asset_name',
+            'status',
+            'group_id',
+            'serial_no',
+            'location'
+        ];
+        let resultSets = this.context.database.select(fields).from('assets');
+        if (group_id) resultSets.where("group_id", group_id);
+
+        resultSets.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
+
+        const groups = await Utils.redisGet(this.context.persistence, "groups");
+
+        const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
+
+        let assets = AssetService.addBUAndUTAttributes(results, groups, Asset);
+        return Utils.buildResponse({data: {items: assets}});
     }
 
     /**
@@ -120,6 +128,34 @@ class AssetService {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
             return Utils.buildResponse({data: {by, message: "Asset deleted"}});
+        });
+    }
+
+    /**
+     * @private
+     *
+     * @param results
+     * @param groups
+     * @param Asset
+     * @returns {*}
+     */
+    static addBUAndUTAttributes(results, groups, Asset) {
+        return results.map(item => {
+            const asset = (!Asset || item instanceof Asset) ? item : new Asset(item);
+            let group = groups[asset.group_id];
+            const [bu, ut] = Utils.getBUAndUT(group, groups);
+            let grp = {};
+
+            Object.assign(grp, group);
+
+            if (grp['children']) delete grp['children'];
+            if (bu['children']) delete bu['children'];
+            if (ut['parent']) delete ut['parent'];
+
+            asset.group = grp;
+            asset.business_unit = bu;
+            asset.undertaking = ut.shift() || null;
+            return asset;
         });
     }
 }
