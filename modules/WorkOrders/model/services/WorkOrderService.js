@@ -131,6 +131,7 @@ class WorkOrderService extends ApiService {
             limit = query.limit || 10,
             workOderNo = query['work_order_no'],
             relationId = query['relation_id'],
+            relationTo = query['related_to'],
             assignedTo = query['assigned_to'],
             createdBy = query['created_by'],
             fromDate = query['from_date'],
@@ -156,6 +157,7 @@ class WorkOrderService extends ApiService {
         if (type) resultSet.whereIn("type_id", type.split(","));
         if (createdBy) resultSet.where("created_by", createdBy);
         if (relationId) resultSet.where("relation_id", relationId);
+        if (relationTo) resultSet.where("related_to", relationTo);
         if (workOderNo) resultSet.where('work_order_no', 'like', `%${workOderNo}%`);
 
         resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
@@ -332,6 +334,8 @@ class WorkOrderService extends ApiService {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         return WorkOrderMapper.updateDomainRecord({value: orderId, domain: workOrder}).then(result => {
             if (result.pop()) {
+                workOrder.id = orderId;
+                // Events.emit("work_order_updated", workOrder, who, model);
                 return Utils.buildResponse({data: result.shift()});
             } else {
                 return Promise.reject(Utils.buildResponse({status: "fail", data: result.shift()}, 404));
