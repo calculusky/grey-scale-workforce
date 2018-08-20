@@ -53,3 +53,5 @@ _persistence
 public/ext_plugin
 
 *.env
+
+./knexfile.js
