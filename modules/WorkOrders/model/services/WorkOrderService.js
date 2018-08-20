@@ -308,7 +308,7 @@ class WorkOrderService extends ApiService {
                 relation_id: workOrder.id
             }, who, files, API).then();
         }
-
+        workOrder['created_by'] = {id: who.sub, username: who.name};
         return Utils.buildResponse({data: workOrder});
     }
 
