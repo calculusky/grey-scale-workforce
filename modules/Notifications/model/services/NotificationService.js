@@ -138,17 +138,16 @@ class NotificationService {
         const fcmTokens = await db.select(['fire_base_token']).from('users').whereIn('id', userIds);
 
         let payload = {
-            notification: {
+            data: {
                 'title': 'IE Force',
                 body: notification.message,
-                click_action: "com.mrworking.workorder.MAIN"
-            },
-            data: {
                 type: notification.type
             },
+            priority: "high",
             ttl: 3600,
             registration_ids: _.flatten(fcmTokens.map(({fire_base_token}) => fire_base_token))
         };
+
         if (payload.registration_ids.length) this.push(payload, API).catch(console.error);
         else return Promise.reject(Utils.buildResponse({
             status: "fail",
