@@ -259,6 +259,8 @@ class UserService extends ApiService {
 
         if (!model.length) return Utils.buildResponse({status: "fail", data: {message: "User doesn't exist"}}, 400);
 
+        model = new User(model.shift());
+
         const newAssignedTo = Utils.serializeAssignedTo(user.assigned_to);
 
         if (user.assigned_to) user.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignedTo);
