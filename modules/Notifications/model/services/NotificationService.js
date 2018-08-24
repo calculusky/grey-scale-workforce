@@ -205,6 +205,7 @@ class NotificationService {
                             if (retrying) return resolve();
                         }
                     } else {
+
                         //There must have been an ERROR
                         if (err.error === "Unavailable") {
                             if (!retrying) {
