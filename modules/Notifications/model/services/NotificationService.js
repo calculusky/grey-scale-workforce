@@ -190,6 +190,7 @@ class NotificationService {
                     console.log('FCM:', err);
                     return;
                 }
+                console.log(payload);
                 console.log(body);
                 if (body.failure === 0 && body['canonical_ids'] === 0) return resolve(true); //everything was successful
                 let results = body.results;
@@ -208,7 +209,7 @@ class NotificationService {
                         if (err.error === "Unavailable") {
                             if (!retrying) {
                                 NetworkUtils.exponentialBackOff(this.push({
-                                    notification: payload.notification,
+                                    data: payload.data,
                                     to: (payload.registration_ids) ? payload.registration_ids[index] : payload.to
                                 }, API, true), 20, 0);
                             } else {
