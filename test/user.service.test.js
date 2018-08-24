@@ -98,7 +98,8 @@ test("That we can reset a user password", () => {
 
 describe('Updating User', () => {
     test('Update a user', () => {
-        return expect(API.users().updateUser('id', 7, {last_name: "Bolanle", roles: 1, group_id: 3}, {}, API)).resolves
+        return expect(API.users().updateUser('id', 1,
+            {last_name: "Okeke", roles: 1, group_id: 1, assigned_to: "[1]"}, {}, [], API)).resolves
             .toEqual(expect.objectContaining({
                 code: expect.any(Number)
             }))

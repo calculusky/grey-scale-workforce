@@ -239,6 +239,7 @@ class UserService extends ApiService {
         const UserMapper = MapperFactory.build(MapperFactory.USER);
         const role_id = body['roles'];
         const password = body.password;
+        const cols = ['*'];
         let user = new User(body);
         let group_id = null;
 
@@ -253,6 +254,14 @@ class UserService extends ApiService {
 
         //We shouldn't override the group that created the user
         if (body.group_id) (group_id = body.group_id) && (delete user.group_id);
+
+        let model = await this.context.database.table("users").where(by, value).select(cols);
+
+        if (!model.length) return Utils.buildResponse({status: "fail", data: {message: "User doesn't exist"}}, 400);
+
+        const newAssignedTo = Utils.serializeAssignedTo(user.assigned_to);
+
+        if (user.assigned_to) user.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignedTo);
 
         return UserMapper.updateDomainRecord({value, domain: user}).then(async (result) => {
             if (result.pop()) {
