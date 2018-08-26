@@ -114,7 +114,6 @@ class MaterialUtilizationService extends ApiService {
 
         if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
-        materialUtilization.work_order_id = materialUtilization.work_order_id.replace(/-/g, "").toUpperCase();
         //Get Mapper
         const MaterialUtilizationMapper = MapperFactory.build(MapperFactory.MATERIAL_UTILIZATION);
         return MaterialUtilizationMapper.createDomainRecord(materialUtilization).then(materialUtilization => {
