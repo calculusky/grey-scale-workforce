@@ -94,12 +94,11 @@ class NotificationService {
                 } else errors.push(validator.errors.first('id'))
             }
             const [...updates] = await Promise.all(promises);
-            return Utils.buildResponse({data: {updates, errors}});
+            return Utils.buildResponse({data: {items: updates.map(i => i.shift()), errors}});
         }
 
         const notification = new Notification(body);
         const [domain, itemsUpdated] = await NotificationMapper.updateDomainRecord({by, value, domain: notification});
-        // console.log(Utils.buildResponse({status: 'fail', data: domain}));
         if (!itemsUpdated) return Promise.reject(Utils.buildResponse({status: 'fail', data: domain}, 404));
 
         return Utils.buildResponse({data: domain});
@@ -190,7 +189,6 @@ class NotificationService {
                     console.log('FCM:', err);
                     return;
                 }
-                console.log(payload);
                 console.log(body);
                 if (body.failure === 0 && body['canonical_ids'] === 0) return resolve(true); //everything was successful
                 let results = body.results;

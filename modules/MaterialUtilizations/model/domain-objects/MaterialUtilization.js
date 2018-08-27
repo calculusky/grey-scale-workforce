@@ -37,7 +37,7 @@ class MaterialUtilization extends DomainObject {
     rules() {
         return {
             material_id: 'numeric|required',
-            work_order_id: 'string|required',
+            work_order_id: 'numeric|required',
             quantity: 'numeric|required',
             description: 'string|required'
         };

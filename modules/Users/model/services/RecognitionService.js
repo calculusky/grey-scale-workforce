@@ -122,7 +122,7 @@ class RecognitionService {
             //Let's ask, should we really care about the response of the two actions
             //We somehow know this will definitely always be called
             this.context.persistence.del(token);
-            if (fireBaseToken && fireBaseToken.trim().length > 0) API.users().unRegisterFcmToken(fireBaseToken);
+            if (fireBaseToken && fireBaseToken.trim().length > 0) API.users().unRegisterFcmToken(fireBaseToken).then();
             return resolve(Utils.buildResponse({data: {token, user: {id: who.sub}}}));
         };
         return new Promise(executor);

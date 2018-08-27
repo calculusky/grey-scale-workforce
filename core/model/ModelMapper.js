@@ -234,6 +234,7 @@ class ModelMapper {
         return resultSets
             .then(itemsUpdated => {
                 filteredDomain.serialize(updateData, "client");
+                filteredDomain[by] = value;
                 return Promise.resolve([filteredDomain, itemsUpdated]);
             })
             .catch(err => {
