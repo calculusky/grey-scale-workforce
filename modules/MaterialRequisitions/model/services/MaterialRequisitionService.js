@@ -57,7 +57,7 @@ class MaterialRequisitionService extends ApiService {
         if (workOrderId) resultSet = resultSet.where('work_order_id', workOrderId);
         if (requested_by) resultSet = resultSet.where('requested_by', requested_by);
 
-        resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
+        resultSet = resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
 
         const records = await resultSet.catch(err => {
             return Promise.reject(Utils.buildResponse(Utils.getMysqlError(err), 400));
