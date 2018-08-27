@@ -45,21 +45,17 @@ class MaterialRequisitionService extends ApiService {
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getMaterialRequisitions(query, who = {}) {
-        const offset = parseInt(query.offset || "0"),
-            limit = parseInt(query.limit || "10"),
-            status = query.status,
-            workOrderId = query['work_order_id'],
-            assignedTo = query['assigned_to'],
-            requestedBy = query['requested_by'];
+
+        const {status, work_order_id: workOrderId, assigned_to, requested_by, offset = 0, limit = 10} = query;
 
         const db = this.context.database;
         let materialRequisitions = [];
 
         let resultSet = this.context.database.select(['*']).from("material_requisitions");
-        if (assignedTo) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assignedTo}}')`);
+        if (assigned_to) resultSet = resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assigned_to}}')`);
         if (status) resultSet = resultSet.where('status', status);
         if (workOrderId) resultSet = resultSet.where('work_order_id', workOrderId);
-        if (requestedBy) resultSet = resultSet.where('requested_by', requestedBy);
+        if (requested_by) resultSet = resultSet.where('requested_by', requested_by);
 
         resultSet = resultSet.where('deleted_at', null).limit(limit).offset(offset).orderBy("id", "desc");
 
@@ -100,7 +96,7 @@ class MaterialRequisitionService extends ApiService {
 
         if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
-        if(materialReq.work_order_id)
+        if (materialReq.work_order_id)
             materialReq.work_order_id = materialReq.work_order_id.replace(/-/g, "");
 
         //Get Mapper
