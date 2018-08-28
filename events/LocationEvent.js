@@ -58,7 +58,13 @@ class LocationEvent extends EventEmitter {
             db.table("work_orders").whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${user.id}}')`
                 + `and DATE(start_date) = CURDATE()`)
                 .select(['id', 'related_to', 'type_id', db.raw('DATE_FORMAT(start_date, \'%Y-%m-%d\')')]),
-            this.api.workOrders().getWorkOrdersBetweenDates(user.id, null, startDate, endDate, 0, 10)
+            this.api.workOrders().getWorkOrders({
+                assigned_to: user.id,
+                from_date: startDate,
+                to_date: endDate,
+                offset: 0,
+                limit: 10
+            }, {})
         ]);
 
 
@@ -95,12 +101,12 @@ class LocationEvent extends EventEmitter {
          * We need to do a reverse geo-coding on the customer address
          * to provide a destination as longitude and latitude to the consumer
          */
-        const geocodeEnpoint = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
+        const geocodeEndPoint = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
         let processed = 0;
         broadcastMsg.work_orders.forEach(item => {
             if (!item.customer || !item.customer.plain_address) return;
             delete item.payment_plan;
-            const url = `${geocodeEnpoint}${item.customer.plain_address}&key${process.env.GOOGLE_API_KEY}`;
+            const url = `${geocodeEndPoint}${item.customer.plain_address}&key${process.env.GOOGLE_API_KEY}`;
             request(url, (err, res, body) => {
                 if (err) return;
 
