@@ -777,9 +777,8 @@ module.exports.getWorkStatuses = function (type, key = null) {
         "3": {
             1: "New",
             2: "Assigned",
-            3: "Open",
-            4: "Pending",
-            5: "Closed"
+            3: "Pending",
+            4: "Closed"
         }
     };
     if (key !== null && status[type][key]) return status[type][key];
