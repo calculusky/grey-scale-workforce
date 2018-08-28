@@ -94,7 +94,7 @@ module.exports.createDelinquencyList = function () {
 
         //Determines if onComplete should be called or not depending on the number of rows processed
         const endProcess = (totalRowsVisited) => {
-            if (totalRowsVisited === rowLen) {
+            if ((totalRowsVisited === rowLen) || (totalRowsVisited === workSheet.actualRowCount)) {
                 logMgs.push(`${processedDisc} of ${actualRowCount}` + " delinquent records imported successfully");
                 logMgs.push(`${processedWO ? processedWO : "No"} work order(s) was generated from the total of`
                     + ` ${processedDisc}` + " delinquency record imported.");
@@ -153,7 +153,7 @@ module.exports.createDelinquencyList = function () {
 
             const customerUT = Utils.getGroupParent(groups[customer.group_id], "undertaking");
 
-            if (customerUT.id !== utIndex.result) {
+            if (customerUT && customerUT.id !== utIndex.result) {
                 logMgs.push(`The customer (${accountNo}) does not belong to the undertaking (${undertaking}) specified in row(${rn}).`);
                 if (customerUT.name === undertaking) logMgs.push("The template you are using might be the problem.");
                 return ++processed && endProcess(++total);
@@ -204,7 +204,7 @@ module.exports.createDelinquencyList = function () {
                 Utils.customerHasPendingWorkOrder(db, accountNo)
             ]).catch(err => console.error('something light', err));
 
-            // If the customer has a pending work order we should create a new one
+            // If the customer has a pending work order we shouldn't create a new one
             if (hasPending) {
                 logMgs.push(`Couldn't create a work order for customer (${accountNo}) in row(${rn})`
                     + ` because the customer still has a pending work order.`);
@@ -228,7 +228,7 @@ module.exports.createDelinquencyList = function () {
                 status: '1',
                 group_id: uploadData.group_id,
                 created_by: assignedTo.id,
-                assigned_to: `[{"id": ${hubManagerId}, "created_at": "${assignedTo.created_at}"}]`,
+                assigned_to: `[${hubManagerId}]`,
                 issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
                 created_at: assignedTo.created_at,
                 updated_at: assignedTo.created_at
@@ -286,7 +286,7 @@ module.exports.updateAssetLocation = function () {
         const onComplete = (status, update = true) => {
             deleteFile(currentFile);
             this.lock.g = false;//release the lock here
-            Events.emit("upload_completed", "asset location", status, fileName, (uploadData) ? uploadData.created_by : 0);
+            Events.emit("upload_completed", "asset_location", status, fileName, (uploadData) ? uploadData.created_by : 0);
             return (update) ? _updateUploadStatus(this, fileName, status, JSON.stringify(logMgs)) : true;
         };
 
@@ -322,8 +322,8 @@ module.exports.updateAssetLocation = function () {
 
         //Determines if onComplete should be called or not depending on the number of rows processed
         const endProcess = (totalRowsVisited) => {
-            console.log(totalRowsVisited, rowLen);
-            if (totalRowsVisited === rowLen) {
+            console.log(totalRowsVisited, workSheet.actualRowCount, rowLen);
+            if ((totalRowsVisited === rowLen) || (totalRowsVisited === workSheet.actualRowCount)) {
                 logMgs.push(`${processedAsset} of ${actualRowCount}` + " assets location updated successfully");
                 console.log(logMgs);
                 return onComplete((processedAsset === actualRowCount) ? 4 : 5);
@@ -349,7 +349,7 @@ module.exports.updateAssetLocation = function () {
             if (typeof lat === "object" || typeof lng === "object") return endProcess(++total);
 
             const data = {location: db.raw(`POINT(${lat}, ${lng})`)};
-            db.table(tableName).where("serial_no", `${assetID}`.trim()).update(data).then(res => {
+            return db.table(tableName).where("serial_no", `${assetID}`.trim()).update(data).then(res => {
                 if (res === 0) return logMgs.push(`Asset specified in row(${rn}) doesn't exist.`) && endProcess(++total);
                 else return ++processedAsset && endProcess(++total);
             }).catch(err => {
