@@ -30,7 +30,7 @@ class Customer extends DomainObject {
 
     softDeletes() {
         return [
-            false,
+            true,
             "deleted_at"
         ];
     }
@@ -39,6 +39,18 @@ class Customer extends DomainObject {
         return {
             account_no: String
         };
+    }
+
+    asset(cols = ["assets.id", "assets.asset_name", "assets.asset_type"]) {
+        return this.relations().belongsToMany(
+            "Asset",
+            "customers_assets",
+            "customer_id",
+            "asset_id",
+            "account_no",
+            null,
+            cols
+        )
     }
 
 }
