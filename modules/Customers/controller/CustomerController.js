@@ -2,9 +2,6 @@
  * Created by paulex on 9/04/17.
  */
 
-const Log = require(`${__dirname}/../../../core/logger`);
-const RecognitionService = require('../../Users/model/services/RecognitionService');
-
 /**
  *
  * @param app
@@ -86,41 +83,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
-
-    // /**
-    //  * @swagger
-    //  * /customers/user/{user_id}/{offset}/{limit}:
-    //  *   get:
-    //  *     summary: Gets customers assigned to a user
-    //  *     description: ''
-    //  *     tags: [Customer]
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: getCustomers
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successful
-    //  *         schema:
-    //  *           $ref: '#/definitions/getCustomerOutput'
-    //  *     parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - in: path
-    //  *       name: user_id
-    //  *       required: true
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  */
-    // app.get('/customers/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.customers().getCustomers(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
-    //         .then(({data, code})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status(code).send(err);
-    //         });
-    // });
-
-
     /**
      * @swagger
      * /customers/{account_no}:
@@ -130,7 +92,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     tags: [Customers]
      *     produces:
      *     - application/json
-     *     operationId: getCustomers
+     *     operationId: getCustomer
      *     responses:
      *       '200':
      *         description: Successful
@@ -141,7 +103,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/account_no'
      */
     app.get('/customers/:account_no', urlencodedParser, (req, res)=> {
-        return API.customers().getCustomers(req.params['account_no'])
+        return API.customers().getCustomer(req.params['account_no'])
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -154,6 +116,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /customers/meter/{meter_no}:
      *   get:
+     *     deprecated: true
      *     summary: Gets List of customers by meter
      *     description: ''
      *     tags: [Customers]
@@ -170,7 +133,36 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/meter_no'
      */
     app.get('/customers/meter/:meterNo', urlencodedParser, (req, res)=> {
-        return API.customers().getCustomers(req.params['meterNo'], "meter_no")
+        return API.customers().getCustomer(req.params['meterNo'], "meter_no")
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
+     * /customers:
+     *   get:
+     *     summary: Queries for a list of customers
+     *     description: ''
+     *     tags: [Customers]
+     *     produces:
+     *     - application/json
+     *     operationId: getCustomers
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getCustomerOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/meter_no'
+     */
+    app.get('/customers', urlencodedParser, (req, res)=> {
+        return API.customers().getCustomers(req.query, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

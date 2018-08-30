@@ -9,7 +9,7 @@ const ModelMapper = require('../../../../core/model/ModelMapper');
 class CustomerMapper extends ModelMapper{
     constructor(context) {
         super(context);
-        this.primaryKey = "id";
+        this.primaryKey = "account_no";
         this.tableName = "customers";
         this.domainName = "Customer";
     }

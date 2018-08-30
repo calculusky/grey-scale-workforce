@@ -23,11 +23,15 @@ class Relationships {
      *
      * @param relatedDomainMapper
      * @param tableName
-     * @param foreignKey
-     * @param localKey
+     * @param foreignPivotKey
+     * @param relatedPivotKey
+     * @param parentKey
+     * @param relatedKey
+     * @param cols
      * @returns {Promise}
      */
-    belongsToMany(relatedDomainMapper, tableName = null, foreignKey = null, localKey = "id") {
+    belongsToMany(relatedDomainMapper, tableName = null, foreignPivotKey = null, relatedPivotKey = null,
+                  parentKey = null, relatedKey = null, cols = []) {
         //Get the domain mapper of the model that will be returned
         let DomainMapper = MapperFactory.build(relatedDomainMapper);
         if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${relatedDomainMapper} cannot be found.`);
@@ -43,16 +47,16 @@ class Relationships {
         //TODO if the tableName is null we can try guessing it as well
         tableName = (tableName) ? tableName : this.linkTable(domainTable);
 
-        let primaryKey = (DomainMapper.primaryKey) ? DomainMapper.primaryKey : localKey;
+        let primaryKey = (parentKey) ? parentKey : "id";//TODO get the primary key of this.domainObject
         let primaryKeyValue = this.domainObject[primaryKey];
-        let tablePrimaryKey = domain.getTableColumn(primaryKey);
+        let tablePrimaryKey = domain.getTableColumn((relatedKey) ? relatedKey : DomainMapper.primaryKey);
 
         let columns = [`${domainTable}.*`];
 
         let resultSets = KNEX.select(columns).from(domainTable)
             .innerJoin(tableName, function () {
-                this.on(`${tableName}.${foreignKey}`, KNEX.raw('?', [`${primaryKeyValue}`]))
-                    .andOn(`${tableName}.${localKey}`, `${domainTable}.${tablePrimaryKey}`)
+                this.on(`${tableName}.${foreignPivotKey}`, KNEX.raw('?', [`${primaryKeyValue}`]))
+                    .andOn(`${tableName}.${relatedPivotKey}`, `${domainTable}.${tablePrimaryKey}`)
             });
 
         let executor = (resolve, reject) => {
@@ -151,7 +155,7 @@ class Relationships {
     }
 
 
-    morphTo(modelNameColumn, modelIdColumn, cols=['*']) {
+    morphTo(modelNameColumn, modelIdColumn, cols = ['*']) {
         //TODO test if the modelNameCol is not selected
         if (!this.domainObject[modelNameColumn] || !this.domainObject[modelIdColumn]) {
             throw new ReferenceError(`The columns[${modelNameColumn},${modelIdColumn}] 
