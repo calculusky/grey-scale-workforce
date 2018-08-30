@@ -119,8 +119,6 @@ class NotificationService {
 
         if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
-        console.log(validator.errors.all());
-
         let userIds = [];
         //The to column is an array
         if (notification.to instanceof Array) {
