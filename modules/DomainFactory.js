@@ -63,6 +63,8 @@ class DomainFactory {
                     return require('./MaterialUtilizations/model/domain-objects/MaterialUtilization');
                 case DomainFactory.ACTIVITY:
                     return require('./Activities/model/domain-objects/Activity');
+                case DomainFactory.PENDING_REASON:
+                    return require('./BaseRecords/model/domain-objects/PendingReason');
             }
         } catch (e) {
             if (e.code === "MODULE_NOT_FOUND") {
@@ -97,5 +99,6 @@ DomainFactory.STOCK_MOVEMENT = "StockMovement";
 DomainFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
 DomainFactory.FAULT_CATEGORY = "FaultCategory";
 DomainFactory.ACTIVITY = "Activity";
+DomainFactory.PENDING_REASON = "PendingReason";
 
 module.exports = DomainFactory;

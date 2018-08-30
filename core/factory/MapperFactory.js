@@ -51,6 +51,7 @@ MapperFactory.STOCK_MOVEMENT = "StockMovement";
 MapperFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
 MapperFactory.FAULT_CATEGORY = "FaultCategory";
 MapperFactory.ACTIVITY = "Activity";
+MapperFactory.PENDING_REASON = "PendingReason";
 
 
 module.exports = MapperFactory;
