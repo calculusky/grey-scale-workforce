@@ -1,0 +1,9 @@
+{
+  "id": "id",
+  "name":"name",
+  "deleted_at": "deleted_at",
+  "created_by": "created_by",
+  "assigned_to":"assigned_to",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}
