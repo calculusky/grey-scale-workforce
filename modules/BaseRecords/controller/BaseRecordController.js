@@ -30,16 +30,76 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *         description: Successfully Added
      */
     app.post('/base_records/pending_reason', jsonParser, (req, res) => {
-        console.log(req.body);
         API.baseRecords().createPendingReason(req.body, req.who)
-            .then(({data, code}) => {
-                console.log(data);
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                console.log(code, err);
-                return res.status(code).send(err);
-            });
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
     });
 
+    /**
+     * @swagger
+     * /base_records/pending_reason/{id}:
+     *   put:
+     *     summary: Creates a new pending reason
+     *     description: ''
+     *     tags: [Base Records]
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: createPendingReason
+     *     responses:
+     *       '200':
+     *         description: Successfully Added
+     */
+    app.put('/base_records/pending_reason/:id', jsonParser, (req, res) => {
+        API.baseRecords().updatePendingReason("id", req.params['id'], req.body, req.who)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+
+    /**
+     * @swagger
+     * /base_records/fault_category:
+     *   post:
+     *     summary: Creates a new fault category
+     *     description: ''
+     *     tags: [Base Records]
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: createFaultCategory
+     *     responses:
+     *       '200':
+     *         description: Successfully Added
+     */
+    app.post('/base_records/fault_category', jsonParser, (req, res) => {
+        API.baseRecords().createFaultCategory(req.body, req.who)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+
+    /**
+     * @swagger
+     * /base_records/fault_category/{id}:
+     *   put:
+     *     summary: Update fault category
+     *     description: ''
+     *     tags: [Base Records]
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: updateFaultCategory
+     *     responses:
+     *       '200':
+     *         description: Successfully Added
+     */
+    app.put('/base_records/fault_category/:id', jsonParser, (req, res) => {
+        API.baseRecords().updateFaultCategory("id", req.params['id'], req.body, req.who)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err))
+    });
 };

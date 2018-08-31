@@ -65,6 +65,8 @@ class DomainFactory {
                     return require('./Activities/model/domain-objects/Activity');
                 case DomainFactory.PENDING_REASON:
                     return require('./BaseRecords/model/domain-objects/PendingReason');
+                case DomainFactory.FAULT_CATEGORY:
+                    return require('./FaultCategories/model/domain-objects/FaultCategory');
             }
         } catch (e) {
             if (e.code === "MODULE_NOT_FOUND") {
