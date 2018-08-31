@@ -1,14 +1,14 @@
 //noinspection JSUnresolvedFunction
 const DomainObject = require('../../../../core/model/DomainObject');
 //noinspection JSUnresolvedFunction
-const map = require('./map.json');
+const map = require('./pending.reason.map.json');
 
 /**
  * @author Paul Okeke
- * Created by paulex on 07/10/18.
- * @name FaultCategory
+ * Created by paulex on 8/30/18.
+ * @name PendingReason
  */
-class FaultCategory extends DomainObject {
+class PendingReason extends DomainObject {
 
     constructor(data) {
         super(data, map);
@@ -28,19 +28,18 @@ class FaultCategory extends DomainObject {
 
     softDeletes() {
         return [
-            true,
+            false,
             "deleted_at"
         ];
     }
 
     rules() {
         return {
-            name: 'string|required',
-            type: 'string|required',
+            name: 'string|required'
         };
     }
 
 }
 
 //noinspection JSUnresolvedVariable
-module.exports = FaultCategory;
+module.exports = PendingReason;

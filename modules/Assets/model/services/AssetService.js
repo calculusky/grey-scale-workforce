@@ -34,8 +34,9 @@ class AssetService {
             'serial_no',
             'location'
         ];
-        let resultSets = this.context.database.select(fields).from('assets');
+        const resultSets = this.context.database.select(fields).from('assets');
         if (group_id) resultSets.where("group_id", group_id);
+        if (status) resultSets.whereIn("status", status.split(","));
 
         resultSets.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
 
@@ -90,28 +91,12 @@ class AssetService {
             .where('asset_name', 'like', `%${keyword}%`)
             .where("deleted_at", null)
             .orWhere('asset_type_name', 'like', `%${keyword}%`)
-            .limit(parseInt(limit)).offset(parseInt(offset)).orderBy('asset_name', 'asc');
+            .limit(Number(limit)).offset(Number(offset)).orderBy('asset_name', 'asc');
 
         const groups = await Utils.redisGet(this.context.persistence, "groups");
 
         const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
-        let assets = results.map(item => {
-            const asset = new Asset(item);
-            let group = groups[asset.group_id];
-            const [bu, ut] = Utils.getBUAndUT(group, groups);
-            let grp = {};
-
-            Object.assign(grp, group);
-
-            if (grp['children']) delete grp['children'];
-            if (bu['children']) delete bu['children'];
-            if (ut['parent']) delete ut['parent'];
-
-            asset.group = grp;
-            asset.business_unit = bu;
-            asset.undertaking = ut.shift() || null;
-            return asset;
-        });
+        const assets = AssetService.addBUAndUTAttributes(results.records, groups, Asset);
         return Utils.buildResponse({data: {items: assets}});
     }
 
@@ -149,8 +134,8 @@ class AssetService {
             Object.assign(grp, group);
 
             if (grp['children']) delete grp['children'];
-            if (bu['children']) delete bu['children'];
-            if (ut['parent']) delete ut['parent'];
+            if (bu && bu['children']) delete bu['children'];
+            if (ut && ut['parent']) delete ut['parent'];
 
             asset.group = grp;
             asset.business_unit = bu;
