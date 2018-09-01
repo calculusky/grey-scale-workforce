@@ -152,6 +152,16 @@ test("Retrieve material requisition that belongs to a work order", () => {
 });
 
 
+test("Delete multiple work orders", ()=>{
+    return API.workOrders().deleteMultipleWorkOrder([6, 2, 9], {sub:1}).then(r => {
+        console.log(JSON.stringify(r));
+        expect(r).toEqual(expect.objectContaining({
+            code: expect.any(Number),
+            data: expect.any(Object)
+        }));
+    })
+});
+
 afterAll(() => {
     return API.workOrders().deleteWorkOrder("relation_id", "12");
 });

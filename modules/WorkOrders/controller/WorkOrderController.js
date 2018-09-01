@@ -305,4 +305,29 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
         });
     });
 
+    /**
+     * @swagger
+     * /work_orders/delete:
+     *  patch:
+     *    summary: Deletes multiple work orders
+     *    description: "Deletes multiple work orders"
+     *    tags: ['Work Orders']
+     *    produces:
+     *    - application/json
+     *    operationId: deleteWorkOrder
+     *    responses:
+     *      '200':
+     *        description: Returns true with the id of the Work Order deleted
+     *    parameters:
+     *    - $ref: '#/parameters/sessionId'
+     */
+    app.patch('/work_orders/delete', (req, res) => {
+        API.workOrders().deleteMultipleWorkOrder(req.body, req.who)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            }).catch(({err, code}) => {
+            return res.status(code).send(err);
+        });
+    });
+
 };
