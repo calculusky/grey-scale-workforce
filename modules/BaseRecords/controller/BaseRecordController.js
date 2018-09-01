@@ -28,6 +28,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     responses:
      *       '200':
      *         description: Successfully Added
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
      */
     app.post('/base_records/pending_reason', jsonParser, (req, res) => {
         API.baseRecords().createPendingReason(req.body, req.who)
@@ -50,6 +52,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     responses:
      *       '200':
      *         description: Successfully Added
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
      */
     app.put('/base_records/pending_reason/:id', jsonParser, (req, res) => {
         API.baseRecords().updatePendingReason("id", req.params['id'], req.body, req.who)
@@ -73,6 +77,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     responses:
      *       '200':
      *         description: Successfully Added
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
      */
     app.post('/base_records/fault_category', jsonParser, (req, res) => {
         API.baseRecords().createFaultCategory(req.body, req.who)
@@ -96,6 +102,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     responses:
      *       '200':
      *         description: Successfully Added
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
      */
     app.put('/base_records/fault_category/:id', jsonParser, (req, res) => {
         API.baseRecords().updateFaultCategory("id", req.params['id'], req.body, req.who)
