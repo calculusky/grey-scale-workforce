@@ -35,7 +35,6 @@ class MessageEvent extends EventEmitter {
     async assignWorkOrder(workOrder, userIds = [], who = {}) {
         userIds = (Array.isArray(userIds)) ? userIds : JSON.parse(userIds);
         userIds = userIds.map(i => i.id);
-        console.log(userIds);
         if (!userIds.length) return;
 
         const body = {
