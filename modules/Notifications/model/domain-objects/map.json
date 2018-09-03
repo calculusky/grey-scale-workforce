@@ -7,6 +7,8 @@
   "level": "level",
   "from": "from",
   "to": "to",
+  "record_ids": "record_ids",
+  "link": "link",
   "group": "group",
   "deleted_at": "deleted_at",
   "created_at": "created_at",

@@ -35,8 +35,7 @@ class MessageEvent extends EventEmitter {
     async assignWorkOrder(workOrder, userIds = [], who = {}) {
         userIds = (Array.isArray(userIds)) ? userIds : JSON.parse(userIds);
         userIds = userIds.map(i => i.id);
-
-        if(!userIds.length) return;
+        if (!userIds.length) return;
 
         const body = {
             type: "work_orders",
@@ -44,9 +43,10 @@ class MessageEvent extends EventEmitter {
             message: workOrder.summary,
             level: workOrder.priority,
             from: who.sub,
+            record_ids: `["${workOrder.id}"]`,
             to: userIds
         };
-        await this.api.notifications().sendNotification(body, who, this.api).catch(err=>{
+        await this.api.notifications().sendNotification(body, who, this.api).catch(err => {
             console.log('MessageEvent:', JSON.stringify(err));
         });
     }
