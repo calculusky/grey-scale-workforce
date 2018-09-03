@@ -44,6 +44,7 @@ class Notification extends DomainObject {
             message: 'string|required',
             status: 'numeric',
             from: 'integer|required',
+            record_ids:'string-array',
             to: 'required'
         };
     }
