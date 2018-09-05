@@ -213,11 +213,12 @@ class Relationships {
      * @param relatedDomainKey
      * @param foreignKey
      * @param options
+     * @param cols
      * @returns {Promise}
      */
     morphMany(domainMapperName, relatedDomainKey, foreignKey = `${relatedDomainKey}_id`,
-              options = {localDomain: `${this.domainObject.constructor.name}s`.toLocaleLowerCase(), localKey: "id"}) {
-
+              options = {localDomain: `${this.domainObject.constructor.name}s`.toLocaleLowerCase(), localKey: "id"},
+              cols=['*']) {
         let DomainMapper = MapperFactory.build(domainMapperName);
         if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
 
@@ -235,7 +236,7 @@ class Relationships {
 
         let foreignTable = DomainMapper.tableName;
 
-        let resultSets = KNEX.select(['*']).from(foreignTable)
+        let resultSets = KNEX.select(cols).from(foreignTable)
             .where(foreignKey, this.domainObject[options.localKey]).andWhere(relatedDomainKey, options.localDomain);
 
         const executor = (resolve, reject) => {

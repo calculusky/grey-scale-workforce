@@ -139,6 +139,7 @@ class ModelMapper {
      * @returns {Promise.<DomainObject>|boolean}
      */
     createDomainRecord(domainObject = {}, domainObjects = []) {
+        const DomainObject = DomainFactory.build(this.domainName);
         if (domainObject) domainObjects.push(domainObject);
 
         //so there has to be a domain object
@@ -176,7 +177,7 @@ class ModelMapper {
             //services inserting multiples should however treat the result as an array
             let id = result.shift();
             if (domainObjects.length === 1) {
-                domainObject = domainObjects.shift().serialize(dbData.shift(), 'client');
+                domainObject = new DomainObject(domainObjects.shift().serialize(dbData.shift(), 'client'));
                 domainObject.id = id;
             } else {
                 domainObject = domainObjects.map(domain => {

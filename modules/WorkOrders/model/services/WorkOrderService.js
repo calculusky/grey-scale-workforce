@@ -325,15 +325,9 @@ class WorkOrderService extends ApiService {
      * @returns {Promise.<WorkOrder>|*}
      */
     async changeWorkOrderStatus(value/*WorkOrderId*/, status, note, files = [], who = {}, API) {
-        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
-
-        if (note) API.notes().createNote(note, who, files, API);
-
-        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.updateDomainRecord({value, domain: new WorkOrder({status})}).then(result => {
-            if (result.pop()) return Utils.buildResponse({data: result.shift()});
-            else return Promise.reject(Utils.buildResponse({status: "fail", data: result.shift()}, 404));
-        });
+        const updated = await this.updateWorkOrder("id", value, {status}, who, [], API);
+        if (note) API.notes().createNote(note, who, files, API).catch(console.error);
+        return updated;
     }
 
     /**

@@ -68,6 +68,17 @@ class AssetService {
     }
 
 
+    updateAsset(value, body = {}, who = {}, by = "id") {
+        const Asset = DomainFactory.build(DomainFactory.ASSET);
+        const domain = new Asset(body);
+
+        const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
+        return AssetMapper.updateDomainRecord({by, value, domain}).then(asset => {
+            return Utils.buildResponse({data: asset});
+        });
+    }
+
+
     /**
      * We are majorly searching for asset by name
      * @param keyword
@@ -93,10 +104,10 @@ class AssetService {
             .orWhere('asset_type_name', 'like', `%${keyword}%`)
             .limit(Number(limit)).offset(Number(offset)).orderBy('asset_name', 'asc');
 
-        const groups = await Utils.redisGet(this.context.persistence, "groups");
+        const groups = await Utils.getFromPersistent(this.context, "groups", true);
 
         const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
-        const assets = AssetService.addBUAndUTAttributes(results.records, groups, Asset);
+        const assets = AssetService.addBUAndUTAttributes(results, groups, Asset);
         return Utils.buildResponse({data: {items: assets}});
     }
 

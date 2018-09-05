@@ -2,7 +2,6 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const ApiService = require('../../../ApiService');
 const Utils = require('../../../../core/Utility/Utils');
-const crypto = require('crypto');
 const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 
