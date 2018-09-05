@@ -54,7 +54,7 @@ class WebEvent extends EventEmitter {
         delete iFault['related_to'];
         delete iFault['relation_id'];
 
-        const url = "http://62.138.8.136/test/index.php?entryPoint=fault-create";
+        const url = "http://62.138.8.136/ie/index.php?entryPoint=fault-create";
 
         const headers = {'Content-type': "application/x-www-form-urlencoded"};
         const options = {
@@ -109,7 +109,7 @@ class WebEvent extends EventEmitter {
         delete iFault['related_to'];
         delete iFault['relation_id'];
 
-        const url = "http://62.138.8.136/test/index.php?entryPoint=fault-update";
+        const url = "http://62.138.8.136/ie/index.php?entryPoint=fault-update";
 
         const headers = {'Content-type': "application/x-www-form-urlencoded"};
         const options = {

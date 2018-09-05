@@ -83,23 +83,14 @@ class WorkOrderService extends ApiService {
     async updateWorkOrder(by, value, body = {}, who, files = [], API) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        const cols = ['*'];
-        let model = await this.context.database.table("work_orders").where(by, value).select(cols);
+        const model = (await WorkOrderMapper.findDomainRecord({by, value})).records.shift();
 
-        if (!model.length) return Utils.buildResponse({
-            status: "fail",
-            data: {message: "Work Order doesn't exist"}
-        }, 400);
-
-        model = new WorkOrder(model.shift());
+        if (!model) return Promise.reject(Error.RecordNotFound("Work Order doesn't exist."));
 
         const workOrder = new WorkOrder(body);
+        const newAssignees = Utils.serializeAssignedTo(workOrder.assigned_to);
 
-        const newAssignedTo = Utils.serializeAssignedTo(workOrder.assigned_to);
-
-        if (workOrder.assigned_to) workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignedTo);
-
-        //Check Work Order Status
+        if (workOrder.assigned_to) workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignees);
 
         return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}).then(result => {
             const assignees = _.differenceBy((workOrder.assigned_to) ? JSON.parse(workOrder.assigned_to) : [], model.assigned_to, 'id');

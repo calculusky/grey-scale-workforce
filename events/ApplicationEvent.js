@@ -1,13 +1,15 @@
 const EventEmitter = require('events').EventEmitter;
 const _ = require('lodash');
 const Utils = require('../core/Utility/Utils');
+const {isEqual} = require('lodash');
 
 class ApplicationEvent extends EventEmitter {
 
     constructor() {
         super();
         this.on("update_groups", this.onUpdateGroups);
-        this.on("work_order_updated", this.onWorkOrderUpdate)
+        this.on("work_order_updated", this.onWorkOrderUpdate);
+        this.on("role_updated", this.onRoleUpdated)
     }
 
 
@@ -59,6 +61,34 @@ class ApplicationEvent extends EventEmitter {
             await this.api.workOrders()
                 .updateWorkOrder("id", workOrder.id || oldRecord.id, completedDate, who, [], this.api);
         }
+    }
+
+    /**
+     *
+     *
+     * @param {Role} role
+     * @param who
+     * @param {Role} oldRecord
+     * @returns {Promise<Boolean>}
+     */
+    async onRoleUpdated(role, who, oldRecord) {
+
+        //For now We are only concerned if the permissions changed
+        if (!role.permissions || !oldRecord.permissions) return false;
+
+        if (isEqual(role.permissions, oldRecord.permissions)) return false;
+
+        const userIds = (await role.users()).records.map(({id}) => id);
+
+        userIds.forEach(userId => {
+            const socketIds = this.sharedData.clients[userId];
+            if (!socketIds || socketIds.length < 1) return;
+            socketIds.forEach(socketId => {
+                const socket = this.io.sockets.connected[socketId];
+                if (socket) socket.emit('role_updated', true);
+            });
+        });
+        return true;
     }
 
 }

@@ -1,4 +1,6 @@
-
+/**
+ * @type {API}
+ */
 const API = require('../index').test();
 
 
@@ -43,4 +45,11 @@ it("Should pass having been specified a valid role_id and user_id", () => {
     return expect(API.roles().addUserToRole(3, 1)).resolves.toEqual(expect.objectContaining({
         code: expect.any(Number)
     }));
+});
+
+test("test that we can update a role", async () => {
+    return expect(API.roles().updateRole("4", {name: "CaNTraL C3nTa"}, {sub: 1})).resolves.toEqual(expect.objectContaining({
+        code: expect.any(Number),
+        data: expect.any(Object)
+    }))
 });
