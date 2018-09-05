@@ -21,11 +21,11 @@ class Relationships {
     /**
      * Many -to- Many Relationship
      *
-     * @param relatedDomainMapper
-     * @param tableName
-     * @param foreignPivotKey
-     * @param relatedPivotKey
-     * @param parentKey
+     * @param relatedDomainMapper - The Domain or Model to be returned
+     * @param tableName - The table that holds the relationship e.g roles_users
+     * @param foreignPivotKey - The foreign key of the calling model as represented on the table {@param tableName}
+     * @param relatedPivotKey - The foreign key that represents the model to be returned on {@param tableName}
+     * @param parentKey - The primary or main key on the calling model/domain.
      * @param relatedKey
      * @param cols
      * @returns {Promise}

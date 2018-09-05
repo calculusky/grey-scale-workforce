@@ -2,6 +2,7 @@ const Utils = require('./Utils');
 const status = 'fail';
 module.exports = function () {
     return {
+        RecordNotFound: (msg = "Record Not Found.") => Utils.buildResponse({status, msg}, 404),
         InternalServerError: Utils.buildResponse({status, msg: 'Internal Server Error'}, 500),
         ValidationFailure: data => Utils.buildResponse({status: "fail", data, code: 'VALIDATION_ERROR'}, 400),
         GroupNotFound: Utils.buildResponse({status: "fail", data: {group_id: ["The group_id doesn't exist."]}}, 400),

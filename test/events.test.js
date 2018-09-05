@@ -1,3 +1,6 @@
+/**
+ * @type {API}
+ */
 const API = require('../index').test();
 // API = new API(ctx);
 
@@ -36,11 +39,16 @@ test("Events:onFaultAdded", async () => {
         relation_id: "54"
     };
     const t = await IntegratorEvent.onFaultAdded(fault, {});
-    expect(t).toEqual("err");
+    expect(t).toEqual(1);
 });
 
 test("Events:onFaultUpdated", async () => {
-    const t = await IntegratorEvent.onFaultUpdated(1, {});
+    const t = await IntegratorEvent.onFaultUpdated(3, {});
+    expect(t).toEqual("1");
+});
+
+test("Events:onRoleUpdated", async ()=>{
+    const t = await ApplicationEvent.onRoleUpdated({permissions:{name:"2"}}, {}, {permissions:{name:"22"}});
     expect(t).toEqual("err");
 });
 

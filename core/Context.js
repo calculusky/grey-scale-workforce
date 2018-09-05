@@ -16,6 +16,8 @@ let globalContext = null;
 //Private Fields
 let _privateStore = new WeakMap();
 
+require('./extensions');
+
 /**
  * @name Context
  */
@@ -39,14 +41,14 @@ class Context {
         this._(this).incoming_store = {};
 
 
-        this._(this).registerCustomValidators = () => {
-            Validator.register("string-array", (value, req, attr) => {
-                const [isValid, obj] = Utils.isJson(value);
-                return (isValid) ? Array.isArray(obj) : false;
-            }, "The :attribute must be a string-array or an array");
-        };
+        // this._(this).registerCustomValidators = () => {
+        //     Validator.register("string-array", (value, req, attr) => {
+        //         const [isValid, obj] = Utils.isJson(value);
+        //         return (isValid) ? Array.isArray(obj) : false;
+        //     }, "The :attribute must be a string-array or an array");
+        // };
 
-        this._(this).registerCustomValidators();
+        // this._(this).registerCustomValidators();
 
         this.modelMappers = MapperFactory;
         Context.globalContext = this;
@@ -155,22 +157,22 @@ class Context {
     }
 }
 
-if (!String.prototype.padStart) {
-    String.prototype.padStart = function padStart(targetLength, padString) {
-        targetLength = targetLength >> 0; //floor if number or convert non-number to 0;
-        padString = String(padString || ' ');
-        if (this.length > targetLength) {
-            return String(this);
-        }
-        else {
-            targetLength = targetLength - this.length;
-            if (targetLength > padString.length) {
-                //append to original to ensure we are longer than needed
-                padString += padString.repeat(targetLength / padString.length);
-            }
-            return padString.slice(0, targetLength) + String(this);
-        }
-    };
-}
+// if (!String.prototype.padStart) {
+//     String.prototype.padStart = function padStart(targetLength, padString) {
+//         targetLength = targetLength >> 0; //floor if number or convert non-number to 0;
+//         padString = String(padString || ' ');
+//         if (this.length > targetLength) {
+//             return String(this);
+//         }
+//         else {
+//             targetLength = targetLength - this.length;
+//             if (targetLength > padString.length) {
+//                 //append to original to ensure we are longer than needed
+//                 padString += padString.repeat(targetLength / padString.length);
+//             }
+//             return padString.slice(0, targetLength) + String(this);
+//         }
+//     };
+// }
 
 module.exports = Context;

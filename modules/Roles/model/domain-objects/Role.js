@@ -49,6 +49,11 @@ class Role extends DomainObject {
     user() {
         return this.relations().belongsTo("User", "assigned_to");
     }
+
+    //Gets all the users that belongs this ROLE
+    users(){
+        return this.relations().belongsToMany("User", "role_users", "role_id", "user_id")
+    }
 }
 
 //noinspection JSUnresolvedVariable
