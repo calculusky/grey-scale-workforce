@@ -139,6 +139,7 @@ class ModelMapper {
      * @returns {Promise.<DomainObject>|boolean}
      */
     createDomainRecord(domainObject = {}, domainObjects = []) {
+        const DomainObject = DomainFactory.build(this.domainName);
         if (domainObject) domainObjects.push(domainObject);
 
         //so there has to be a domain object
@@ -176,7 +177,7 @@ class ModelMapper {
             //services inserting multiples should however treat the result as an array
             let id = result.shift();
             if (domainObjects.length === 1) {
-                domainObject = domainObjects.shift().serialize(dbData.shift(), 'client');
+                domainObject = new DomainObject(domainObjects.shift().serialize(dbData.shift(), 'client'));
                 domainObject.id = id;
             } else {
                 domainObject = domainObjects.map(domain => {
@@ -248,8 +249,10 @@ class ModelMapper {
     /**
      * @param by
      * @param value
+     * @param deletedBy - The id of the user that deleted this record
+     * @param immediate - Determines if the returned promise should be triggered immediately
      */
-    deleteDomainRecord({by = this.primaryKey, value}) {
+    deleteDomainRecord({by = this.primaryKey, value, deletedBy}, immediate = true) {
         if (!by) throw new ReferenceError(`${this.constructor.name} must override the primary key field.`);
         if (!this.tableName) throw new ReferenceError(`${this.constructor.name} must override the tableName field.`);
         if (by !== "*_all" && !value) throw new TypeError("The parameter value must be set for this operation");
@@ -257,17 +260,18 @@ class ModelMapper {
         let DomainObject = DomainFactory.build(this.domainName);
 
         let domainObject = new DomainObject();
-        let [softDelete, dateDeletedCol] = domainObject.softDeletes();
+        let [softDelete, dateDeletedCol, deletedByCol] = domainObject.softDeletes();
 
         if (typeof softDelete === 'boolean' && softDelete) {
-            domainObject[dateDeletedCol] = Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s");
+            domainObject[dateDeletedCol] = Utils.date.dateToMysql();
+            if (deletedByCol && deletedBy) domainObject[deletedByCol] = deletedBy;
             return this.updateDomainRecord({by, value, domain: domainObject});
         }
 
         let resultSets = this.context.database.table(this.tableName).delete();
 
         resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
-
+        if (!immediate) return resultSets;
         return resultSets
             .then(itemsDeleted => {
                 return Promise.resolve(itemsDeleted);

@@ -4,6 +4,7 @@
   "asset_type": "asset_type",
   "asset_type_name": "asset_type_name",
   "status": "status",
+  "state": "state",
   "serial_no": "serial_no",
   "description": "description",
   "date_installed": "date_installed",

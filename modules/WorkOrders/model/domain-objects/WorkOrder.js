@@ -31,8 +31,9 @@ class WorkOrder extends DomainObject {
 
     softDeletes() {
         return [
-            false,
-            "deleted_at"
+            true,
+            "deleted_at",
+            "deleted_by"
         ];
     }
 

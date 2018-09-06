@@ -3,7 +3,7 @@ const _ = require('lodash');
 const Utils = require("../core/Utility/Utils");
 const DomainFactory = require("../modules/DomainFactory");
 
-class WebEvent extends EventEmitter {
+class IntegratorEvent extends EventEmitter {
 
     constructor() {
         super();
@@ -12,7 +12,7 @@ class WebEvent extends EventEmitter {
     }
 
     /**
-     * Initializes the Web Event with necessary inputs
+     * Initializes the Event with necessary inputs
      * @param context {Context}
      * @param io
      * @param API {API}
@@ -28,6 +28,7 @@ class WebEvent extends EventEmitter {
 
     /**
      * TODO create a table for service-subscribers
+     *
      * Such that when an event is triggered we can look-up
      * all the subscribers to this service and notify them all
      *
@@ -35,6 +36,8 @@ class WebEvent extends EventEmitter {
      * @param who
      */
     async onFaultAdded(fault = {}, who) {
+        if (fault.source !== "crm") return;
+
         const iFault = Object.assign({}, fault);
         const db = this.context.database;
 
@@ -54,7 +57,7 @@ class WebEvent extends EventEmitter {
         delete iFault['related_to'];
         delete iFault['relation_id'];
 
-        const url = "http://62.138.8.136/test/index.php?entryPoint=fault-create";
+        const url = "http://62.138.8.136/ie/index.php?entryPoint=fault-create";
 
         const headers = {'Content-type': "application/x-www-form-urlencoded"};
         const options = {
@@ -109,12 +112,12 @@ class WebEvent extends EventEmitter {
         delete iFault['related_to'];
         delete iFault['relation_id'];
 
-        const url = "http://62.138.8.136/test/index.php?entryPoint=fault-update";
+        const url = "http://62.138.8.136/ie/index.php?entryPoint=fault-update";
 
         const headers = {'Content-type': "application/x-www-form-urlencoded"};
         const options = {
             url,
-            headers,    
+            headers,
             form: iFault,
             timeout: 1500
         };
@@ -123,4 +126,4 @@ class WebEvent extends EventEmitter {
 
 }
 
-module.exports = new WebEvent();
+module.exports = new IntegratorEvent();

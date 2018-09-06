@@ -19,3 +19,10 @@ test("fetch a single asset", () => {
         data: expect.any(Object)
     }));
 });
+
+it("Search for an asset", () => {
+    return expect(API.assets().searchAssets("wasim", 0, 10)).resolves.toEqual(expect.objectContaining({
+        code: expect.any(Number),
+        data: expect.any(Object)
+    }));
+});

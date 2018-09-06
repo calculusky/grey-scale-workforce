@@ -1,14 +1,14 @@
 //noinspection JSUnresolvedFunction
 const DomainObject = require('../../../../core/model/DomainObject');
 //noinspection JSUnresolvedFunction
-const map = require('./map.json');
+const map = require('./pending.reason.map.json');
 
 /**
  * @author Paul Okeke
- * Created by paulex on 7/4/17.
- * @name Notification
+ * Created by paulex on 8/30/18.
+ * @name PendingReason
  */
-class Notification extends DomainObject {
+class PendingReason extends DomainObject {
 
     constructor(data) {
         super(data, map);
@@ -16,12 +16,7 @@ class Notification extends DomainObject {
     }
 
     required() {
-        return [
-            'type',
-            'message',
-            'from',
-            'to'
-        ];
+        return [];
     }
 
     guard() {
@@ -40,19 +35,11 @@ class Notification extends DomainObject {
 
     rules() {
         return {
-            type: 'string|required',
-            message: 'string|required',
-            status: 'numeric',
-            from: 'integer|required',
-            record_ids:'string-array',
-            to: 'required'
+            name: 'string|required'
         };
     }
 
-    fromUser() {
-        return this.relations().belongsTo("User", "from");
-    }
 }
 
 //noinspection JSUnresolvedVariable
-module.exports = Notification;
+module.exports = PendingReason;

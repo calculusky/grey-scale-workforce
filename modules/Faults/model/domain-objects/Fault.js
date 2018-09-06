@@ -65,6 +65,15 @@ class Fault extends DomainObject {
     }
 
     /**
+     * Fetches all the work orders related to this fault
+     *
+     * @returns {Promise}
+     */
+    workOrders(cols = ['id', 'work_order_no', "related_to", "relation_id", "type_id", "status"]) {
+        return this.relations().morphMany("WorkOrder", "related_to", 'relation_id', undefined, cols);
+    }
+
+    /**
      * Returns the User that owns the fault
      * @returns {Promise}
      */

@@ -5,11 +5,7 @@
 const Fault = require('../modules/Faults/model/domain-objects/Fault');
 const WorkOrder = require('../modules/WorkOrders/model/domain-objects/WorkOrder');
 
-let API = require('../API');
-
-const config = require('../config.json');
-const Context = require('../core/Context');
-API = new API(new Context(config));
+let API = require('../index').test();
 
 test("belongsToMany Should be defined", ()=>{
     let relationship = new RelationShips();

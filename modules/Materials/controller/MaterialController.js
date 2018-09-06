@@ -87,38 +87,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /materials/user/{user_id}/{offset}/{limit}:
-     *   get:
-     *     summary: Gets materials assigned to a user
-     *     description: ''
-     *     tags: [Materials]
-     *     produces:
-     *     - application/json
-     *     operationId: getMaterialsByUser
-     *     responses:
-     *       '200':
-     *         description: Successful
-     *         schema:
-     *           $ref: '#/definitions/getMaterialOutput'
-     *     parameters:
-     *     - $ref: '#/parameters/sessionId'
-     *     - $ref: '#/parameters/user_id'
-     *     - $ref: '#/parameters/offset'
-     *     - $ref: '#/parameters/limit'
-     */
-    app.get('/materials/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res) => {
-        return API.materials().getMaterials(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
-            .then(({data, code}) => {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                return res.status(code).send(err);
-            });
-    });
-
-
-    /**
-     * @swagger
      * /materials/{offset}/{limit}:
      *   get:
      *     summary: Retrieves a List of materials
@@ -126,7 +94,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     tags: [Materials]
      *     produces:
      *     - application/json
-     *     operationId: getMaterials
+     *     operationId: getMaterial
      *     responses:
      *       '200':
      *         description: Successful
@@ -139,7 +107,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.get('/materials/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
         console.log('/materials/offset/limit');
-        return API.materials().getMaterials({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
+        return API.materials().getMaterial({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -169,7 +137,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/material_id'
      */
     app.get('/materials/:id', urlencodedParser, (req, res) => {
-        return API.materials().getMaterials(req.params['id'], undefined, req.who)
+        return API.materials().getMaterial(req.params['id'], undefined, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

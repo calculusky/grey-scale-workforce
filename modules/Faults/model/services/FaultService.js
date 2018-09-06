@@ -134,9 +134,8 @@ class FaultService extends ApiService {
         if (files.length) {
             API.attachments().createAttachment({module: "faults", relation_id: record.id}, who, files, API).then();
         }
-
         //If the fault is created internally via mr.working lets push the data to other service integrating to mrworking
-        if (!record.source) Events.emit("fault_added", record, who);
+        Events.emit("fault_added", record, who);
 
         return Utils.buildResponse({data: record});
     }
@@ -171,8 +170,6 @@ class FaultService extends ApiService {
         }
 
         return FaultMapper.updateDomainRecord({value, domain: fault}).then(result => {
-            //Send updated fault to other services.
-            fault.id = model.id;
             Events.emit("fault_updated", fault, who, model);
             return Utils.buildResponse({data: Utils.convertDataKeyToJson(result.shift(), "labels", "assigned_to")});
         });
