@@ -1,4 +1,5 @@
 const Validator = require("validatorjs");
+const Utils = require("./Utility/Utils");
 
 Validator.register("string-array", (value, req, attr) => {
     const [isValid, obj] = Utils.isJson(value);
