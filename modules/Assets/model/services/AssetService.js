@@ -23,7 +23,7 @@ class AssetService {
 
     async getAssets(query = {}, who = {}) {
         const Asset = DomainFactory.build(DomainFactory.ASSET);
-        const {group_id, offset = 0, limit = 10} = query;
+        const {group_id, status, offset = 0, limit = 10} = query;
         let fields = [
             'id',
             'asset_type',
