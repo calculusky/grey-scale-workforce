@@ -21,7 +21,7 @@ class MapperFactory {
      * @param mapperName
      * @param context
      * @param path
-     * @returns {UserMapper|AssetMapper|FaultCategoryMapper}
+     * @returns {UserMapper|AssetMapper|FaultCategoryMapper|WorkOrderMapper}
      */
     static build(mapperName = "", path = "", context = null) {
         return Utils.loadMapper(mapperStore, path, mapperName, context);
