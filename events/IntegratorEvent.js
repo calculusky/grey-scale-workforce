@@ -36,7 +36,7 @@ class IntegratorEvent extends EventEmitter {
      * @param who
      */
     async onFaultAdded(fault = {}, who) {
-        if (fault.source !== "crm") return;
+        if (fault.source === "crm") return false;
 
         const iFault = Object.assign({}, fault);
         const db = this.context.database;
