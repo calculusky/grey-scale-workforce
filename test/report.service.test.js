@@ -1,3 +1,8 @@
 /**
- * Created by paulex on 11/15/17.
+ * @type {API}
  */
+const API = require('../index').test();
+
+test("Test ", () => {
+    return expect(API.reports().getBasicDashboard({sub: 1})).resolves.toEqual({});
+});
