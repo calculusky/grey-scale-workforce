@@ -3,6 +3,9 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
+const Error = require('../../../../core/Utility/ErrorUtils')();
+const Events = require('../../../../events/events');
+
 
 /**
  * @name RoleService
@@ -54,22 +57,49 @@ class RoleService extends ApiService {
 
         let validator = new validate(role, role.rules(), role.customErrorMessages());
 
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                data: validator.errors.all()
-            }, 400));
-        }
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         ApiService.insertPermissionRights(role, who);
 
-        role.permissions = JSON.stringify(role.permissions);
+        const [valid, json] = Utils.isJson(role.permissions);
+        if (valid) role.permissions = JSON.stringify(json);
 
         //Get Mapper
         const RoleMapper = MapperFactory.build(MapperFactory.ROLE);
         return RoleMapper.createDomainRecord(role).then(role => {
             if (!role) return Promise.reject();
             return Utils.buildResponse({data: role});
+        });
+    }
+
+    /**
+     *
+     * @param value
+     * @param body
+     * @param who
+     * @param by
+     */
+    async updateRole(value, body = {}, who, by = "id") {
+        const Role = DomainFactory.build(DomainFactory.ROLE);
+        const RoleMapper = MapperFactory.build(MapperFactory.ROLE);
+
+        const model = (await RoleMapper.findDomainRecord({by, value})).records.shift();
+
+        if (!model) return Promise.reject(Error.RecordNotFound("Role not found."));
+
+        const domain = new Role(body);
+
+        const newAssignee = Utils.serializeAssignedTo(domain.assigned_to);
+
+        const [valid, json] = Utils.isJson(domain.permissions);
+        if (valid) domain.permissions = JSON.stringify(json);
+
+        if (domain.assigned_to) domain.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignee);
+
+        return RoleMapper.updateDomainRecord({by, value, domain}).then(res => {
+            if (!res.mLast()) return Error.RecordNotFound();
+            Events.emit("role_updated", domain, who, model);
+            return Utils.buildResponse({data: res.shift()});
         });
     }
 
@@ -89,7 +119,7 @@ class RoleService extends ApiService {
         const validator = new validate(user_roles, {user_id: 'integer|required', role_id: 'integer|required'});
 
         if (validator.fails()) {
-            console.log(validator.errors.all());
+            console.error(validator.errors.all());
             return Promise.reject(Utils.buildResponse({
                 status: "fail",
                 data: validator.errors.all(),

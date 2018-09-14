@@ -25,7 +25,6 @@ class Asset extends DomainObject {
 
     guard() {
         return [
-            'api_instance_id',
             'id'
         ];
     }
@@ -39,7 +38,9 @@ class Asset extends DomainObject {
 
     rules() {
         return {
-            asset_name: 'string|required'
+            asset_name: 'string|required',
+            state: 'boolean',
+            status: 'boolean'
         };
     }
 

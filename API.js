@@ -223,6 +223,13 @@ class API {
     }
 
     /**
+     * @returns {BaseRecordService}
+     */
+    baseRecords(){
+        return API._(this)['services']['BaseRecordService'];
+    }
+
+    /**
      * @returns {ReportService|*}
      */
     reports() {

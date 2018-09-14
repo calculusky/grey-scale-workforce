@@ -21,7 +21,7 @@ class MapperFactory {
      * @param mapperName
      * @param context
      * @param path
-     * @returns {UserMapper|AssetMapper|FaultCategoryMapper}
+     * @returns {UserMapper|AssetMapper|FaultCategoryMapper|WorkOrderMapper}
      */
     static build(mapperName = "", path = "", context = null) {
         return Utils.loadMapper(mapperStore, path, mapperName, context);
@@ -51,6 +51,7 @@ MapperFactory.STOCK_MOVEMENT = "StockMovement";
 MapperFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
 MapperFactory.FAULT_CATEGORY = "FaultCategory";
 MapperFactory.ACTIVITY = "Activity";
+MapperFactory.PENDING_REASON = "PendingReason";
 
 
 module.exports = MapperFactory;

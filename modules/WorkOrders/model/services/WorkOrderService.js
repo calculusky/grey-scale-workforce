@@ -83,23 +83,14 @@ class WorkOrderService extends ApiService {
     async updateWorkOrder(by, value, body = {}, who, files = [], API) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        const cols = ['*'];
-        let model = await this.context.database.table("work_orders").where(by, value).select(cols);
+        const model = (await WorkOrderMapper.findDomainRecord({by, value})).records.shift();
 
-        if (!model.length) return Utils.buildResponse({
-            status: "fail",
-            data: {message: "Work Order doesn't exist"}
-        }, 400);
-
-        model = new WorkOrder(model.shift());
+        if (!model) return Promise.reject(Error.RecordNotFound("Work Order doesn't exist."));
 
         const workOrder = new WorkOrder(body);
+        const newAssignees = Utils.serializeAssignedTo(workOrder.assigned_to);
 
-        const newAssignedTo = Utils.serializeAssignedTo(workOrder.assigned_to);
-
-        if (workOrder.assigned_to) workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignedTo);
-
-        //Check Work Order Status
+        if (workOrder.assigned_to) workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignees);
 
         return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}).then(result => {
             const assignees = _.differenceBy((workOrder.assigned_to) ? JSON.parse(workOrder.assigned_to) : [], model.assigned_to, 'id');
@@ -261,11 +252,10 @@ class WorkOrderService extends ApiService {
      * @param body
      * @param who
      * @param files
-     * @param API {API}
+     * @param {API} API
      * @returns {*}
      */
     async createWorkOrder(body = {}, who = {}, files = [], API) {
-        console.log('body', body);
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         let workOrder = new WorkOrder(body);
 
@@ -287,7 +277,10 @@ class WorkOrderService extends ApiService {
         let bu = Utils.getGroupParent(group, 'business_unit') || group;
 
         const uniqueNo = await Utils.generateUniqueSystemNumber(
-            getNumberPrefix(workOrder.type_id), bu['short_name'], 'work_orders', this.context
+            _prefix(workOrder.type_id),
+            bu['short_name'],
+            'work_orders',
+            this.context
         ).catch(Promise.reject(Error.InternalServerError));
 
         workOrder.work_order_no = uniqueNo.toUpperCase();
@@ -314,7 +307,7 @@ class WorkOrderService extends ApiService {
 
     /**
      *
-     * @param orderId
+     * @param value - The Work Order Id
      * @param status
      * @param note
      * @param files
@@ -322,35 +315,44 @@ class WorkOrderService extends ApiService {
      * @param API {API}
      * @returns {Promise.<WorkOrder>|*}
      */
-    async changeWorkOrderStatus(orderId, status, note, files = [], who = {}, API) {
-        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
-        let workOrder = new WorkOrder();
-
-        workOrder.status = status;
-
-        //if there a note lets
-        if (note) API.notes().createNote(note, who, files, API);
-
-        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.updateDomainRecord({value: orderId, domain: workOrder}).then(result => {
-            if (result.pop()) {
-                workOrder.id = orderId;
-                // Events.emit("work_order_updated", workOrder, who, model);
-                return Utils.buildResponse({data: result.shift()});
-            } else {
-                return Promise.reject(Utils.buildResponse({status: "fail", data: result.shift()}, 404));
-            }
-        });
+    async changeWorkOrderStatus(value/*WorkOrderId*/, status, note, files = [], who = {}, API) {
+        const updated = await this.updateWorkOrder("id", value, {status}, who, [], API);
+        if (note) API.notes().createNote(note, who, files, API).catch(console.error);
+        return updated;
     }
 
-    deleteWorkOrder(by = "id", value) {
+    /**
+     * Deletes a work order
+     *
+     * @param by
+     * @param value
+     * @param who
+     * @returns {*|Promise|PromiseLike<T>|Promise<T>}
+     */
+    deleteWorkOrder(by = "id", value, who = {}) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.deleteDomainRecord({by, value}).then(count => {
+        return WorkOrderMapper.deleteDomainRecord({by, value, deletedBy: who.sub}).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
             return Utils.buildResponse({data: {message: "Work Order deleted"}});
         });
+    }
+
+    /**
+     * Delete multiple work orders
+     *
+     * @param ids
+     * @param who
+     * @param by
+     * @returns {Promise<*>}
+     */
+    async deleteMultipleWorkOrder(ids = [], who = {}, by = "id") {
+        if (!Array.isArray(ids)) return Promise.reject(Utils.buildResponse({data: {message: "Expected an array of work order id"}}));
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        const task = ids.map(value => WorkOrderMapper.deleteDomainRecord({by, value, deletedBy: who.sub}, false));
+        const items = (await Promise.all(task)).map(([{id}, del]) => ({id, deleted: del > 0}));
+        return Utils.buildResponse({data: {items}});
     }
 
 
@@ -367,7 +369,7 @@ class WorkOrderService extends ApiService {
 
 }
 
-function getNumberPrefix(typeId) {
+function _prefix(typeId) {
     if (!typeId) return "W";
     switch (parseInt(typeId)) {
         case 1:
@@ -417,8 +419,6 @@ async function _doWorkOrderList(workOrders, context, module, isSingle = false, {
         } else promises.push(null);
 
         promises.push(Utils.getAssignees(workOrder.assigned_to, db), workOrder.createdBy());
-
-        console.log("test");
 
         //If we're loading for a list view let's get the counts of notes, attachments etc.
         if (!isSingle) {

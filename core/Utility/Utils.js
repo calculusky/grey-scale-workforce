@@ -723,11 +723,11 @@ module.exports.processMakerError = function (err) {
 module.exports.getFaultStatus = function (key) {
     switch (key) {
         case '1':
-            return "Pending";
+            return "New";
         case '2':
-            return "Overdue";
+            return "Assigned";
         case '3':
-            return "Resolved";
+            return "Pending";
         case '4':
             return "Closed";
         default:
@@ -751,7 +751,7 @@ module.exports.getFaultPriority = function (key) {
 };
 
 module.exports.getWorkStatuses = function (type, key = null) {
-    console.log(type, key);
+    // console.log(type, key);
     //Assumptions of the type are 1: Disconnection, 2: Reconnection , 3: Faults
     if (!key && isNaN(type)) return [];
     if ((key && isNaN(type)) || isNaN(key)) return "/invalid-status";

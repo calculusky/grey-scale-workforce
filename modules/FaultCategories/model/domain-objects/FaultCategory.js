@@ -16,11 +16,7 @@ class FaultCategory extends DomainObject {
     }
 
     required() {
-        return [
-            'name',
-            'type',
-            'short_name'
-        ];
+        return [];
     }
 
     guard() {
@@ -40,7 +36,7 @@ class FaultCategory extends DomainObject {
     rules() {
         return {
             name: 'string|required',
-            short_name: 'string|required',
+            type: 'string|required',
         };
     }
 
