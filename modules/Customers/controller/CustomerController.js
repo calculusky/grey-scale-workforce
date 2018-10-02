@@ -205,6 +205,36 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
+     * /customers/{account_no}/workorders:
+     *   get:
+     *     summary: Gets a work orders that have a level of relationship with customers
+     *     description: ''
+     *     tags: [Customers]
+     *     produces:
+     *     - application/json
+     *     operationId: getCustomerWorkOrders
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getWorkOrderOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/account_no'
+     */
+    app.get('/customers/:account_no/workorders', urlencodedParser, (req, res)=> {
+        return API.customers().getCustomerWorkOrders(req.params['account_no'], req.who)
+            .then(({data, code})=> {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code})=> {
+                return res.status(code).send(err);
+            });
+    });
+
+
+    /**
+     * @swagger
      * /customers/{account_no}:
      *  delete:
      *    summary: Deletes a Customer

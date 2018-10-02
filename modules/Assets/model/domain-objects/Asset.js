@@ -48,6 +48,10 @@ class Asset extends DomainObject {
     user() {
         return this.relations().belongsTo("User", "assigned_to");
     }
+
+    faults(cols = ["*"]) {
+        return this.relations().morphMany("Fault", "related_to", "relation_id", undefined, cols);
+    }
 }
 
 //noinspection JSUnresolvedVariable

@@ -37,10 +37,10 @@ class DisconnectionBilling extends DomainObject {
         return this.relations().belongsTo("PaymentPlan", "id", "disc_order_id");
     }
 
-    workOrders(){
+    workOrders(cols = ['id', 'work_order_no', "related_to", "relation_id", "type_id", "status"]){
         return this.relations().morphMany('WorkOrder', 'related_to', "relation_id", {
-            localDomain: "disconnections", localKey: "id"
-        });
+            localDomain: "disconnection_billings", localKey: "id"
+        }, cols);
     }
     
     customer(cols=['account_no', 'old_account_no', 'email','meter_no', 'customer_name', 'mobile_no', 'plain_address', 'customer_type']){

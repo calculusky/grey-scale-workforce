@@ -17,3 +17,12 @@ test("fetch a list of customers", () => {
         expect(resp.data.data.items).toHaveLength(1)
     });
 });
+
+
+
+test("fetch work orders for a customer", () => {
+    expect.assertions(1);
+    return API.customers().getCustomerWorkOrders("0100002117").then(resp=>{
+        expect(resp.data.data.items).toHaveLength(1)
+    });
+});

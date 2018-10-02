@@ -84,41 +84,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
-
-    // /**
-    //  * @swagger
-    //  * /assets/user/{user_id}/{offset}/{limit}:
-    //  *   get:
-    //  *     deprecated:
-    //  *       description: No longer maintained
-    //  *     summary: Gets assets assigned to a user
-    //  *     description: ''
-    //  *     tags: [Assets]
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: getAssetsByUser
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successful
-    //  *         schema:
-    //  *           $ref: '#/definitions/getAssetOutput'
-    //  *     parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - $ref: '#/parameters/user_id'
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  */
-    // app.get('/assets/user/:user_id/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.assets().getAssets(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
-    //         .then(({data, code})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status(code).send(err);
-    //         });
-    // });
-
-
     /**
      * @swagger
      * /assets/{offset}/{limit}:
@@ -204,6 +169,35 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
     app.get('/assets/search/:keyword', urlencodedParser, (req, res) => {
         console.log('/assets/search/keyword');
         return API.assets().searchAssets(req.params['keyword'], req.query['offset'], req.query['limit'])
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swagger
+     * /assets/{id}/faults:
+     *   get:
+     *     summary: Get all faults related to an asset
+     *     description: ''
+     *     tags: [Assets]
+     *     produces:
+     *     - application/json
+     *     operationId: searchAssets
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getCustomerOutput'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/asset_id'
+     */
+    app.get('/assets/:id/faults', urlencodedParser, (req, res) => {
+        return API.assets().getAssetFaults(req.params['id'], req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
