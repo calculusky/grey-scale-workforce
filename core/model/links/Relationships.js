@@ -31,7 +31,7 @@ class Relationships {
      * @returns {Promise}
      */
     belongsToMany(relatedDomainMapper, tableName = null, foreignPivotKey = null, relatedPivotKey = null,
-                  parentKey = null, relatedKey = null, cols = []) {
+                  parentKey = null, relatedKey = null, cols = null) {
         //Get the domain mapper of the model that will be returned
         let DomainMapper = MapperFactory.build(relatedDomainMapper);
         if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${relatedDomainMapper} cannot be found.`);
@@ -51,7 +51,7 @@ class Relationships {
         let primaryKeyValue = this.domainObject[primaryKey];
         let tablePrimaryKey = domain.getTableColumn((relatedKey) ? relatedKey : DomainMapper.primaryKey);
 
-        let columns = [`${domainTable}.*`];
+        let columns = cols || [`${domainTable}.*`];
 
         let resultSets = KNEX.select(columns).from(domainTable)
             .innerJoin(tableName, function () {
@@ -59,41 +59,36 @@ class Relationships {
                     .andOn(`${tableName}.${relatedPivotKey}`, `${domainTable}.${tablePrimaryKey}`)
             });
 
-        let executor = (resolve, reject) => {
-            resultSets.then(res => {
-                let records = [];
-                let rowLen = res.length;
-                let processed = 0;
-                for (let i = 0; i < rowLen; i++) {
-                    let domainObject = new DomainObject();
-                    domainObject.serialize(res[i], 'client');
-                    records.push(domainObject);
-                    if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
-                }
-                if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
-            }).catch(err => {
-                return reject(err);
-            });
-        };
+        let executor = (resolve, reject) => finalizeResult(resultSets, DomainObject, resolve, reject);
         return new Promise(executor);
     }
 
     /**
-     * One - to - One Relationship
+     * One - to - Many Relationship
      * @param domainMapperName
+     * @param foreignKey
      * @param parentKey
+     * @param cols
      */
-    hasOne(domainMapperName, parentKey = `${domainMapperName.toLowerCase()}_id`) {
+    hasMany(domainMapperName, foreignKey = `${domainMapperName.toLowerCase()}_id`, parentKey = "id", cols = ["*"]) {
         let DomainMapper = MapperFactory.build(domainMapperName);
         if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
 
         //Get the DomainObject for the domain we are retrieving.
         let DomainObject = DomainFactory.build(DomainMapper.domainName);
-        if (!DomainObject)
-            throw new ReferenceError(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
-        let foreignDomain = new DomainObject();
+        if (!DomainObject) throw new ReferenceError(`Domain Object for ${DomainMapper.domainName} cannot be found.`);
+
+        const foreignDomain = new DomainObject();
 
         let foreignTable = DomainMapper.tableName;
+
+        let resultSets = KNEX.select(cols).from(foreignTable).where(foreignKey, this.domainObject[parentKey]);
+
+        const [softDelete, deleteCol] = foreignDomain.softDeletes();
+        if (softDelete) resultSets.where(deleteCol, null);
+
+        const executor = (resolve, reject) => finalizeResult(resultSets, DomainObject, resolve, reject);
+        return new Promise(executor);
     }
 
 
@@ -134,29 +129,13 @@ class Relationships {
         let resultSets = KNEX.select(cols).from(foreignTable)
             .where(parentKey, this.domainObject[foreignKey])
             .where(`${foreignTable}.deleted_at`, null);
-        // console.log(resultSets.toString());
 
-        const executor = (resolve, reject) => {
-            resultSets.then(res => {
-                let records = [], rowLen = res.length, processed = 0;
-                for (let i = 0; i < rowLen; i++) {
-                    let domainObject = new DomainObject();
-                    domainObject.serialize(res[i], 'client');
-                    records.push(domainObject);
-                    if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
-                }
-                if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
-            }).catch(err => {
-                console.log(err);
-                return reject(err);
-            })
-        };
+        const executor = (resolve, reject) => finalizeResult(resultSets, DomainObject, resolve, reject);
         return new Promise(executor);
     }
 
 
     morphTo(modelNameColumn, modelIdColumn, cols = ['*']) {
-        //TODO test if the modelNameCol is not selected
         if (!this.domainObject[modelNameColumn] || !this.domainObject[modelIdColumn]) {
             throw new ReferenceError(`The columns[${modelNameColumn},${modelIdColumn}] 
             specified for morphTo relationship are not selected for 'this' domain object`);
@@ -189,20 +168,7 @@ class Relationships {
         let resultSets = KNEX.select(cols).from(DomainMapper.tableName)
             .where(DomainMapper.primaryKey, this.domainObject[modelIdColumn]);
 
-        let executor = (resolve, reject) => {
-            resultSets.then(res => {
-                let records = [], rowLen = res.length, processed = 0;
-                for (let i = 0; i < rowLen; i++) {
-                    let domainObject = new DomainObject();
-                    domainObject.serialize(res[i], 'client');
-                    records.push(domainObject);
-                    if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
-                }
-                if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
-            }).catch(err => {
-                return reject(err);
-            });
-        };
+        let executor = (resolve, reject) => finalizeResult(resultSets, DomainObject, resolve, reject);
         return new Promise(executor);
     }
 
@@ -218,7 +184,7 @@ class Relationships {
      */
     morphMany(domainMapperName, relatedDomainKey, foreignKey = `${relatedDomainKey}_id`,
               options = {localDomain: `${this.domainObject.constructor.name}s`.toLocaleLowerCase(), localKey: "id"},
-              cols=['*']) {
+              cols = ['*']) {
         let DomainMapper = MapperFactory.build(domainMapperName);
         if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
 
@@ -239,20 +205,7 @@ class Relationships {
         let resultSets = KNEX.select(cols).from(foreignTable)
             .where(foreignKey, this.domainObject[options.localKey]).andWhere(relatedDomainKey, options.localDomain);
 
-        const executor = (resolve, reject) => {
-            resultSets.then(res => {
-                let records = [], rowLen = res.length, processed = 0;
-                for (let i = 0; i < rowLen; i++) {
-                    let domainObject = new DomainObject();
-                    domainObject.serialize(res[i], 'client');
-                    records.push(domainObject);
-                    if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
-                }
-                if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
-            }).catch(err => {
-                return reject(err)
-            });
-        };
+        const executor = (resolve, reject) => finalizeResult(resultSets, DomainObject, resolve, reject);
         return new Promise(executor);
     }
 
@@ -266,6 +219,21 @@ class Relationships {
         return domains.sort().join('_').toLowerCase();
     }
 
+}
+
+function finalizeResult(resultSets, DomainObject, resolve, reject) {
+    resultSets.then(res => {
+        let records = [], rowLen = res.length, processed = 0;
+        for (let i = 0; i < rowLen; i++) {
+            let domainObject = new DomainObject();
+            domainObject.serialize(res[i], 'client');
+            records.push(domainObject);
+            if (++processed === rowLen) return resolve({records: records, query: resultSets.toString()});
+        }
+        if (0 === rowLen) return resolve({records: records, query: resultSets.toString()});
+    }).catch(err => {
+        return reject(err)
+    });
 }
 
 module.exports = Relationships;

@@ -26,3 +26,11 @@ it("Search for an asset", () => {
         data: expect.any(Object)
     }));
 });
+
+
+it("Get fault of an asset", () => {
+    return expect(API.assets().getAssetFaults(1)).resolves.toEqual(expect.objectContaining({
+        code: expect.any(Number),
+        data: expect.any(Object)
+    }));
+});
