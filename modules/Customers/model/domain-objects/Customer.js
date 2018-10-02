@@ -41,6 +41,16 @@ class Customer extends DomainObject {
         };
     }
 
+
+    disconnectionBilling(cols = ["id", "account_no", "work_order_id", "current_bill"]) {
+        return this.relations().hasMany(
+            "DisconnectionBilling",
+            "account_no",
+            "account_no",
+            cols
+        )
+    }
+
     asset(cols = ["assets.id", "assets.asset_name", "assets.asset_type"]) {
         return this.relations().belongsToMany(
             "Asset",
