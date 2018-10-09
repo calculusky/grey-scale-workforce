@@ -204,6 +204,7 @@ class UserService extends ApiService {
             'id',
             'username',
             'first_name',
+	    'email',
             'last_name',
             'gender',
             'avatar'
@@ -211,6 +212,7 @@ class UserService extends ApiService {
         let resultSets = this.context.database.select(fields).from('users')
             .where('username', 'like', `%${keyword}%`)
             .orWhere('first_name', 'like', `%${keyword}%`)
+	    .orWhere('email', 'like', `%${keyword}%`)
             .orWhere('last_name', 'like', `%${keyword}%`)
             .orWhere('middle_name', 'like', `%${keyword}%`)
             .where("deleted_at", null)

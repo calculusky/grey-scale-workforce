@@ -1,6 +1,7 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
+const {orderBy} = require("lodash");
 
 /**
  * @name CustomerService
@@ -100,6 +101,55 @@ class CustomerService {
 
         const assets = CustomerService.addBUAndUTAttributes(results, groups, Customer);
         return Utils.buildResponse({data: {items: assets}});
+    }
+
+    /**
+     * Fetches work-orders that has a level of relationship with a customer
+     *
+     * Most work-orders are primarily not related to a customer, thus it is
+     * quite not direct.
+     *
+     * @param accountNo
+     * @param who
+     */
+    async getCustomerWorkOrders(accountNo, who) {
+        const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
+        const customer = new Customer({account_no: accountNo});
+        const [billings, assets] = await Promise.all([customer.disconnectionBilling(), customer.asset()]);
+        const cols = [
+            'id',
+            'work_order_no',
+            "related_to",
+            "relation_id",
+            "type_id",
+            "labels",
+            "status",
+            "priority",
+            "summary",
+            "address_line",
+            "start_date",
+            "completed_date",
+            "assigned_to",
+            "created_at",
+            "updated_at"
+        ];
+        const workOrders = [];
+
+        for (let billing of billings.records) {
+            const workOrder = await billing.workOrders(cols);
+            if (workOrder.records.length > 0) workOrders.push(...workOrder.records);
+        }
+
+        //from asset we need to get all the fault and then the work orders
+        //For lack of proper DB Queries we are going to fetch this one after the other
+        for (let asset of assets.records) {
+            const faults = await asset.faults();
+            for (const fault of faults.records) {
+                const workOrder = await fault.workOrders(cols);
+                if (workOrder.records.length > 0) workOrders.push(...workOrder.records);
+            }
+        }
+        return Utils.buildResponse({data: {items: orderBy(workOrders, ["id"], ["desc"])}});
     }
 
     /**

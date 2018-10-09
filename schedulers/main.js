@@ -51,6 +51,8 @@ module.exports.createDelinquencyList = function () {
         const currDate = new Date();
         const logMgs = [];
         const db = this.context.database;
+        let uploadData;
+        let groups;
 
         //onComplete is called when the file is done processing
         const onComplete = (status, update = true) => {
@@ -67,9 +69,10 @@ module.exports.createDelinquencyList = function () {
         ];
 
         //Fetch Groups and the Uploaded record before hand
-        let [groups, uploadData] = await Promise.all(task).catch(_ => {
-            return logMgs.push("There was an error reading the file") && onComplete(3);
-        });
+        ([groups, uploadData] = await Promise.all(task).catch(err => {
+            console.error('UploadFailed:', err);
+            return logMgs.push("There was an error reading the file.") && onComplete(3);
+        }));
 
         //check that the uploaded data is intact.. if we can't find the uploaded record we can end this right now
         if (!uploadData.length) return logMgs.push("Couldn't find the uploaded record.") && onComplete(5, false);
