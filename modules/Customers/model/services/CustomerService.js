@@ -137,7 +137,10 @@ class CustomerService {
 
         for (let billing of billings.records) {
             const workOrder = await billing.workOrders(cols);
-            if (workOrder.records.length > 0) workOrders.push(...workOrder.records);
+            if (workOrder.records.length > 0) {
+                workOrder.records.forEach(work => work['disconnections'] = billing);
+                workOrders.push(...workOrder.records);
+            }
         }
 
         //from asset we need to get all the fault and then the work orders
@@ -149,6 +152,7 @@ class CustomerService {
                 if (workOrder.records.length > 0) workOrders.push(...workOrder.records);
             }
         }
+        console.log(workOrders);
         return Utils.buildResponse({data: {items: orderBy(workOrders, ["id"], ["desc"])}});
     }
 
