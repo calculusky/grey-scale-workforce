@@ -222,7 +222,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/account_no'
      */
-    app.get('/customers/:account_no/workorders', urlencodedParser, (req, res)=> {
+    app.get('/customers/:account_no/work_orders', urlencodedParser, (req, res)=> {
         return API.customers().getCustomerWorkOrders(req.params['account_no'], req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
