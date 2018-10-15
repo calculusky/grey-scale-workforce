@@ -106,8 +106,9 @@ class WorkOrderService extends ApiService {
                     relation_id: workOrder.id
                 }, who, files, API).then();
             }
-
-            return Utils.buildResponse({data: result.shift()});
+            const updatedRec = result.shift();
+            Utils.convertDataKeyToJson(updatedRec, "labels", "assigned_to");
+            return Utils.buildResponse({data: updatedRec});
         });
     }
 
