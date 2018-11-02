@@ -385,6 +385,7 @@ module.exports.getBUAndUT = function (group, groups) {
             bu = this.getGroupParent(group, "business_unit");
             if (bu && bu.parent) delete bu.parent;
             if (bu && bu.children) delete bu.children;
+            findUT([Object.assign({}, group)]);
         } else {
             bu = this.getGroupParent(group, "business_unit");
             let ut1 = this.getGroupParent(group, "undertaking");
