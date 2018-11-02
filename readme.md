@@ -49,4 +49,4 @@ process maker etc.
 
 * Paul Okeke - Software Developer
 
-See also the list of [contributors](./CONTRIBUTORS.txt) who participated in this project.
+See also the list of [contributors](./CONTRIBUTING.md) who participated in this project.
