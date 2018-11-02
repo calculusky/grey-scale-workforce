@@ -129,6 +129,7 @@ class NotificationService {
         }
         //TODO we only have this here currently because group:column can't be null
         notification.group = "[]";
+        notification.record_ids = notification.record_ids || '[]';
 
         if (userIds.length === 0) return Promise.resolve(Utils.buildResponse({data: {message: "Nothing to do"}}));
 
