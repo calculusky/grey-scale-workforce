@@ -230,6 +230,13 @@ class API {
     }
 
     /**
+     * @returns {LocationHistoryService}
+     */
+    locations(){
+        return API._(this)['services']['LocationHistoryService'];
+    }
+
+    /**
      * @returns {ReportService|*}
      */
     reports() {

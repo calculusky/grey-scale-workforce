@@ -7,7 +7,7 @@
     "mrworking": "./commands/index.js"
   },
   "scripts": {
-    "test": "jest --forceExit",
+    "test": "jest --detectOpenHandles",
     "start": "node index.js"
   },
   "jest": {
