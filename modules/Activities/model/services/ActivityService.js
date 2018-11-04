@@ -79,7 +79,7 @@ class ActivityService extends ApiService {
             if (activity.activity_type === "update") {
                 const fieldName = activity.description.substring(0, activity.description.indexOf(":"));
                 const values = activity.description.substring(activity.description.indexOf(":") + 1, activity.description.length);
-                const [oldValue, newValue] = await API[activity.service_name]().attributesToValues(fieldName, values.split("__::::__"));
+                const [oldValue, newValue] = await API[activity.service_name]().attributesToValues(fieldName, values.split("__::::__"), undefined, activity.model_type);
                 activity.description = `${fieldName} from ${oldValue} to ${newValue}`;
             }
 
