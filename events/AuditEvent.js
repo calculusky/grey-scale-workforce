@@ -87,7 +87,8 @@ class AuditEvent extends EventEmitter {
             fault.source,
             fault,
             oldRecord,
-            "faults"
+            "faults",
+            fault.related_to
         );
         return true;
     }
@@ -102,7 +103,7 @@ class AuditEvent extends EventEmitter {
             workOrder,
             oldRecord,
             "workOrders",
-            workOrder.type_id
+            oldRecord.type_id
         );
         return true;
     }
