@@ -89,11 +89,25 @@ parameters:
     in: path
     description: The user id
 
+  userId:
+    name: user_id
+    type: integer
+    required: true
+    in: query
+    description: The user id
+
   group_id:
     name: group_id
     type: integer
     required: true
     in: path
+    description: The group id
+
+  groupId:
+    name: group_id
+    type: integer
+    required: true
+    in: query
     description: The group id
 
   fault_id:
