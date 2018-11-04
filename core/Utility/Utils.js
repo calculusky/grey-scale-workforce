@@ -802,10 +802,10 @@ module.exports.getWorkPriorities = function (type, key = null) {
         },
         2: {},
         3: {
-            1: "Low",
-            2: "Medium",
-            3: "High",
-            4: "Urgent"
+            0: "Low",
+            1: "Medium",
+            2: "High",
+            3: "Urgent"
         }
     };
     if (key !== null && priorities[type][key]) return priorities[type][key];
