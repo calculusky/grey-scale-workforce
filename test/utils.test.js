@@ -32,3 +32,7 @@ it("isJson with a valid", () => {
 it("isJson with a valid", () => {
     expect(Utils.isJson(["abc"])[0]).toEqual(true);
 });
+
+it("Test that we can retrieve address by supplying location points", () => {
+    return expect(Utils.getAddressFromPoint(6.4718342, 3.5741831)).resolves.toEqual(true);
+});

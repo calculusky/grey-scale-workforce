@@ -6,6 +6,7 @@ const MapperUtils = require('./MapperUtil');
 const crypto = require('crypto'), algorithm = 'aes192';
 const _ = require("lodash");
 let unitCounter = {};
+let request = null;
 
 
 module.exports = function Utils() {
@@ -150,6 +151,34 @@ module.exports.date = DateUtils;
 
 module.exports.mapper = function () {
     return MapperUtils;
+};
+
+module.exports.getAddressFromPoint = function (lat, lng) {
+    if (request === null) request = require('request');
+    const geocodeEndPoint = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.GOOGLE_API_KEY}`;
+    const executor = (resolve, reject) => {
+        const mAddress = {};
+        request(geocodeEndPoint, (err, res, body) => {
+            if (err) return reject(err);
+            body = JSON.parse(body);
+            if (body.status && body.status !== "OK") return reject(false);
+            if (!body.results) return resolve("Unknown");
+            const address = body.results.shift();
+            mAddress.plain_address = address['formatted_address'];
+            address.address_components.forEach(comp => {
+                const types = comp.types.shift();
+                if (types === "street_number") mAddress.street_number = comp.long_name;
+                else if (types === "route") mAddress.street_name = comp.long_name;
+                else if (types === "neighborhood") mAddress.city = comp.long_name;
+                else if (types === "administrative_area_level_2") mAddress.local_govt = comp.long_name;
+                else if (types === "administrative_area_level_1") mAddress.state = comp.long_name;
+                else if (types === "country") mAddress.country = comp.long_name;
+            });
+            console.log(mAddress);
+            return resolve(mAddress);
+        });
+    };
+    return new Promise(executor);
 };
 
 module.exports.validatePayLoad = function (payLoad, checks) {

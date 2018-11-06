@@ -21,8 +21,9 @@ test("Should be successful with the required parameters", ()=> {
     return expect(
         API.attachments().createAttachment({
             'module': "agetron",
-            "relation_id": 1
-        }, {sub: 1}, [
+            "relation_id": 1,
+            "location":"null"
+        }, {sub: 1, group:[1]}, [
             {
                 filename: "nna",
                 size: 1232,
