@@ -484,36 +484,27 @@ module.exports.getGroupParent = function (group, type = 'business_unit') {
     return (tGroup && tGroup.type === type) ? tGroup : null;
 };
 
-module.exports.generateUniqueSystemNumber = function (prefix, unitName, moduleName, context) {
+module.exports.generateUniqueSystemNumber = async function (prefix, unitName, moduleName, context) {
     let generated = `${prefix}${unitName}`;
     const db = context.database;
     if (!unitCounter[unitName]) unitCounter[unitName] = 0;
+    const results = await db.select([moduleName]).from('unit_counters').where('unit_name', unitName);
+    let count = (results.length) ? results.shift()[moduleName] : 0;
+    if (unitCounter[unitName] === 0) unitCounter[unitName] = count;
 
-    const executor = (resolve, reject) => {
-        let resultSets = db.select([moduleName]).from('unit_counters').where('unit_name', unitName);
-        return resultSets.then(results => {
-            //if the result is empty we need to add the new counter
-            let count = (results.length) ? results.shift()[moduleName] : 0;
+    if (!count) db.table('unit_counters').insert({"unit_name": unitName}).then(() => null)
+        .catch(e=>console.log("InsertUnitCounter", e));
 
-            if (unitCounter[unitName] === 0) unitCounter[unitName] = count;
+    ++unitCounter[unitName];
 
-            if (!count) db.table('unit_counters').insert({"unit_name": unitName}).then(() => null);
+    db.table('unit_counters').update({[moduleName]: unitCounter[unitName]}).where('unit_name', unitName).then(() => null).catch((e)=>console.log("UnitCounters", e));
 
-            ++unitCounter[unitName];
+    count = `${unitCounter[unitName]}`;
+    let randomNo = Math.round(Math.random() * (999 - 100) + 100);
+    const month = `${'0' + (new Date().getMonth() + 1)}`.slice(-2);
+    generated = `${generated}${count.padStart(6, '0')}${randomNo}${month}`;
 
-            //Lets add this up
-            db.table('unit_counters').update({[moduleName]: unitCounter[unitName]}).where('unit_name', unitName)
-                .then(() => null);
-
-            count = `${unitCounter[unitName]}`;
-            let randomNo = Math.round(Math.random() * (999 - 100) + 100);
-            const month = `${'0' + (new Date().getMonth() + 1)}`.slice(-2);
-            generated = `${generated}${count.padStart(6, '0')}${randomNo}${month}`;
-            // console.log(generated);
-            return resolve(generated);
-        }).catch(console.error);
-    };
-    return new Promise(executor);
+    return generated;
 };
 
 module.exports.humanizeUniqueSystemNumber = function (systemUniqueNo) {
