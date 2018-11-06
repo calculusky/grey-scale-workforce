@@ -235,7 +235,7 @@ module.exports.createDelinquencyList = function () {
                 issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
                 created_at: assignedTo.created_at,
                 updated_at: assignedTo.created_at
-            }).then(res => {
+            }, {sub: assignedTo.id}, [], API).then(res => {
                 db.table('disconnection_billings').where('id', '=', discId)
                     .update({
                         work_order_id: res.data.data.work_order_no,
