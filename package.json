@@ -24,6 +24,7 @@
   "author": "Paul Okeke",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.353.0",
     "bcrypt": "^3.0.2",
     "body-parser": "^1.17.2",
     "chalk": "^2.3.2",
