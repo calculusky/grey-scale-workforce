@@ -1,15 +1,17 @@
 /**
  * @type {API}
  */
-const API = require('../index').test();
+const [API,ctx] = require('../index').test(); //Array Destructuring
 // API = new API(ctx);
 
 const EmailEvent = require('../events/EmailEvent');
 const IntegratorEvent = require('../events/IntegratorEvent');
 const ApplicationEvent = require('../events/ApplicationEvent');
+const LocationEvent = require('../events/LocationEvent');
 EmailEvent.init();
 IntegratorEvent.init();
-ApplicationEvent.init(undefined, undefined, API, {});
+ApplicationEvent.init(undefined, undefined, API, {client: {1: 1}});
+LocationEvent.init(ctx, undefined, API, {clients: {1: 1}});
 
 
 test("Egg", async () => {
@@ -47,8 +49,8 @@ test("Events:onFaultUpdated", async () => {
     expect(t).toEqual("1");
 });
 
-test("Events:onRoleUpdated", async ()=>{
-    const t = await ApplicationEvent.onRoleUpdated({permissions:{name:"2"}}, {}, {permissions:{name:"22"}});
+test("Events:onRoleUpdated", async () => {
+    const t = await ApplicationEvent.onRoleUpdated({permissions: {name: "2"}}, {}, {permissions: {name: "22"}});
     expect(t).toEqual("err");
 });
 
@@ -72,9 +74,28 @@ it("Events:onWorkOrderUpdate", async () => {
         related_to: "faults",
         relation_id: 1,
         status: 4,
-        type_id:3
+        type_id: 3
     });
     expect.assertions(1);
     const t = await ApplicationEvent.onWorkOrderUpdate(workOrder, {sub: 1}, {});
+    expect(t).toBeTruthy();
+});
+
+
+it("Events:broadCastLocation", async () => {
+    expect.assertions(1);
+    const location = {
+        "locations": [
+            {
+                "lat": -34.7868114,
+                "lon": -55.2337042,
+                "bearing": 0,
+                "speed": 0,
+                "accuracy": 4235,
+                "altitude": 0
+            }
+        ]
+    };
+    const t = await LocationEvent.broadcastLocation(location, {id: 1});
     expect(t).toBeTruthy();
 });
