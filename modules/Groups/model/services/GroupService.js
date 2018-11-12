@@ -256,6 +256,18 @@ class GroupService extends ApiService {
         return Utils.buildResponse({data: {items, ids}});
     }
 
+    /**
+     *
+     * @param value
+     * @returns {Promise<*|>}
+     */
+    async getGroupUsers(value){
+        const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
+        const group = (await GroupMapper.findDomainRecord({value, fields:["id"]})).records.shift();
+        if(!group) return Promise.reject(Error.RecordNotFound(`The group record "${value}" doesn't exist.`));
+        return (await group.users()).records;
+    }
+
 
     /**
      *

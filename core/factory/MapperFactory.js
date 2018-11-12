@@ -52,6 +52,7 @@ MapperFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
 MapperFactory.FAULT_CATEGORY = "FaultCategory";
 MapperFactory.ACTIVITY = "Activity";
 MapperFactory.PENDING_REASON = "PendingReason";
+MapperFactory.LOCATION_HISTORY = "LocationHistory";
 
 
 module.exports = MapperFactory;

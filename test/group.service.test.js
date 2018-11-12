@@ -89,17 +89,21 @@ test("Get Groups Children", async () => {
     expect(API.groups().getGroupChildren(259)).resolves.toBeInstanceOf(Array);
 });
 
+test("Test that you can get all users of a group", ()=>{
+    return expect(API.groups().getGroupUsers(1)).resolves.toBeInstanceOf(Array);
+});
+
 afterAll(() => {
-    ctx.database.table("groups").where("name", "GroupUs").select("id").then(r => {
-        let t = r.shift();
-        if (t) {
-            ctx.database.table("group_subs").where("child_group_id", t.id).del().then(m => {
-                let vv = [
-                    API.groups().deleteGroup("name", "GroupUs", API),
-                    API.groups().deleteGroup("name", "GroupMe", API)
-                ];
-                Promise.all(vv).then(r => console.log("")).catch(err => console.log(err));
-            }).catch(err => console.log(err));
-        }
-    }).catch(err => console.log(err));
+    // ctx.database.table("groups").where("name", "GroupUs").select("id").then(r => {
+    //     let t = r.shift();
+    //     if (t) {
+    //         ctx.database.table("group_subs").where("child_group_id", t.id).del().then(m => {
+    //             let vv = [
+    //                 API.groups().deleteGroup("name", "GroupUs", API),
+    //                 API.groups().deleteGroup("name", "GroupMe", API)
+    //             ];
+    //             Promise.all(vv).then(r => console.log("")).catch(err => console.log(err));
+    //         }).catch(err => console.log(err));
+    //     }
+    // }).catch(err => console.log(err));
 });

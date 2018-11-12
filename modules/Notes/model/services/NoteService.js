@@ -4,6 +4,7 @@ let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
 const Events = require('../../../../events/events');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 
 /**
  * @name NoteService
@@ -16,37 +17,20 @@ class NoteService extends ApiService {
         MapperFactory = this.context.modelMappers;
     }
 
-    getNotes(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    async getNotes(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         value = {[by]: value, "module": module};
         const NoteMapper = MapperFactory.build(MapperFactory.NOTE);
-        const executor = (resolve, reject) => {
-            NoteMapper.findDomainRecord({by, value}, offset, limit)
-                .then(results => {
-                    let notes = results.records;
-                    let processed = 0;
-                    let rowLen = notes.length;
-                    notes.forEach(note => {
-                        const promises = [];
-                        promises.push(note.user(), note.attachments());
-                        Promise.all(promises).then(values => {
-                            note.user = values.shift().records.shift();
-                            note.attachments = values.shift().records;
-                            sweepNoteResponsePayload(note);
-                            if (++processed === rowLen) {
-                                console.log(notes[0]['attachments']);
-                                return resolve(Utils.buildResponse({data: {items: notes}}));
-                            }
-                        }).catch(err => {
-                            return reject(err);
-                        });
-                    });
-                    if (!rowLen) return resolve(Utils.buildResponse({data: {items: notes}}));
-                })
-                .catch(err => {
-                    return reject(err);
-                });
-        };
-        return new Promise(executor)
+        const notes = (await NoteMapper.findDomainRecord({by, value}, offset, limit)).records;
+        for(const note of notes){
+            const [{records:[user]}, {records:attachments}] = await Promise.all([note.user(), note.attachments()]);
+            note.user = user;
+            note.attachments = attachments;
+            if(note.location){
+                note.location.address = await Utils.getAddressFromPoint(note.location.x, note.location.y).catch(console.error);
+            }
+            sweepNoteResponsePayload(note);
+        }
+        return Utils.buildResponse({data: {items: notes}});
     }
 
     /**
@@ -56,29 +40,34 @@ class NoteService extends ApiService {
      * @param files
      * @param API {API}
      */
-    createNote(body = {}, who = {}, files = [], API) {
+    async createNote(body = {}, who = {}, files = [], API) {
         const Note = DomainFactory.build(DomainFactory.NOTE);
+        const [isValid, location] = (body.location) ? Utils.isJson(body.location) : [false, null];
+        const aLocation = (isValid) ? this.context.database.raw(`POINT(${location.x}, ${location.y})`) : null;
+
         let note = new Note(body);
         note.created_by = who.sub;
+        note.location = aLocation;
 
         ApiService.insertPermissionRights(note, who);
 
         let validator = new validate(note, note.rules(), note.customErrorMessages());
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                data: validator.errors.all()
-            }, 400));
+
+        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+
+        if(location){
+            location.address = await Utils.getAddressFromPoint(location.x, location.y).catch(console.error);
         }
+
         //Get Mapper
         const NoteMapper = MapperFactory.build(MapperFactory.NOTE);
         return NoteMapper.createDomainRecord(note).then(note => {
             if (!note) return Promise.reject(false);
-
+            note.location = location;
             if (files.length) {
-                API.attachments().createAttachment({module: "notes", relation_id: note.id}, who, files, API).then();
+                API.attachments().createAttachment({module: "notes", relation_id: note.id, location}, who, files, API).then();
             }
-            //TODO notify those assign to this record that a note is added
+
             Events.emit("note_added", note, who);
             return Utils.buildResponse({data: note});
         });

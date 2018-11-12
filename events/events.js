@@ -67,7 +67,23 @@ exports.init = function (context, io, API) {
         |---------------------------------------------------
          */
         socket.on("update_location", data => {
-            this.eventListeners.forEach(listener => listener.emit('update_location', data, socket))
+            this.eventListeners.forEach(listener => listener.emit('update_location', data, socket));
+            io.sockets.emit("update_location", data);
+            socket.join('location_update_userA');
+            socket.broadcast.to('location_update_userA').emit({msg: 'Hello peeps'});
+            console.log(data);
+        });
+
+        //data : {id:1, username:""}
+        socket.on("register_location_update", (data) => {
+            socket.join(`location_update_${data.id}`);
+        });
+
+        //data : {id:1, username:""}
+        socket.on("unregister_location_update", (data) => {
+            socket.leave(`location_update_${data.id}`, (err) => {
+                if (err) console.log("Couldn't remove user from room");
+            });
         });
 
     });

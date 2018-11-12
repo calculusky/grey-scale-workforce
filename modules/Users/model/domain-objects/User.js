@@ -79,6 +79,10 @@ class User extends DomainObject {
     async group() {
 
     }
+
+    async locationHistory(){
+        return this.relations().morphMany("LocationHistory", "module", "relation_id");
+    }
 }
 
 //noinspection JSUnresolvedVariable
