@@ -6,11 +6,7 @@ const KNEX = require('knex');
 const Validator = require("validatorjs");
 const MapperFactory = require('./factory/MapperFactory');
 const Utils = require("../core/Utility/Utils");
-const redis = require("redis"), client = redis.createClient({
-    host: process.env.REDIS_HOST || "localhost",
-    port: process.env.REDIS_PORT || 6379,
-    auth_pass: process.env.REDIS_PASS || ""
-});
+const redis = require("redis");
 let globalContext = null;
 
 //Private Fields
@@ -25,7 +21,13 @@ class Context {
 
     constructor(config) {
         this.config = config;
-        this.persistence = client;
+
+        this.persistence = redis.createClient({
+            host: process.env.REDIS_HOST || "localhost",
+            port: process.env.REDIS_PORT || 6379,
+            auth_pass: process.env.REDIS_PASS || ""
+        });
+
         this.database = KNEX({
             client: "mysql2",
             connection: {

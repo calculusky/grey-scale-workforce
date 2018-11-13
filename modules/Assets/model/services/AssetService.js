@@ -118,7 +118,7 @@ class AssetService {
      * @param who
      * @returns {Promise<{data?: *, code?: *}>}
      */
-    async getAssetFaults(assetId, who){
+    async getAssetFaults(assetId, who) {
         const Asset = DomainFactory.build(DomainFactory.ASSET);
         const asset = new Asset({id: assetId});
         const faults = (await asset.faults()).records;

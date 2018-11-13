@@ -282,7 +282,7 @@ class WorkOrderService extends ApiService {
             bu['short_name'],
             'work_orders',
             this.context
-        ).catch(Promise.reject(Error.InternalServerError));
+        ).catch(_ => (Promise.reject(Error.InternalServerError)));
 
         workOrder.work_order_no = uniqueNo.toUpperCase();
 

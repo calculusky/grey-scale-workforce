@@ -4,7 +4,9 @@
 const fs = require("fs");
 const cron = require('node-schedule');
 const Excel = require('exceljs');
+const spawn = require('child_process').spawn;
 const Utils = require('../core/Utility/Utils');
+const AWS = require('aws-sdk');
 const _ = require('lodash');
 let API = null;
 const Events = require('../events/events.js');
@@ -24,6 +26,17 @@ module.exports = function main(context, Api) {
 
     //schedule job for running updateAssetLocation
     cron.scheduleJob('*/2 * * * *', main.updateAssetLocation.bind(this));
+
+    //schedule job for running a database backup
+    if (process.env.NODE_ENV === 'production') {
+        const s3 = new AWS.S3({
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.SECRET_ACCESS_KEY_ID,
+            }
+        });
+        cron.scheduleJob('0 10,15,18,22 * * *', main.backUpDatabase.bind(this, s3));
+    }
 
     //schedule job for creating meter readings
     cron.scheduleJob('*/1 * * * *', main.createMeterReadings.bind(this));
@@ -235,7 +248,7 @@ module.exports.createDelinquencyList = function () {
                 issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
                 created_at: assignedTo.created_at,
                 updated_at: assignedTo.created_at
-            }).then(res => {
+            }, {sub: assignedTo.id}, [], API).then(res => {
                 db.table('disconnection_billings').where('id', '=', discId)
                     .update({
                         work_order_id: res.data.data.work_order_no,
@@ -373,6 +386,32 @@ module.exports.updateAssetLocation = function () {
         });
     }
     console.log("Lock for asset locations list is held, i'll wait till it is released");
+};
+
+module.exports.backUpDatabase = function (s3) {
+    //check if no process is currently running
+    if (Object.keys(this.lock).every(val => val === true)) return setTimeout(() => this.backUpDatabase(), 10000);
+    const sqlArgs = ['-u', process.env.DB_USER, `-p${process.env.DB_PASS}`, process.env.DB_DATABASE, '--single-transaction'];
+    const startProcessor = function () {
+        console.log("Starting Database Backup Process..........");
+        (async function () {
+            const mysqldump = spawn('mysqldump', sqlArgs);
+            const putParams = {
+                Bucket: "mrworking-api",
+                Key: `${process.env.NODE_ENV}/iforce_${Utils.date.dateToMysql(undefined, "YYYY-MM-DD H:m:ss")}_dbk.sql`,
+                Body: ""
+            };
+            mysqldump.stdout
+                .on('data', (data) => (putParams.Body += data))
+                .on('end', () => {
+                    s3.putObject(putParams, (err, resp) => {
+                        if (err) return console.log("DBBackUpFailed:", err);
+                        console.log("DBBackupSuccessful", resp)
+                    })
+                });
+        })();
+    };
+    return startProcessor();
 };
 
 /**
