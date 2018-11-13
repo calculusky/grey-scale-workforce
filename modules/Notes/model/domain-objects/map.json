@@ -6,6 +6,7 @@
   "source": "source",
   "source_id": "source_id",
   "source_name": "source_name",
+  "location":"location",
   "created_by": "created_by",
   "assigned_to": "assigned_to",
   "group_id": "group_id",

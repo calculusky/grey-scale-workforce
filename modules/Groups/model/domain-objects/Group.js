@@ -44,9 +44,13 @@ class Group extends DomainObject {
         };
     }
 
-
-    user() {
-        return this.relations().belongsTo("User", "assigned_to");
+    /**
+     *
+     * @param cols
+     * @returns {Promise}
+     */
+    users(cols = ["id", "username", "first_name", "last_name", "gender", "email", "avatar"]) {
+        return this.relations().belongsToMany("User", "user_groups", "group_id", "user_id", null, null, cols);
     }
 }
 

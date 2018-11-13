@@ -24,31 +24,17 @@ class AttachmentService extends ApiService {
      * @param limit
      * @returns {Promise}
      */
-    getAttachments(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    async getAttachments(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         value = {[by]: value, "module": module};
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        const executor = (resolve, reject) => {
-            AttachmentMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
-                .then(result => {
-                    let attachments = result.records;
-                    let processed = 0;
-                    let rowLen = attachments.length;
-                    attachments.forEach(attachment => {
-                        attachment.user().then(res => {
-                            attachment.user = res.records.shift() || {};
-                            if (++processed === rowLen)
-                                return resolve(Utils.buildResponse({data: {items: result.records}}));
-                        }).catch(err => {
-                            return reject(err)
-                        })
-                    });
-                    if (!rowLen) return resolve(Utils.buildResponse({data: {items: attachments}}));
-                })
-                .catch(err => {
-                    return reject(err);
-                });
-        };
-        return new Promise(executor)
+        const attachments = (await AttachmentMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')).records;
+        for(let attachment of attachments){
+            attachment.user = (await attachment.user()).records.shift() || {};
+            if(attachment.location){
+                attachment.location.address = await Utils.getAddressFromPoint(attachment.location.x, attachment.location.y).catch(console.error);
+            }
+        }
+        return Utils.buildResponse({data: {items: attachments}});
     }
 
     /**
@@ -58,8 +44,12 @@ class AttachmentService extends ApiService {
      * @param who
      * @param API
      */
-    createAttachment(body = {}, who = {}, files = [], API) {
+    async createAttachment(body = {}, who = {}, files = [], API) {
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
+
+        const [isValid, location] = (body.location) ? Utils.isJson(body.location) : [false, null];
+        const aLocation = (isValid) ? this.context.database.raw(`POINT(${location.x}, ${location.y})`) : null;
+
         let attachments = [];
         if (files.length) {
             files.forEach(file => attachments.push(new Attachment({
@@ -69,18 +59,29 @@ class AttachmentService extends ApiService {
                 file_size: file.size || 1,
                 file_path: file.path,
                 file_type: file.mimetype,
+                location: aLocation,
                 created_by: who.sub,
                 group_id: (who.group.length) ? who.group.shift() : null
             })));
         } else {
             body['created_by'] = who.sub;
             body['group_id'] = who.group;
+            body['location'] = aLocation;
             attachments.push(new Attachment(body));
         }
+
+        if(location){
+            location.address = await Utils.getAddressFromPoint(location.x, location.y).catch(console.error);
+        }
+
         //Get Mapper
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         return AttachmentMapper.createDomainRecord(null, attachments).then(attachment => {
             if (!attachment) return Promise.reject(false);
+
+            if(Array.isArray(attachment)) for(let att of attachment) att.location = location;
+            else attachment.location = location;
+            //reset the attachment location to what it is
             return Utils.buildResponse({data: Array.isArray(attachment) ? attachment.pop() : attachment});
         });
     }
