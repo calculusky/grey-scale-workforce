@@ -103,7 +103,7 @@ class AuditEvent extends EventEmitter {
             workOrder,
             oldRecord,
             "workOrders",
-            oldRecord.type_id
+            workOrder.type_id || oldRecord.type_id
         );
         return true;
     }
