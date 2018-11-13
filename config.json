@@ -13,6 +13,10 @@
       "notes": {
         "path": "/attachments/notes",
         "use_parent": true
+      },
+      "work_orders":{
+        "path":"/attachments/work_orders",
+	"use_parent":true
       }
     },
     "persistence": {
