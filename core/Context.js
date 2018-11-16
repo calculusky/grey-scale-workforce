@@ -35,6 +35,13 @@ class Context {
                 "user": process.env.DB_USER,
                 "password": process.env.DB_PASS,
                 "database": process.env.DB_DATABASE
+            },
+            pool: {
+                afterCreate: function(connection, callback) {
+                    connection.query("SET time_zone = '+02:00';", function(err) {
+                        callback(err, connection);
+                    });
+                }
             }
         });
 
