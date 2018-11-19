@@ -97,7 +97,6 @@ function sweepNoteResponsePayload(note) {
         delete attachment.updated_at;
         delete attachment.created_at;
         delete attachment.details;
-        delete attachment.module;
         delete attachment.relation_id;
     });
     if (note.user) {
