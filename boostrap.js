@@ -91,10 +91,9 @@ module.exports = function route(context) {
             else if (path === "work_orders") {
                 if (req.method === 'PUT' && req.path.includes("status")) saveAt = `${saveAt}/attachments/notes`;
                 else saveAt = `${saveAt}/attachments/${path}`
-            }
-
-            if (routePath) {
-                saveAt = (routePath.use_parent) ? `${saveAt}${routePath.path}` : routePath.path;
+            } else {
+                if(routePath)
+                    saveAt = (routePath.use_parent) ? `${saveAt}${routePath.path}` : routePath.path;
             }
             cb(null, saveAt);
         }
