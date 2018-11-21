@@ -81,19 +81,19 @@ module.exports = function route(context) {
             let routePath = routePaths[path];
             let body = req.body;
 
-            if (routePath) {
-                saveAt = (routePath.use_parent) ? `${saveAt}${routePath.path}` : routePath.path;
+            if (path === "attachments") saveAt = `${saveAt}/${path}/${body.module}`;
+            else if (path === 'uploads') saveAt = `${saveAt}/uploads/${req.body['upload_type']}`;
+            else if (req.method === "PUT" && path.toLowerCase() === "users") {
+                const userFolderPath = `${saveAt}/profile/${req.params['id']}`;
+                if (!fs.existsSync(userFolderPath)) fs.mkdirSync(`${saveAt}/profile/${req.params['id']}`);
+                saveAt = `${saveAt}/profile/${req.params['id']}`
+            }
+            else if (path === "work_orders") {
+                if (req.method === 'PUT' && req.path.includes("status")) saveAt = `${saveAt}/attachments/notes`;
+                else saveAt = `${saveAt}/attachments/${path}`
             } else {
-                if (path === "attachments") saveAt = `${saveAt}/attachments/${body.module}`;
-                else if (path === 'uploads') saveAt = `${saveAt}/uploads/${req.body['upload_type']}`;
-                else if (req.method === "PUT" && path.toLowerCase() === "users") {
-                    const userFolderPath = `${saveAt}/profile/${req.params['id']}`;
-                    if (!fs.existsSync(userFolderPath)) fs.mkdirSync(`${saveAt}/profile/${req.params['id']}`);
-                    saveAt = `${saveAt}/profile/${req.params['id']}`
-                } else if (path === "work_orders") {
-                    if (req.method === 'PUT' && req.path.includes("status")) saveAt = `${saveAt}/attachments/notes`;
-                    else saveAt = `${saveAt}/attachments/work_orders`
-                }
+                if(routePath)
+                    saveAt = (routePath.use_parent) ? `${saveAt}${routePath.path}` : routePath.path;
             }
             cb(null, saveAt);
         }

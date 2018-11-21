@@ -76,7 +76,7 @@ class LocationEvent extends EventEmitter {
         };
 
         this.api.locations().createLocationHistory(location).then(response => {
-            console.log("Saved Location History", response);
+            // console.log("Saved Location History", response);
         }).catch(error => {
             console.log("Error Saving LocationHistory",error);
         });

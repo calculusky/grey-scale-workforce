@@ -8,6 +8,7 @@ const MapperFactory = require('./factory/MapperFactory');
 const Utils = require("../core/Utility/Utils");
 const redis = require("redis");
 let globalContext = null;
+const moment = require('moment');
 
 //Private Fields
 let _privateStore = new WeakMap();
@@ -34,7 +35,17 @@ class Context {
                 "host": process.env.DB_HOST,
                 "user": process.env.DB_USER,
                 "password": process.env.DB_PASS,
-                "database": process.env.DB_DATABASE
+                "database": process.env.DB_DATABASE,
+                timezone: "UTC",
+                typeCast: function (field, next) {
+                    if (field.type === 'DATETIME' || field.type === 'TIMESTAMP') {
+                        const value = field.string();
+                        return (value === null)
+                            ? value
+                            : moment(value).utc().utcOffset(parseInt(process.env.TIME_ZONE)).format('YYYY-MM-DDTHH:mm:ssZ');
+                    }
+                    return next();
+                }
             }
         });
 
