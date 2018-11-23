@@ -30,36 +30,10 @@ class LocationEvent extends EventEmitter {
         const db = this.context.database;
         const userId = this.sharedData.clients[soc.id];
         const broadcastMsg = {};
-        let user = await db.table("users").where("id", userId).select([
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'gender',
-            'avatar'
-        ]);
-        user = user.shift();
 
-        let last_work_order = await db.table('work_orders').where(db.raw(`JSON_CONTAINS(assigned_to, '{"id" : ${user.id}}')`)).orderBy('id', 'desc').limit(1).select([
-            'id',
-            'work_order_no'
-        ]);
-
-        last_work_order = last_work_order.shift();
-
-        Object.assign(broadcastMsg, user);
-
-        const records = await this.api.attachments().getAttachments(user.id, "notes", "created_by");
-
-        let attachments = records.data.data.items.map(attachment => {
-            delete attachment.user;
-            return attachment;
-        });
         const mLocation = data.locations.shift();
 
         broadcastMsg.locations = data.locations;
-        broadcastMsg.attachements = attachments;
-        broadcastMsg.last_work_order = last_work_order;
 
         if ((mLocation.lat < -90 || mLocation.lat > 90) || (mLocation.lon < -180 || mLocation.lon > 180)) {
             console.log("Invalid latitude and longitude entered");
@@ -68,7 +42,7 @@ class LocationEvent extends EventEmitter {
 
         const location = {
             module: "users",
-            relation_id: `${user.id}`,
+            relation_id: userId,
             location: {
                 x: mLocation.lat,
                 y: mLocation.lon
@@ -81,8 +55,39 @@ class LocationEvent extends EventEmitter {
             console.log("Error Saving LocationHistory",error);
         });
 
+        const room_name = `location_update_${userId}`;
+        const roomDetails = this.io.sockets.adapter.rooms[room_name];
+        if (roomDetails.length > 0) {
 
-        this.io.to(`location_update_${user.id}`).emit('location_update', broadcastMsg);
+            let user = await db.table("users").where("id", userId).select([
+                'id',
+                'username',
+                'first_name',
+                'last_name',
+                'gender',
+                'avatar'
+            ]);
+            user = user.shift();
+
+
+            Object.assign(broadcastMsg, user);
+
+            let last_work_order = await db.table('work_orders').where(db.raw(`JSON_CONTAINS(assigned_to, '{"id" : ${user.id}}')`)).orderBy('id', 'desc').limit(1).select([
+                'id',
+                'work_order_no'
+            ]);
+            last_work_order = last_work_order.shift();
+
+            const records = await this.api.attachments().getAttachments(user.id, "notes", "created_by");
+
+            broadcastMsg.attachements = records.data.data.items.map(attachment => {
+                delete attachment.user;
+                return attachment;
+            });
+            broadcastMsg.last_work_order = last_work_order;
+
+            this.io.to(`location_update_${user.id}`).emit('location_update', broadcastMsg);
+        }
 
         return true;
     }
