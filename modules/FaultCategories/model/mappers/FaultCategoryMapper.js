@@ -13,6 +13,8 @@ class FaultCategoryMapper extends ModelMapper {
         this.tableName = "fault_categories";
         this.domainName = "FaultCategory";
     }
+
+    _audit(){}
 }
 
 module.exports = FaultCategoryMapper;

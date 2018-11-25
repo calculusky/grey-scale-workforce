@@ -216,7 +216,7 @@ class GroupService extends ApiService {
         const domain = new Group(body);
         const parent_group_id = (body['parent']) ? body['parent'] : null;
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
-        return GroupMapper.updateDomainRecord({value, domain}).then(() => {
+        return GroupMapper.updateDomainRecord({value, domain}, who).then(() => {
             const db = this.context.database;
             domain.id = value;
             const backgroundTask = [API.workflows().updateGroup(Object.assign({}, domain))];
@@ -273,10 +273,11 @@ class GroupService extends ApiService {
      *
      * @param by
      * @param value
+     * @param who
      * @param API {API}
      * @returns {*}
      */
-    deleteGroup(by = "id", value, API) {
+    deleteGroup(by = "id", value, who, API) {
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
         const db = this.context.database;
 
@@ -286,7 +287,7 @@ class GroupService extends ApiService {
             }).catch(console.error);
         });
 
-        return GroupMapper.deleteDomainRecord({by, value}).then(count => {
+        return GroupMapper.deleteDomainRecord({by, value}, undefined, who).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }

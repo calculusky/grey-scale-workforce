@@ -236,7 +236,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.put('/work_orders/:id/status/:statusId', multiPart.array("files", 10), (req, res) => {
         let {id, statusId} = req.params;
-        API.workOrders().changeWorkOrderStatus(id, statusId, req.body, req.files, req.who, API)
+        API.workOrders().changeWorkOrderStatus(id, statusId, req.who, req.body, req.files, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

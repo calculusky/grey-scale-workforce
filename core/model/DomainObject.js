@@ -1,6 +1,6 @@
 //noinspection JSUnresolvedFunction
 const RelationShips = require('./links/Relationships');
-
+const validator = require('validatorjs');
 const privateStore = new WeakMap();
 
 /**
@@ -30,6 +30,23 @@ class DomainObject {
             });
         }
         this._(this).relations = new RelationShips(this);
+
+        this._(this).validate = () => {
+            const valid = new validator(this, this.rules(), this.customErrorMessages());
+            if (valid.passes(null)) return true;
+            this.errors = valid.errors;
+            return false;
+        };
+
+        //DomainObject Internal Configurations
+        let validateErrors = [];
+        Object.defineProperty(this, 'validate', {get: this._(this).validate, enumerable: false, configurable: false});
+        Object.defineProperty(this, 'errors', {
+            set: (v) => validateErrors = v,
+            get: () => validateErrors,
+            enumerable: false,
+            configurable: false
+        });
     }
 
     /**
@@ -56,6 +73,8 @@ class DomainObject {
                     this[key] = data[dbKey];
                 }
             });
+            // console.log(newData);
+            this._(this).data = newData;
         }
         return newData;
     }
@@ -103,10 +122,6 @@ class DomainObject {
             privateStore.set(instance, store);
         }
         return store;
-    }
-
-    async attributesToValues(colName, value, ctx){
-        return value;
     }
 }
 

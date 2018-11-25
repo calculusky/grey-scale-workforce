@@ -29,10 +29,6 @@ class ApiService {
         if (typeof assignedTo === "string" && (assignedTo === "[]" || assignedTo.length === 0)) setDefaultAssignedTo();
         else if (!assignedTo || assignedTo.length === 0) setDefaultAssignedTo();
     }
-
-    async attributesToValues(colName, values = [], ctx, modelType=null) {
-        return values;
-    }
 }
 
 module.exports = ApiService;

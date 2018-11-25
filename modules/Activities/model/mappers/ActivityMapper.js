@@ -13,6 +13,10 @@ class ActivityMapper extends ModelMapper {
         this.tableName = "activities";
         this.domainName = "Activity";
     }
+
+    _audit(data, type = "CREATE") {
+        //overrides the default audit function
+    }
 }
 
 module.exports = ActivityMapper;
