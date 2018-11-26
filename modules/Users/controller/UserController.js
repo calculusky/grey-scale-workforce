@@ -288,7 +288,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.put("/password/reset", jsonParser, (req, res) => {
         Log.info("resetPassword:", req.body);
-        API.users().resetPassword(req.body, API)
+        API.users().resetPassword(req.body, req.who, API)
             .then(({data, code = 200}) => {
                 console.log('success', data);
                 return res.status(code).send(data);

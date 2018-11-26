@@ -13,6 +13,8 @@ class ActivationMapper extends ModelMapper {
         this.tableName = "activations";
         this.domainName = "Activation";
     }
+
+    _audit(){}
 }
 
 module.exports = ActivationMapper;

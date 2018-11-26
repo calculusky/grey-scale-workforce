@@ -129,7 +129,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/payment_id'
      */
     app.delete('/payments/:id', urlencodedParser, (req, res)=> {
-        API.payments().deletePayment("id", req.params.id)
+        API.payments().deletePayment("id", req.params.id, req.who, API)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

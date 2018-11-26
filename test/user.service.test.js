@@ -92,14 +92,14 @@ test("That we can reset a user password", () => {
         password: "admin1234",
         token: "92c5a7dc4535b2ea326a9f4ef5e6735c5d1ed59a4ad7d22d0679f69bf3898a95",
     };
-    return expect(API.users().resetPassword(body, API)).resolves.toBeDefined();
+    return expect(API.users().resetPassword(body, {}, API)).resolves.toBeDefined();
 });
 
 
 describe('Updating User', () => {
     test('Update a user', () => {
         return expect(API.users().updateUser('id', 1,
-            {last_name: "Okeke", roles: 1, group_id: 1, assigned_to: "[1]"}, {}, [], API)).resolves
+            {last_name: "Okeke", roles: 1, group_id: 1, assigned_to: "[1]"}, {sub:1}, [], API)).resolves
             .toEqual(expect.objectContaining({
                 code: expect.any(Number)
             }))
@@ -113,5 +113,8 @@ test("Delete a user", () => {
 
 
 afterAll(() => {
-    API.users().deleteUser("username", "cco_user").then(t => console.log(t)).catch(err => console.log(err));
+    API.users().deleteUser("username", "cco_user", {
+        sub: 1,
+        group: [1]
+    }, API).then(t => console.log(t)).catch(err => console.log(err));
 });

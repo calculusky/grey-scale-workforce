@@ -4,6 +4,7 @@ const ApiService = require('../../../ApiService');
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
+const Excel = require('exceljs');
 
 
 /**
@@ -45,7 +46,7 @@ class ActivityService extends ApiService {
 
         const record = await ActivityMapper.createDomainRecord(activity).catch(err => (Promise.reject(err)));
 
-        Utils.convertDataKeyToJson(record, "labels", "assigned_to");
+        Utils.convertDataKeyToJson(record, "assigned_to");
 
         return Utils.buildResponse({data: record});
     }
@@ -59,8 +60,6 @@ class ActivityService extends ApiService {
      */
     async getActivities(query, who = {}, API) {
         const db = this.context.database;
-        const Activity = DomainFactory.build(DomainFactory.ACTIVITY);
-        // const ActivityMapper = MapperFactory.build(MapperFactory.ACTIVITY);
 
         const {module, relation_id, activity_by, offset = 0, limit = 10} = query;
 
@@ -70,25 +69,21 @@ class ActivityService extends ApiService {
         if (relation_id) resultSet.where("relation_id", relation_id);
         if (activity_by) resultSet.where("activity", activity_by);
 
-        const activities = await resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
+        const activities = await resultSet.limit(Number(limit)).offset(Number(offset)).orderBy("id", "asc");
 
-        let i = 0;
-        for (let activity of activities) {
-            activity = new Activity(activity);
+        const items = Utils.auditDifference(activities).filter(item => !['id', 'updated_at'].includes(item.field_name));
+        return Utils.buildResponse({data: {items}});
+    }
 
-            if (activity.activity_type === "update") {
-                const fieldName = activity.description.substring(0, activity.description.indexOf(":"));
-                const values = activity.description.substring(activity.description.indexOf(":") + 1, activity.description.length);
-                const [oldValue, newValue] = await API[activity.service_name]().attributesToValues(fieldName, values.split("__::::__"), undefined, activity.model_type);
-                activity.description = `${fieldName} from ${oldValue} to ${newValue}`;
-            }
+    /**
+     *
+     * @param format
+     * @param who
+     * @param API {API}
+     * @returns {Promise<void>}
+     */
+    async exportAuditLogs(query, format="excel", who, API){
 
-            let {records} = await activity.activityBy("username", "first_name", "last_name");
-            activity.activity_by = records.shift();
-            activities[i] = activity;
-            i++;
-        }
-        return Utils.buildResponse({data: {items: activities}});
     }
 }
 

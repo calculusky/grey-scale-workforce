@@ -12,6 +12,10 @@ class NotificationMapper extends ModelMapper{
         this.tableName = "notifications";
         this.domainName = "Notification";
     }
+
+    _audit(data, who, type = "CREATE"){
+
+    }
 }
 
 module.exports = NotificationMapper;

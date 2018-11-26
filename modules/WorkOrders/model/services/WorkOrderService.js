@@ -92,7 +92,10 @@ class WorkOrderService extends ApiService {
 
         if (workOrder.assigned_to) workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignees);
 
-        return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}).then(result => {
+        /*The work order type is needed for auditing*/
+        if (!workOrder.type_id) workOrder.type_id = model.type_id;
+
+        return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}, who).then(result => {
             const assignees = _.differenceBy((workOrder.assigned_to) ? JSON.parse(workOrder.assigned_to) : [], model.assigned_to, 'id');
             Events.emit("assign_work_order",
                 {id: model.id, work_order_no: model.work_order_no, summary: model.summary},
@@ -263,9 +266,7 @@ class WorkOrderService extends ApiService {
         workOrder.assigned_to = Utils.serializeAssignedTo(workOrder.assigned_to);
 
         //enforce the validation
-        let validator = new validate(workOrder, workOrder.rules(), workOrder.customErrorMessages());
-
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+        if (!workOrder.validate) return Promise.reject(Error.ValidationFailure(workOrder.errors.all()));
 
         ApiService.insertPermissionRights(workOrder, who);
 
@@ -316,7 +317,7 @@ class WorkOrderService extends ApiService {
      * @param API {API}
      * @returns {Promise.<WorkOrder>|*}
      */
-    async changeWorkOrderStatus(value/*WorkOrderId*/, status, note, files = [], who = {}, API) {
+    async changeWorkOrderStatus(value/*WorkOrderId*/, status, who = {}, note, files = [], API) {
         const updated = await this.updateWorkOrder("id", value, {status}, who, [], API);
         if (note) API.notes().createNote(note, who, files, API).catch(console.error);
         return updated;
@@ -332,7 +333,7 @@ class WorkOrderService extends ApiService {
      */
     deleteWorkOrder(by = "id", value, who = {}) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.deleteDomainRecord({by, value, deletedBy: who.sub}).then(count => {
+        return WorkOrderMapper.deleteDomainRecord({by, value}, true, who).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
@@ -351,23 +352,10 @@ class WorkOrderService extends ApiService {
     async deleteMultipleWorkOrder(ids = [], who = {}, by = "id") {
         if (!Array.isArray(ids)) return Promise.reject(Utils.buildResponse({data: {message: "Expected an array of work order id"}}));
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        const task = ids.map(value => WorkOrderMapper.deleteDomainRecord({by, value, deletedBy: who.sub}, false));
+        const task = ids.map(value => WorkOrderMapper.deleteDomainRecord({by, value}, false, who));
         const items = (await Promise.all(task)).map(([{id}, del]) => ({id, deleted: del > 0}));
         return Utils.buildResponse({data: {items}});
     }
-
-
-    async attributesToValues(colName, values = [], ctx, modelType = 1) {
-        switch (colName) {
-            case "priority":
-                return values.map(i => Utils.getWorkPriorities(modelType, i));
-            case "status":
-                return values.map(i => Utils.getWorkStatuses(modelType, i));
-            default:
-                return values;
-        }
-    }
-
 }
 
 function _prefix(typeId) {

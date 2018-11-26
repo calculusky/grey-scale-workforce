@@ -36,13 +36,12 @@ class Context {
                 "user": process.env.DB_USER,
                 "password": process.env.DB_PASS,
                 "database": process.env.DB_DATABASE,
-                timezone: "UTC",
                 typeCast: function (field, next) {
-                    if (field.type === 'DATETIME' || field.type === 'TIMESTAMP') {
+                    if (['TIMESTAMP', 'DATETIME', 'DATE'].includes(field.type)) {
                         const value = field.string();
                         return (value === null)
                             ? value
-                            : moment(value).utc().utcOffset(parseInt(process.env.TIME_ZONE)).format('YYYY-MM-DDTHH:mm:ssZ');
+                            : moment(value).utc().utcOffset(parseInt(process.env.TIME_ZONE)).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
                     }
                     return next();
                 }
@@ -52,16 +51,6 @@ class Context {
         this.persistence.on('ready', () => this.loadStaticData());
         // this.persistence.init({dir: this.config.storage.persistence.path}).then(i=>this.loadStaticData(i));
         this._(this).incoming_store = {};
-
-
-        // this._(this).registerCustomValidators = () => {
-        //     Validator.register("string-array", (value, req, attr) => {
-        //         const [isValid, obj] = Utils.isJson(value);
-        //         return (isValid) ? Array.isArray(obj) : false;
-        //     }, "The :attribute must be a string-array or an array");
-        // };
-
-        // this._(this).registerCustomValidators();
 
         this.modelMappers = MapperFactory;
         Context.globalContext = this;

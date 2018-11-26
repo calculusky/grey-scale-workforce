@@ -117,11 +117,12 @@ class UploadService extends ApiService {
      *
      * @param by
      * @param value
+     * @param who
      * @returns {*}
      */
-    deleteUpload(by = "id", value) {
+    deleteUpload(by = "id", value, who={}) {
         const UploadMapper = MapperFactory.build(MapperFactory.UPLOAD);
-        return UploadMapper.deleteDomainRecord({by, value}).then(count => {
+        return UploadMapper.deleteDomainRecord({by, value}, true, who).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }

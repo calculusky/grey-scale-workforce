@@ -4,6 +4,7 @@
   "module": "module",
   "activity_type": "activity_type",
   "model_type": "model_type",
+  "record": "record",
   "description": "description",
   "service_name": "service_name",
   "ip_address": "ip_address",

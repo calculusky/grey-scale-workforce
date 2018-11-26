@@ -80,8 +80,9 @@ class User extends DomainObject {
 
     }
 
-    async locationHistory(){
-        return this.relations().morphMany("LocationHistory", "module", "relation_id");
+    async locationHistory() {
+        const options = {localDomain: "users", localKey: "id", orderBy: ["id", "desc"], limit: 20};
+        return this.relations().morphMany("LocationHistory", "module", "relation_id", options);
     }
 }
 
