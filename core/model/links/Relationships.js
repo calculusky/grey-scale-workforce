@@ -205,6 +205,9 @@ class Relationships {
         let resultSets = KNEX.select(cols).from(foreignTable)
             .where(foreignKey, this.domainObject[options.localKey]).andWhere(relatedDomainKey, options.localDomain);
 
+        if(options.orderBy) resultSets.orderBy(options.orderBy[0], options.orderBy[1]);
+        if(options.limit) resultSets.limit(options.limit);
+
         const executor = (resolve, reject) => finalizeResult(resultSets, DomainObject, resolve, reject);
         return new Promise(executor);
     }
