@@ -871,10 +871,10 @@ module.exports.auditDifference = function (items) {
         const currentRecord = records[len];
         const oldRecord = records[--len];
         let changeObjects = [];
-        if (item.activity_type === 'CREATE') {
+        if (item.activity_type === 'CREATE' || oldRecord === undefined) {
             changeObjects.push({
                 field_name: item.model_type,
-                field_value: item.record,
+                field_value: null,
                 old_value: null,
                 by: item.activity_by,
                 event_time: item.created_at,

@@ -4,6 +4,7 @@ const ApiService = require('../../../ApiService');
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
+const Excel = require('exceljs');
 
 
 /**
@@ -71,8 +72,18 @@ class ActivityService extends ApiService {
         const activities = await resultSet.limit(Number(limit)).offset(Number(offset)).orderBy("id", "asc");
 
         const items = Utils.auditDifference(activities).filter(item => !['id', 'updated_at'].includes(item.field_name));
-        console.log(items);
         return Utils.buildResponse({data: {items}});
+    }
+
+    /**
+     *
+     * @param format
+     * @param who
+     * @param API {API}
+     * @returns {Promise<void>}
+     */
+    async exportAuditLogs(query, format="excel", who, API){
+
     }
 }
 
