@@ -57,7 +57,7 @@ class LocationEvent extends EventEmitter {
 
         const room_name = `location_update_${userId}`;
         const roomDetails = this.io.sockets.adapter.rooms[room_name];
-        if (roomDetails.length > 0) {
+        if (roomDetails && roomDetails.length > 0) {
 
             let user = await db.table("users").where("id", userId).select([
                 'id',
