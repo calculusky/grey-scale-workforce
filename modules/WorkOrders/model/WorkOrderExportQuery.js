@@ -1,11 +1,14 @@
 const ExportQuery = require('../../../core/ExportQuery');
 const Utils = require('../../../core/Utility/Utils');
+const ApiService = require('../../ApiService');
+
 /**
  * @author Paul Okeke
  * Created by paulex on 26/11/18.
  */
 class WorkOrderExportQuery extends ExportQuery {
-    constructor(query, modelMapper, api) {
+
+    constructor(query, modelMapper, who, api) {
         const excelColMap = {
             work_order_no: ["Work Order No", "work_order_no"],
             account_no: ["Account No", "account_no"],
@@ -16,18 +19,46 @@ class WorkOrderExportQuery extends ExportQuery {
             arrears: ["Arrears", "arrears"],
             min_amount_payable: ["Amount Due", "min_amount_payable"],
             total_amount_payable: ["Total Amount Due", "total_amount_payable"],
+            assigned_to: ['Assigned To', 'assigned_to'],
             status: ["Status", "status"],
             priority: ["Priority", "priority"],
+            start_date: ["Scheduled Start", "start_date"],
+            completed_date: ["Completed Date", "completed_date"],
             created_at: ["Created At", "created_at"],
-            notes:['Notes', 'notes'],
-            attachments:['Attachments', 'attachments']
+            owner: ["Created By", "created_by"],
+            notes: ['Notes', 'notes'],
+            attachments: ['Attachments', 'attachments']
         };
-        super(query, excelColMap, modelMapper, api);
+
+        const faultColMap = {
+            work_order_no: ["Work Order No", "work_order_no"],
+            fault_no: ["Fault No", "fault_no"],
+            asset_name: ["Asset Name", "asset_name"],
+            undertaking: ["Undertaking", "undertaking"],
+            status: ["Status", "status"],
+            priority: ["Priority", "priority"],
+            start_date: ["Scheduled Start", "start_date"],
+            completed_date: ["Completed Date", "completed_date"],
+            assigned_to: ['Assigned To', 'assigned_to'],
+            created_at: ["Created At", "created_at"],
+            owner: ["Created By", "created_by"],
+            notes: ['Notes', 'notes'],
+            attachments: ['Attachments', 'attachments']
+        };
+        super(query, (`${query.type_id}` === '3') ? faultColMap : excelColMap, modelMapper, who, api);
+
+        this.groups = {};
+    }
+
+    setGroups(groups) {
+        this.groups = groups;
+        return this;
     }
 
     onQuery(query) {
         const db = this.modelMapper.context.database;
         this.sqlQuery = db.table(this.modelMapper.tableName);
+        const selectCols = [];
         for (const [key, value] of Object.entries(query)) {
             switch (key) {
                 case 'priority': {
@@ -53,55 +84,83 @@ class WorkOrderExportQuery extends ExportQuery {
                     break;
                 }
                 case 'type_id': {
-                    this.sqlQuery.where(key, value);
-                    this.sqlQuery.leftJoin('notes AS nt', 'work_orders.id', 'nt.relation_id');
-                    this.sqlQuery.leftJoin('attachments AS att', 'nt.id', 'att.relation_id');
+                    //@Query for Disconnection and Reconnection work orders
                     if (`${value}` === '1' || `${value}` === '2') {
                         this.sqlQuery.innerJoin('disconnection_billings AS db', 'work_orders.work_order_no', 'db.work_order_id');
                         this.sqlQuery.innerJoin('customers AS c', 'db.account_no', 'c.account_no');
-                        this.sqlQuery.leftJoin('customers_assets AS a', 'c.account_no', 'a.customer_id');
-                        this.sqlQuery.leftJoin('assets AS a2', 'a.asset_id', 'a2.id');
-                        this.sqlQuery.select([
-                            'work_orders.id as id',
-                            'work_order_no',
-                            'c.account_no',
-                            'c.customer_name',
-                            'c.group_id as undertaking',
-                            'a2.asset_name as asset_name',
-                            'db.current_bill',
-                            'db.arrears',
-                            'db.min_amount_payable',
-                            'db.total_amount_payable',
-                            'work_orders.status',
-                            'work_orders.priority',
-                            'work_orders.created_at',
-                            db.raw(`GROUP_CONCAT(CONCAT_WS(' : ', att.file_name, att.created_at) SEPARATOR '(;)') as attachments`),
-                            db.raw(`GROUP_CONCAT(CONCAT_WS(' : ', nt.note, nt.created_at) SEPARATOR '(;)') as notes`)
-                        ]);
+                        this.sqlQuery.leftJoin('customers_assets AS ca', 'c.account_no', 'ca.customer_id');
+                        this.sqlQuery.leftJoin('assets AS a2', 'ca.asset_id', 'a2.id');
+                        // this.sqlQuery.leftJoin('groups AS grp', 'c.group_id', 'grp.id');
+                        selectCols.push(
+                            'c.account_no', 'c.customer_name', 'c.group_id as undertaking',
+                            'a2.asset_name as asset_name', 'db.current_bill', 'db.arrears', 'db.min_amount_payable',
+                            'db.total_amount_payable'
+                        );
                         this.sqlQuery.groupBy('work_orders.work_order_no', 'asset_name');
                     }
+                    //@Query for Fault Orders
                     else if (`${value}` === '3') {
-                        this.sqlQuery.select([]);
+                        this.sqlQuery.innerJoin('faults AS ft', 'work_orders.relation_id', 'ft.id');
+                        this.sqlQuery.innerJoin('assets AS a2', 'ft.relation_id', 'a2.id');
+                        selectCols.push('ft.id as fault_no', 'a2.asset_name as asset_name', 'a2.group_id as undertaking');
+                        this.sqlQuery.groupBy('work_orders.work_order_no', 'asset_name');
                     }
+                    /*--------------------------------------------------
+                    * @Query default query for all type of work orders |
+                    *--------------------------------------------------*/
+                    this.sqlQuery.where(key, value);
+                    this.sqlQuery.leftJoin('notes AS nt', 'work_orders.id', 'nt.relation_id');
+                    this.sqlQuery.leftJoin('attachments AS att', 'nt.id', 'att.relation_id');
+                    this.sqlQuery.leftJoin('users AS ua', db.raw(`JSON_CONTAINS(work_orders.assigned_to->'$[*].id', CAST(ua.id as JSON))`));
+                    this.sqlQuery.leftJoin("users AS nu", 'nt.created_by', 'nu.id');
+                    this.sqlQuery.leftJoin("users AS u", 'work_orders.created_by', 'u.id');
+                    selectCols.push(
+                        'work_orders.id as id', 'work_order_no', 'work_orders.start_date',
+                        'work_orders.completed_date', 'work_orders.status', 'work_orders.priority', 'work_orders.created_at',
+                        db.raw("CONCAT(u.first_name, ' ', u.last_name) as owner"),
+                        db.raw("work_orders.assigned_to->'$[*].created_at' as times_assigned"),
+                        db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', ua.first_name, ' ', ua.last_name, '"')), ']')as JSON) as assigned_to`),
+                        db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', att.file_name, '"')), ']') as JSON) as attachments`),
+                        db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', nu.first_name, ' - ', nt.note, ' : ', nt.created_at, '"')), ']') as JSON) as notes`)
+                    );
                     break;
                 }
             }
         }
+        //@HelpTips - Log the Query to see the actual sql query. console.log(this.sqlQuery.toString());
+        this.sqlQuery.select(selectCols);
+        ApiService.queryWithPermissions('works.index', this.sqlQuery, this.modelMapper, this.who);
     }
 
+    /**
+     * The result of the sql query is manipulated here
+     * @param results
+     */
     onResultQuery(results) {
         results = results.map(row => {
-            if(row['current_bill']) row['current_bill'] = (row['current_bill']).toLocaleString('en-US', {style: 'currency', currency: 'NGN'});
-            if(row['arrears']) row['arrears'] = Number(row['arrears']).toLocaleString('en-US', {style: 'currency', currency: 'NGN'});
-            if(row['min_amount_payable']) row['min_amount_payable'] = Number(row['min_amount_payable']).toLocaleString('en-US', {style: 'currency', currency: 'NGN'});
-            if(row['total_amount_payable']) row['total_amount_payable'] = Number(row['total_amount_payable']).toLocaleString('en-US', {style: 'currency', currency: 'NGN'});
+            const undertaking = Utils.getGroupParent(this.groups[row['undertaking']], 'undertaking');
+            if (`${this.query.type_id}` === '1' || `${this.query.type_id}` === '2') {
+                const cFormat = {style: 'currency', currency: 'NGN'};
+                row['current_bill'] = Number(row['current_bill']).toLocaleString('en-NG', cFormat);
+                row['arrears'] = Number(row['arrears']).toLocaleString('en-NG', cFormat);
+                row['min_amount_payable'] = Number(row['min_amount_payable']).toLocaleString('en-NG', cFormat);
+                row['total_amount_payable'] = Number(row['total_amount_payable']).toLocaleString('en-NG', cFormat)
+            }
+            const attachments = row['attachments'] || [], notes = row['notes'] || [];
             row['status'] = Utils.getWorkStatuses(this.query.type_id, row['status']);
             row['priority'] = Utils.getWorkStatuses(this.query.type_id, row['priority']);
-            row['attachments'] = row['attachments'].split("(;)").filter(i=>i!=='');
-            row['notes'] = row['notes'].split("(;)").filter(i=>i!=='');
+            const url = `${process.env.APP_URL}:${process.env.PORT}`;
+            row['attachments'] = attachments.filter(i => i !== null).map(file => `${url}/attachment/notes/download/${file}`).join('\r\n');
+            row['notes'] = notes.filter(i => i !== null).join('\r\n');
+            row['assigned_to'] = row['assigned_to'].map((t, i) => `${t} : ${row['times_assigned'][i]}`).join('\r\n');
+            row['undertaking'] = (undertaking) ? undertaking.name : null;
             return row;
         });
         super.onResultQuery(results);
+    }
+
+    getAuditRecordId(textRow) {
+        return textRow['work_order_no'];
     }
 }
 

@@ -3,9 +3,7 @@
  * Created by paulex on 7/5/17.
  */
 const KNEX = require('knex');
-const Validator = require("validatorjs");
 const MapperFactory = require('./factory/MapperFactory');
-const Utils = require("../core/Utility/Utils");
 const redis = require("redis");
 let globalContext = null;
 const moment = require('moment');
