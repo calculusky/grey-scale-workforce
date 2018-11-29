@@ -4,6 +4,7 @@
 const [API, ctx] = require('../index').test();
 const ExportQuery = require('../core/ExportQuery');
 const MapperFactory = require('../core/factory/MapperFactory');
+const Utils = require('../core/Utility/Utils');
 
 it("Throw Error if onQuery method is not inherited", () => {
     return expect(() => {
@@ -28,7 +29,7 @@ it("Throw Error if onQuery method is not inherited", () => {
 //     return expect(exports.export()).resolves.toBeDefined();
 // });
 
-it("Test that we can export file in excel", () => {
+it("Test that we can export file in excel", async () => {
     const WorkOrderExport = require('../modules/WorkOrders/model/WorkOrderExportQuery');
     const workOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER, '../modules/WorkOrders/model/mappers/WorkOrderMapper', ctx);
     const who = {
@@ -40,7 +41,8 @@ it("Test that we can export file in excel", () => {
             "works.edit": "all",
         }
     };
-    const exports = new WorkOrderExport({type_id: 1, includes: "audit,records"}, workOrderMapper, who, API);
-
+    const exports = new WorkOrderExport({type_id: 3, includes: "audit,records"}, workOrderMapper, who, API);
+    const groups = await Utils.getFromPersistent(ctx, 'groups', true);
+    exports.setGroups(groups);
     return expect(exports.export()).resolves.toBeDefined();
 });

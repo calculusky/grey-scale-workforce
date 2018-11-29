@@ -46,6 +46,13 @@ class WorkOrderExportQuery extends ExportQuery {
             attachments: ['Attachments', 'attachments']
         };
         super(query, (`${query.type_id}` === '3') ? faultColMap : excelColMap, modelMapper, who, api);
+
+        this.groups = {};
+    }
+
+    setGroups(groups) {
+        this.groups = groups;
+        return this;
     }
 
     onQuery(query) {
@@ -83,6 +90,7 @@ class WorkOrderExportQuery extends ExportQuery {
                         this.sqlQuery.innerJoin('customers AS c', 'db.account_no', 'c.account_no');
                         this.sqlQuery.leftJoin('customers_assets AS ca', 'c.account_no', 'ca.customer_id');
                         this.sqlQuery.leftJoin('assets AS a2', 'ca.asset_id', 'a2.id');
+                        // this.sqlQuery.leftJoin('groups AS grp', 'c.group_id', 'grp.id');
                         selectCols.push(
                             'c.account_no', 'c.customer_name', 'c.group_id as undertaking',
                             'a2.asset_name as asset_name', 'db.current_bill', 'db.arrears', 'db.min_amount_payable',
@@ -94,7 +102,7 @@ class WorkOrderExportQuery extends ExportQuery {
                     else if (`${value}` === '3') {
                         this.sqlQuery.innerJoin('faults AS ft', 'work_orders.relation_id', 'ft.id');
                         this.sqlQuery.innerJoin('assets AS a2', 'ft.relation_id', 'a2.id');
-                        selectCols.push('ft.id as fault_no', 'a2.asset_name as asset_name');
+                        selectCols.push('ft.id as fault_no', 'a2.asset_name as asset_name', 'a2.group_id as undertaking');
                         this.sqlQuery.groupBy('work_orders.work_order_no', 'asset_name');
                     }
                     /*--------------------------------------------------
@@ -130,7 +138,8 @@ class WorkOrderExportQuery extends ExportQuery {
      */
     onResultQuery(results) {
         results = results.map(row => {
-            if(`${this.query.type_id}` === '1' || `${this.query.type_id}` === '2'){
+            const undertaking = Utils.getGroupParent(this.groups[row['undertaking']], 'undertaking');
+            if (`${this.query.type_id}` === '1' || `${this.query.type_id}` === '2') {
                 const cFormat = {style: 'currency', currency: 'NGN'};
                 row['current_bill'] = Number(row['current_bill']).toLocaleString('en-NG', cFormat);
                 row['arrears'] = Number(row['arrears']).toLocaleString('en-NG', cFormat);
@@ -144,6 +153,7 @@ class WorkOrderExportQuery extends ExportQuery {
             row['attachments'] = attachments.filter(i => i !== null).map(file => `${url}/attachment/notes/download/${file}`).join('\r\n');
             row['notes'] = notes.filter(i => i !== null).join('\r\n');
             row['assigned_to'] = row['assigned_to'].map((t, i) => `${t} : ${row['times_assigned'][i]}`).join('\r\n');
+            row['undertaking'] = (undertaking) ? undertaking.name : null;
             return row;
         });
         super.onResultQuery(results);

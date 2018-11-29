@@ -331,10 +331,14 @@ class WorkOrderService extends ApiService {
      * @param API
      * @returns {Promise<void>}
      */
-    async exportWorkOrders(query, who={}, API){
+    async exportWorkOrders(query, who = {}, API) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const exportWorkOrderQuery = new ExportQuery(query, WorkOrderMapper, who, API);
-        return exportWorkOrderQuery.export();
+        const groups = await Utils.getFromPersistent(this.context, "groups", true);
+        return exportWorkOrderQuery.setGroups(groups).export().catch(err => {
+            console.error(err);
+            return Utils.buildResponse({status: "fail", data: {message: "There was an error fetching the export"}});
+        });
     }
 
     /**

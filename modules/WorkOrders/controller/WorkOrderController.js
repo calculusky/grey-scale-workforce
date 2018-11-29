@@ -10,7 +10,7 @@
  * @param multiPart
  */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
-    // app.use('/work_orders*', (req, res, next) => API.recognitions().auth(req, res, next));
+    app.use('/work_orders*', (req, res, next) => API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
