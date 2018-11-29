@@ -848,7 +848,7 @@ module.exports.getWorkPriorities = function (type, key = null) {
 
 module.exports.auditDifference = function (items) {
     if (!Array.isArray(items)) return [items];
-    const [...records] = items.map(item => item.record);
+    const [...records] = items.map(item => item.record).filter(k => k !== null);
     let len = records.length - 1;
     const changes = [];
 
