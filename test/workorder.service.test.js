@@ -38,7 +38,10 @@ test("Test that we can create a work order", () => {
         status: '1',
         group_id: 1,
         'issue_date': '2017/10/5'
-    }, {group: 1})).resolves.toEqual({});
+    }, {sub: 1, group: [1]}, [], API)).resolves.toEqual(expect.objectContaining({
+        code: 200,
+        data: expect.any(Object)
+    }));
 });
 
 it("Should fail if an invalid type_id is supplied", () => {
@@ -52,7 +55,7 @@ it("Should fail if an invalid type_id is supplied", () => {
         status: '1',
         group_id: 1,
         'issue_date': '2017/10/5'
-    }, {group: 1})).rejects.toEqual(expect.objectContaining({
+    }, {sub: 1, group: [1]}, [], API)).rejects.toEqual(expect.objectContaining({
         code: 400,
         err: expect.objectContaining({
             code: "VALIDATION_ERROR"
@@ -70,7 +73,7 @@ test("Test that we can't create a work order with an invalid group id", () => {
         assigned_to: `["1"]`,
         status: '1',
         'issue_date': '2017/10/5'
-    }, {group: 100000})).rejects.toEqual({
+    }, {sub: 1, group: [10000000000]}, [], API)).rejects.toEqual({
         err: {
             status: 'fail',
             data: {group_id: ["The group_id doesn't exist."]}
@@ -152,8 +155,8 @@ test("Retrieve material requisition that belongs to a work order", () => {
 });
 
 
-test("Delete multiple work orders", ()=>{
-    return API.workOrders().deleteMultipleWorkOrder([6, 2, 9], {sub:1}).then(r => {
+test("Delete multiple work orders", () => {
+    return API.workOrders().deleteMultipleWorkOrder([6, 2, 9], {sub: 1}).then(r => {
         console.log(JSON.stringify(r));
         expect(r).toEqual(expect.objectContaining({
             code: expect.any(Number),
@@ -163,5 +166,5 @@ test("Delete multiple work orders", ()=>{
 });
 
 afterAll(() => {
-    return API.workOrders().deleteWorkOrder("relation_id", "12");
+    return API.workOrders().deleteWorkOrder("relation_id", "2", {sub: 1, group: ['1']});
 });

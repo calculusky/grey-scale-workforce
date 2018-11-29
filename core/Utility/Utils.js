@@ -223,7 +223,7 @@ module.exports.getMysqlError = function (err) {
                 type: "Database",
                 code: `${err.errno} - ${err.code}`,
                 desc: "You are trying to insert a record that has relationship with " +
-                "another entity of which the related entity doesn't exist"
+                    "another entity of which the related entity doesn't exist"
             };
         case 1586:
             return {
@@ -269,7 +269,7 @@ module.exports.getMysqlError = function (err) {
                 type: "Database",
                 code: `${err.errno} - ${err.code}`,
                 desc: "You are trying to insert a record that have a relationship with " +
-                "another entity of which the related entity doesn't exist"
+                    "another entity of which the related entity doesn't exist"
             };
         case 1217:
             return {
@@ -493,11 +493,11 @@ module.exports.generateUniqueSystemNumber = async function (prefix, unitName, mo
     if (unitCounter[unitName] === 0) unitCounter[unitName] = count;
 
     if (!count) db.table('unit_counters').insert({"unit_name": unitName}).then(() => null)
-        .catch(e=>console.log("InsertUnitCounter", e));
+        .catch(e => console.log("InsertUnitCounter", e));
 
     ++unitCounter[unitName];
 
-    db.table('unit_counters').update({[moduleName]: unitCounter[unitName]}).where('unit_name', unitName).then(() => null).catch((e)=>console.log("UnitCounters", e));
+    db.table('unit_counters').update({[moduleName]: unitCounter[unitName]}).where('unit_name', unitName).then(() => null).catch((e) => console.log("UnitCounters", e));
 
     count = `${unitCounter[unitName]}`;
     let randomNo = Math.round(Math.random() * (999 - 100) + 100);
@@ -740,6 +740,15 @@ module.exports.processMakerError = function (err) {
     }
 };
 
+module.exports.getWorkOrderType = function (typeId) {
+    const type = {
+        '1': {id: 1, name: 'Disconnections'},
+        '2': {id: 2, name: 'Re-connections'},
+        '3': {id: 3, name: 'Faults'}
+    };
+    return type[typeId];
+};
+
 
 module.exports.getFaultStatus = function (key) {
     switch (key) {
@@ -834,4 +843,52 @@ module.exports.getWorkPriorities = function (type, key = null) {
     else if (type && priorities[type]) return priorities[type];
     else if (type && !priorities[type]) return [];
     else return ""
+};
+
+
+module.exports.auditDifference = function (items) {
+    if (!Array.isArray(items)) return [items];
+    const [...records] = items.map(item => item.record);
+    let len = records.length - 1;
+    const changes = [];
+
+    const differenceBetween = (old, current, pos) => {
+        const changeObjects = [];
+        for (const [key, value] of Object.entries(current)) {
+            const changeObject = {};
+            if (old.hasOwnProperty(key) && old[key] === value) continue;
+            if (!old[key] && (pos - 1) >= 0) differenceBetween(records[pos - 1], current, pos - 1);
+            changeObject.field_name = key;
+            changeObject.field_value = value;
+            changeObject.old_value = old[key] || null;
+            changeObjects.push(changeObject);
+        }
+        return changeObjects;
+    };
+
+    while (len >= 0) {
+        const item = items[len];
+        const currentRecord = records[len];
+        const oldRecord = records[--len];
+        let changeObjects = [];
+        if (item.activity_type === 'CREATE' || oldRecord === undefined) {
+            changeObjects.push({
+                field_name: item.model_type,
+                field_value: null,
+                old_value: null,
+                by: item.activity_by,
+                event_time: item.created_at,
+                event_type: item.activity_type
+            });
+        } else {
+            changeObjects = differenceBetween(oldRecord, currentRecord, len).map(change => {
+                change.by = item.activity_by;
+                change.event_time = item.created_at;
+                change.event_type = item.activity_type;
+                return change;
+            });
+        }
+        changes.push(...changeObjects);
+    }
+    return changes;
 };

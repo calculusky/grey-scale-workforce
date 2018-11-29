@@ -13,6 +13,8 @@ class LocationHistoryMapper extends ModelMapper {
         this.tableName = "location_history";
         this.domainName = "LocationHistory";
     }
+
+    _audit(){}
 }
 
 module.exports = LocationHistoryMapper;

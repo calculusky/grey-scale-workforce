@@ -84,7 +84,7 @@ class PaymentService {
         //check if the system exist
         let systemType = PaymentService.getPaymentType(payment.system);
 
-        if (systemType == null) return Promise.reject(Error.InvalidSystemName(payment.system));
+        if (systemType === null) return Promise.reject(Error.InvalidSystemName(payment.system));
 
         const executor = (resolve, reject) => {
             const db = this.context.database;
@@ -155,7 +155,7 @@ class PaymentService {
                         }).catch(console.error);
 
                         //Update work order status to payment received
-                        db.table('work_orders').update({status: 5}).where(systemType.key, payment.system_id)
+                        API.workOrders().changeWorkOrderStatus(workOrder.id, 5/*Payment Received*/, who, null, [], API)
                             .catch(err => Log.e(TAG, JSON.stringify(err)));
 
                         const createReconnectionOrder = (result) => {
@@ -176,7 +176,7 @@ class PaymentService {
                                 "issue_date": date
                             };
                             console.log('Reconnection', reconnectionOrder);
-                            API.workOrders().createWorkOrder(reconnectionOrder).catch(err => console.error('PAYMENTS', err));
+                            API.workOrders().createWorkOrder(reconnectionOrder, who).catch(err => console.error('PAYMENTS', err));
                         };
                         //By default we create reconnection orders.
                         if (body['auto_generate_rc']) {
@@ -239,11 +239,13 @@ class PaymentService {
      *
      * @param by
      * @param value
+     * @param who
+     * @param API {API}
      * @returns {*}
      */
-    deletePayment(by = "id", value) {
+    deletePayment(by = "id", value, who, API) {
         const PaymentMapper = MapperFactory.build(MapperFactory.PAYMENT);
-        return PaymentMapper.deleteDomainRecord({by, value}).then(count => {
+        return PaymentMapper.deleteDomainRecord({by, value}, true, who).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }

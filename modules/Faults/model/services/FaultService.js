@@ -169,7 +169,7 @@ class FaultService extends ApiService {
             API.attachments().createAttachment({module: "faults", relation_id: fault.id}, who, files, API).then();
         }
 
-        return FaultMapper.updateDomainRecord({value, domain: fault}).then(result => {
+        return FaultMapper.updateDomainRecord({value, domain: fault}, who).then(result => {
             Events.emit("fault_updated", fault, who, model);
             return Utils.buildResponse({data: Utils.convertDataKeyToJson(result.shift(), "labels", "assigned_to")});
         });
@@ -189,20 +189,6 @@ class FaultService extends ApiService {
             }
             return Utils.buildResponse({data: {by, message: "Fault deleted"}});
         });
-    }
-
-    async attributesToValues(colName, values = [], ctx, modelType = null) {
-        switch (colName) {
-            case "priority":
-                return values.map(i => Utils.getFaultPriority(i));
-            case "status":
-                return values.map(i => Utils.getFaultStatus(i));
-            case "category_id" || "fault_category_id":
-                const categories = await Utils.getFromPersistent(ctx, "fault:categories", true);
-                return values.map(i => categories[i]);
-            default:
-                return values;
-        }
     }
 }
 

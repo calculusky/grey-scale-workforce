@@ -23,8 +23,8 @@ it("Should create an activity:", () => {
 test("That we can get activities by query", () => {
     expect.assertions(1);
     return API.activities().getActivities({
-        module: "faults",
-        relation_id: 118,
+        module: "work_orders",
+        relation_id: 28,
     }, {}, API).then(res => {
         expect(res).toEqual(expect.objectContaining({
             code: expect.any(Number),

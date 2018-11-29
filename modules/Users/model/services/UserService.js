@@ -268,7 +268,7 @@ class UserService extends ApiService {
 
         if (user.assigned_to) user.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignedTo);
 
-        return UserMapper.updateDomainRecord({value, domain: user}).then(async (result) => {
+        return UserMapper.updateDomainRecord({value, domain: user}, who).then(async (result) => {
             if (result.pop()) {
                 user[by] = value;
                 if (role_id) {
@@ -295,10 +295,11 @@ class UserService extends ApiService {
     /**
      *
      * @param body
+     * @param who
      * @param API {API}
      * @returns {Promise<*>}
      */
-    async resetPassword(body = {}, API) {
+    async resetPassword(body = {}, who = {}, API) {
         const rules = {
             email: 'email|required',
             password_confirmation: "string|required",
@@ -339,7 +340,7 @@ class UserService extends ApiService {
         user.setPassword(Password.encrypt(body.password).hash.replace("$2a$", "$2y$"));
         user['wf_user_pass'] = Utils.encrypt(body.password, process.env.JWT_SECRET);
 
-        let update = await UserMapper.updateDomainRecord({by: "email", value: body.email, domain: user});
+        let update = await UserMapper.updateDomainRecord({by: "email", value: body.email, domain: user}, who);
         update = update.slice(-1).shift();
         if (!update) return Promise.reject(Utils.buildResponse({status: 'fail', msg: "User doesn't exist"}, 400));
 
@@ -364,24 +365,19 @@ class UserService extends ApiService {
         //Because we need to delete this user also on process maker
         //We'd have to read the user table to get the wf_user_id.
         //Ideally we should delete the record straight
-        let user = await db.table("users").where(by, value).select(['wf_user_id']);
+        let user = (await db.table("users").where(by, value).select(['id', 'wf_user_id'])).shift();
 
         //We can quickly return to the developer that the record doesn't exist
-        if (!user.length) {
-            return Utils.buildResponse({
-                status: "fail",
-                msg: "The specified record doesn't exist"
-            }, 404);
-        }
+        if (!user) return Error.RecordNotFound();
 
         const rand = await Utils.random();
         const u = "username", e = "email", d = "deleted_by";
         db.raw(`update users set ${u} = CONCAT(${u}, ?), ${e} = CONCAT(?, ${e}), ${d}=${who.sub} where ${by} = ?`,
             [`_${rand}_deleted`, `${rand}_deleted_`, value]).then(() => {
-            API.workflows().updateUser(by, value, {}).catch(console.error);
+            API.workflows().updateUser("id", user.id, {}).catch(console.error);
         }).catch(console.error);
 
-        return UserMapper.deleteDomainRecord({by, value}).then(() => {
+        return UserMapper.deleteDomainRecord({by: "id", value: user.id}, true, who).then(() => {
             return Utils.buildResponse({data: {message: "User deleted"}});
         });
     }
