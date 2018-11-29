@@ -50,4 +50,6 @@ public/ext_plugin
 
 *.env
 
+public/swagger-ui
+
 ./knexfile.js

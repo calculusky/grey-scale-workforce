@@ -3,7 +3,6 @@
  */
 const DomainFactory = require('../../modules/DomainFactory');
 const DomainObject = require('./DomainObject');
-const Util = require('../Utility/MapperUtil');
 const Utils = require('../Utility/Utils');
 const Log = require('../logger.js');
 
@@ -186,6 +185,13 @@ class ModelMapper {
                     return domain;
                 });
             }
+
+            //We can guess the user who is creating this record to make an audit
+            const who = {sub: domainObject.created_by, group:[domainObject.group_id]};
+            Array.isArray(domainObject)
+                ? domainObject.forEach(e => this._audit(e, who))
+                : this._audit(domainObject, who);
+
             return Promise.resolve(domainObject);
         }).catch(err => {
             Log.e('createDomainRecord', err);
@@ -198,8 +204,9 @@ class ModelMapper {
      * @param by
      * @param value
      * @param domain
+     * @param who
      */
-    updateDomainRecord({by = this.primaryKey, value, domain}) {
+    updateDomainRecord({by = this.primaryKey, value, domain}, who = {}) {
         if (!by) throw new ReferenceError(`${this.constructor.name} must override the primary key field.`);
         if (!this.tableName) throw new ReferenceError(`${this.constructor.name} must override the tableName field.`);
         if (by !== "*_all" && !value) throw new TypeError("The parameter value must be set for this operation");
@@ -234,8 +241,9 @@ class ModelMapper {
 
         return resultSets
             .then(itemsUpdated => {
+                updateData[by] = value;
                 filteredDomain.serialize(updateData, "client");
-                filteredDomain[by] = value;
+                this._audit(filteredDomain, who, updateData[`${deletedAt}`] ? "DELETE" : "UPDATE");
                 return Promise.resolve([filteredDomain, itemsUpdated]);
             })
             .catch(err => {
@@ -249,10 +257,10 @@ class ModelMapper {
     /**
      * @param by
      * @param value
-     * @param deletedBy - The id of the user that deleted this record
      * @param immediate - Determines if the returned promise should be triggered immediately
+     * @param who
      */
-    deleteDomainRecord({by = this.primaryKey, value, deletedBy}, immediate = true) {
+    deleteDomainRecord({by = this.primaryKey, value}, immediate = true, who = {}) {
         if (!by) throw new ReferenceError(`${this.constructor.name} must override the primary key field.`);
         if (!this.tableName) throw new ReferenceError(`${this.constructor.name} must override the tableName field.`);
         if (by !== "*_all" && !value) throw new TypeError("The parameter value must be set for this operation");
@@ -264,8 +272,8 @@ class ModelMapper {
 
         if (typeof softDelete === 'boolean' && softDelete) {
             domainObject[dateDeletedCol] = Utils.date.dateToMysql();
-            if (deletedByCol && deletedBy) domainObject[deletedByCol] = deletedBy;
-            return this.updateDomainRecord({by, value, domain: domainObject});
+            if (deletedByCol && who.sub) domainObject[deletedByCol] = who.sub;
+            return this.updateDomainRecord({by, value, domain: domainObject}, who);
         }
 
         let resultSets = this.context.database.table(this.tableName).delete();
@@ -274,6 +282,7 @@ class ModelMapper {
         if (!immediate) return resultSets;
         return resultSets
             .then(itemsDeleted => {
+                this._audit(domainObject, who, "DELETE");
                 return Promise.resolve(itemsDeleted);
             })
             .catch(err => {
@@ -281,6 +290,18 @@ class ModelMapper {
                 const error = Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400);
                 return Promise.reject(error)
             });
+    }
+
+    /**
+     * @param data - The changed data
+     * @param who - The current user session
+     * @param type - The type of audit
+     */
+    _audit(data, who, type = "CREATE") {
+        const events = require('../../events/events');
+        if (!who) return Log.e("AuditFailed:", "Couldn't audit because the who argument is undefined");
+        if (!data[this.primaryKey]) return Log.e("AuditFailed:", "Can't audit a record without it's primary key");
+        events.emit("audit", type, this.tableName, data[this.primaryKey], data, who, this.domainName);
     }
 
 

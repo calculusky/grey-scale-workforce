@@ -13,6 +13,8 @@ class CustomerMapper extends ModelMapper{
         this.tableName = "customers";
         this.domainName = "Customer";
     }
+
+    _audit(){}
 }
 
 module.exports = CustomerMapper;

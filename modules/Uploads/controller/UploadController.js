@@ -57,7 +57,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        description: Returns true with the id of the request deleted
      */
     app.delete('/uploads/:id', urlencodedParser, (req, res)=> {
-        API.uploads().deleteUpload("id", req.params.id)
+        API.uploads().deleteUpload("id", req.params.id, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

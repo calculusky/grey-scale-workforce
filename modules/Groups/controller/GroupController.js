@@ -177,7 +177,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/group_id'
      */
     app.delete('/groups/:id', urlencodedParser, (req, res) => {
-        API.groups().deleteGroup("id", req.params.id, API)
+        API.groups().deleteGroup("id", req.params.id, req.who, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

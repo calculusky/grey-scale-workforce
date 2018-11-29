@@ -133,8 +133,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/work_order_id'
      */
-    app.get('/work_orders/:id', urlencodedParser, (req, res) => {
-        console.log("/work_orders/:id");
+    app.get('/work_orders/:id', urlencodedParser, (req, res, next) => {
+        if (req.params.id === 'export') return next();
         API.workOrders().getWorkOrder(req.params.id, undefined, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
@@ -236,7 +236,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.put('/work_orders/:id/status/:statusId', multiPart.array("files", 10), (req, res) => {
         let {id, statusId} = req.params;
-        API.workOrders().changeWorkOrderStatus(id, statusId, req.body, req.files, req.who, API)
+        API.workOrders().changeWorkOrderStatus(id, statusId, req.who, req.body, req.files, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -276,6 +276,40 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 res.set("Connection", "close");
                 return res.status(code).send(err);
             });
+    });
+
+    /**
+     * @swagger
+     * /work_orders/export:
+     *   get:
+     *     summary: "Export Work Orders to Excel(xlsx)"
+     *     description: ''
+     *     tags: [Work Orders]
+     *     produces:
+     *     - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+     *     operationId: exportWorkOrders
+     *     responses:
+     *       '200':
+     *         description: An Excel Document
+     *         content:
+     *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+     *             schema:
+     *               type: string
+     *               format: binary
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/workOrderType'
+     *     - $ref: '#/parameters/exportWith'
+     */
+    app.get('/work_orders/export', urlencodedParser, (req, res) => {
+        return API.workOrders().exportWorkOrders(req.query, req.who, API).then(workBook=>{
+            res.setHeader('Content-disposition', 'attachment; filename=' + workBook['subject'] || "mrworking_export.xlsx");
+            res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            return workBook.xlsx.write(res);
+        }).catch(({err, code}) => {
+            res.set("Connection", "close");
+            return res.status(code).send(err);
+        });
     });
 
 

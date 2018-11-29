@@ -13,6 +13,8 @@ class PendingReasonMapper extends ModelMapper{
         this.tableName = "fault_delay_reasons";
         this.domainName = "PendingReason";
     }
+
+    _audit(){}
 }
 
 module.exports = PendingReasonMapper;
