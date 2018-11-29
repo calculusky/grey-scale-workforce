@@ -196,6 +196,26 @@ parameters:
     in: query
     description: Use this to specify the closed entities you will like to receive, e.g ?include=fault,billing
 
+  exportWith:
+    name: with
+    type: string
+    required: false
+    in: query
+    enum: ["audit,records", "audit", "records"]
+    default: "audit,records"
+    style: form
+    explode: true
+    description: 'You can choose to export an excel including the audit, records or both. e.g ?with=audit,records.
+                 The default is ?with=audit,records'
+
+  workOrderType:
+    name: type_id
+    type: integer
+    required: true
+    in: query
+    enum: [1, 2 ,3]
+    description: The Work Order Type
+
 #----------------------Definitions-------------------------------
 definitions:
   loginInput:

@@ -8,6 +8,7 @@ const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const _ = require("lodash");
 const Events = require('../../../../events/events');
+const ExportQuery = require('../WorkOrderExportQuery');
 let MapperFactory = null;
 
 /**
@@ -321,6 +322,19 @@ class WorkOrderService extends ApiService {
         const updated = await this.updateWorkOrder("id", value, {status}, who, [], API);
         if (note) API.notes().createNote(note, who, files, API).catch(console.error);
         return updated;
+    }
+
+    /**
+     *
+     * @param query
+     * @param who
+     * @param API
+     * @returns {Promise<void>}
+     */
+    async exportWorkOrders(query, who={}, API){
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        const exportWorkOrderQuery = new ExportQuery(query, WorkOrderMapper, who, API);
+        return exportWorkOrderQuery.export();
     }
 
     /**

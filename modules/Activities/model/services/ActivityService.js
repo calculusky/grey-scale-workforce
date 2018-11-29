@@ -71,20 +71,17 @@ class ActivityService extends ApiService {
 
         const activities = await resultSet.limit(Number(limit)).offset(Number(offset)).orderBy("id", "asc");
 
-        const items = Utils.auditDifference(activities).filter(item => !['id', 'updated_at'].includes(item.field_name));
+        const items = Utils.auditDifference(activities)
+            .filter(item => !['id', 'updated_at'].includes(item.field_name)).reverse();
+
+        const cols = ['id','username','first_name', 'last_name'];
+        for (const item of items) {
+            item.by = (await db.table("users").where("id", item.by).select(cols)).shift();
+        }
+
         return Utils.buildResponse({data: {items}});
     }
 
-    /**
-     *
-     * @param format
-     * @param who
-     * @param API {API}
-     * @returns {Promise<void>}
-     */
-    async exportAuditLogs(query, format="excel", who, API){
-
-    }
 }
 
 module.exports = ActivityService;

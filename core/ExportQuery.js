@@ -11,9 +11,10 @@ class ExportQuery {
      * @param query
      * @param colMap
      * @param modelMapper {ModelMapper}
+     * @param who
      * @param api {API}
      */
-    constructor(query = {}, colMap = {}, modelMapper, api) {
+    constructor(query = {}, colMap = {}, modelMapper, who, api) {
         //clear out empty keys
         Object.keys(query).forEach(key => {
             if (query[key] === undefined || query[key] === null || `${query[key]}`.trim() === '') delete query[key];
@@ -21,10 +22,18 @@ class ExportQuery {
         this.query = query;
         this.colMap = colMap;
         this.modelMapper = modelMapper;
-        this.includeAudit = query.hasOwnProperty("includes") && (query.includes.indexOf("audit") !== -1);
+        this.includeAudit = true;
+        this.includeRecords = true;
         this.queryResult = [];
         this.api = api;
+        this.who = who;
         this.sqlQuery = null;
+
+        if (query.hasOwnProperty("includes")) {
+            if (query.includes.indexOf("audit") === -1) this.includeAudit = false;
+            if (query.includes.indexOf("records") === -1) this.includeRecords = false;
+        }
+
         this.onQuery(query);
     }
 
@@ -51,8 +60,9 @@ class ExportQuery {
     }
 
     /**
+     * This function is immediately triggered after the query is executed
      *
-     * @param result
+     * @param result - The database result
      */
     onResultQuery(result) {
         this.queryResult = result;
@@ -64,48 +74,50 @@ class ExportQuery {
      */
     async getAudits(relationId) {
         const rQuery = {module: this.modelMapper.tableName, relation_id: relationId};
-        console.log(rQuery);
         const {data: {data: {items}}} = await this.api.activities().getActivities(rQuery, {}, this.api).catch(console.error);
-        console.log(items);
         return items;
     }
 
+    getAuditRecordId(textRow) {
+        //by default we get the primary key
+        return textRow[this.modelMapper.primaryKey] || "";
+    }
 
     async export() {
         await this.executeQuery();
         const workBook = new Excel.Workbook();
-        const mainSheet = workBook.addWorksheet(this.modelMapper.tableName);
-        const auditLogSheet = workBook.addWorksheet("AuditLog");
-        mainSheet.state = 'visible';
-        auditLogSheet.state = 'visible';
         workBook.creator = 'Vascon Solutions';
-        const headerStyle = {font: {name: 'Carlito', family: 4, size: 12, bold: true}};
-        const bodyStyle = {font: {name: 'Carlito', family: 4, size: 12, bold: false}};
+        workBook.subject = 'mrworking-file-export.xlsx';
+        const recordSheet = workBook.addWorksheet(this.modelMapper.tableName);
+        const auditLogSheet = workBook.addWorksheet("AuditLog");
+        //@Style for header and body
+        const headerStyle = {font: {name: 'Open Sans', family: 4, size: 12, bold: true}};
+        const bodyStyle = {font: {name: 'Open Sans', family: 4, size: 12, bold: false}};
+        //@Set column headers
         const mainColumns = Object.keys(this.colMap).map(key => {
             return {header: this.colMap[key][0], key: this.colMap[key][1], width: 12, style: headerStyle};
         });
         if (this.includeAudit) auditLogSheet.columns = ExportQuery._getAuditColumns();
 
-        mainSheet.columns = mainColumns;
+        recordSheet.columns = mainColumns;
 
         for (const textRow of this.queryResult) {
             const row = {};
             for (const [key, value] of Object.entries(textRow)) {
                 if (this.colMap[key] && Array.isArray(this.colMap[key])) {
-                    if (Array.isArray(value)) {
-                        row[this.colMap[key][1]] = value.map(txt => `${txt}`).join('\r\n');
-                        row['alignment'] = {wrapText: true};
-                    } else row[this.colMap[key][1]] = value;
+                    row[this.colMap[key][1]] = value;
+                    row['alignment'] = {wrapText: true};
                 }
             }
-            mainSheet.addRow(row).font = bodyStyle.font;
+            recordSheet.addRow(row).font = bodyStyle.font;
 
             if (this.includeAudit) {
                 const logs = await this.getAudits(textRow[this.modelMapper.primaryKey]).catch(err => console.log(err));
                 if (!logs.length) continue;
                 const lastRowNumber = auditLogSheet.lastRow.number;
                 for (const log of logs) {
-                    log.record_id = textRow['work_order_no'];
+                    log.record_id = this.getAuditRecordId(textRow);
+                    log.by = `${log.by.first_name} ${log.by.last_name}`;
                     const aRow = auditLogSheet.addRow(log);
                     aRow.font = bodyStyle.font;
                     aRow.alignment = {vertical: 'middle', horizontal: 'center'}
@@ -113,10 +125,11 @@ class ExportQuery {
                 auditLogSheet.mergeCells(`A${lastRowNumber + 1}:A${lastRowNumber + logs.length}`);
             }
         }
-        workBook.xlsx.writeFile('newFile.xlsx').then(function () {
-            console.log('done')
-        });
-        return mainSheet;
+
+        if (!this.includeAudit) workBook.removeWorksheet(auditLogSheet.id); else auditLogSheet.state = 'visible';
+        if (!this.includeRecords) workBook.removeWorksheet(recordSheet.id); else workBook.state = 'visible';
+
+        return workBook;
     }
 
     /**
@@ -126,7 +139,7 @@ class ExportQuery {
      */
     static _getAuditColumns() {
         const headerStyle = {
-            font: {name: 'Carlito', family: 4, size: 12, bold: true},
+            font: {name: 'Open Sans', family: 4, size: 12, bold: true},
             alignment: {vertical: 'middle', horizontal: 'center'}
         };
         return [

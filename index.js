@@ -8,4 +8,4 @@ const API = require("./boostrap")(ctx);
 
 
 //For test purpose only
-if (process.env.NODE_ENV === "test") exports.test = () => API;
+if (process.env.NODE_ENV === "test") exports.test = () => [API, ctx];
