@@ -231,13 +231,14 @@ class GroupService extends ApiService {
         });
     }
 
-    async getGroups(query={}, who={}){
-        const {type, offset = 0, limit = 10} = query;
+    async getGroups(query = {}, who = {}) {
+        const {name, type, offset = 0, limit = 10} = query;
         const groups = await Utils.getFromPersistent(this.context, "groups", true);
 
         let items = [];
-        Object.entries(groups).forEach(([key, value])=>{
-            if(type && !type.split(",").map(i => i.toLowerCase()).includes(`${value['type']}`.toLowerCase())) return;
+        Object.entries(groups).forEach(([key, value]) => {
+            if (type && !type.split(",").map(i => i.toLowerCase()).includes(`${value['type']}`.toLowerCase())) return;
+            if (name && value['name'].toLowerCase().indexOf(name.toLowerCase()) === -1) return;
             items.push(value);
         });
         if (offset || limit) items = items.slice(offset, offset + limit);
@@ -261,10 +262,10 @@ class GroupService extends ApiService {
      * @param value
      * @returns {Promise<*|>}
      */
-    async getGroupUsers(value){
+    async getGroupUsers(value) {
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
-        const group = (await GroupMapper.findDomainRecord({value, fields:["id"]})).records.shift();
-        if(!group) return Promise.reject(Error.RecordNotFound(`The group record "${value}" doesn't exist.`));
+        const group = (await GroupMapper.findDomainRecord({value, fields: ["id"]})).records.shift();
+        if (!group) return Promise.reject(Error.RecordNotFound(`The group record "${value}" doesn't exist.`));
         return (await group.users()).records;
     }
 
