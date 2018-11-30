@@ -30,12 +30,9 @@ class LocationEvent extends EventEmitter {
         const db = this.context.database;
         const userId = this.sharedData.clients[soc.id];
         const broadcastMsg = {};
-
-
         broadcastMsg.locations = data.locations;
 
-        const LocationDetails = Object.assign([], data.locations);
-        const mLocation = LocationDetails.shift();
+        const mLocation = data.locations[0];
 
         if ((mLocation.lat < -90 || mLocation.lat > 90) || (mLocation.lon < -180 || mLocation.lon > 180)) {
             console.log("Invalid latitude and longitude entered");
@@ -79,7 +76,7 @@ class LocationEvent extends EventEmitter {
                 'work_order_no'
             ]);
 
-            const records = await this.api.attachments().getAttachments(user.id, "notes", "created_by");
+            const records = await this.api.attachments().getAttachments(user.id, "notes", "created_by",{}, 0, 900);
 
             broadcastMsg.attachements = records.data.data.items.map(attachment => {
                 delete attachment.user;
@@ -89,8 +86,6 @@ class LocationEvent extends EventEmitter {
 
             this.io.to(`location_update_${user.id}`).emit('location_update', broadcastMsg);
         }
-        console.log(broadcastMsg);
-
         return true;
     }
 }
