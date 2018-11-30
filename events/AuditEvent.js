@@ -35,7 +35,7 @@ class AuditEvent extends EventEmitter {
             description: "...",
             model_type: domainName,
             activity_by: who.sub,
-            group_id: `${(Array.isArray(who.group) && who.group.length) ? who.group.shift() : 1}`
+            group_id: (Array.isArray(who.group) && who.group.length) ? `${who.group[0]}` : '1'
         };
         this.api.activities().createActivity(activity, who).catch(console.error);
     }
