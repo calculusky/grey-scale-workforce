@@ -3,6 +3,7 @@
  */
 
 const ModelMapper = require('../../../../core/model/ModelMapper');
+const Utils = require('../../../../core/Utility/Utils');
 
 
 class FaultMapper extends ModelMapper {

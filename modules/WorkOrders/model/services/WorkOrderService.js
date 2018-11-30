@@ -320,7 +320,7 @@ class WorkOrderService extends ApiService {
      */
     async changeWorkOrderStatus(value/*WorkOrderId*/, status, who = {}, note, files = [], API) {
         const updated = await this.updateWorkOrder("id", value, {status}, who, [], API);
-        if (note) API.notes().createNote(note, who, files, API).catch(console.error);
+        if (note && note.note) API.notes().createNote(note, who, files, API).catch(console.error);
         return updated;
     }
 
