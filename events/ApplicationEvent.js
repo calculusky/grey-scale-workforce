@@ -117,7 +117,7 @@ class ApplicationEvent extends EventEmitter {
         //check if the asset status is already in-active before setting it to in-active
         if (`${asset.status}` === "0") return false;
 
-        const res = await this.api.assets().updateAsset(asset.id, {status: "0"}, {sub: 1}).catch(console.error);
+        const res = await this.api.assets().updateAsset(asset.id, {status: "0"}, who).catch(console.error);
         //TODO update all sub-assets
         return res.data.status === "success";
     }
@@ -162,7 +162,7 @@ class ApplicationEvent extends EventEmitter {
             //check if the asset status is already in-active before setting it to in-active
             if (`${asset.status}` === "1") return false;
 
-            await this.api.assets().updateAsset(asset.id, {status: "1"}, {sub: 1}).catch(console.error);
+            await this.api.assets().updateAsset(asset.id, {status: "1"}, who).catch(console.error);
             //TODO update all sub-assets
         }
     }
