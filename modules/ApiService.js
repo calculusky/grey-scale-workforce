@@ -19,7 +19,7 @@ class ApiService {
     static insertPermissionRights(data, who) {
         if (!who || !who.sub) return;
         data['created_by'] = who.sub;
-        if (!data['group_id']) data['group_id'] = (Array.isArray(who.group)) ? who.group.shift() : 1;
+        if (!data['group_id']) data['group_id'] = (Array.isArray(who.group)) ? who.group[0] : 1;
 
         let assignedTo = data['assigned_to'];
         const setDefaultAssignedTo = () => {

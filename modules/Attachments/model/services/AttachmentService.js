@@ -27,10 +27,13 @@ class AttachmentService extends ApiService {
     async getAttachments(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         value = {[by]: value, "module": module};
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        const attachments = (await AttachmentMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')).records;
-        for(let attachment of attachments){
+        const attachments = (await AttachmentMapper.findDomainRecord({
+            by,
+            value
+        }, offset, limit, 'created_at', 'desc')).records;
+        for (let attachment of attachments) {
             attachment.user = (await attachment.user()).records.shift() || {};
-            if(attachment.location){
+            if (attachment.location) {
                 attachment.location.address = await Utils.getAddressFromPoint(attachment.location.x, attachment.location.y).catch(console.error);
             }
         }
@@ -61,16 +64,16 @@ class AttachmentService extends ApiService {
                 file_type: file.mimetype,
                 location: aLocation,
                 created_by: who.sub,
-                group_id: (who.group.length) ? who.group.shift() : null
+                group_id: (who.group && who.group.length) ? who.group[0] : null
             })));
         } else {
             body['created_by'] = who.sub;
-            body['group_id'] = who.group;
+            body['group_id'] = (Array.isArray(who.group) && who.group.length) ? who.group[0] : 1;
             body['location'] = aLocation;
             attachments.push(new Attachment(body));
         }
 
-        if(location){
+        if (location) {
             location.address = await Utils.getAddressFromPoint(location.x, location.y).catch(console.error);
         }
 
@@ -79,7 +82,7 @@ class AttachmentService extends ApiService {
         return AttachmentMapper.createDomainRecord(null, attachments).then(attachment => {
             if (!attachment) return Promise.reject(false);
 
-            if(Array.isArray(attachment)) for(let att of attachment) att.location = location;
+            if (Array.isArray(attachment)) for (let att of attachment) att.location = location;
             else attachment.location = location;
             //reset the attachment location to what it is
             return Utils.buildResponse({data: Array.isArray(attachment) ? attachment.pop() : attachment});
