@@ -187,11 +187,10 @@ class ModelMapper {
             }
 
             //We can guess the user who is creating this record to make an audit
-            const who = {sub: domainObject.created_by, group:[domainObject.group_id]};
+            const who = {sub: domainObject.created_by, group: [domainObject.group_id]};
             Array.isArray(domainObject)
-                ? domainObject.forEach(e => this._audit(e, who))
+                ? domainObject.forEach(e => this._audit(e, {sub: e.created_by, group: [e.group_id]}))
                 : this._audit(domainObject, who);
-
             return Promise.resolve(domainObject);
         }).catch(err => {
             Log.e('createDomainRecord', err);
