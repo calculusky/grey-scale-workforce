@@ -30,10 +30,9 @@ class LocationEvent extends EventEmitter {
         const db = this.context.database;
         const userId = this.sharedData.clients[soc.id];
         const broadcastMsg = {};
-
-        const mLocation = data.locations.shift();
-
         broadcastMsg.locations = data.locations;
+
+        const mLocation = data.locations[0];
 
         if ((mLocation.lat < -90 || mLocation.lat > 90) || (mLocation.lon < -180 || mLocation.lon > 180)) {
             console.log("Invalid latitude and longitude entered");
@@ -72,13 +71,12 @@ class LocationEvent extends EventEmitter {
 
             Object.assign(broadcastMsg, user);
 
-            let last_work_order = await db.table('work_orders').where(db.raw(`JSON_CONTAINS(assigned_to, '{"id" : ${user.id}}')`)).orderBy('id', 'desc').limit(1).select([
+            let last_work_order = await db.table('work_orders').where(db.raw(`JSON_CONTAINS(assigned_to, '{"id" : ${user.id}}')`)).orderBy('id', 'desc').limit(5).select([
                 'id',
                 'work_order_no'
             ]);
-            last_work_order = last_work_order.shift();
 
-            const records = await this.api.attachments().getAttachments(user.id, "notes", "created_by");
+            const records = await this.api.attachments().getAttachments(user.id, "notes", "created_by",{}, 0, 900);
 
             broadcastMsg.attachements = records.data.data.items.map(attachment => {
                 delete attachment.user;
@@ -88,7 +86,6 @@ class LocationEvent extends EventEmitter {
 
             this.io.to(`location_update_${user.id}`).emit('location_update', broadcastMsg);
         }
-
         return true;
     }
 }

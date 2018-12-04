@@ -332,6 +332,8 @@ class WorkOrderService extends ApiService {
      * @returns {Promise<void>}
      */
     async exportWorkOrders(query, who = {}, API) {
+        const validator = new validate(query, {type_id: "required"});
+        if (validator.fails(null)) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const exportWorkOrderQuery = new ExportQuery(query, WorkOrderMapper, who, API);
         const groups = await Utils.getFromPersistent(this.context, "groups", true);
