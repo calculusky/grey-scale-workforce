@@ -216,7 +216,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *    - $ref: '#/parameters/id'
      */
     app.delete('/faults/:id', urlencodedParser, (req, res) => {
-        API.faults().deleteFault("id", req.params.id)
+        API.faults().deleteFault("id", req.params.id, req.who, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
