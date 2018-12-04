@@ -37,7 +37,8 @@ class Fault extends DomainObject {
     softDeletes() {
         return [
             true,
-            "deleted_at"
+            "deleted_at",
+            "deleted_by"
         ];
     }
 

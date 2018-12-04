@@ -179,11 +179,13 @@ class FaultService extends ApiService {
      *
      * @param by
      * @param value
+     * @param who
+     * @param API
      * @returns {*}
      */
-    deleteFault(by = "id", value) {
+    deleteFault(by = "id", value, who, API) {
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
-        return FaultMapper.deleteDomainRecord({by, value}).then(count => {
+        return FaultMapper.deleteDomainRecord({by, value}, true, who).then(count => {
             if (!count) {
                 return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
             }
