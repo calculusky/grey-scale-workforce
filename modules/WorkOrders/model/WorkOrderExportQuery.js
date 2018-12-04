@@ -121,7 +121,7 @@ class WorkOrderExportQuery extends ExportQuery {
                         db.raw("work_orders.assigned_to->'$[*].created_at' as times_assigned"),
                         db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', ua.first_name, ' ', ua.last_name, '"')), ']')as JSON) as assigned_to`),
                         db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', att.file_name, '"')), ']') as JSON) as attachments`),
-                        db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', nu.first_name, ' - ', nt.note, ' : ', nt.created_at, '"')), ']') as JSON) as notes`)
+                        db.raw(`GROUP_CONCAT(DISTINCT CONCAT(nu.first_name, ' - ', nt.note, ' : ', nt.created_at) SEPARATOR '<@>') as notes`)
                     );
                     break;
                 }
@@ -146,13 +146,15 @@ class WorkOrderExportQuery extends ExportQuery {
                 row['min_amount_payable'] = Number(row['min_amount_payable']).toLocaleString('en-NG', cFormat);
                 row['total_amount_payable'] = Number(row['total_amount_payable']).toLocaleString('en-NG', cFormat)
             }
-            const attachments = row['attachments'] || [], notes = row['notes'] || [];
+            const attachments = row['attachments'] || [],
+                notes = (row['notes'] || "").split("<@>"),
+                assignedTo = row['assigned_to'] || [];
             row['status'] = Utils.getWorkStatuses(this.query.type_id, row['status']);
             row['priority'] = Utils.getWorkStatuses(this.query.type_id, row['priority']);
             const url = `${process.env.APP_URL}:${process.env.PORT}`;
             row['attachments'] = attachments.filter(i => i !== null).map(file => `${url}/attachment/notes/download/${file}`).join('\r\n');
             row['notes'] = notes.filter(i => i !== null).join('\r\n');
-            row['assigned_to'] = row['assigned_to'].map((t, i) => `${t} : ${row['times_assigned'][i]}`).join('\r\n');
+            row['assigned_to'] = assignedTo.map((t, i) => `${t} : ${row['times_assigned'][i]}`).join('\r\n');
             row['undertaking'] = (undertaking) ? undertaking.name : null;
             return row;
         });
