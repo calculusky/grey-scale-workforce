@@ -152,7 +152,6 @@ class CustomerService {
                 if (workOrder.records.length > 0) workOrders.push(...workOrder.records);
             }
         }
-        console.log(workOrders);
         return Utils.buildResponse({data: {items: orderBy(workOrders, ["id"], ["desc"])}});
     }
 
