@@ -393,23 +393,17 @@ module.exports.backUpDatabase = function (s3) {
     if (Object.keys(this.lock).every(val => val === true)) return setTimeout(() => this.backUpDatabase(), 10000);
     const sqlArgs = ['-u', process.env.DB_USER, `-p${process.env.DB_PASS}`, process.env.DB_DATABASE, '--single-transaction'];
     const startProcessor = function () {
-        console.log("Starting Database Backup Process..........");
-        (async function () {
-            const mysqldump = spawn('mysqldump', sqlArgs);
-            const putParams = {
-                Bucket: "mrworking-api",
-                Key: `${process.env.NODE_ENV}/iforce_${Utils.date.dateToMysql(undefined, "YYYY-MM-DD H:m:ss")}_dbk.sql`,
-                Body: ""
-            };
-            mysqldump.stdout
-                .on('data', (data) => (putParams.Body += data))
-                .on('end', () => {
-                    s3.putObject(putParams, (err, resp) => {
-                        if (err) return console.log("DBBackUpFailed:", err);
-                        console.log("DBBackupSuccessful", resp)
-                    })
-                });
-        })();
+        console.log(">>>>>>>>>>>>>>> Starting Database Backup Process >>>>>>>>>>>>>>>");
+        const mysqldump = spawn('mysqldump', sqlArgs);
+        const putParams = {
+            Bucket: "mrworking-api",
+            Key: `${process.env.NODE_ENV}/iforce_${Utils.date.dateToMysql(undefined, "YYYY-MM-DD H:m:ss")}_dbk.sql`,
+            Body: mysqldump.stdout
+        };
+        s3.upload(putParams, (err, data) => {
+            if (err) return console.log("DBBackUpFailed:", err);
+            console.log(data, `\n\r<<<<<<<<<<<<<<<<<<<<<< DBBackupSuccessful <<<<<<<<<<<<<<<<<<<<<<<<`);
+        });
     };
     return startProcessor();
 };

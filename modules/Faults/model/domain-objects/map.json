@@ -20,6 +20,7 @@
   "assigned_to": "assigned_to",
   "group_id": "group_id",
   "created_by": "created_by",
+  "deleted_by": "deleted_by",
   "deleted_at": "deleted_at",
   "created_at": "created_at",
   "updated_at": "updated_at"

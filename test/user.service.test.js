@@ -1,7 +1,7 @@
 /**
  * Created by paulex on 7/11/17.
  */
-const API = require('../index').test();
+const [API, ctx] = require('../index').test();
 
 // beforeAll(() => {
 //     return API.users().createUser({
@@ -99,7 +99,7 @@ test("That we can reset a user password", () => {
 describe('Updating User', () => {
     test('Update a user', () => {
         return expect(API.users().updateUser('id', 1,
-            {last_name: "Okeke", roles: 1, group_id: 1, assigned_to: "[1]"}, {sub:1}, [], API)).resolves
+            {last_name: "Okeke", roles: 1, group_id: 1, assigned_to: "[1]"}, {sub: 1}, [], API)).resolves
             .toEqual(expect.objectContaining({
                 code: expect.any(Number)
             }))
@@ -111,10 +111,34 @@ test("Delete a user", () => {
     return expect(API.users().deleteUser('id', 51, {}, API)).resolves.toBeDefined();
 });
 
+it("Should return the attachments that belongs to this user", () => {
+    return expect(API.users().getUserAttachments(1, 0, 10, {sub: 1}, API)).resolves.toEqual({
+        data: {
+            status: "success",
+            data: {
+                items: expect.any(Array)
+            }
+        },
+        code: 200
+    });
+});
+
+it("Should return the work orders that assigned to this user", () => {
+    return expect(API.users().getUserWorkOrders(1, {offset: 0, limit: 10}, {sub: 1}, API)).resolves.toEqual({
+        data: {
+            status: "success",
+            data: {
+                items: expect.any(Array)
+            }
+        },
+        code: 200
+    });
+});
+
 
 afterAll(() => {
-    API.users().deleteUser("username", "cco_user", {
-        sub: 1,
-        group: [1]
-    }, API).then(t => console.log(t)).catch(err => console.log(err));
+    // API.users().deleteUser("username", "cco_user", {
+    //     sub: 1,
+    //     group: [1]
+    // }, API).then(t => console.log(t)).catch(err => console.log(err));
 });

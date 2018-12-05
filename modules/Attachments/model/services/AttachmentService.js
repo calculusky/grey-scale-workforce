@@ -25,7 +25,8 @@ class AttachmentService extends ApiService {
      * @returns {Promise}
      */
     async getAttachments(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
-        value = {[by]: value, "module": module};
+        value = {[by]: value};
+        if (module) value.module = module;
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         const attachments = (await AttachmentMapper.findDomainRecord({
             by,
@@ -33,6 +34,8 @@ class AttachmentService extends ApiService {
         }, offset, limit, 'created_at', 'desc')).records;
         for (let attachment of attachments) {
             attachment.user = (await attachment.user()).records.shift() || {};
+            attachment.file_url = Utils.makeAttachmentURL(attachment);
+            delete attachment.file_path;
             if (attachment.location) {
                 attachment.location.address = await Utils.getAddressFromPoint(attachment.location.x, attachment.location.y).catch(console.error);
             }

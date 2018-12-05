@@ -381,6 +381,34 @@ class UserService extends ApiService {
             return Utils.buildResponse({data: {message: "User deleted"}});
         });
     }
+
+    /**
+     *
+     * @param userId
+     * @param offset
+     * @param limit
+     * @param who
+     * @param API {API}
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getUserAttachments(userId, offset=0, limit=10, who, API) {
+        let {data:{data:{items}}} = await API.attachments().getAttachments(userId, undefined, "id", who, offset, limit);
+        return Utils.buildResponse({data:{items}});
+    }
+
+    /**
+     *
+     * @param userId
+     * @param query
+     * @param who
+     * @param API
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getUserWorkOrders(userId, query={}, who, API){
+        query.assigned_to = userId;
+        let {data:{data:{items}}} = await API.workOrders().getWorkOrders(query, who);
+        return Utils.buildResponse({data:{items}});
+    }
 }
 
 module.exports = UserService;
