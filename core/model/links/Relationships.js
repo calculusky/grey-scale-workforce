@@ -69,8 +69,12 @@ class Relationships {
      * @param foreignKey
      * @param parentKey
      * @param cols
+     * @param offset
+     * @param limit
+     * @param orderBy
      */
-    hasMany(domainMapperName, foreignKey = `${domainMapperName.toLowerCase()}_id`, parentKey = "id", cols = ["*"]) {
+    hasMany(domainMapperName, foreignKey = `${domainMapperName.toLowerCase()}_id`,
+            parentKey = "id", cols = ["*"], {offset = 0, limit = 10, orderBy = parentKey}) {
         let DomainMapper = MapperFactory.build(domainMapperName);
         if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
 
@@ -152,7 +156,7 @@ class Relationships {
         let DomainMapper = MapperFactory.build(relatedModelName);
         //The table name can either have an S at the end or probably doesn't
 
-        DomainMapper = (DomainMapper)
+        DomainMapper = (!lodash.isEmpty(DomainMapper))
             ? DomainMapper
             : MapperFactory.build(relatedModelName.substring(0, relatedModelName.length - 1));
 
@@ -205,8 +209,8 @@ class Relationships {
         let resultSets = KNEX.select(cols).from(foreignTable)
             .where(foreignKey, this.domainObject[options.localKey]).andWhere(relatedDomainKey, options.localDomain);
 
-        if(options.orderBy) resultSets.orderBy(options.orderBy[0], options.orderBy[1]);
-        if(options.limit) resultSets.limit(options.limit);
+        if (options.orderBy) resultSets.orderBy(options.orderBy[0], options.orderBy[1]);
+        if (options.limit) resultSets.limit(options.limit);
 
         const executor = (resolve, reject) => finalizeResult(resultSets, DomainObject, resolve, reject);
         return new Promise(executor);

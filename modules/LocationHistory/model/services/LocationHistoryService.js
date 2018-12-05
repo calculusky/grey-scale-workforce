@@ -54,7 +54,6 @@ class LocationHistoryService extends ApiService {
         if (group_id) users = await API.groups().getGroupUsers(group_id);
         else if (user_id) ({data: {data: {items: users}}} = (await API.users().getUsers(user_id)));
         for (let user of users) ({records: user.locations} = (await user.locationHistory()));
-        console.log(users);
         return Utils.buildResponse({data: {items: users}});
     }
 }
