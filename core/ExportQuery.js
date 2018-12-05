@@ -29,9 +29,9 @@ class ExportQuery {
         this.who = who;
         this.sqlQuery = null;
 
-        if (query.hasOwnProperty("includes")) {
-            if (query.includes.indexOf("audit") === -1) this.includeAudit = false;
-            if (query.includes.indexOf("records") === -1) this.includeRecords = false;
+        if (query.hasOwnProperty("with")) {
+            if (query.with.indexOf("audit") === -1) this.includeAudit = false;
+            if (query.with.indexOf("records") === -1) this.includeRecords = false;
         }
 
         this.onQuery(query);

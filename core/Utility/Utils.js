@@ -181,6 +181,11 @@ module.exports.getAddressFromPoint = function (lat, lng) {
     return new Promise(executor);
 };
 
+module.exports.makeAttachmentURL = function(attachment){
+    return `${process.env.APP_URL}:${process.env.PORT}/attachment/${attachment.module}/download/${attachment.file_name}`
+};
+
+
 module.exports.validatePayLoad = function (payLoad, checks) {
     const pKeys = Object.keys(payLoad);
     let valid = true;
@@ -848,7 +853,8 @@ module.exports.getWorkPriorities = function (type, key = null) {
 
 module.exports.auditDifference = function (items) {
     if (!Array.isArray(items)) return [items];
-    const [...records] = items.map(item => item.record).filter(k => k !== null);
+    items = items.filter(item=>item.record !== null);
+    const [...records] = items.map(item => item.record);
     let len = records.length - 1;
     const changes = [];
 
@@ -856,7 +862,7 @@ module.exports.auditDifference = function (items) {
         const changeObjects = [];
         for (const [key, value] of Object.entries(current)) {
             const changeObject = {};
-            if (old.hasOwnProperty(key) && old[key] === value) continue;
+            if (old.hasOwnProperty(key) && `${old[key]}` === `${value}`) continue;
             if (!old[key] && (pos - 1) >= 0) differenceBetween(records[pos - 1], current, pos - 1);
             changeObject.field_name = key;
             changeObject.field_value = value;
