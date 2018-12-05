@@ -226,6 +226,68 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
         });
     });
 
+    /**
+     * @swagger
+     * /users/{id}/attachments:
+     *  get:
+     *   description: "Get list of attachments created by a user"
+     *   summary: "Fetches attachments created by a user"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: "getUserAttachments"
+     *   responses:
+     *     '200':
+     *       description: "A List of attachments"
+     *       schema:
+     *         $ref: '#/definitions/getUserAttachments'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - name: id
+     *       description: The ID of the user
+     *       in: path
+     *       required: true
+     *       type: integer
+     */
+    app.get("/users/:id/attachments", urlencodedParser, (req, res) => {
+        API.users().getUserAttachments(req.params.id, req.query['offset'], req.query['limit'], req.who, API).then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code = 500}) => {
+            return res.status(code).send(err);
+        });
+    });
+
+    /**
+     * @swagger
+     * /users/{id}/work_orders:
+     *  get:
+     *   description: "Get list of work orders assigned to a user"
+     *   summary: "Fetches work orders created by a user"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: "getUserWorkOrders"
+     *   responses:
+     *     '200':
+     *       description: "A List of work orders"
+     *       schema:
+     *         $ref: '#/definitions/getUserWorkOrders'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - name: id
+     *       description: The ID of the user
+     *       in: path
+     *       required: true
+     *       type: integer
+     */
+    app.get("/users/:id/work_orders", urlencodedParser, (req, res) => {
+        API.users().getUserWorkOrders(req.params.id, req.query, req.who, API).then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code = 500}) => {
+            return res.status(code).send(err);
+        });
+    });
+
 
     /**
      * @swagger

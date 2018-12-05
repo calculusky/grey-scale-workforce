@@ -84,6 +84,10 @@ class User extends DomainObject {
         const options = {localDomain: "users", localKey: "id", orderBy: ["id", "desc"], limit: 20};
         return this.relations().morphMany("LocationHistory", "module", "relation_id", options);
     }
+
+    async attachments(cols, offset=0, limit=10) {
+        return this.relations().hasMany("Attachment", 'created_by', 'id', cols, {offset, limit});
+    }
 }
 
 //noinspection JSUnresolvedVariable
