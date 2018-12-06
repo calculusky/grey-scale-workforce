@@ -17,7 +17,8 @@ class ExportQuery {
     constructor(query = {}, colMap = {}, modelMapper, who, api) {
         //clear out empty keys
         Object.keys(query).forEach(key => {
-            if (query[key] === undefined || query[key] === null || `${query[key]}`.trim() === '') delete query[key];
+            let v = query[key];
+            if (v === undefined || v === null || `${v}`.trim() === '' || v === 'null') delete query[key];
         });
         this.query = query;
         this.colMap = colMap;
