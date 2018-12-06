@@ -392,7 +392,7 @@ class UserService extends ApiService {
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getUserAttachments(userId, offset=0, limit=10, who, API) {
-        let {data:{data:{items}}} = await API.attachments().getAttachments(userId, undefined, "id", who, offset, limit);
+        let {data:{data:{items}}} = await API.attachments().getAttachments(userId, undefined, "created_by", who, offset, limit);
         return Utils.buildResponse({data:{items}});
     }
 
