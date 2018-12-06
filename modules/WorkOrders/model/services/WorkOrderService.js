@@ -294,7 +294,6 @@ class WorkOrderService extends ApiService {
 
         Utils.convertDataKeyToJson(workOrder, "labels", "assigned_to");
 
-        Events.emit("work_order_added", workOrder, who);
         Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
 
 

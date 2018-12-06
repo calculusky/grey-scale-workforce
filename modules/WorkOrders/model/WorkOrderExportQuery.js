@@ -1,6 +1,7 @@
 const ExportQuery = require('../../../core/ExportQuery');
 const Utils = require('../../../core/Utility/Utils');
 const ApiService = require('../../ApiService');
+const moment = require('moment');
 
 /**
  * @author Paul Okeke
@@ -70,17 +71,36 @@ class WorkOrderExportQuery extends ExportQuery {
                     break;
                 }
                 case 'created_by': {
-                    this.sqlQuery.where(key, value);
+                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, value);
                     break;
                 }
                 case 'completed_date': {
-                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, ">=", value)
-                        .where(`${this.modelMapper.tableName}.${key}`, "<=", value);
+                    const dateFrom = Utils.date.dateFormat(value, undefined, 'YYYY-MM-DD');
+                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, ">=", dateFrom)
+                        .where(`${this.modelMapper.tableName}.${key}`, "<=", dateFrom);
                     break;
                 }
                 case 'date_from': {
-                    this.sqlQuery.where(`${this.modelMapper.tableName}.created_at`, ">=", value)
-                        .where(`${this.modelMapper.tableName}.created_at`, "<=", query['date_to'] || value);
+                    const dateFrom = Utils.date.dateFormat(value, undefined, 'YYYY-MM-DD');
+                    const dateTo = Utils.date.dateFormat(query['date_to'] || value, undefined, 'YYYY-MM-DD');
+                    this.sqlQuery.where(`${this.modelMapper.tableName}.created_at`, ">=", dateFrom)
+                        .where(`${this.modelMapper.tableName}.created_at`, "<=", dateTo);
+                    break;
+                }
+                case 'account_no': {
+                    if (['1', '2'].includes(`${query['type_id']}`))
+                        this.sqlQuery.where('c.account_no', value);
+                    break;
+                }
+                case 'group_id': {
+                    (['1', '2'].includes(`${query['type_id']}`))
+                        ? this.sqlQuery.whereIn('c.group_id', value.split(','))
+                        : this.sqlQuery.whereIn('a2.group_id', value.split(','));
+                    break;
+                }
+                case 'work_order_no': {
+                    const workOrderNo = value.replace(/-/g, "");
+                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, workOrderNo);
                     break;
                 }
                 case 'type_id': {
@@ -128,6 +148,7 @@ class WorkOrderExportQuery extends ExportQuery {
             }
         }
         //@HelpTips - Log the Query to see the actual sql query. console.log(this.sqlQuery.toString());
+        this.sqlQuery.orderBy(`${this.modelMapper.tableName}.created_at`, 'asc');
         this.sqlQuery.select(selectCols);
         ApiService.queryWithPermissions('works.index', this.sqlQuery, this.modelMapper, this.who);
     }
