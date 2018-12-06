@@ -83,8 +83,8 @@ class WorkOrderExportQuery extends ExportQuery {
                 case 'date_from': {
                     const dateFrom = Utils.date.dateFormat(value, undefined, 'YYYY-MM-DD');
                     const dateTo = Utils.date.dateFormat(query['date_to'] || value, undefined, 'YYYY-MM-DD');
-                    this.sqlQuery.where(`${this.modelMapper.tableName}.created_at`, ">=", dateFrom)
-                        .where(`${this.modelMapper.tableName}.created_at`, "<=", dateTo);
+                    this.sqlQuery.where(`${this.modelMapper.tableName}.created_at`, ">=", `${dateFrom} 00:00:00`)
+                        .where(`${this.modelMapper.tableName}.created_at`, "<=", `${dateTo} 23:59:00`);
                     break;
                 }
                 case 'account_no': {
