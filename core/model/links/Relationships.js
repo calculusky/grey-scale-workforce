@@ -74,7 +74,7 @@ class Relationships {
      * @param orderBy
      */
     hasMany(domainMapperName, foreignKey = `${domainMapperName.toLowerCase()}_id`,
-            parentKey = "id", cols = ["*"], {offset = 0, limit = 10, orderBy = parentKey}) {
+            parentKey = "id", cols = ["*"], {offset = 0, limit = 10, orderBy = parentKey}={}) {
         let DomainMapper = MapperFactory.build(domainMapperName);
         if (!DomainMapper) throw new ReferenceError(`Domain Mapper for ${domainMapperName} cannot be found.`);
 
