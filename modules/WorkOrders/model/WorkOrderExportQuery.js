@@ -116,7 +116,10 @@ class WorkOrderExportQuery extends ExportQuery {
                             'a2.asset_name as asset_name', 'db.current_bill', 'db.arrears', 'db.min_amount_payable',
                             'db.total_amount_payable'
                         );
-                        this.sqlQuery.groupBy('work_orders.work_order_no', 'asset_name', 'c.account_no');
+                        this.sqlQuery.groupBy(
+                            'work_orders.work_order_no', 'a2.asset_name', 'c.account_no',
+                            'db.current_bill', 'db.arrears', 'db.min_amount_payable', 'db.total_amount_payable'
+                        );
                     }
                     //@Query for Fault Orders
                     else if (`${value}` === '3') {
