@@ -75,8 +75,8 @@ class WorkOrderExportQuery extends ExportQuery {
                 }
                 case 'completed_date': {
                     const dateFrom = Utils.date.dateFormat(value, undefined, 'YYYY-MM-DD');
-                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, ">=", dateFrom)
-                        .where(`${this.modelMapper.tableName}.${key}`, "<=", dateFrom);
+                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, ">=", `${dateFrom} 00:00:00`)
+                        .where(`${this.modelMapper.tableName}.${key}`, "<=", `${dateFrom} 23:59:00`);
                     break;
                 }
                 case 'date_from': {
