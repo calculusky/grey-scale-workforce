@@ -1,7 +1,6 @@
 const ExportQuery = require('../../../core/ExportQuery');
 const Utils = require('../../../core/Utility/Utils');
 const ApiService = require('../../ApiService');
-const moment = require('moment');
 
 /**
  * @author Paul Okeke
@@ -76,8 +75,8 @@ class WorkOrderExportQuery extends ExportQuery {
                 }
                 case 'completed_date': {
                     const dateFrom = Utils.date.dateFormat(value, undefined, 'YYYY-MM-DD');
-                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, ">=", dateFrom)
-                        .where(`${this.modelMapper.tableName}.${key}`, "<=", dateFrom);
+                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, ">=", `${dateFrom} 00:00:00`)
+                        .where(`${this.modelMapper.tableName}.${key}`, "<=", `${dateFrom} 23:59:00`);
                     break;
                 }
                 case 'date_from': {
@@ -93,9 +92,10 @@ class WorkOrderExportQuery extends ExportQuery {
                     break;
                 }
                 case 'group_id': {
+                    const groupIds = [].concat(...value.split(',').map(id => Utils.getGroupChildren(this.groups[id]).ids));
                     (['1', '2'].includes(`${query['type_id']}`))
-                        ? this.sqlQuery.whereIn('c.group_id', value.split(','))
-                        : this.sqlQuery.whereIn('a2.group_id', value.split(','));
+                        ? this.sqlQuery.whereIn('c.group_id', groupIds)
+                        : this.sqlQuery.whereIn('a2.group_id', groupIds);
                     break;
                 }
                 case 'work_order_no': {
@@ -116,7 +116,10 @@ class WorkOrderExportQuery extends ExportQuery {
                             'a2.asset_name as asset_name', 'db.current_bill', 'db.arrears', 'db.min_amount_payable',
                             'db.total_amount_payable'
                         );
-                        this.sqlQuery.groupBy('work_orders.work_order_no', 'asset_name');
+                        this.sqlQuery.groupBy(
+                            'work_orders.work_order_no', 'a2.asset_name', 'c.account_no',
+                            'db.current_bill', 'db.arrears', 'db.min_amount_payable', 'db.total_amount_payable'
+                        );
                     }
                     //@Query for Fault Orders
                     else if (`${value}` === '3') {
