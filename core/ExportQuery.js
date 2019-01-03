@@ -34,8 +34,6 @@ class ExportQuery {
             if (query.with.indexOf("audit") === -1) this.includeAudit = false;
             if (query.with.indexOf("records") === -1) this.includeRecords = false;
         }
-
-        this.onQuery(query);
     }
 
     onQuery(query) {
@@ -47,6 +45,7 @@ class ExportQuery {
      * @returns {null}
      */
     getQuery() {
+        if (!this.sqlQuery) this.onQuery(this.query);
         return this.sqlQuery;
     }
 
