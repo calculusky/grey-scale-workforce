@@ -692,7 +692,7 @@ module.exports.customerHasPendingWorkOrder = async function (db, acctNo = "", tb
 
     let wks = await db.table("work_orders").where("related_to", tbl).where("relation_id", disc.id).select(['status'])
         .catch(_ => (Promise.resolve(true)));
-    return (wks.length && wks.shift().status <= 4);
+    return (wks.length && wks.shift().status <= 2);
 };
 
 
