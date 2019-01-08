@@ -1,5 +1,5 @@
 
-    const API = require('../index').test();
+const API = require('../index').test();
 
 
 test("Test that createFault is defined", () => {

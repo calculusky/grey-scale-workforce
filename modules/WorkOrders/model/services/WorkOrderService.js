@@ -117,6 +117,22 @@ class WorkOrderService extends ApiService {
     }
 
     /**
+     *
+     * @param body
+     * @param who
+     * @param API
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async updateMultipleWorkOrders(body, who, API) {
+        const ids = Object.keys(body), response = [];
+        for (let id of ids) {
+            const update = await this.updateWorkOrder('id', id, body[id], who, [], API).catch(err => {response.push(err.code);});
+            if (update) response.push(200);
+        }
+        return Utils.buildResponse({data: response});
+    }
+
+    /**
      * Gets list of work orders by date. However this can be used to get work-orders regardless of supplying
      * the dates.
      * @param query

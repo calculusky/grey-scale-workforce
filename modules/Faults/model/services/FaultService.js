@@ -114,7 +114,7 @@ class FaultService extends ApiService {
 
         const validator = new validate(fault, fault.rules(), fault.customErrorMessages());
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+        if (validator.fails(null)) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         const groups = await Utils.getFromPersistent(this.context, "groups", true).catch(_ => (Promise.reject(Error.InternalServerError)));
 

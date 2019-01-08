@@ -15,13 +15,14 @@ class CustomerService {
     }
 
 
-    async getCustomer(value, by = "account_no", who = {}, offset = 0, limit = 10) {
+    async getCustomer(value, by = "account_no", who = {}, offset = 0, limit = 10, includes = ['assets']) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         const results = await CustomerMapper.findDomainRecord({by, value}, offset, limit);
         const groups = await Utils.getFromPersistent(this.context, "groups", true);
         const customers = CustomerService.addBUAndUTAttributes(results.records, groups);
-        for (const customer of customers) customer.assets = (await customer.asset()).records;
-        return Utils.buildResponse({data: {items: customers}})
+        if (includes.includes("assets"))
+            for (const customer of customers) customer.assets = (await customer.asset()).records;
+        return Utils.buildResponse({data: {items: customers}});
     }
 
     /**
