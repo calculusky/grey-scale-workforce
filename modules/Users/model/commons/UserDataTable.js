@@ -24,7 +24,6 @@ class UserDataTable extends MDataTables {
             new Field('email'),
             new Field('user_type'),
             new Field('created_at')
-                .getFormatter(Format.sqlDateToFormat("d M, Y LTS")),
         );
         return super.addFields(...fields);
     }
