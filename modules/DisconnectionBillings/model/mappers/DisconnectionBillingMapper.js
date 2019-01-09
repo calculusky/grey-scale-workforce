@@ -11,6 +11,10 @@ class DisconnectionBillingMapper extends ModelMapper{
         this.tableName = "disconnection_billings";
         this.domainName = "DisconnectionBilling";
     }
+
+    _audit(data, who, type){
+
+    }
 }
 
 module.exports = DisconnectionBillingMapper;

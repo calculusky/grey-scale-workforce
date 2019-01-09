@@ -12,7 +12,7 @@ const Log = require(`${__dirname}/../../../core/logger`);
  * @param multiPart
  */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
-    app.use('/faults*', (req, res, next) => API.recognitions().auth(req, res, next));
+    app.use('/disconnection_billings*', (req, res, next) => API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
