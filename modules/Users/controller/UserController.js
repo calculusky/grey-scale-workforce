@@ -144,7 +144,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *       required: true
      *       type: integer
      */
-    app.get("/users/:id", urlencodedParser, (req, res) => {
+    app.get("/users/:id(\\d+)", urlencodedParser, (req, res) => {
         Log.info('/users/:id', `/users/:${req.params.id}`);
         API.users().getUsers(req.params.id)
             .then(({data, code}) => {
@@ -325,6 +325,22 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 console.error('err', err);
                 return res.status(code).send(err);
             });
+    });
+
+    app.get("/users/records", (req, res) => {
+        console.log("Trying to fetch");
+        console.log(req.query);
+        API.users().getUserTableRecords(req.query, req.who).then(data => {
+            console.log('success', data);
+            data.recordsTotal = 52;
+            data.recordsFiltered = 52;
+            data.draw = 0;
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            console.log();
+            return res.status(500).send(err);
+        });
     });
 
     /**

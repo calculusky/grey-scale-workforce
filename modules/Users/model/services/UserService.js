@@ -291,6 +291,20 @@ class UserService extends ApiService {
         });
     }
 
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getUserTableRecords(body, who){
+        const UserDataTable = require('../commons/UserDataTable');
+        const userDataTable = new UserDataTable(this.context.database, MapperFactory.build(MapperFactory.USER));
+        const editor = await userDataTable.addFields().addBody(body).make();
+        return editor.data();
+    }
+
 
     /**
      *
