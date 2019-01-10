@@ -5,11 +5,21 @@ module.exports = {
     development: {
         client: 'mysql2',
         connection: {
-            filename: './dev.sqlite3'
+            host: 'localhost',
+            user: 'root',
+            password: 'root',
+            database: 'migrations',
         },
+        // connection: {
+        //     filename: './dev.sqlite3'
+        // },
         migrations: {
             directory: __dirname + `/database/migrations`,
-            tableName: 'migrations'
+            // tableName: 'migrations'
+        },
+        seeds: {
+            directory: __dirname + `/database/seeds`
+            // directory: './seeds/dev'
         }
     },
 
