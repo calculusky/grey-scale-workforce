@@ -327,18 +327,32 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-    app.get("/users/records", (req, res) => {
-        console.log("Trying to fetch");
-        console.log(req.query);
+    /**
+     * @swagger
+     * /users/data-tables/records:
+     *  get:
+     *   description: "Get users record for data-tables"
+     *   summary: "Update a User"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: getUserTableRecords
+     *   responses:
+     *     '200':
+     *       description: "User"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/users/data-tables/records", (req, res) => {
         API.users().getUserTableRecords(req.query, req.who).then(data => {
-            console.log('success', data);
-            data.recordsTotal = 52;
-            data.recordsFiltered = 52;
-            data.draw = 0;
+            console.log(data);
             return res.send(JSON.stringify(data));
         }).catch(err => {
             console.error('err', err);
-            console.log();
             return res.status(500).send(err);
         });
     });

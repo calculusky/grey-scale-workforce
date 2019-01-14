@@ -3,6 +3,7 @@ const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
+const DisconnectionBillingDataTable = require('../commons/DisconnectionBillingDataTable');
 let MapperFactory = null;
 
 /**
@@ -82,6 +83,24 @@ class DisconnectionBillingService extends ApiService {
         }
         return Utils.buildResponse({data: record});
     }
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getDisconnectionBillingDataTableRecords(body, who){
+        console.log(body);
+        const billingDataTable = new DisconnectionBillingDataTable(this.context.database, MapperFactory.build(MapperFactory.DISCONNECTION_ORDER));
+        const editor = await billingDataTable.addBody(body).make().catch(err=>{
+            console.log(err);
+        });
+        return editor.data();
+    }
+
+
 
     /**
      *

@@ -5,6 +5,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const Events = require('../../../../events/events');
+const RoleDataTable = require('../commons/RoleDataTable');
 
 
 /**
@@ -159,6 +160,21 @@ class RoleService extends ApiService {
         return await this.context.database.table("role_users").where('role_id', roleId)
             .where('user_id', userId).del();
     }
+
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getRoleTableRecords(body, who){
+        const roleDataTable = new RoleDataTable(this.context.database, MapperFactory.build(MapperFactory.ROLE));
+        const editor = await roleDataTable.addBody(body).make();
+        return editor.data();
+    }
+
 
 
     /**

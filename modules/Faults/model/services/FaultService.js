@@ -4,6 +4,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
 const Events = require('../../../../events/events');
+const FaultDataTable = require('../commons/FaultDataTable');
 let MapperFactory = null;
 
 /**
@@ -173,6 +174,19 @@ class FaultService extends ApiService {
             Events.emit("fault_updated", fault, who, model);
             return Utils.buildResponse({data: Utils.convertDataKeyToJson(result.shift(), "labels", "assigned_to")});
         });
+    }
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getFaultTableRecords(body, who){
+        const faultDataTable = new FaultDataTable(this.context.database, MapperFactory.build(MapperFactory.FAULT));
+        const editor = await faultDataTable.addBody(body).make();
+        return editor.data();
     }
 
     /**

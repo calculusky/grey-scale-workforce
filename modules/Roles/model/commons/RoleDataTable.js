@@ -1,12 +1,12 @@
 const MDataTables = require('../../../../core/MDataTables');
 const {Field} = require('datatables.net-editor-server');
 
-class UserDataTable extends MDataTables {
+class RoleDataTable extends MDataTables {
 
     /**
      *
      * @param db
-     * @param mapper {UserMapper}
+     * @param mapper {RoleMapper}
      * @param who
      */
     constructor(db, mapper, who = {}) {
@@ -20,13 +20,10 @@ class UserDataTable extends MDataTables {
      * @returns {MDataTables}
      */
     addFields(...fields) {
-        console.log(this.body);
         fields.push(
-            new Field('first_name'),
-            new Field('last_name'),
-            new Field('username'),
-            new Field('email'),
-            new Field('user_type'),
+            new Field('id'),
+            new Field('name'),
+            new Field('slug'),
             new Field('created_at')
         );
         return super.addFields(...fields);
@@ -34,4 +31,4 @@ class UserDataTable extends MDataTables {
 
 }
 
-module.exports = UserDataTable;
+module.exports = RoleDataTable;

@@ -754,6 +754,18 @@ module.exports.getWorkOrderType = function (typeId) {
     return type[typeId];
 };
 
+module.exports.identifyWorkOrderDataTableType = function(columns=[]){
+    for (let i = 0; i < columns.length; i++) {
+        const key = columns[i].data;
+        if(key === 'fault_no') {
+            return 3;
+        }else if(key === 'account_no') {
+            return 1;
+        }
+    }
+    return 0;
+};
+
 
 module.exports.getFaultStatus = function (key) {
     switch (key) {
@@ -848,6 +860,17 @@ module.exports.getWorkPriorities = function (type, key = null) {
     else if (type && priorities[type]) return priorities[type];
     else if (type && !priorities[type]) return [];
     else return ""
+};
+
+module.exports.getUploadStatus = function(val){
+  switch (val) {
+      case '1': return 'Pending';
+      case '2': return 'Running';
+      case '3': return 'Error';
+      case '4': return 'Finished';
+      case '5': return 'Incomplete';
+      default: return 'something';
+  }
 };
 
 

@@ -312,6 +312,37 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
         });
     });
 
+    /**
+     * @swagger
+     * /work_orders/data-tables/records:
+     *  get:
+     *   description: "Get work_orders record for data-tables"
+     *   summary: "Get work orders records for data-tables"
+     *   tags: [Work Orders]
+     *   produces:
+     *   - application/json
+     *   operationId: getWorkOrderDataTableRecords
+     *   responses:
+     *     '200':
+     *       description: "WorkOrder"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/work_orders/data-tables/records", (req, res) => {
+        API.workOrders().getWorkDataTableRecords(req.query, req.who).then(data => {
+            console.log(data);
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
+        });
+    });
+
+
 
     /**
      * @swagger
@@ -328,7 +359,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        description: Returns true with the id of the Work Order deleted
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/work_order_id'
+     *    - $ref: '#/parameters/work_   order_id'
      */
     app.delete('/work_orders/:id', (req, res) => {
         API.workOrders().deleteWorkOrder("id", req.params.id, req.who)

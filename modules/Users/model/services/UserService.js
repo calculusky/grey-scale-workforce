@@ -5,6 +5,7 @@ const Password = require('../../../../core/Utility/Password');
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
+const UserDataTable = require('../commons/UserDataTable');
 
 /**
  * Created by paulex on 7/4/17.
@@ -299,9 +300,8 @@ class UserService extends ApiService {
      * @returns {Promise<IDtResponse>}
      */
     async getUserTableRecords(body, who){
-        const UserDataTable = require('../commons/UserDataTable');
         const userDataTable = new UserDataTable(this.context.database, MapperFactory.build(MapperFactory.USER));
-        const editor = await userDataTable.addFields().addBody(body).make();
+        const editor = await userDataTable.addBody(body).make();
         return editor.data();
     }
 

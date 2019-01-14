@@ -2,6 +2,8 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const {orderBy} = require("lodash");
+const CustomerDataTable = require('../commons/CustomerDataTable');
+
 
 /**
  * @name CustomerService
@@ -156,13 +158,27 @@ class CustomerService {
         return Utils.buildResponse({data: {items: orderBy(workOrders, ["id"], ["desc"])}});
     }
 
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getCustomerTableRecords(body, who){
+        const customerDataTable = new CustomerDataTable(this.context.database, MapperFactory.build(MapperFactory.CUSTOMER));
+        const editor = await customerDataTable.addBody(body).make();
+        return editor.data();
+    }
+
     /**
      *
      * @param by
      * @param value
      * @returns {*}
      */
-    deleteCustomer(by = "id", value) {
+    deleteCustomer(by = "account_no", value) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         return CustomerMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {

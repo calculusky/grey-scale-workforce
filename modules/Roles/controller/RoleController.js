@@ -106,16 +106,16 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/roles/:offset?/:limit?', urlencodedParser, (req, res) => {
-        console.log('/roles/offset/limit');
-        return API.roles().getRoles({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
-            .then(({data, code}) => {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                return res.status(code).send(err);
-            });
-    });
+    // app.get('/roles/:offset?/:limit?', urlencodedParser, (req, res) => {
+    //     console.log('/roles/offset/limit');
+    //     return API.roles().getRoles({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
+    //         .then(({data, code}) => {
+    //             return res.status(code).send(data);
+    //         })
+    //         .catch(({err, code}) => {
+    //             return res.status(code).send(err);
+    //         });
+    // });
 
 
     /**
@@ -137,7 +137,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/role_id'
      */
-    app.get('/roles/:id', urlencodedParser, (req, res) => {
+    app.get('/roles/:id(\\d+)', urlencodedParser, (req, res) => {
+        console.log("dfd");
         return API.roles().getRoles(req.params['id'], undefined, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
@@ -146,6 +147,38 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(err);
             });
     });
+
+
+    /**
+     * @swagger
+     * /roles/records:
+     *  get:
+     *   description: "Get roles record for data-tables"
+     *   summary: "Update a User"
+     *   tags: [Roles]
+     *   produces:
+     *   - application/json
+     *   operationId: getRoleTableRecords
+     *   responses:
+     *     '200':
+     *       description: "User"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/roles/data-tables/records", (req, res) => {
+        API.roles().getRoleTableRecords(req.query, req.who).then(data => {
+            console.log(data);
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
+        });
+    });
+
 
 
     /**

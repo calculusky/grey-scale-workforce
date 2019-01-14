@@ -6,6 +6,8 @@ const Util = require('../../../../core/Utility/MapperUtil');
 const fs = require("fs");
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
+const UploadDataTable = require('../commons/UploadDataTable');
+
 
 /**
  * @name UploadService
@@ -112,6 +114,20 @@ class UploadService extends ApiService {
         };
         return new Promise(executor);
     }
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getUploadDataTableRecords(body, who){
+        const uploadDataTable = new UploadDataTable(this.context.database, MapperFactory.build(MapperFactory.UPLOAD));
+        const editor = await uploadDataTable.addBody(body).make();
+        return editor.data();
+    }
+
 
     /**
      *

@@ -12,7 +12,7 @@ const Log = require(`${__dirname}/../../../core/logger`);
  * @param multiPart
  */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
-    app.use('/faults*', (req, res, next) => API.recognitions().auth(req, res, next));
+    app.use('/disconnection_billings*', (req, res, next) => API.recognitions().auth(req, res, next));
 
     /**
      * @swagger
@@ -48,31 +48,33 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
         });
     });
 
-
-    // /**
-    //  * @swagger
-    //  * /faults/{id}:
-    //  *  delete:
-    //  *    summary: Deletes a Fault
-    //  *    description: "Deletes a Fault"
-    //  *    tags: [Faults]
-    //  *    produces:
-    //  *    - application/json
-    //  *    operationId: deleteFault
-    //  *    responses:
-    //  *      '200':
-    //  *        description: Returns true with the id of the request deleted
-    //  *    parameters:
-    //  *    - $ref: '#/parameters/sessionId'
-    //  *    - $ref: '#/parameters/id'
-    //  */
-    // app.delete('/faults/:id', urlencodedParser, (req, res) => {
-    //     API.faults().deleteFault("id", req.params.id, req.who, API)
-    //         .then(({data, code}) => {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code}) => {
-    //             return res.status(code).send(err);
-    //         });
-    // });
+    /**
+     * @swagger
+     * /disconnection_billings/data-tables/records:
+     *  get:
+     *   description: "Get disconnection billing record for data-tables"
+     *   summary: "Get disconnection billings records for data-tables"
+     *   tags: [Disconnection Billings]
+     *   produces:
+     *   - application/json
+     *   operationId: getDisconnectionBillingDataTableRecords
+     *   responses:
+     *     '200':
+     *       description: "disconnection"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/disconnection_billings/data-tables/records", (req, res) => {
+        API.disconnections().getDisconnectionBillingDataTableRecords(req.query, req.who).then(data => {
+            console.log(data);
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
+        });
+    });
 };

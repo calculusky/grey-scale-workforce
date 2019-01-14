@@ -9,6 +9,7 @@ const Error = require('../../../../core/Utility/ErrorUtils')();
 const _ = require("lodash");
 const Events = require('../../../../events/events');
 const ExportQuery = require('../WorkOrderExportQuery');
+const WorkOrderDataTable = require('../commons/WorkOrderDataTable');
 let MapperFactory = null;
 
 /**
@@ -357,6 +358,20 @@ class WorkOrderService extends ApiService {
             return Utils.buildResponse({status: "fail", data: {message: "There was an error fetching the export"}});
         });
     }
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getWorkDataTableRecords(body, who){
+        const workDataTable = new WorkOrderDataTable(this.context.database, MapperFactory.build(MapperFactory.WORK_ORDER));
+        const editor = await workDataTable.addBody(body).make();
+        return editor.data();
+    }
+
 
     /**
      * Deletes a work order

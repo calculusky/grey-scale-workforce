@@ -1,12 +1,13 @@
 const MDataTables = require('../../../../core/MDataTables');
 const {Field} = require('datatables.net-editor-server');
+const Utils = require('../../../../core/Utility/Utils');
 
-class UserDataTable extends MDataTables {
+class UploadDataTable extends MDataTables {
 
     /**
      *
      * @param db
-     * @param mapper {UserMapper}
+     * @param mapper {UploadMapper}
      * @param who
      */
     constructor(db, mapper, who = {}) {
@@ -20,13 +21,11 @@ class UserDataTable extends MDataTables {
      * @returns {MDataTables}
      */
     addFields(...fields) {
-        console.log(this.body);
         fields.push(
-            new Field('first_name'),
-            new Field('last_name'),
-            new Field('username'),
-            new Field('email'),
-            new Field('user_type'),
+            new Field('original_file_name', 'file_name'),
+            new Field('upload_type'),
+            new Field('status').getFormatter(val => Utils.getUploadStatus(val)),
+            new Field('message'),
             new Field('created_at')
         );
         return super.addFields(...fields);
@@ -34,4 +33,4 @@ class UserDataTable extends MDataTables {
 
 }
 
-module.exports = UserDataTable;
+module.exports = UploadDataTable;
