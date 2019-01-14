@@ -6,11 +6,9 @@ const DomainObject = require('./DomainObject');
 const Utils = require('../Utility/Utils');
 const Log = require('../logger.js');
 
-
 /**
  * @author Paul Okeke
  * @name ModelMapper
- * This class should only be extended and not used directly
  */
 class ModelMapper {
 

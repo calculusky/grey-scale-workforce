@@ -144,7 +144,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *       required: true
      *       type: integer
      */
-    app.get("/users/:id", urlencodedParser, (req, res) => {
+    app.get("/users/:id(\\d+)", urlencodedParser, (req, res) => {
         Log.info('/users/:id', `/users/:${req.params.id}`);
         API.users().getUsers(req.params.id)
             .then(({data, code}) => {
@@ -325,6 +325,36 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 console.error('err', err);
                 return res.status(code).send(err);
             });
+    });
+
+    /**
+     * @swagger
+     * /users/data-tables/records:
+     *  get:
+     *   description: "Get users record for data-tables"
+     *   summary: "Update a User"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: getUserTableRecords
+     *   responses:
+     *     '200':
+     *       description: "User"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/users/data-tables/records", (req, res) => {
+        API.users().getUserTableRecords(req.query, req.who).then(data => {
+            console.log(data);
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
+        });
     });
 
     /**

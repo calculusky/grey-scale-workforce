@@ -197,6 +197,35 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
+    /**
+     * @swagger
+     * /faults/data-tables/records:
+     *  get:
+     *   description: "Get faults record for data-tables"
+     *   summary: "Update a User"
+     *   tags: [Faults]
+     *   produces:
+     *   - application/json
+     *   operationId: getFaultTableRecords
+     *   responses:
+     *     '200':
+     *       description: "Fault"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/faults/data-tables/records", (req, res) => {
+        API.faults().getFaultTableRecords(req.query, req.who).then(data => {
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
+        });
+    });
+
 
     /**
      * @swagger

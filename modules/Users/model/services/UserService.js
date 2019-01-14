@@ -5,6 +5,7 @@ const Password = require('../../../../core/Utility/Password');
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
+const UserDataTable = require('../commons/UserDataTable');
 
 /**
  * Created by paulex on 7/4/17.
@@ -289,6 +290,19 @@ class UserService extends ApiService {
                 return Promise.reject(Utils.buildResponse({status: "fail", data: result.shift()}, 404));
             }
         });
+    }
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getUserTableRecords(body, who){
+        const userDataTable = new UserDataTable(this.context.database, MapperFactory.build(MapperFactory.USER));
+        const editor = await userDataTable.addBody(body).make();
+        return editor.data();
     }
 
 
