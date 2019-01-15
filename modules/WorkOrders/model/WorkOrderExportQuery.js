@@ -33,6 +33,7 @@ class WorkOrderExportQuery extends ExportQuery {
         const faultColMap = {
             work_order_no: ["Work Order No", "work_order_no"],
             fault_no: ["Fault No", "fault_no"],
+            fault_operation: ["Fault Operation", "fault_operation"],
             asset_name: ["Asset Name", "asset_name"],
             undertaking: ["Undertaking", "undertaking"],
             status: ["Status", "status"],
@@ -110,7 +111,6 @@ class WorkOrderExportQuery extends ExportQuery {
                         this.sqlQuery.innerJoin('customers AS c', 'db.account_no', 'c.account_no');
                         this.sqlQuery.leftJoin('customers_assets AS ca', 'c.account_no', 'ca.customer_id');
                         this.sqlQuery.leftJoin('assets AS a2', 'ca.asset_id', 'a2.id');
-                        // this.sqlQuery.leftJoin('groups AS grp', 'c.group_id', 'grp.id');
                         selectCols.push(
                             'c.account_no', 'c.customer_name', 'c.group_id as undertaking',
                             'a2.asset_name as asset_name', 'db.current_bill', 'db.arrears', 'db.min_amount_payable',
@@ -125,7 +125,9 @@ class WorkOrderExportQuery extends ExportQuery {
                     else if (`${value}` === '3') {
                         this.sqlQuery.innerJoin('faults AS ft', 'work_orders.relation_id', 'ft.id');
                         this.sqlQuery.innerJoin('assets AS a2', 'ft.relation_id', 'a2.id');
-                        selectCols.push('ft.id as fault_no', 'a2.asset_name as asset_name', 'a2.group_id as undertaking');
+                        this.sqlQuery.leftJoin('fault_categories AS fc', 'fc.id', 'ft.fault_category_id');
+                        selectCols.push('ft.id as fault_no', 'a2.asset_name as asset_name',
+                            'a2.group_id as undertaking', 'fc.name as fault_operation');
                         this.sqlQuery.groupBy('work_orders.work_order_no', 'asset_name');
                     }
                     /*--------------------------------------------------
@@ -154,6 +156,7 @@ class WorkOrderExportQuery extends ExportQuery {
         this.sqlQuery.orderBy(`${this.modelMapper.tableName}.created_at`, 'asc');
         this.sqlQuery.select(selectCols);
         ApiService.queryWithPermissions('works.index', this.sqlQuery, this.modelMapper, this.who);
+        console.log(this.sqlQuery.toString());
     }
 
     /**
