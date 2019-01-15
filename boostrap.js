@@ -85,7 +85,7 @@ module.exports = function route(context) {
             else if (path === 'uploads') saveAt = `${saveAt}/uploads/${req.body['upload_type']}`;
             else if (req.method === "PUT" && path.toLowerCase() === "users") {
                 const userFolderPath = `${saveAt}/profile/${req.params['id']}`;
-                if (!fs.existsSync(userFolderPath)) fs.mkdirSync(`${saveAt}/profile/${req.params['id']}`);
+                if (!fs.existsSync(userFolderPath)) fs.mkdirSync(`${saveAt}/profile/${req.params['id']}`, {recursive:true});
                 saveAt = `${saveAt}/profile/${req.params['id']}`
             }
             else if (path === "work_orders") {
