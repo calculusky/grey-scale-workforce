@@ -156,7 +156,6 @@ class WorkOrderExportQuery extends ExportQuery {
         this.sqlQuery.orderBy(`${this.modelMapper.tableName}.created_at`, 'asc');
         this.sqlQuery.select(selectCols);
         ApiService.queryWithPermissions('works.index', this.sqlQuery, this.modelMapper, this.who);
-        console.log(this.sqlQuery.toString());
     }
 
     /**
