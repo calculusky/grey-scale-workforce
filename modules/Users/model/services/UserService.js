@@ -423,6 +423,20 @@ class UserService extends ApiService {
         let {data:{data:{items}}} = await API.workOrders().getWorkOrders(query, who);
         return Utils.buildResponse({data:{items}});
     }
+
+    /**
+     *
+     * @param userId
+     * @param who
+     * @param API
+     * @param res
+     * @returns {Promise<void>}
+     */
+    async getUserProfileImage(userId, who, API, res){
+        const user = (await this.context.database.table("users").where('id', userId).select(['avatar'])).shift();
+        let rootPath = this.context.config.storage;
+        return res.sendFile(`profile/${userId}/${user.avatar}`, {root: rootPath.path});
+    }
 }
 
 module.exports = UserService;

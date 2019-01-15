@@ -291,6 +291,34 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
+     * /users/{id}/profile_image:
+     *  get:
+     *   description: "The User Profile Image"
+     *   summary: "Get a user profile image"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: "getUserWorkOrders"
+     *   responses:
+     *     '200':
+     *       description: "User Profile Image"
+     *       schema:
+     *         $ref: '#/definitions/getUserProfileImage'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - name: id
+     *       description: The ID of the user
+     *       in: path
+     *       required: true
+     *       type: integer
+     */
+    app.get("/users/:id/profile_image", urlencodedParser, (req, res) => {
+        return API.users().getUserProfileImage(req.params.id, req.who, API, res);
+    });
+
+
+    /**
+     * @swagger
      * /users/{id}:
      *  put:
      *   description: "Update User Details"
