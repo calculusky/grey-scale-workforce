@@ -2,6 +2,8 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const {orderBy} = require("lodash");
+const CustomerDataTable = require('../commons/CustomerDataTable');
+
 
 /**
  * @name CustomerService
@@ -15,13 +17,14 @@ class CustomerService {
     }
 
 
-    async getCustomer(value, by = "account_no", who = {}, offset = 0, limit = 10) {
+    async getCustomer(value, by = "account_no", who = {}, offset = 0, limit = 10, includes = ['assets']) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         const results = await CustomerMapper.findDomainRecord({by, value}, offset, limit);
         const groups = await Utils.getFromPersistent(this.context, "groups", true);
         const customers = CustomerService.addBUAndUTAttributes(results.records, groups);
-        for (const customer of customers) customer.assets = (await customer.asset()).records;
-        return Utils.buildResponse({data: {items: customers}})
+        if (includes.includes("assets"))
+            for (const customer of customers) customer.assets = (await customer.asset()).records;
+        return Utils.buildResponse({data: {items: customers}});
     }
 
     /**
@@ -155,13 +158,27 @@ class CustomerService {
         return Utils.buildResponse({data: {items: orderBy(workOrders, ["id"], ["desc"])}});
     }
 
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getCustomerTableRecords(body, who){
+        const customerDataTable = new CustomerDataTable(this.context.database, MapperFactory.build(MapperFactory.CUSTOMER));
+        const editor = await customerDataTable.addBody(body).make();
+        return editor.data();
+    }
+
     /**
      *
      * @param by
      * @param value
      * @returns {*}
      */
-    deleteCustomer(by = "id", value) {
+    deleteCustomer(by = "account_no", value) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         return CustomerMapper.deleteDomainRecord({by, value}).then(count => {
             if (!count) {

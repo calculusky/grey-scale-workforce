@@ -54,6 +54,14 @@ class API {
         return API._(this)['services']['CustomerService'];
     }
 
+    /**
+     *
+     * @returns {DisconnectionBillingService}
+     */
+    disconnections(){
+        return API._(this)['services']['DisconnectionBillingService']
+    }
+
     /**const API = require('');
 
      *

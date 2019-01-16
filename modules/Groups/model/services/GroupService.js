@@ -4,6 +4,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
 const Events = require('../../../../events/events');
+const GroupDataTable = require('../commons/GroupDataTable');
 let MapperFactory = null;
 
 
@@ -268,6 +269,22 @@ class GroupService extends ApiService {
         if (!group) return Promise.reject(Error.RecordNotFound(`The group record "${value}" doesn't exist.`));
         return (await group.users()).records;
     }
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getGroupTableRecords(body, who){
+        const roleDataTable = new GroupDataTable(this.context.database, MapperFactory.build(MapperFactory.GROUP));
+        const editor = await roleDataTable.addBody(body).make();
+        return editor.data();
+    }
+
+
+
 
 
     /**

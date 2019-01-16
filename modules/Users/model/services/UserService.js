@@ -5,6 +5,7 @@ const Password = require('../../../../core/Utility/Password');
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
+const UserDataTable = require('../commons/UserDataTable');
 
 /**
  * Created by paulex on 7/4/17.
@@ -291,6 +292,19 @@ class UserService extends ApiService {
         });
     }
 
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getUserTableRecords(body, who){
+        const userDataTable = new UserDataTable(this.context.database, MapperFactory.build(MapperFactory.USER));
+        const editor = await userDataTable.addBody(body).make();
+        return editor.data();
+    }
+
 
     /**
      *
@@ -408,6 +422,20 @@ class UserService extends ApiService {
         query.assigned_to = userId;
         let {data:{data:{items}}} = await API.workOrders().getWorkOrders(query, who);
         return Utils.buildResponse({data:{items}});
+    }
+
+    /**
+     *
+     * @param userId
+     * @param who
+     * @param API
+     * @param res
+     * @returns {Promise<void>}
+     */
+    async getUserProfileImage(userId, who, API, res){
+        const user = (await this.context.database.table("users").where('id', userId).select(['avatar'])).shift();
+        let rootPath = this.context.config.storage;
+        return res.sendFile(`profile/${userId}/${user.avatar}`, {root: rootPath.path});
     }
 }
 

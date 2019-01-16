@@ -1,7 +1,7 @@
 /**
  * Created by paulex on 9/6/17.
  */
-let API = require('../index').test();
+let [API, ctx] = require('../index').test();
 
 let workOrder = null;
 
@@ -165,6 +165,22 @@ test("Delete multiple work orders", () => {
     })
 });
 
+test("Update multiple work orders", () => {
+    const body = {
+        5: {summary: "yEs5"},
+        6: {summary: "yEs6"},
+        7: {summary: "yEs7"}
+    };
+    return API.workOrders()
+        .updateMultipleWorkOrders(body, {sub: 1}, API).then(r => {
+            console.log(JSON.stringify(r));
+            expect(r).toEqual(expect.objectContaining({
+                code: expect.any(Number),
+                data: expect.any(Object)
+            }));
+        })
+});
+
 afterAll(() => {
-    return API.workOrders().deleteWorkOrder("relation_id", "2", {sub: 1, group: ['1']});
+    // return API.workOrders().deleteWorkOrder("relation_id", "2", {sub: 1, group: ['1']});
 });

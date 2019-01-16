@@ -692,7 +692,7 @@ module.exports.customerHasPendingWorkOrder = async function (db, acctNo = "", tb
 
     let wks = await db.table("work_orders").where("related_to", tbl).where("relation_id", disc.id).select(['status'])
         .catch(_ => (Promise.resolve(true)));
-    return (wks.length && wks.shift().status <= 4);
+    return (wks.length && wks.shift().status <= 2);
 };
 
 
@@ -752,6 +752,18 @@ module.exports.getWorkOrderType = function (typeId) {
         '3': {id: 3, name: 'Faults'}
     };
     return type[typeId];
+};
+
+module.exports.identifyWorkOrderDataTableType = function(columns=[]){
+    for (let i = 0; i < columns.length; i++) {
+        const key = columns[i].data;
+        if(key === 'fault_no') {
+            return 3;
+        }else if(key === 'account_no') {
+            return 1;
+        }
+    }
+    return 0;
 };
 
 
@@ -848,6 +860,17 @@ module.exports.getWorkPriorities = function (type, key = null) {
     else if (type && priorities[type]) return priorities[type];
     else if (type && !priorities[type]) return [];
     else return ""
+};
+
+module.exports.getUploadStatus = function(val){
+  switch (val) {
+      case '1': return 'Pending';
+      case '2': return 'Running';
+      case '3': return 'Error';
+      case '4': return 'Finished';
+      case '5': return 'Incomplete';
+      default: return 'something';
+  }
 };
 
 

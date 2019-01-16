@@ -30,7 +30,11 @@ class DisconnectionBilling extends DomainObject {
     }
 
     rules() {
-        return {};
+        return {
+            account_no:'string|required',
+            current_bill:'numeric|required',
+            arrears:'numeric|required'
+        };
     }
 
     paymentPlan() {

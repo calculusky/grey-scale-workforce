@@ -4,6 +4,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const validate = require('validatorjs');
 const Events = require('../../../../events/events');
+const FaultDataTable = require('../commons/FaultDataTable');
 let MapperFactory = null;
 
 /**
@@ -114,7 +115,7 @@ class FaultService extends ApiService {
 
         const validator = new validate(fault, fault.rules(), fault.customErrorMessages());
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+        if (validator.fails(null)) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
         const groups = await Utils.getFromPersistent(this.context, "groups", true).catch(_ => (Promise.reject(Error.InternalServerError)));
 
@@ -173,6 +174,19 @@ class FaultService extends ApiService {
             Events.emit("fault_updated", fault, who, model);
             return Utils.buildResponse({data: Utils.convertDataKeyToJson(result.shift(), "labels", "assigned_to")});
         });
+    }
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body
+     * @param who
+     * @returns {Promise<IDtResponse>}
+     */
+    async getFaultTableRecords(body, who){
+        const faultDataTable = new FaultDataTable(this.context.database, MapperFactory.build(MapperFactory.FAULT));
+        const editor = await faultDataTable.addBody(body).make();
+        return editor.data();
     }
 
     /**

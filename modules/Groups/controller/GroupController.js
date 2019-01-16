@@ -149,7 +149,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/group_id'
      */
-    app.get('/groups/:id', urlencodedParser, (req, res) => {
+    app.get('/groups/:id(\\d+)', urlencodedParser, (req, res) => {
         return API.groups().getGroup(req.params['id'], undefined, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
@@ -158,6 +158,38 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(err);
             });
     });
+
+    /**
+     * @swagger
+     * /groups/data-tables/records:
+     *  get:
+     *   description: "Get groups record for data-tables"
+     *   summary: "Update a User"
+     *   tags: [Groups]
+     *   produces:
+     *   - application/json
+     *   operationId: getGroupTableRecords
+     *   responses:
+     *     '200':
+     *       description: "Group"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/groups/data-tables/records", (req, res) => {
+        API.groups().getGroupTableRecords(req.query, req.who).then(data => {
+            console.log(data);
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
+        });
+    });
+
+
 
     /**
      * @swagger

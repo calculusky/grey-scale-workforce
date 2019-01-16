@@ -1334,3 +1334,26 @@ definitions:
         description: The id of the record within the module specified
       note:
         type: string
+
+  postDisconnectionBillingInput:
+    type: object
+    required:
+    - account_no
+    - current_bill
+    - arrears
+    properties:
+      account_no:
+        type: string
+      current_bill:
+        type: number
+        format: float
+      arrears:
+        type: number
+        format: float
+      work_order:
+        type: object
+        $ref: '#/definitions/postWorkOrderInput'
+
+  patchWorkOrderMultipleUpdateInput:
+    type: object
+    example: {ID:{summary: "test", labels: ["broken pole"]}, ID2 : {summary: "test2", priority: 3}}

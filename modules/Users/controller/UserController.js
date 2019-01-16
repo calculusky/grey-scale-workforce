@@ -144,7 +144,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *       required: true
      *       type: integer
      */
-    app.get("/users/:id", urlencodedParser, (req, res) => {
+    app.get("/users/:id(\\d+)", urlencodedParser, (req, res) => {
         Log.info('/users/:id', `/users/:${req.params.id}`);
         API.users().getUsers(req.params.id)
             .then(({data, code}) => {
@@ -291,6 +291,34 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swagger
+     * /users/{id}/profile_image:
+     *  get:
+     *   description: "The User Profile Image"
+     *   summary: "Get a user profile image"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: "getUserWorkOrders"
+     *   responses:
+     *     '200':
+     *       description: "User Profile Image"
+     *       schema:
+     *         $ref: '#/definitions/getUserProfileImage'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - name: id
+     *       description: The ID of the user
+     *       in: path
+     *       required: true
+     *       type: integer
+     */
+    app.get("/users/:id/profile_image", urlencodedParser, (req, res) => {
+        return API.users().getUserProfileImage(req.params.id, req.who, API, res);
+    });
+
+
+    /**
+     * @swagger
      * /users/{id}:
      *  put:
      *   description: "Update User Details"
@@ -325,6 +353,36 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 console.error('err', err);
                 return res.status(code).send(err);
             });
+    });
+
+    /**
+     * @swagger
+     * /users/data-tables/records:
+     *  get:
+     *   description: "Get users record for data-tables"
+     *   summary: "Update a User"
+     *   tags: [Users]
+     *   produces:
+     *   - application/json
+     *   operationId: getUserTableRecords
+     *   responses:
+     *     '200':
+     *       description: "User"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/users/data-tables/records", (req, res) => {
+        API.users().getUserTableRecords(req.query, req.who).then(data => {
+            console.log(data);
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
+        });
     });
 
     /**
