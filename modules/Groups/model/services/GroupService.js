@@ -233,13 +233,14 @@ class GroupService extends ApiService {
     }
 
     async getGroups(query = {}, who = {}) {
-        const {name, type, offset = 0, limit = 10} = query;
+        const {name, type, ext_code, offset = 0, limit = 10} = query;
         const groups = await Utils.getFromPersistent(this.context, "groups", true);
 
         let items = [];
         Object.entries(groups).forEach(([key, value]) => {
             if (type && !type.split(",").map(i => i.toLowerCase()).includes(`${value['type']}`.toLowerCase())) return;
             if (name && value['name'].toLowerCase().indexOf(name.toLowerCase()) === -1) return;
+            if (ext_code && (value['ext_code'] !== ext_code)) return;
             items.push(value);
         });
         if (offset || limit) items = items.slice(offset, offset + limit);
