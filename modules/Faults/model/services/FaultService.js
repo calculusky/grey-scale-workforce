@@ -107,21 +107,13 @@ class FaultService extends ApiService {
         const related = await Utils.verifyRelatedSource(this.context.database, fault).catch(console.error);
         if (!related) return Promise.reject(Error.ValidationFailure({relation_id: ["The related record doesn't exist."]}));
 
-        fault.assigned_to = Utils.serializeAssignedTo(fault.assigned_to);
+        fault.serializeAssignedTo().setIssueDateIfNull(Utils.date.dateToMysql());
 
         ApiService.insertPermissionRights(fault, who);
 
-        if (!fault.issue_date) fault.issue_date = Utils.date.dateToMysql();
+        if (!fault.validate()) return Promise.reject(Error.ValidationFailure(fault.getErrors().all()));
 
-        const validator = new validate(fault, fault.rules(), fault.customErrorMessages());
-
-        if (validator.fails(null)) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
-
-        const groups = await Utils.getFromPersistent(this.context, "groups", true).catch(_ => (Promise.reject(Error.InternalServerError)));
-
-        const group = groups[fault.group_id];
-
-        if (!group) return Promise.reject(Error.GroupNotFound);
+        if(!(await API.groups().isGroupIdValid(fault.group_id))) return Promise.reject(Error.GroupNotFound);
 
         fault.fault_no = ``;//TODO generate fault no
 
@@ -157,7 +149,7 @@ class FaultService extends ApiService {
 
         let model = await this.context.database.table("faults").where(by, value).select(['*']);
 
-        if (!model.length) return Utils.buildResponse({status: "fail", data: {message: "Fault doesn't exist"}}, 400);
+        if (!model.length) return Error.RecordNotFound("Fault doesn't exist");
 
         model = new Fault(model.shift());
 

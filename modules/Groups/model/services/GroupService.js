@@ -65,9 +65,7 @@ class GroupService extends ApiService {
         const Group = DomainFactory.build(DomainFactory.GROUP);
         let group = new Group(body);
 
-        let validator = new validate(group, group.rules(), group.customErrorMessages());
-
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+        if (!group.validate()) return Promise.reject(Error.ValidationFailure(group.getErrors().all()));
 
         ApiService.insertPermissionRights(group, who);
 
@@ -179,6 +177,7 @@ class GroupService extends ApiService {
 
 
     /**
+     * Updates a user group
      *
      * @param userId
      * @param oldGroupId
@@ -206,6 +205,7 @@ class GroupService extends ApiService {
 
 
     /**
+     * Updates a group
      *
      * @param value
      * @param body
@@ -235,7 +235,7 @@ class GroupService extends ApiService {
     async getGroups(query = {}, who = {}) {
         const {name, type, offset = 0, limit = 10} = query;
         const groups = await Utils.getFromPersistent(this.context, "groups", true);
-
+        console.log(groups);
         let items = [];
         Object.entries(groups).forEach(([key, value]) => {
             if (type && !type.split(",").map(i => i.toLowerCase()).includes(`${value['type']}`.toLowerCase())) return;
@@ -277,14 +277,23 @@ class GroupService extends ApiService {
      * @param who
      * @returns {Promise<IDtResponse>}
      */
-    async getGroupTableRecords(body, who){
+    async getGroupTableRecords(body, who) {
         const roleDataTable = new GroupDataTable(this.context.database, MapperFactory.build(MapperFactory.GROUP));
         const editor = await roleDataTable.addBody(body).make();
         return editor.data();
     }
 
 
-
+    /**
+     * Confirms if a group exist
+     *
+     * @param groupId
+     * @returns {Promise<*>}
+     */
+    async isGroupIdValid(groupId) {
+        const groups = await this.context.getKey("groups", true);
+        return (groups) ? groups[groupId] : null;
+    }
 
 
     /**

@@ -1,7 +1,19 @@
-
-const API = require('../index').test();
+const [API, ctx] = require('../index').test();
 const Utils = require('../core/Utility/Utils');
 
+//Mock Knex Database
+const knexMock = require('mock-knex');
+const tracker = knexMock.getTracker();
+
+
+beforeAll(async (done) => {
+    ctx.getPersistence().getClient().on('ready', done);
+});
+
+afterAll(async done => {
+    await ctx.getPersistence().disconnect();
+    done();
+});
 
 test("That createGroup is defined", () => {
     return expect(API.groups().createGroup()).toBeDefined();
@@ -13,18 +25,46 @@ it("Should fail if required fields aren't set", () => {
     return expect(API.groups().createGroup(group, {sub: 1})).rejects.toBeDefined();
 });
 
-it("Should pass if required fields are set", () => {
-    let group = {
-        "name": "GroupMe",
-        "short_name": "GM",
-        "type": "technical"
-    };
-    return expect(API.groups().createGroup(group, {sub: 1}, API)).resolves.toEqual(expect.objectContaining({
-        code: expect.any(Number)
-    }));
+
+describe("Creating Group", () => {
+    tracker.install();
+    knexMock.mock(ctx.database, 'knex@0.15.2');
+    afterAll(() => knexMock.unmock(ctx.database, 'knex@0.15.2'));
+
+    beforeAll(() => {
+        tracker.on('query', query => {
+            query.response([]);
+        });
+    });
+
+    it("Should pass if required fields are set", () => {
+        let group = {
+            "name": "GroupMe",
+            "short_name": "GM",
+            "type": "technical"
+        };
+        return expect(API.groups().createGroup(group, {sub: 1}, API)).resolves.toEqual(expect.objectContaining({
+            code: expect.any(Number)
+        }));
+    });
+
 });
 
+
 describe("Linking Groups", () => {
+    tracker.install();
+    knexMock.mock(ctx.database, 'knex@0.15.2');
+    afterAll(() => knexMock.unmock(ctx.database, 'knex@0.15.2'));
+
+    beforeAll(() => {
+        tracker.on('query', query => {
+            if (query.method === "insert") {
+                return query.response({data: {data: {data: {id: 1}}}});
+            }
+            query.response([{}]);
+        });
+    });
+
     test("link a newly created group to a parent group if the parent key is supplied", async () => {
         let group = {
             "name": "GroupUs",
@@ -78,7 +118,7 @@ test("Get Business Unit and Undertaking from group", async () => {
 
 test("Fetch Groups with query", async () => {
     return expect(API.groups().getGroups({
-        type:"business_unit"
+        type: "business_unit"
     })).resolves.toEqual(expect.objectContaining({
         code: expect.any(Number),
         data: expect.any(Object)
@@ -89,8 +129,14 @@ test("Get Groups Children", async () => {
     expect(API.groups().getGroupChildren(259)).resolves.toBeInstanceOf(Array);
 });
 
-test("Test that you can get all users of a group", ()=>{
+test("Test that you can get all users of a group", () => {
     return expect(API.groups().getGroupUsers(1)).resolves.toBeInstanceOf(Array);
+});
+
+
+it("Test if a group_id is valid", () => {
+    // ctx.setKey("groups", "");
+    return expect(API.groups().isGroupIdValid(1)).resolves.toEqual("");
 });
 
 afterAll(() => {

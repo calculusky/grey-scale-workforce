@@ -392,7 +392,7 @@ module.exports.redisGet = function (redis, key, toJson = true) {
 module.exports.getBUAndUT = function (group, groups) {
     if (!group) return [null, []];
     let bu, ut = [];
-    const type = group.type.toLowerCase();
+    const type = (group.type) ? group.type.toLowerCase() : "";
     const findUT = (item) => {
         if (!item) return;
         item.forEach(child => {

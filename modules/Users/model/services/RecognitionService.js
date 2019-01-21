@@ -79,8 +79,6 @@ class RecognitionService {
                         pmToken
                     };
 
-                    console.log(tokenOpt);
-
                     //Get the permitted group this user can have access to records
                     const permitted_groups = _.flatten(tokenOpt.group.map(id => {
                         return (({ids}) => ids)(Utils.getGroupChildren(groups[id]))
@@ -89,10 +87,10 @@ class RecognitionService {
 
 
                     let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
-                    const persistence = this.context.persistence;
+                    // const persistence = this.context.persistence;
                     //Set up the token on redis server
-                    persistence.set(token, true, 'EX', tokenExpiry);
-                    persistence.set(`permissions:${user.id}`, (permissions) ? permissions : "{}", 'EX', tokenExpiry);
+                    this.context.setKey(token, true, 'EX', tokenExpiry);
+                    this.context.setKey(`permissions:${user.id}`, (permissions) ? permissions : "{}", 'EX', tokenExpiry);
 
                     delete user.firebase_token;
                     delete user.wf_user_id;

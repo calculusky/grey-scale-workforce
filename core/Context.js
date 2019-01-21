@@ -4,9 +4,10 @@
  */
 const KNEX = require('knex');
 const MapperFactory = require('./factory/MapperFactory');
-const redis = require("redis");
-let globalContext = null;
-const moment = require('moment');
+const knexConfig = require('../knexfile');
+const Persistence = require('../core/persistence/Persistence');
+const EventEmitter = require('events');
+// let globalContext = null;
 
 //Private Fields
 let _privateStore = new WeakMap();
@@ -16,46 +17,69 @@ require('./extensions');
 /**
  * @name Context
  */
-class Context {
+class Context extends EventEmitter {
 
     constructor(config) {
+        super();
         this.config = config;
 
-        this.persistence = redis.createClient({
-            host: process.env.REDIS_HOST || "localhost",
-            port: process.env.REDIS_PORT || 6379,
-            auth_pass: process.env.REDIS_PASS || ""
-        });
+        //TODO make database property private: to avoid external users overriding the value
+        this.database = KNEX(knexConfig[process.env.NODE_ENV]);
+        this._(this).persistence = new Persistence();
+        this._(this).persistence.connect().getClient().on('ready', () => this.loadStaticData());
 
-        this.database = KNEX({
-            client: "mysql2",
-            connection: {
-                "host": process.env.DB_HOST,
-                "user": process.env.DB_USER,
-                "password": process.env.DB_PASS,
-                "database": process.env.DB_DATABASE,
-                typeCast: function (field, next) {
-                    if (['TIMESTAMP', 'DATETIME', 'DATE'].includes(field.type)) {
-                        const value = field.string();
-                        return (value === null)
-                            ? value
-                            : moment(value).utc().utcOffset(parseInt(process.env.TIME_ZONE)).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
-                    }
-                    return next();
-                }
-            }
-        });
-
-        this.persistence.on('ready', () => this.loadStaticData());
-        // this.persistence.init({dir: this.config.storage.persistence.path}).then(i=>this.loadStaticData(i));
         this._(this).incoming_store = {};
 
         this.modelMappers = MapperFactory;
         Context.globalContext = this;
     }
 
+    /**
+     * Set keys with values
+     *
+     * @param keys
+     */
+    setKey(...keys) {
+        this._(this).persistence.set(...keys);
+    }
 
-//we are going load certain static data into memory
+    /**
+     * Get a value by the key
+     *
+     * @param key
+     * @param toJson
+     */
+    async getKey(key, toJson = false) {
+        return (toJson) ? JSON.parse((await this._(this).persistence.get(key))) : this._(this).persistence.get(key);
+    }
+
+    /**
+     *
+     * @param keys
+     * @returns {boolean}
+     */
+    delKey(...keys) {
+        return this._(this).persistence.delete(keys);
+    }
+
+    /**
+     *
+     * @returns {Persistence}
+     */
+    getPersistence() {
+        return this._(this).persistence;
+    }
+
+    /**
+     * Get the database for this app instance
+     *
+     * @returns {*}
+     */
+    db() {
+        return this.database;
+    }
+
+    //we are going load certain static data into memory
     async loadStaticData() {
         const db = this.database;
         let findParents = (_groups, group, parentKey) => {
@@ -122,10 +146,12 @@ class Context {
         mergeChildren(dbGroups, groupParentChild, groups);
         mergeChildren(dbFCategories, fCatParentChild, faultCategories);
 
-        this.persistence.set("groups", JSON.stringify(groups));
-        this.persistence.set("work:types", JSON.stringify(workTypes));
-        this.persistence.set("asset:types", JSON.stringify(assetTypes));
-        this.persistence.set("fault:categories", JSON.stringify(faultCategories));
+        this.setKey("groups", JSON.stringify(groups));
+        this.setKey("work:types", JSON.stringify(workTypes));
+        this.setKey("asset:types", JSON.stringify(assetTypes));
+        this.setKey("fault:categories", JSON.stringify(faultCategories));
+
+        this.emit('loaded_static', true);
         return true;
     }
 
@@ -156,23 +182,5 @@ class Context {
         return api;
     }
 }
-
-// if (!String.prototype.padStart) {
-//     String.prototype.padStart = function padStart(targetLength, padString) {
-//         targetLength = targetLength >> 0; //floor if number or convert non-number to 0;
-//         padString = String(padString || ' ');
-//         if (this.length > targetLength) {
-//             return String(this);
-//         }
-//         else {
-//             targetLength = targetLength - this.length;
-//             if (targetLength > padString.length) {
-//                 //append to original to ensure we are longer than needed
-//                 padString += padString.repeat(targetLength / padString.length);
-//             }
-//             return padString.slice(0, targetLength) + String(this);
-//         }
-//     };
-// }
 
 module.exports = Context;

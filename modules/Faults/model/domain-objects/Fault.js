@@ -57,6 +57,22 @@ class Fault extends DomainObject {
         };
     }
 
+    setIssueDate(date) {
+        this.issue_date = date;
+        return this;
+    }
+
+    /**
+     *
+     * @param date
+     * @returns {Fault}
+     */
+    setIssueDateIfNull(date) {
+        if (!this.issue_date)
+            this.issue_date = date;
+        return this;
+    }
+
     /**
      *
      * @returns {*}

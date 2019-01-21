@@ -36,6 +36,7 @@ class User extends DomainObject {
         return [
             'id',
             'roles',
+            'email',
             'old_group_id',
             'user_group_id'
         ];

@@ -2,6 +2,7 @@
 const RelationShips = require('./links/Relationships');
 const validator = require('validatorjs');
 const privateStore = new WeakMap();
+const Utils = require('../Utility/Utils');
 
 /**
  * @author Paul Okeke
@@ -34,19 +35,41 @@ class DomainObject {
         this._(this).validate = () => {
             const valid = new validator(this, this.rules(), this.customErrorMessages());
             if (valid.passes(null)) return true;
-            this.errors = valid.errors;
+            this._errors = valid.errors;
             return false;
         };
 
         //DomainObject Internal Configurations
         let validateErrors = [];
-        Object.defineProperty(this, 'validate', {get: this._(this).validate, enumerable: false, configurable: false});
-        Object.defineProperty(this, 'errors', {
+        Object.defineProperty(this, '_validate', {get: this._(this).validate, enumerable: false, configurable: false});
+        Object.defineProperty(this, '_errors', {
             set: (v) => validateErrors = v,
             get: () => validateErrors,
             enumerable: false,
             configurable: false
         });
+    }
+
+    /**
+     * Validates this model data with validation rules specified
+     */
+    validate(){
+        return this._validate;
+    }
+
+    /**
+     * returns the validation errors of this domain object
+     */
+    getErrors(){
+        return this._errors;
+    }
+
+    isAuditAble(){
+        return true;
+    }
+
+    toAuditAbleFormat(){
+        return this;
     }
 
     /**
@@ -77,6 +100,17 @@ class DomainObject {
             this._(this).data = newData;
         }
         return newData;
+    }
+
+    /**
+     * Assigned to values are received in array form e.g
+     * "[1,2]", this function formats it for storage purpose
+     *
+     * @returns {*}
+     */
+    serializeAssignedTo() {
+        if (this.assigned_to) Utils.serializeAssignedTo(this.assigned_to);
+        return this;
     }
 
     getTableColumn(clientName) {

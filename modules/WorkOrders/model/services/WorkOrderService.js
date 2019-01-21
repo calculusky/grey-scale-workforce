@@ -127,7 +127,9 @@ class WorkOrderService extends ApiService {
     async updateMultipleWorkOrders(body, who, API) {
         const ids = Object.keys(body), response = [];
         for (let id of ids) {
-            const update = await this.updateWorkOrder('id', id, body[id], who, [], API).catch(err => {response.push(err.code);});
+            const update = await this.updateWorkOrder('id', id, body[id], who, [], API).catch(err => {
+                response.push(err.code);
+            });
             if (update) response.push(200);
         }
         return Utils.buildResponse({data: response});
@@ -281,29 +283,16 @@ class WorkOrderService extends ApiService {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         let workOrder = new WorkOrder(body);
 
-        workOrder.assigned_to = Utils.serializeAssignedTo(workOrder.assigned_to);
+        workOrder.serializeAssignedTo();
 
-        //enforce the validation
-        if (!workOrder.validate) return Promise.reject(Error.ValidationFailure(workOrder.errors.all()));
+        if(!workOrder.validate()) return Promise.reject(Error.ValidationFailure(workOrder.getErrors().all()));
 
         ApiService.insertPermissionRights(workOrder, who);
 
-        const groups = await Utils.getFromPersistent(this.context, "groups", true).catch(_ => (Promise.reject(Error.InternalServerError)));
-
-        const group = groups[workOrder.group_id];
-
-        if (!group) return Promise.reject(Error.GroupNotFound);
-
-        let bu = Utils.getGroupParent(group, 'business_unit') || group;
-
-        const uniqueNo = await Utils.generateUniqueSystemNumber(
-            _prefix(workOrder.type_id),
-            bu['short_name'],
-            'work_orders',
-            this.context
-        ).catch(_ => (Promise.reject(Error.InternalServerError)));
-
-        workOrder.work_order_no = uniqueNo.toUpperCase();
+        await workOrder.generateWorkOrderNo(this.context).catch(err => (err === -1)
+            ? Promise.reject(Error.GroupNotFound)
+            : Promise.reject(Error.InternalServerError)
+        );
 
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
 
@@ -316,7 +305,7 @@ class WorkOrderService extends ApiService {
 
         if (files.length) {
             API.attachments().createAttachment({
-                module: "work_orders",
+                module: this.moduleName,
                 relation_id: workOrder.id
             }, who, files, API).then();
         }
@@ -366,7 +355,7 @@ class WorkOrderService extends ApiService {
      * @param who
      * @returns {Promise<IDtResponse>}
      */
-    async getWorkDataTableRecords(body, who){
+    async getWorkDataTableRecords(body, who) {
         const workDataTable = new WorkOrderDataTable(this.context.database, MapperFactory.build(MapperFactory.WORK_ORDER));
         const editor = await workDataTable.addBody(body).make();
         return editor.data();
@@ -406,19 +395,6 @@ class WorkOrderService extends ApiService {
         const items = (await Promise.all(task)).map(([{id}, del]) => ({id, deleted: del > 0}));
         return Utils.buildResponse({data: {items}});
     }
-}
-
-function _prefix(typeId) {
-    if (!typeId) return "W";
-    switch (parseInt(typeId)) {
-        case 1:
-            return "D";
-        case 2:
-            return "R";
-        case 3:
-            return "F";
-    }
-    return "W";
 }
 
 function sweepWorkOrderResponsePayload(workOrder) {

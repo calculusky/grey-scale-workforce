@@ -16,7 +16,7 @@ class AssetService {
     async getAsset(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
         const results = await AssetMapper.findDomainRecord({by, value}, offset, limit);
-        const groups = await Utils.redisGet(this.context.persistence, "groups");
+        const groups = await this.context.getKey("groups", true);
         const assets = AssetService.addBUAndUTAttributes(results.records, groups);
         return Utils.buildResponse({data: {items: assets}});
     }
@@ -34,13 +34,13 @@ class AssetService {
             'serial_no',
             'location'
         ];
-        const resultSets = this.context.database.select(fields).from('assets');
+        const resultSets = this.context.db().select(fields).from('assets');
         if (group_id) resultSets.where("group_id", group_id);
         if (status) resultSets.whereIn("status", status.split(","));
 
         resultSets.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
 
-        const groups = await Utils.redisGet(this.context.persistence, "groups");
+        const groups = await this.context.getKey("groups", true);
 
         const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
 
@@ -98,13 +98,13 @@ class AssetService {
             'serial_no',
             'location'
         ];
-        let resultSets = this.context.database.select(fields).from('assets')
+        let resultSets = this.context.db().select(fields).from('assets')
             .where('asset_name', 'like', `%${keyword}%`)
             .where("deleted_at", null)
             .orWhere('asset_type_name', 'like', `%${keyword}%`)
             .limit(Number(limit)).offset(Number(offset)).orderBy('asset_name', 'asc');
 
-        const groups = await Utils.getFromPersistent(this.context, "groups", true);
+        const groups = await this.context.getKey("groups", true);
 
         const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
         const assets = AssetService.addBUAndUTAttributes(results, groups, Asset);

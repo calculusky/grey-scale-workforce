@@ -10,7 +10,7 @@ const fs = require('fs');
 const swagger = require('./swagger');
 const express = require("express");
 const events = require('./events/events.js');
-const cors = require('cors');
+const AuditAble = require('./core/AuditAble');
 
 module.exports = function route(context) {
 
@@ -141,7 +141,7 @@ module.exports = function route(context) {
     | Initialize Events - Socket IO
     *--------------------------------------*/
     events.init(context, io, API);
-
+    AuditAble.initialize(context, API);
     /*-----------------------------------------------
      | Start the scheduler
      |----------------------------------------------*/

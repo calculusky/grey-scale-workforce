@@ -5,6 +5,7 @@ const DomainFactory = require('../../modules/DomainFactory');
 const DomainObject = require('./DomainObject');
 const Utils = require('../Utility/Utils');
 const Log = require('../logger.js');
+const AuditAble = require('../AuditAble');
 
 /**
  * @author Paul Okeke
@@ -187,8 +188,8 @@ class ModelMapper {
             //We can guess the user who is creating this record to make an audit
             const who = {sub: domainObject.created_by, group: [domainObject.group_id]};
             Array.isArray(domainObject)
-                ? domainObject.forEach(e => this._audit(e, {sub: e.created_by, group: [e.group_id]}))
-                : this._audit(domainObject, who);
+                ? domainObject.forEach(e => onAudit(this, e, {sub: e.created_by, group: [e.group_id]}))
+                : onAudit(this, domainObject, who);
             return Promise.resolve(domainObject);
         }).catch(err => {
             Log.e('createDomainRecord', err);
@@ -240,7 +241,7 @@ class ModelMapper {
             .then(itemsUpdated => {
                 updateData[by] = value;
                 filteredDomain.serialize(updateData, "client");
-                this._audit(filteredDomain, who, updateData[`${deletedAt}`] ? "DELETE" : "UPDATE");
+                onAudit(this, filteredDomain, who, updateData[`${deletedAt}`] ? "DELETE" : "UPDATE");
                 return Promise.resolve([filteredDomain, itemsUpdated]);
             })
             .catch(err => {
@@ -279,7 +280,7 @@ class ModelMapper {
         if (!immediate) return resultSets;
         return resultSets
             .then(itemsDeleted => {
-                this._audit(domainObject, who, "DELETE");
+                onAudit(this, domainObject, who, "DELETE");
                 return Promise.resolve(itemsDeleted);
             })
             .catch(err => {
@@ -288,19 +289,6 @@ class ModelMapper {
                 return Promise.reject(error)
             });
     }
-
-    /**
-     * @param data - The changed data
-     * @param who - The current user session
-     * @param type - The type of audit
-     */
-    _audit(data, who, type = "CREATE") {
-        const events = require('../../events/events');
-        if (!who) return Log.e("AuditFailed:", "Couldn't audit because the who argument is undefined");
-        if (!data[this.primaryKey]) return Log.e("AuditFailed:", "Can't audit a record without it's primary key");
-        events.emit("audit", type, this.tableName, data[this.primaryKey], data, who, this.domainName);
-    }
-
 
     /**
      * Sub-classes MUST override this method and return
@@ -327,6 +315,19 @@ class ModelMapper {
         return store;
     }
 
+}
+
+/**
+ *
+ * @param mapper
+ * @param action {String}
+ * @param domain {DomainObject}
+ * @param who
+ */
+function onAudit(mapper, domain, who, action = "CREATE") {
+    if ((domain instanceof DomainObject) && domain.isAuditAble()) {
+        AuditAble.getInstance().audit(mapper, domain, who, action);
+    }
 }
 
 ModelMapper._private_store = new WeakMap();

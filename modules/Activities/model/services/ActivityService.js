@@ -22,25 +22,20 @@ class ActivityService extends ApiService {
      *
      * @param body
      * @param who
+     * @param API {API}
      * @returns {Promise<*>}
      */
-    async createActivity(body, who) {
+    async createActivity(body, who, API) {
         const Activity = DomainFactory.build(DomainFactory.ACTIVITY);
         const activity = new Activity(body);
 
-        activity.assigned_to = Utils.serializeAssignedTo(activity.assigned_to);
+        activity.serializeAssignedTo();
 
         ApiService.insertPermissionRights(activity, who);
 
-        const validator = new validate(activity, activity.rules(), activity.customErrorMessages());
+        if (!activity.validate()) return Promise.reject(activity.getErrors().all());
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
-
-        const groups = await Utils.getFromPersistent(this.context, "groups", true).catch(_ => (Promise.reject(Error.InternalServerError)));
-
-        const group = groups[activity.group_id];
-
-        if (!group) return Promise.reject(Error.GroupNotFound);
+        if (!(await API.groups().isGroupIdValid(activity.group_id))) return Promise.reject(Error.GroupNotFound);
 
         const ActivityMapper = MapperFactory.build(MapperFactory.ACTIVITY);
 
@@ -74,7 +69,7 @@ class ActivityService extends ApiService {
         const items = Utils.auditDifference(activities)
             .filter(item => !['id', 'updated_at'].includes(item.field_name)).reverse();
 
-        const cols = ['id','username','first_name', 'last_name'];
+        const cols = ['id', 'username', 'first_name', 'last_name'];
         for (const item of items) {
             item.by = (await db.table("users").where("id", item.by).select(cols)).shift();
         }

@@ -50,6 +50,47 @@ class WorkOrder extends DomainObject {
         }
     }
 
+    /**
+     * Generates a new work order number and assigns it to the attribute "work_order_no"
+     *
+     * Rejects with a -2 value if the group cannot be found
+     *
+     * @param ctx {Context}
+     * @returns {Promise<*>}
+     */
+    async generateWorkOrderNo(ctx) {
+        const Utils = require('../../../../core/Utility/Utils');
+        const groups = await ctx.getKey("groups", true);
+
+        const group = groups[this.group_id];
+
+        if (!group) return Promise.reject(-2);
+
+        let bu = Utils.getGroupParent(group, 'business_unit') || group;
+        const prefix = WorkOrder.getWorkOrderPrefix(this.type_id);
+        const uniqueNo = await Utils.generateUniqueSystemNumber(prefix, bu['short_name'], 'work_orders', ctx);
+        this.work_order_no = uniqueNo.toUpperCase();
+
+        return this.work_order_no;
+    }
+
+    static getWorkOrderPrefix(typeId) {
+        if (!typeId) return "W";
+        switch (parseInt(typeId)) {
+            case 1:
+                return "D";
+            case 2:
+                return "R";
+            case 3:
+                return "F";
+        }
+        return "W";
+    }
+
+
+    /* --------------------------------------------/
+     | Work Order Relationships
+     *--------------------------------------------*/
     relatedTo(related_to = "", cols = []) {
         switch (related_to) {
             case "faults": {

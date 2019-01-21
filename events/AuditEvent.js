@@ -1,5 +1,4 @@
 const EventEmitter = require('events').EventEmitter;
-const Utils = require('../core/Utility/Utils');
 
 const _ = require('lodash');
 
@@ -37,7 +36,7 @@ class AuditEvent extends EventEmitter {
             activity_by: who.sub,
             group_id: (Array.isArray(who.group) && who.group.length) ? `${who.group[0]}` : '1'
         };
-        this.api.activities().createActivity(activity, who).catch(console.error);
+        this.api.activities().createActivity(activity, who, this.api).catch(console.error);
     }
 
 }
