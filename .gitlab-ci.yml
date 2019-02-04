@@ -24,6 +24,8 @@ before_script:
 
 test:
   stage: test
+  variables:
+    NODE_ENV: "test"
   script:
     - "npm test"
 
