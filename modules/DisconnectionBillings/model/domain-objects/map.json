@@ -8,6 +8,8 @@
   "total_amount_payable": "total_amount_payable",
   "reconnection_fee": "reconnection_fee",
   "has_plan": "has_plan",
+  "created_by":"created_by",
+  "group_id":"group_id",
   "assigned_to":"assigned_to",
   "created_at": "created_at",
   "updated_at": "updated_at"

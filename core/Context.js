@@ -93,7 +93,7 @@ class Context extends EventEmitter {
             }
         };
         //First lets load all groups and sub groups
-        const iCols = ['id', 'name', 'type', 'short_name', 'parent_group_id'],
+        const iCols = ['id', 'name', 'type', 'short_name', 'ext_code', 'parent_group_id'],
             tCols = ['group_subs.parent_group_id as parent', db.raw('GROUP_CONCAT(child_group_id) AS children')],
             gLeftJoin = ['group_subs', 'groups.id', 'group_subs.child_group_id'],
             gInnerJoin = ['group_subs', 'groups.id', 'group_subs.parent_group_id'],

@@ -48,7 +48,7 @@ class DisconnectionBillingService extends ApiService {
         if (!customer) return Promise.reject(Error.FormRecordNotFound('account_no'));
 
         //Get the default reconnection fee for this customer tariff
-        let [fee] = await db.table("rc_fees").where('name', customer.tariff).select(['amount']);
+        let [{amount: fee}] = await db.table("rc_fees").where('name', customer.tariff).select(['amount']);
         fee = (fee) ? fee : 3000;
 
         dBilling.calculateMinAmount();
@@ -58,6 +58,7 @@ class DisconnectionBillingService extends ApiService {
         const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
         const record = await DisconnectionBillingMapper.createDomainRecord(dBilling, who).catch(err => (Promise.reject(err)));
         if (workOrder) {
+            if (typeof workOrder === 'string') workOrder = Utils.isJson(workOrder).pop();
             workOrder.related_to = "disconnection_billings";
             workOrder.relation_id = `${record.id}`;
             workOrder.type_id = 1;
@@ -65,8 +66,8 @@ class DisconnectionBillingService extends ApiService {
                 this.deleteDisconnectionBilling('id', record.id, who, API).catch(console.error);
                 return Promise.reject(err);
             });
-            db.table("disconnection_billings").update({work_order_id: order.work_order_no}).where('id', record.id).catch(console.error);
-            return Utils.buildResponse({data: order});
+            db.table("disconnection_billings").update({work_order_id: work_order.work_order_no}).where('id', record.id).catch(console.error);
+            return Utils.buildResponse({data: {...record, work_order}});
         }
         return Utils.buildResponse({data: record});
     }
@@ -95,7 +96,7 @@ class DisconnectionBillingService extends ApiService {
      * @returns {*}
      */
     deleteDisconnectionBilling(by = "id", value, who, API) {
-        const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.FAULT);
+        const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
         return DisconnectionBillingMapper.deleteDomainRecord({by, value}, true, who).then(count => {
             if (!count) return Promise.reject(Error.RecordNotFound());
             return Utils.buildResponse({data: {by, message: "DisconnectionBilling deleted"}});

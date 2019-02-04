@@ -221,6 +221,7 @@ class GroupService extends ApiService {
         Object.entries(groups).forEach(([key, value]) => {
             if (type && !type.split(",").map(i => i.toLowerCase()).includes(`${value['type']}`.toLowerCase())) return;
             if (name && value['name'].toLowerCase().indexOf(name.toLowerCase()) === -1) return;
+            if (ext_code && (value['ext_code'] !== ext_code)) return;
             items.push(value);
         });
         if (offset || limit) items = items.slice(offset, offset + limit);
