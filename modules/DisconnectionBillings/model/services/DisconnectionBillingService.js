@@ -58,11 +58,10 @@ class DisconnectionBillingService extends ApiService {
         const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
         const record = await DisconnectionBillingMapper.createDomainRecord(dBilling, who).catch(err => (Promise.reject(err)));
         if (workOrder) {
-            if (typeof workOrder === 'string') workOrder = Utils.isJson(workOrder).pop();
             workOrder.related_to = "disconnection_billings";
             workOrder.relation_id = `${record.id}`;
             workOrder.type_id = 1;
-            const {data: {data: order}} = await API.workOrders().createWorkOrder(workOrder, who, files, API).catch(err => {
+            const {data: {data: work_order}} = await API.workOrders().createWorkOrder(workOrder, who, files, API).catch(err => {
                 this.deleteDisconnectionBilling('id', record.id, who, API).catch(console.error);
                 return Promise.reject(err);
             });

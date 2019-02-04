@@ -108,7 +108,10 @@ class GroupService extends ApiService {
             return this.context.db()('group_subs').insert(multi).then(r => {
                 return resolve(Utils.buildResponse({data: multi}));
             }).catch(err => {
-                if (err.errno === 1062) return resolve(Utils.buildResponse({msg: "Record already exist", code: "DUPLICATE"}));
+                if (err.errno === 1062) return resolve(Utils.buildResponse({
+                    msg: "Record already exist",
+                    code: "DUPLICATE"
+                }));
                 return reject(Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400));
             });
         };
@@ -215,7 +218,7 @@ class GroupService extends ApiService {
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getGroups(query = {}, who) {
-        const {name, type, offset = 0, limit = 10} = query;
+        const {name, ext_code, type, offset = 0, limit = 10} = query;
         const groups = await this.context.getKey("groups", true);
         let items = [];
         Object.entries(groups).forEach(([key, value]) => {
