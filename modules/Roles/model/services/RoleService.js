@@ -19,87 +19,64 @@ class RoleService extends ApiService {
         MapperFactory = this.context.modelMappers;
     }
 
-
-    getRoles(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    /**
+     *
+     * @param value
+     * @param by
+     * @param who {Session}
+     * @param offset
+     * @param limit
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getRoles(value, by = "id", who, offset = 0, limit = 10) {
         const RoleMapper = MapperFactory.build(MapperFactory.ROLE);
-        const executor = (resolve, reject) => {
-            RoleMapper.findDomainRecord({by, value}, offset, limit)
-                .then(result => {
-                    let groups = result.records;
-                    let processed = 0;
-                    let rowLen = groups.length;
-
-                    groups.forEach(group => {
-                        group.user().then(res => {
-                            group.user = res.records.shift();
-                            if (++processed === rowLen)
-                                return resolve(Utils.buildResponse({data: {items: result.records}}));
-                        }).catch(err => {
-                            return reject(err)
-                        })
-                    })
-                })
-                .catch(err => {
-                    return reject(err);
-                });
-        };
-        return new Promise(executor)
+        const roles = (await RoleMapper.findDomainRecord({by, value}, offset, limit)).records;
+        return Utils.buildResponse({data: {items: roles}});
     }
 
     /**
      * Creates a new role
      *
      * @param body
-     * @param who
+     * @param who {Session}
      */
-    createRole(body = {}, who = {}) {
+    createRole(body = {}, who) {
         const Role = DomainFactory.build(DomainFactory.ROLE);
-        let role = new Role(body);
+        const role = new Role(body);
 
-        let validator = new validate(role, role.rules(), role.customErrorMessages());
-
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+        if (!role.validate()) return Promise.reject(Error.ValidationFailure(role.getErrors().all()));
 
         ApiService.insertPermissionRights(role, who);
 
-        const [valid, json] = Utils.isJson(role.permissions);
-        if (valid) role.permissions = JSON.stringify(json);
-
-        //Get Mapper
         const RoleMapper = MapperFactory.build(MapperFactory.ROLE);
-        return RoleMapper.createDomainRecord(role).then(role => {
+        return RoleMapper.createDomainRecord(role, who).then(role => {
             if (!role) return Promise.reject();
             return Utils.buildResponse({data: role});
         });
     }
 
     /**
+     * TODO check that the permission is a string-object literal
      *
      * @param value
      * @param body
-     * @param who
+     * @param who {Session}
      * @param by
      */
     async updateRole(value, body = {}, who, by = "id") {
         const Role = DomainFactory.build(DomainFactory.ROLE);
         const RoleMapper = MapperFactory.build(MapperFactory.ROLE);
-
         const model = (await RoleMapper.findDomainRecord({by, value})).records.shift();
 
         if (!model) return Promise.reject(Error.RecordNotFound("Role not found."));
 
-        const domain = new Role(body);
+        const role = new Role(body);
 
-        const newAssignee = Utils.serializeAssignedTo(domain.assigned_to);
+        role.updateAssignedTo(model.assigned_to);
 
-        const [valid, json] = Utils.isJson(domain.permissions);
-        if (valid) domain.permissions = JSON.stringify(json);
-
-        if (domain.assigned_to) domain.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignee);
-
-        return RoleMapper.updateDomainRecord({by, value, domain}).then(res => {
-            if (!res.mLast()) return Error.RecordNotFound();
-            Events.emit("role_updated", domain, who, model);
+        return RoleMapper.updateDomainRecord({by, value, domain: role}, who).then(res => {
+            if (!res[1]) return Error.RecordNotFound();
+            Events.emit("role_updated", role, who, model);
             return Utils.buildResponse({data: res.shift()});
         });
     }
@@ -113,54 +90,47 @@ class RoleService extends ApiService {
      * @param API
      */
     async addUserToRole(roleId, userId, who = {}, API) {
-        let user_roles = {role_id: roleId, user_id: userId};
+        const user_roles = {role_id: roleId, user_id: userId};
 
         Utils.numericToInteger(user_roles, 'role_id', 'user_id');
 
         const validator = new validate(user_roles, {user_id: 'integer|required', role_id: 'integer|required'});
 
-        if (validator.fails()) {
-            console.error(validator.errors.all());
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                data: validator.errors.all(),
-                code: 'VALIDATION_ERROR'
-            }, 400));
-        }
+        if (validator.fails(null)) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
 
-        let date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
+        const date = Utils.date.dateToMysql();
         user_roles.created_at = date;
         user_roles.updated_at = date;
 
-        const db = this.context.database;
-        const resp = await db.table("role_users").insert(user_roles).catch(console.error);
+        await this.context.db()("role_users").insert(user_roles).catch(e => {
+            return Promise.reject(Utils.getMysqlError(e));
+        });
 
-        return Utils.buildResponse({data: resp});
+        return Utils.buildResponse({data: user_roles});
     }
 
     /**
+     * Updates a user role
      *
-     * @param userId
-     * @param oldRoleId
+     * @param userId {Number} - The user id
+     * @param oldRoleId {Number} - The id the user was initially assigned to
      * @param body
-     * @param who
+     * @param who {Session}
      * @param API {API}
      * @returns {Promise<void>|*}
      */
-    async updateUserRole(userId, oldRoleId, body = {role_id: null}, who = {}, API) {
+    async updateUserRole(userId, oldRoleId, body = {role_id: null}, who, API) {
+        if (!userId) throw new Error("userId is required.");
+        if (!oldRoleId) throw new Error("oldRoleId is required.");
         if (oldRoleId === body.role_id) return true;
-        const db = this.context.database;
-        let date = Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s');
-        const user_roles = {'role_id': body.role_id, updated_at: date};
-        return await db.table("role_users").where('role_id', oldRoleId)
+        const user_roles = {'role_id': body.role_id, updated_at: Utils.date.dateToMysql()};
+        return await this.context.db()("role_users").where('role_id', oldRoleId)
             .where('user_id', userId).update(user_roles).catch(console.error);
     }
 
     async detachUserFromRole(roleId, userId, who = {}) {
-        return await this.context.database.table("role_users").where('role_id', roleId)
-            .where('user_id', userId).del();
+        return await this.context.db().table("role_users").where('role_id', roleId).where('user_id', userId).del();
     }
-
 
     /**
      * For getting dataTable records
@@ -169,27 +139,24 @@ class RoleService extends ApiService {
      * @param who
      * @returns {Promise<IDtResponse>}
      */
-    async getRoleTableRecords(body, who){
-        const roleDataTable = new RoleDataTable(this.context.database, MapperFactory.build(MapperFactory.ROLE));
+    async getRoleTableRecords(body, who) {
+        const roleDataTable = new RoleDataTable(this.context.db(), MapperFactory.build(MapperFactory.ROLE), who);
         const editor = await roleDataTable.addBody(body).make();
         return editor.data();
     }
-
-
 
     /**
      *
      * @param by
      * @param value
+     * @param who {Session}
      * @returns {*}
      */
-    deleteRole(by = "id", value) {
+    deleteRole(by = "id", value, who) {
         const RoleMapper = MapperFactory.build(MapperFactory.ROLE);
-        return RoleMapper.deleteDomainRecord({by, value}).then(count => {
-            if (!count) {
-                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
-            }
-            return Utils.buildResponse({data: {by, message: "Role deleted"}});
+        return RoleMapper.deleteDomainRecord({by, value}, true, who).then(count => {
+            if (!count) return Promise.reject(Error.RecordNotFound());
+            return Utils.buildResponse({data: {message: "Role deleted successfully."}});
         });
     }
 }

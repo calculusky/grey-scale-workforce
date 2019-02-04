@@ -23,7 +23,7 @@ before_script:
 test:
   stage: test
   script:
-    - "npm test test/material_requisition.service.test.js"
+    - "npm test"
 
 #Deploy to Test
 deploy_staging:

@@ -49,13 +49,13 @@ class Persistence {
      * @param values
      */
     set(...values) {
-        this.getClient().set(...values);
+        this.getClient().set(...values,  ()=>null);
     }
 
     /**
      *
      * @param key
-     * @returns {Promise<any>}
+     * @returns {Promise<String|*>}
      */
     get(key) {
         return new Promise((res, rej) => {

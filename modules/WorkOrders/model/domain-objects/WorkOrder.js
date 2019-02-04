@@ -50,23 +50,101 @@ class WorkOrder extends DomainObject {
         }
     }
 
+    setType(typeId) {
+        this.type_id = typeId;
+    }
+
+    setRelationId(relationId) {
+        this.relation_id = relationId;
+    }
+
+    setRelatedTo(relatedTo) {
+        this.related_to = relatedTo;
+    }
+
+    getNotesCount(db) {
+        if (!this.id) return console.assert(this.id, "Work Order ID is not set");
+        return db.count('note as notes_count')
+            .from("notes").where("module", "work_orders").where("relation_id", this.id);
+    }
+
+    getAttachmentsCount(db) {
+        if (!this.id) return console.assert(this.id, "Work Order ID is not set");
+        return db.count('id as attachments_count')
+            .from("notes").where("module", "work_orders").where("relation_id", this.id);
+    }
+
+    getMaterialsUtilizedCount(db) {
+        if (!this.id) return console.assert(this.id, "Work Order ID is not set");
+        return db.count("id as mat_count").from("material_utilizations").where("work_order_id", this.id);
+    }
+
+    getRelatedRecordCount(db) {
+        return [
+            this.getNotesCount(db),
+            this.getAttachmentsCount(db),
+            this.getMaterialsUtilizedCount(db)
+        ];
+    }
+
+    /**
+     * Converts {@property this.work_order_no} to a human readable format
+     *
+     * @returns {string|*}
+     */
+    humanizeWorkOrderNo(){
+        if(!this.work_order_no) return;
+        let formattedNo = "";
+        let stringItems = this.work_order_no.split("");
+        for (let i = 0; i < stringItems.length; i++) {
+            formattedNo += stringItems[i];
+            if (i === 3 || i === 9 || i === 12) {
+                formattedNo += "-";
+            }
+        }
+        this.work_order_no = formattedNo;
+        return this.work_order_no;
+    }
+
+    /**
+     *
+     * @param workType {String}
+     * @param relatedModel {DisconnectionBilling|Fault}
+     * @returns {Promise<void>}
+     */
+    async setRelatedModelData(workType, relatedModel) {
+        this[workType.toLowerCase()] = relatedModel;
+        const relatedTo = this.related_to.toLowerCase();
+        switch (relatedTo) {
+            case "disconnection_billings":
+                const [customer, plan] = await Promise.all([relatedModel.customer(), relatedModel.paymentPlan()]);
+                this['customer'] = customer.records.shift() || {};
+                this['payment_plans'] = plan.records;
+                break;
+            case "faults":
+                if (relatedModel.related_to.toLowerCase() === "assets") {
+                    const asset = await relatedModel.asset();
+                    this['faults']['asset'] = asset.records.shift() || {};
+                } else if (relatedModel.related_to.toLowerCase() === "customers") {
+                    const cus = await relatedModel.customer();
+                    this['faults']['customer'] = cus.records.shift() || {};
+                }
+                break;
+        }
+    }
+
     /**
      * Generates a new work order number and assigns it to the attribute "work_order_no"
      *
      * Rejects with a -2 value if the group cannot be found
      *
      * @param ctx {Context}
+     * @param group
      * @returns {Promise<*>}
      */
-    async generateWorkOrderNo(ctx) {
+    async generateWorkOrderNo(ctx, group = {}) {
         const Utils = require('../../../../core/Utility/Utils');
-        const groups = await ctx.getKey("groups", true);
-
-        const group = groups[this.group_id];
-
-        if (!group) return Promise.reject(-2);
-
-        let bu = Utils.getGroupParent(group, 'business_unit') || group;
+        const bu = Utils.getGroupParent(group, 'business_unit') || group;
         const prefix = WorkOrder.getWorkOrderPrefix(this.type_id);
         const uniqueNo = await Utils.generateUniqueSystemNumber(prefix, bu['short_name'], 'work_orders', ctx);
         this.work_order_no = uniqueNo.toUpperCase();
@@ -91,7 +169,7 @@ class WorkOrder extends DomainObject {
     /* --------------------------------------------/
      | Work Order Relationships
      *--------------------------------------------*/
-    relatedTo(related_to = "", cols = []) {
+    relatedTo(related_to = this.related_to, cols = []) {
         switch (related_to) {
             case "faults": {
                 if (cols.length) break;

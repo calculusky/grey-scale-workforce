@@ -44,13 +44,17 @@ class Attachment extends DomainObject {
     rules() {
         return {
             relation_id: 'integer|required',
-            attachment_by: 'numeric|required',
             module: 'string|required',
             file_path: 'string|required',
-            file_type: 'string|required'
+            file_type: 'string|required',
+            file_size:'string|required'
         };
     }
 
+    getPublicUrl(){
+        this.file_url = `${process.env.APP_URL}:${process.env.PORT}/attachment/${this.module}/download/${this.file_name}`;
+        return this.file_url;
+    }
 
     user(cols = ["id", "username", "first_name", "last_name"]) {
         return this.relations().belongsTo("User", "created_by", cols);

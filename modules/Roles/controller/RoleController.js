@@ -199,7 +199,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/role_id'
      */
     app.delete('/roles/:id', urlencodedParser, (req, res) => {
-        API.roles().deleteRole("id", req.params.id)
+        API.roles().deleteRole("id", req.params.id, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

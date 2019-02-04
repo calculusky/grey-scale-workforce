@@ -11,7 +11,6 @@ describe('Test Suites', () => {
         persistence = new Persistence();
     });
 
-    // expect.assertions(3);
     it("Establish persistence connection", () => {
         expect(persistence.connect()).toBeDefined();
         expect(persistence.connect().getClient()).not.toBeNull();

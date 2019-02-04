@@ -24,21 +24,32 @@ class WebEvent extends EventEmitter {
         return this;
     }
 
+    broadcast(){
+
+    }
+
     /**
      * This events is fired when a new note is added
      *
-     * @param note
-     * @param who
+     * @param note {Note|Object}
+     * @param note.module {String}
+     * @param note.note {String}
+     * @param note.relation_id {String}
+     * @param who {Session}
+     * @return Promise<Boolean>
      */
     async onNotesAdded(note, who) {
-        const db = this.context.database;
+        if (!note.relation_id || !note.module || !note.note)
+            throw new TypeError("relation_id, module and note must be set in note");
+
+        const db = this.context.db();
 
         let [record, user] = await Promise.all([
             db.table(note.module).where('id', note.relation_id).select(['id', 'assigned_to']),
-            db.table("users").where('id', who.sub).select(['id', 'username', 'first_name', 'last_name'])
+            db.table("users").where('id', who.getAuthUser().getUserId()).select(['id', 'username', 'first_name', 'last_name'])
         ]);
 
-        if (!record.length) return;
+        if (!record.length || !user.length) return false;
 
         user = user.shift();
 
@@ -48,7 +59,7 @@ class WebEvent extends EventEmitter {
         let userIds = assignedTo.map(({id}) => id);
 
 
-        if (!userIds.length) return;
+        if (!userIds.length) return false;
         //Remove the user that added this note from the list of users
         userIds = userIds.filter(id => id !== note.created_by);
 
@@ -64,7 +75,7 @@ class WebEvent extends EventEmitter {
 
         //Create the notification on the database!.
         this.api.notifications()
-            .createNotification(Object.assign({from: who.sub}, notification))
+            .createNotification(Object.assign({from: who.getAuthUser().getUserId()}, notification), who)
             .catch(console.error);
 
         notification.from = user;
@@ -76,6 +87,7 @@ class WebEvent extends EventEmitter {
                 if (socket) socket.emit('note_added', notification);
             });
         });
+        return true;
     }
 
     /**
@@ -85,10 +97,10 @@ class WebEvent extends EventEmitter {
      * @param fileName
      * @param createdBy
      * @param level
-     * @returns {Promise<void>}
+     * @returns {Promise<Boolean>}
      */
     async onUploadComplete(type, status, fileName, createdBy, level = 3) {
-        if (!createdBy) return;
+        if (!createdBy) return false;
         //now we need to notify this guy who uploaded the record
         const notification = {
             type: "upload_complete",
@@ -101,11 +113,12 @@ class WebEvent extends EventEmitter {
         };
 
         const socketIds = this.sharedData.clients[createdBy];
-        if (!socketIds || socketIds.length < 1) return;
+        if (!socketIds || socketIds.length < 1) return false;
         socketIds.forEach(socketId => {
             const socket = this.io.sockets.connected[socketId];
             if (socket) socket.emit('upload_complete', notification);
         });
+        return true;
     }
 }
 

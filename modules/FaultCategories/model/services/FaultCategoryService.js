@@ -1,10 +1,10 @@
 const ApiService = require('../../../ApiService');
-const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
 let MapperFactory = null;
 
 
 /**
+ * @deprecated
  * @name FaultCategoryService
  * Created by paulex on 07/10/18.
  */
@@ -17,18 +17,20 @@ class FaultCategoryService extends ApiService {
 
     /**
      *
-     *
-     * @param query
-     * @param who
+     * @param query {Object}
+     * @param who {Session}
+     * @since v2.0.0-alpha01
+     * @deprecated
+     * @see {@link BaseRecordService#getFaultCategories}
      * @returns {Promise<{data?: *, code?: *}>}
      */
-    async getFaultCategories(query = {}, who = {}) {
+    async getFaultCategories(query = {}, who) {
         const offset = (query.offset) ? parseInt(query.offset) : undefined,
             limit = (query.limit) ? parseInt(query.limit) : undefined,
             type = query['type'],
             weight = query['weight'];
 
-        const faultCategories = await Utils.getFromPersistent(this.context, "fault:categories", true);
+        const faultCategories = await this.context.getKey("fault:categories", true);
 
         let items = [];
         Object.entries(faultCategories).forEach(([key, value]) => {

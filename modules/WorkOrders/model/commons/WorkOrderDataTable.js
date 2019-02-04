@@ -7,10 +7,10 @@ class WorkOrderDataTable extends MDataTables {
     /**
      *
      * @param db
-     * @param mapper {UploadMapper}
-     * @param who
+     * @param mapper {WorkOrderMapper}
+     * @param who {Session}
      */
-    constructor(db, mapper, who = {}) {
+    constructor(db, mapper, who) {
         super(db, mapper);
         this.setSession(who);
 
@@ -34,8 +34,7 @@ class WorkOrderDataTable extends MDataTables {
             new Field('work_orders.status', 'status').getFormatter((val, row) => Utils.getWorkStatuses(row['work_orders.type_id'], val)),
             new Field("work_orders.assigned_to", 'assigned'),
             new Field('work_orders.created_at', 'created_at')
-        )
-        ;
+        );
         if (type === 3) this.onFaultOrder(fields);
         else if (type === 1) this.onDisconnectionOrder(fields);
         return super.addFields(...fields);

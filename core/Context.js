@@ -7,7 +7,7 @@ const MapperFactory = require('./factory/MapperFactory');
 const knexConfig = require('../knexfile');
 const Persistence = require('../core/persistence/Persistence');
 const EventEmitter = require('events');
-// let globalContext = null;
+let globalContext = null;
 
 //Private Fields
 let _privateStore = new WeakMap();
@@ -22,7 +22,6 @@ class Context extends EventEmitter {
     constructor(config) {
         super();
         this.config = config;
-
         //TODO make database property private: to avoid external users overriding the value
         this.database = KNEX(knexConfig[process.env.NODE_ENV]);
         this._(this).persistence = new Persistence();
@@ -50,7 +49,8 @@ class Context extends EventEmitter {
      * @param toJson
      */
     async getKey(key, toJson = false) {
-        return (toJson) ? JSON.parse((await this._(this).persistence.get(key))) : this._(this).persistence.get(key);
+        const data = await this._(this).persistence.get(key);
+        return (toJson) ? JSON.parse(data) : data;
     }
 
     /**
@@ -81,7 +81,7 @@ class Context extends EventEmitter {
 
     //we are going load certain static data into memory
     async loadStaticData() {
-        const db = this.database;
+        const db = this.db();
         let findParents = (_groups, group, parentKey) => {
             for (let gp of _groups) {
                 if (gp.id !== group[parentKey]) continue;
@@ -115,8 +115,12 @@ class Context extends EventEmitter {
         const groups = {}, groupParentChild = {}, workTypes = {}, assetTypes = {},
             faultCategories = {}, fCatParentChild = {};
 
-        groupChildren.forEach(item => groupParentChild[item.parent] = item['children'].split(',').reverse());
-        fCatChildren.forEach(item => fCatParentChild[item.parent] = item['children'].split(',').reverse());
+        groupChildren.forEach(item => {
+            if (item['children']) groupParentChild[item.parent] = item['children'].split(',').reverse()
+        });
+        fCatChildren.forEach(item => {
+            if (item['children']) fCatParentChild[item.parent] = item['children'].split(',').reverse()
+        });
 
         woTypes.forEach(workType => workTypes[workType.id] = workType);
         aTypes.forEach(assetType => assetTypes[assetType.id] = assetType);

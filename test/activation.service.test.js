@@ -1,26 +1,14 @@
 /**
- * @field API {API}
+ * @type API {API}
  */
 const [API, ctx] = require('../index').test();
+const globalMock = require('./setup/ApplicationDependency');
 
-//Mock Knex Database
-const knexMock = require('mock-knex');
-const tracker = knexMock.getTracker();
-
+let knexMock, tracker, session;
 
 beforeAll(async (done) => {
-    tracker.install();
-    knexMock.mock(ctx.db(), 'knex@0.15.2');
-    tracker.on('query', query => {
-        query.response([]);
-    });
-    await new Promise((res, rej) => {
-        ctx.on('loaded_static', () => {
-            ctx.setKey("groups", '{"1":{}}');
-            res();
-            done();
-        });
-    });
+    [knexMock, tracker, session] = await globalMock.applicationBeforeAll(ctx);
+    done();
 });
 
 afterAll(async done => {
@@ -29,7 +17,7 @@ afterAll(async done => {
     done();
 });
 
-it("Activation activateUser should be defined", () => {
+it("activateUser should be defined", () => {
     return expect(API.activations().activateUser(1)).toBeDefined();
 });
 
@@ -40,11 +28,11 @@ describe('Test Activations with database mock', () => {
         });
     });
 
-    it("Fail if the userId is not supplied",()=>{
+    it("Activation without userId should fail",()=>{
         return expect(API.activations().activateUser()).rejects.toEqual("UserId wasn't specified");
     });
 
-    it("Activation should resolve", () => {
+    it("Activation should resolve with values", () => {
         return expect(API.activations().activateUser(1)).resolves.toEqual(expect.objectContaining({
             code: expect.any(String)
         }));

@@ -1,14 +1,18 @@
 const DomainFactory = require('../../../DomainFactory');
-let MapperFactory = null;
+const ApiService = require('../../../ApiService');
 const Utils = require('../../../../core/Utility/Utils');
+const Error = require('../../../../core/Utility/ErrorUtils')();
+let MapperFactory = null;
+
 
 /**
  * @name AssetService
  * Created by paulex on 8/22/17.
  */
-class AssetService {
+class AssetService extends ApiService {
 
     constructor(context) {
+        super(context);
         this.context = context;
         MapperFactory = this.context.modelMappers;
     }
@@ -49,31 +53,46 @@ class AssetService {
     }
 
     /**
+     * Creates a new asset
      *
      * @param body
-     * @param who
+     * @param who {Session}
      */
-    createAsset(body = {}, who = {}) {
+    createAsset(body = {}, who) {
         const Asset = DomainFactory.build(DomainFactory.ASSET);
-        body['api_instance_id'] = who.api;
-        let staff = new Asset(body);
+        const asset = new Asset(body);
 
+        if (!asset.validate()) return Promise.reject(Error.ValidationFailure(asset.getErrors().all()));
 
-        //Get Mapper
+        ApiService.insertPermissionRights(asset, who);
+
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        return AssetMapper.createDomainRecord(staff).then(staff => {
+        return AssetMapper.createDomainRecord(asset, who).then(staff => {
             if (!staff) return Promise.reject();
             return Utils.buildResponse({data: staff});
         });
     }
 
-
-    updateAsset(value, body = {}, who = {}, by = "id") {
+    /**
+     * Updates an existing asset
+     *
+     * @param value
+     * @param body
+     * @param who {Session}
+     * @param by
+     * @returns {Bluebird<{data?: *, code?: *}> | * | void | Bluebird<{data?: *, code?: *} | never> | PromiseLike<{data?: *, code?: *} | never> | Promise<{data?: *, code?: *} | never>}
+     */
+    async updateAsset(value, body = {}, who, by = "id") {
         const Asset = DomainFactory.build(DomainFactory.ASSET);
+        const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
+        const model = (await this.context.db()("assets").where(by, value).select()).shift();
         const domain = new Asset(body);
 
-        const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        return AssetMapper.updateDomainRecord({by, value, domain}).then(asset => {
+        if (!model) return Promise.reject(Error.RecordNotFound());
+
+        domain.updateAssignedTo(model.assigned_to);
+
+        return AssetMapper.updateDomainRecord({by, value, domain}, who).then(asset => {
             return Utils.buildResponse({data: asset});
         });
     }

@@ -17,11 +17,6 @@ The API currently supports the below functionality:
 * Redis (Version. 4.0.2)
 * Process Maker Configuration
 
-**NOTE:** You most likely will need to have the web
-application setup. The reason is basically for you to run the database
-migration included on the web application(laravel project).
-However if for any other reason you can get the SQL insert of the
-database then you can proceed.
 
 #### Set Up/Installation
 

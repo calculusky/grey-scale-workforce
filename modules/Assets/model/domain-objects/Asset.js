@@ -39,6 +39,8 @@ class Asset extends DomainObject {
     rules() {
         return {
             asset_name: 'string|required',
+            asset_type: "numeric|required",
+            serial_no: "string|required",
             state: 'boolean',
             status: 'boolean'
         };

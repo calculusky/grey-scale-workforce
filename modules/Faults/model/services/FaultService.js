@@ -2,7 +2,6 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
-const validate = require('validatorjs');
 const Events = require('../../../../events/events');
 const FaultDataTable = require('../commons/FaultDataTable');
 let MapperFactory = null;
@@ -22,141 +21,85 @@ class FaultService extends ApiService {
         MapperFactory = this.context.modelMappers;
     }
 
-
     /**
+     * Retrieves Faults
      *
-     * @param query
-     * @param who
+     * @param query {Object}
+     * @param who {Session}
      * @returns {Promise}
      */
-    async getFaults(query = {}, who = {}) {
-        const db = this.context.database;
-        const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
-        const {id, status, priority, category_id, offset = 0, limit = 10, assigned_to, created_by, from_date, to_date} = query;
-        const task = [
-            Utils.getFromPersistent(this.context, "groups", true),
-            Utils.getFromPersistent(this.context, "fault:categories", true)
-        ];
-
-        if (id) task.push(FaultMapper.findDomainRecord({by: "id", value: id}, offset, limit));
-        else {
-            const resultSet = db.table("faults").select(["*"]);
-            if (status) resultSet.whereIn('status', status.split(","));
-            if (category_id) resultSet.whereIn("fault_category_id", category_id.split(","));
-            if (priority) resultSet.whereIn("priority", priority.split(","));
-            if (assigned_to) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assigned_to}}')`);
-            if (created_by) resultSet.where("created_by", created_by);
-            if (from_date && to_date) resultSet.whereBetween('start_date', [from_date, to_date]);
-            resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
-            task.push(resultSet);
-        }
-
-        let [groups, categories, faults] = await Promise.all(task);
-        faults = (faults.records) ? faults.records : faults;
+    async getFaults(query = {}, who) {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
-        let i = 0;
+        const db = this.context.db();
 
-        for (let fault of faults) {
-            if (!(fault instanceof Fault)) {
-                let f = new Fault();
-                f.serialize(fault, "client");
-                fault = f;
-            }
-            const task = [fault.relatedTo(), fault.createdBy(), Utils.getAssignees(fault.assigned_to, db)];
-            task.push(
-                db.count('note as notes_count').from("notes").where("module", "faults").where("relation_id", fault.id),
-                db.count('id as attachments_count').from("notes").where("module", "attachments").where("relation_id", fault.id),
-                db.count('id as works_count').from("work_orders").where("related_to", "faults").where("relation_id", fault.id)
-            );
+        const [groups, categories] = await Promise.all([
+            this.context.getKey("groups", true),
+            this.context.getKey("fault:categories", true)
+        ]);
 
-            const [relatedTo, createdBy, assignedTo, notesCount, attachmentCount, wCount] = await Promise.all(task);
-            fault['category'] = categories[fault['category_id']];
-            fault.created_by = createdBy.records.shift() || {};
-            fault['group'] = groups[fault['group_id']];
-            fault[fault.related_to.slice(0, -1)] = relatedTo.records.shift() || {};
-            fault['assigned_to'] = assignedTo;
+        const faults = [], results = await this.buildQuery(query);
 
-            if (notesCount && attachmentCount) {
-                fault['notes_count'] = notesCount.shift()['notes_count'];
-                fault['attachments_count'] = attachmentCount.shift()['attachments_count'];
-            }
-            fault['wo_count'] = wCount.shift()['works_count'];
-
-            if (fault['group']['children']) delete fault['group']['children'];
-            if (fault['group']['parent']) delete fault['group']['parent'];
-
-            faults[i] = fault;
-            i++;
+        for (const item of results) {
+            const fault = new Fault(item);
+            await renderFaultDetails(fault, db, groups, categories);
+            faults.push(fault);
         }
+
         return Utils.buildResponse({data: {items: faults}});
     }
 
     /**
-     *
+     * Creates a new fault
      *
      * @param body {Object}
-     * @param who
-     * @param files
+     * @param who {Session}
+     * @param files {Array}
      * @param API {API}
      */
-    async createFault(body = {}, who = {}, files = [], API) {
+    async createFault(body = {}, who, files = [], API) {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const fault = new Fault(body);
 
-        //If this fault is created from an external source then we should verify the relation_id
-        const related = await Utils.verifyRelatedSource(this.context.database, fault).catch(console.error);
-        if (!related) return Promise.reject(Error.ValidationFailure({relation_id: ["The related record doesn't exist."]}));
+        if (!fault.validateSource(this.context.db()))
+            return Promise.reject(Error.ValidationFailure({relation_id: ["The related record doesn't exist."]}));
 
         fault.serializeAssignedTo().setIssueDateIfNull(Utils.date.dateToMysql());
 
-        ApiService.insertPermissionRights(fault, who);
-
         if (!fault.validate()) return Promise.reject(Error.ValidationFailure(fault.getErrors().all()));
 
-        if(!(await API.groups().isGroupIdValid(fault.group_id))) return Promise.reject(Error.GroupNotFound);
+        ApiService.insertPermissionRights(fault, who);
 
-        fault.fault_no = ``;//TODO generate fault no
+        if (!(await API.groups().isGroupIdValid(fault.group_id))) return Promise.reject(Error.GroupNotFound);
 
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
 
-        const record = await FaultMapper.createDomainRecord(fault).catch(err => (Promise.reject(err)));
+        const record = await FaultMapper.createDomainRecord(fault, who).catch(err => (Promise.reject(err)));
 
-        Utils.convertDataKeyToJson(record, "labels", "assigned_to");
-        record['created_by'] = {id: who.sub, username: who.name};
-
-        if (files.length) {
-            API.attachments().createAttachment({module: "faults", relation_id: record.id}, who, files, API).then();
-        }
-        //If the fault is created internally via mr.working lets push the data to other service integrating to mrworking
-        Events.emit("fault_added", record, who);
+        onFaultCreated(record, fault, who, files, API);
 
         return Utils.buildResponse({data: record});
     }
 
     /**
+     * Updates an existing fault
      *
-     * @param by
-     * @param value
-     * @param body
-     * @param who
-     * @param files
+     * @param by {String}
+     * @param value {String|Number}
+     * @param body {Object}
+     * @param who {Session}
+     * @param files {Array}
      * @param API {API}
      * @returns {Promise<void>|*}
      */
     async updateFault(by, value, body = {}, who, files = [], API) {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
-
-        let model = await this.context.database.table("faults").where(by, value).select(['*']);
-
-        if (!model.length) return Error.RecordNotFound("Fault doesn't exist");
-
-        model = new Fault(model.shift());
-
+        const model = (await this.context.db()("faults").where(by, value).select(['*'])).shift();
         const fault = new Fault(body);
 
-        if (fault.assigned_to)
-            fault.assigned_to = Utils.updateAssigned(model.assigned_to, Utils.serializeAssignedTo(fault.assigned_to));
+        if (!model) return Promise.reject(Error.RecordNotFound());
+
+        fault.updateAssignedTo(model.assigned_to);
 
         if (files.length) {
             API.attachments().createAttachment({module: "faults", relation_id: fault.id}, who, files, API).then();
@@ -171,33 +114,141 @@ class FaultService extends ApiService {
     /**
      * For getting dataTable records
      *
-     * @param body
-     * @param who
+     * @param body {Object}
+     * @param who {Session}
      * @returns {Promise<IDtResponse>}
      */
-    async getFaultTableRecords(body, who){
-        const faultDataTable = new FaultDataTable(this.context.database, MapperFactory.build(MapperFactory.FAULT));
+    async getFaultTableRecords(body, who) {
+        const faultDataTable = new FaultDataTable(this.context.database, MapperFactory.build(MapperFactory.FAULT), who);
         const editor = await faultDataTable.addBody(body).make();
         return editor.data();
     }
 
     /**
+     * Deletes a fault
      *
-     * @param by
-     * @param value
-     * @param who
-     * @param API
+     * @param by {String}
+     * @param value {String|Number}
+     * @param who {Session}
+     * @param API {API}
      * @returns {*}
      */
     deleteFault(by = "id", value, who, API) {
         const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
         return FaultMapper.deleteDomainRecord({by, value}, true, who).then(count => {
-            if (!count) {
-                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
-            }
-            return Utils.buildResponse({data: {by, message: "Fault deleted"}});
+            if (!count) return Promise.reject(Error.RecordNotFound());
+            return Utils.buildResponse({data: {message: "Fault successfully deleted."}});
         });
     }
+
+    /**
+     *
+     * @param query
+     * @returns {*}
+     * @private
+     */
+    buildQuery(query) {
+        const {
+            id,
+            status,
+            priority,
+            category_id,
+            offset = 0,
+            limit = 10,
+            assigned_to,
+            created_by,
+            from_date,
+            to_date
+        } = query;
+
+        const resultSet = this.context.db()("faults").select(["*"]);
+
+        if (id) resultSet.where('id', id);
+        if (status) resultSet.whereIn('status', status.split(","));
+        if (category_id) resultSet.whereIn("fault_category_id", category_id.split(","));
+        if (priority) resultSet.whereIn("priority", priority.split(","));
+        if (assigned_to) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assigned_to}}')`);
+        if (created_by) resultSet.where("created_by", created_by);
+        if (from_date && to_date) resultSet.whereBetween('start_date', [from_date, to_date]);
+
+        resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
+
+        return resultSet;
+    }
+}
+
+/**
+ *
+ * @param record
+ * @param body
+ * @param session {Session}
+ * @param files {Array}
+ * @param API {API}
+ * @private
+ */
+function onFaultCreated(record, body, session, files, API) {
+    Utils.convertDataKeyToJson(record, "labels", "assigned_to");
+
+    record['created_by'] = {
+        id: session.getAuthUser().getUserId(),
+        username: session.getAuthUser().getUsername()
+    };
+    if (files.length) API.attachments().createAttachment({
+        module: "faults",
+        relation_id: record.id
+    }, session, files, API).then();
+
+    Events.emit("fault_added", record, session);
+}
+
+/**
+ * For lack of a better function name, we have chosen to name this function
+ * renderFaultDetails because it tends to fetch related fault details
+ * and sets it on the fault object. However this method name is subject to change.
+ *
+ * TODO Refactor
+ *
+ * @param fault
+ * @param db
+ * @param groups
+ * @param categories
+ * @returns {Promise<*>}
+ */
+async function renderFaultDetails(fault, db, groups, categories) {
+
+    const task = [
+        fault.relatedTo(),
+        fault.createdBy(),
+        fault.getAssignedUsers(db),
+        ...fault.getRelatedRecordCount(db)
+    ];
+
+    const [
+        relatedTo,
+        createdBy,
+        assignedTo,
+        notesCount,
+        attachmentCount,
+        wCount
+    ] = await Promise.all(task);
+
+    fault['category'] = categories[fault['category_id']];
+    fault['created_by'] = createdBy.records.shift() || {};
+    fault['group'] = groups[fault['group_id']];
+    fault[fault.related_to.slice(0, -1)] = relatedTo.records.shift() || {};
+    fault['assigned_to'] = assignedTo;
+
+    if (notesCount && attachmentCount) {
+        fault['notes_count'] = notesCount.shift()['notes_count'] || 0;
+        fault['attachments_count'] = attachmentCount.shift()['attachments_count'] || 0;
+    }
+    fault['wo_count'] = wCount.shift()['works_count'];
+
+    const faultGroup = fault['group'];
+    if (faultGroup && faultGroup['children']) delete fault['group']['children'];
+    if (faultGroup && faultGroup['parent']) delete fault['group']['parent'];
+
+    return fault;
 }
 
 module.exports = FaultService;

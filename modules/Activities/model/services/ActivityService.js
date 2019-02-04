@@ -2,9 +2,7 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const ApiService = require('../../../ApiService');
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
-const Excel = require('exceljs');
 
 
 /**
@@ -33,7 +31,7 @@ class ActivityService extends ApiService {
 
         ApiService.insertPermissionRights(activity, who);
 
-        if (!activity.validate()) return Promise.reject(activity.getErrors().all());
+        if (!activity.validate()) return Promise.reject(Error.ValidationFailure(activity.getErrors().all()));
 
         if (!(await API.groups().isGroupIdValid(activity.group_id))) return Promise.reject(Error.GroupNotFound);
 
@@ -54,7 +52,7 @@ class ActivityService extends ApiService {
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getActivities(query, who = {}, API) {
-        const db = this.context.database;
+        const db = this.context.db();
 
         const {module, relation_id, activity_by, offset = 0, limit = 10} = query;
 

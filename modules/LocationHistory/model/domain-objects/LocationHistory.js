@@ -38,6 +38,10 @@ class LocationHistory extends DomainObject {
         }
     }
 
+    isAuditAble(){
+        return false;
+    }
+
 }
 
 module.exports = LocationHistory;

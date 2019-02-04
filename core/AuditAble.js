@@ -1,4 +1,3 @@
-
 /**
  * @author Paul Okeke
  * 20th-Jan-2019
@@ -22,16 +21,15 @@ class AuditAble {
      *
      * @param mapper
      * @param domain {DomainObject}
-     * @param session
+     * @param session {Session}
      * @param action
      * @returns {*|void}
      */
     audit(mapper, domain, session, action = "CREATE") {
-        if (!mapper || !domain) throw new Error("Invalid arguments given");
+        if (!mapper || !domain || !session) throw new Error("Invalid arguments given");
         const primaryKey = mapper.primaryKey;
         const tableName = mapper.tableName;
-        console.log(primaryKey);
-        if (!domain[primaryKey]) return console.error("AuditFailed:", "Can't audit a record without it's primary key");
+        if (!domain[primaryKey]) return console.warn("AuditFailed:", `Can't audit a ${domain.constructor.name} without it's primary key`);
         const record = domain.toAuditAbleFormat();
         const activity = {
             module: tableName,
@@ -40,10 +38,10 @@ class AuditAble {
             record: JSON.stringify(record),
             description: record['description'] || "...",
             model_type: mapper.domainName,
-            activity_by: session.sub,
-            group_id: (Array.isArray(session.group) && session.group.length) ? `${session.group[0]}` : '1'
+            activity_by: session.getAuthUser().getUserId(),
+            group_id: session.getAuthUser().getGroups().shift() || 1
         };
-        return this.api.activities().createActivity(activity, {}, this.api).catch(console.error);
+        return this.api.activities().createActivity(activity, session, this.api).catch(console.error);
     }
 
     /**

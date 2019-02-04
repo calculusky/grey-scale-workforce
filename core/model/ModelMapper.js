@@ -130,13 +130,18 @@ class ModelMapper {
 
 
     /**
-     * TODO handle multiple inserts
      * Inserts a new record to {@link DomainObject.tableName}
+     *
      * @param domainObject - An instance of DomainObject
-     * @param domainObjects
+     * @param domainObjects {Array}
+     * @param session {Session}
      * @returns {Promise.<DomainObject>|boolean}
      */
-    createDomainRecord(domainObject = {}, domainObjects = []) {
+    createDomainRecord(domainObject = {}, domainObjects = [], session = null) {
+        if (!Array.isArray(domainObjects)) {
+            session = domainObjects;
+            domainObjects = [];
+        }
         const DomainObject = DomainFactory.build(this.domainName);
         if (domainObject) domainObjects.push(domainObject);
 
@@ -144,31 +149,24 @@ class ModelMapper {
         if (!domainObjects.length && !(domainObjects[0] instanceof DomainObject))
             throw new TypeError("The parameter domainObject must be " + "an instance of DomainObject.");
 
-        let validateErrors = [];
-        let guardedErrors = [];
+        const validateErrors = [];
+        // const guardedErrors = [];
 
-        let dbData = domainObjects.map(domain => {
+        const dbData = domainObjects.map(domain => {
             let [valid, , cMsg] = Utils.validatePayLoad(domain, domain.required());
             if (!valid) validateErrors.push(cMsg);
-            let [filteredDomain, guardedKeys] = Utils.validateGuarded(domain, domain.guard());
-            if (Object.keys(filteredDomain).length === 0) {
-                guardedErrors.push(guardedKeys);
-            } else {
-                let date = new Date();
-                filteredDomain['created_at'] = Utils.date.dateToMysql(date, "YYYY-MM-DD H:m:s");
-                filteredDomain['updated_at'] = Utils.date.dateToMysql(date, "YYYY-MM-DD H:m:s");
-            }
-            return filteredDomain.serialize(filteredDomain);
+            //@Removed Guard validation here to see the effect
+            domain['created_at'] = Utils.date.dateToMysql();
+            domain['updated_at'] = Utils.date.dateToMysql();
+            return domain.serialize(domain);
         });
         //Stoppers
         if (validateErrors.length) {
             const error = Utils.buildResponse({status: "fail", data: validateErrors}, 400);
             return Promise.reject(error);
         }
-        if (guardedErrors.length) {
-            //TODO return error
-        }
-        let resultSets = this.context.database.insert(dbData).into(this.tableName);
+
+        const resultSets = this.context.db().insert(dbData).into(this.tableName);
         return resultSets.then(result => {
             //if this is a single insert lets return only the single object
             //to avoid problems from other services expecting just a single domainObject as a return value.
@@ -184,12 +182,9 @@ class ModelMapper {
                     return domain;
                 });
             }
-
-            //We can guess the user who is creating this record to make an audit
-            const who = {sub: domainObject.created_by, group: [domainObject.group_id]};
             Array.isArray(domainObject)
-                ? domainObject.forEach(e => onAudit(this, e, {sub: e.created_by, group: [e.group_id]}))
-                : onAudit(this, domainObject, who);
+                ? domainObject.forEach(e => onAudit(this, e, session))
+                : onAudit(this, domainObject, session);
             return Promise.resolve(domainObject);
         }).catch(err => {
             Log.e('createDomainRecord', err);
@@ -202,9 +197,9 @@ class ModelMapper {
      * @param by
      * @param value
      * @param domain
-     * @param who
+     * @param who {Session}
      */
-    updateDomainRecord({by = this.primaryKey, value, domain}, who = {}) {
+    updateDomainRecord({by = this.primaryKey, value, domain}, who = null) {
         if (!by) throw new ReferenceError(`${this.constructor.name} must override the primary key field.`);
         if (!this.tableName) throw new ReferenceError(`${this.constructor.name} must override the tableName field.`);
         if (by !== "*_all" && !value) throw new TypeError("The parameter value must be set for this operation");
@@ -256,9 +251,9 @@ class ModelMapper {
      * @param by
      * @param value
      * @param immediate - Determines if the returned promise should be triggered immediately
-     * @param who
+     * @param who {Session}
      */
-    deleteDomainRecord({by = this.primaryKey, value}, immediate = true, who = {}) {
+    deleteDomainRecord({by = this.primaryKey, value}, immediate = true, who = null) {
         if (!by) throw new ReferenceError(`${this.constructor.name} must override the primary key field.`);
         if (!this.tableName) throw new ReferenceError(`${this.constructor.name} must override the tableName field.`);
         if (by !== "*_all" && !value) throw new TypeError("The parameter value must be set for this operation");
@@ -270,16 +265,17 @@ class ModelMapper {
 
         if (typeof softDelete === 'boolean' && softDelete) {
             domainObject[dateDeletedCol] = Utils.date.dateToMysql();
-            if (deletedByCol && who.sub) domainObject[deletedByCol] = who.sub;
+            if (deletedByCol && who) domainObject[deletedByCol] = who.getAuthUser().getUserId();
             return this.updateDomainRecord({by, value, domain: domainObject}, who);
         }
 
-        let resultSets = this.context.database.table(this.tableName).delete();
+        let resultSets = this.context.db().table(this.tableName).delete();
 
         resultSets = this._(this).buildWhere(by, value, resultSets, domainObject);
         if (!immediate) return resultSets;
         return resultSets
             .then(itemsDeleted => {
+                domainObject[by] = value;
                 onAudit(this, domainObject, who, "DELETE");
                 return Promise.resolve(itemsDeleted);
             })

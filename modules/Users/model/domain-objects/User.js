@@ -2,6 +2,9 @@
 const DomainObject = require('../../../../core/model/DomainObject');
 //noinspection JSUnresolvedFunction
 const map = require('./map.json');
+const Password = require('../../../../core/Utility/Password');
+const Utils = require('../../../../core/Utility/Utils');
+
 
 /**
  * @author Paul Okeke
@@ -37,6 +40,7 @@ class User extends DomainObject {
             'id',
             'roles',
             'email',
+            'group_id',
             'old_group_id',
             'user_group_id'
         ];
@@ -68,6 +72,19 @@ class User extends DomainObject {
         };
     }
 
+    /**
+     *
+     * @returns {User}
+     */
+    encryptPassword() {
+        if (this.password && this.password.trim() !== "") {
+            this.wf_user_pass = Utils.encrypt(this.password, process.env.JWT_SECRET);
+            //replace the password prefix as well for laravel's sake
+            this.setPassword(Password.encrypt(this.password).hash.replace("$2a$", "$2y$"));
+        }
+        return this;
+    }
+
 
     async roles() {
         return this.relations().belongsToMany('Role', 'role_users', 'user_id', 'role_id');
@@ -86,7 +103,7 @@ class User extends DomainObject {
         return this.relations().morphMany("LocationHistory", "module", "relation_id", options);
     }
 
-    async attachments(cols, offset=0, limit=10) {
+    async attachments(cols, offset = 0, limit = 10) {
         return this.relations().hasMany("Attachment", 'created_by', 'id', cols, {offset, limit});
     }
 }

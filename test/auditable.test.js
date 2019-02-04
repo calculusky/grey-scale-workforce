@@ -2,24 +2,13 @@ const [API, ctx] = require('../index').test();
 const AuditAble = require('../core/AuditAble');
 let WorkOrderMapper = require('../modules/WorkOrders/model/mappers/WorkOrderMapper');
 let WorkOrder = require('../modules/WorkOrders/model/domain-objects/WorkOrder');
+const globalMock = require('./setup/ApplicationDependency');
 
-//Mock Knex Database
-const knexMock = require('mock-knex');
-const tracker = knexMock.getTracker();
+let knexMock, tracker, session;
 
 beforeAll(async (done) => {
-    tracker.install();
-    knexMock.mock(ctx.db(), 'knex@0.15.2');
-    tracker.on('query', query => {
-        query.response([]);
-    });
-    await new Promise((res, rej) => {
-        ctx.on('loaded_static', () => {
-            ctx.setKey("groups", '{"1":{}}');
-            res();
-            done();
-        });
-    });
+    [knexMock, tracker, session] = await globalMock.applicationBeforeAll(ctx);
+    done();
 });
 
 afterAll(async done => {
@@ -29,12 +18,12 @@ afterAll(async done => {
 });
 
 
-it("Test audit", () => {
+it("Audit Without required parameters should fail", () => {
     const auditAble = AuditAble.getInstance();
     return expect(() => auditAble.audit()).toThrow(/Invalid arguments given/);
 });
 
-describe('Audit a record', () => {
+describe('Audit Record', () => {
     beforeAll(() => {
         tracker.on('query', (query) => {
             query.response([
@@ -43,11 +32,11 @@ describe('Audit a record', () => {
         });
     });
 
-    it("Audit and confirm that an activity is created", () => {
+    it("Audit should create an activity", () => {
         const auditAble = AuditAble.getInstance();
         const mapper = new WorkOrderMapper(ctx);
         const workOrder = new WorkOrder({id: 1});
-        return expect(auditAble.audit(mapper, workOrder, {sub:1, group:[1]})).resolves.toMatchObject({
+        return expect(auditAble.audit(mapper, workOrder, session)).resolves.toMatchObject({
             data: {
                 data: {
                     activity_type: "CREATE",

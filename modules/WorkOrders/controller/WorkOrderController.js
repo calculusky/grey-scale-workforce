@@ -81,7 +81,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-    //user/:userId/:fromDate/:toDate/:offset(\d+)?/:limit(\d+)?
     /**
      * @swagger
      * /work_orders:
@@ -135,13 +134,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.get('/work_orders/:id', urlencodedParser, (req, res, next) => {
         if (req.params.id === 'export') return next();
-        API.workOrders().getWorkOrder(req.params.id, undefined, req.who)
-            .then(({data, code}) => {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                return res.status(code).send(err);
-            });
+        API.workOrders().getWorkOrders({id: req.params.id}, req.who).then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code}) => {
+            return res.status(code).send(err);
+        });
     });
 
 
@@ -201,7 +198,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/work_order_id'
      */
     app.get('/work_orders/:id/material_requisitions', urlencodedParser, (req, res) => {
-        API.workOrders().getWorkOrderMaterialRequisitions(req.params.id, req.query, req.who)
+        API.workOrders().getWorkOrderMaterialRequisitions(req.params.id, req.query, req.who, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -302,7 +299,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/exportWith'
      */
     app.get('/work_orders/export', urlencodedParser, (req, res) => {
-        return API.workOrders().exportWorkOrders(req.query, req.who, API).then(workBook=>{
+        return API.workOrders().exportWorkOrders(req.query, req.who, API).then(workBook => {
             res.setHeader('Content-disposition', 'attachment; filename=' + workBook['subject'] || "mrworking_export.xlsx");
             res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             return workBook.xlsx.write(res);
@@ -341,7 +338,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             return res.status(500).send(err);
         });
     });
-
 
 
     /**

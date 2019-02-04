@@ -9,24 +9,15 @@ const FaultMapper = require('../modules/Faults/model/mappers/FaultMapper');
 const modelMapper = new UserMapper(ctx);
 const faultMapper = new FaultMapper(ctx);
 
-//Mock Knex Database
-const knexMock = require('mock-knex');
-const tracker = knexMock.getTracker();
-
+const globalMock = require('./setup/ApplicationDependency');
+/**
+ * @param session {Session}
+ */
+let knexMock, tracker, session;
 
 beforeAll(async (done) => {
-    tracker.install();
-    knexMock.mock(ctx.db(), 'knex@0.15.2');
-    tracker.on('query', query => {
-        query.response([]);
-    });
-    await new Promise((res, rej) => {
-        ctx.on('loaded_static', () => {
-            ctx.setKey("groups", '{"1":{}}');
-            res();
-            done();
-        });
-    });
+    [knexMock, tracker, session] = await globalMock.applicationBeforeAll(ctx);
+    done();
 });
 
 afterAll(async done => {
@@ -133,7 +124,7 @@ describe('Test Mapper with mock-knex', () => {
                 email: "donpaul120@gmail.com",
                 first_name: "balo"
             });
-            return expect(modelMapper.updateDomainRecord({value: 1, domain: user})).resolves.toEqual([{
+            return expect(modelMapper.updateDomainRecord({value: 1, domain: user}, session)).resolves.toEqual([{
                 id: 1,
                 // email: "donpaul120@gmail.com",
                 "first_name": "balo",
@@ -157,7 +148,7 @@ describe('Test Mapper with mock-knex', () => {
         it("deleteDomainRecord:should delete a record from the DB", () => {
             modelMapper.primaryKey = "id";
             modelMapper.tableName = "attachments";
-            return expect(modelMapper.deleteDomainRecord({value: 26})).resolves.toEqual([{
+            return expect(modelMapper.deleteDomainRecord({value: 26}, true, session)).resolves.toEqual([{
                 "deleted_at": expect.any(String),
                 "id": 26,
                 "updated_at": expect.any(String)

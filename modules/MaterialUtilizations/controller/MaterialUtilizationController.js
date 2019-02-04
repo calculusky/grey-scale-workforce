@@ -54,14 +54,14 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /material_utilizations:
      *   patch:
-     *     summary: Update/Creates MaterialLocation in bulk
+     *     summary: Update/Creates MaterialUtilization in bulk
      *     description: ''
-     *     tags: [MaterialLocations]
+     *     tags: [MaterialUtilizations]
      *     consumes:
      *     - application/json
      *     produces:
      *     - application/json
-     *     operationId: createMultipleMaterialLocation
+     *     operationId: createMultipleMaterialUtilization
      *     responses:
      *       '200':
      *         description: Successfully Added
@@ -69,10 +69,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *      - $ref: '#/parameters/sessionId'
      *      - in: body
      *        schema:
-     *          $ref: '#/definitions/postMaterialLocationInput'
+     *          $ref: '#/definitions/postMaterialUtilizationInput'
      */
     app.patch('/material_utilizations', jsonParser, (req, res) => {
-        console.log(req.body);
         API.materialUtilizations().createMultipleMaterialUtilization(req.body, req.who, API)
             .then(({data, code}) => {
                 console.log(data);

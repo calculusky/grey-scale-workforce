@@ -2,6 +2,7 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 
 /**
  * @name AttachmentService
@@ -19,12 +20,12 @@ class AttachmentService extends ApiService {
      * @param value
      * @param module
      * @param by
-     * @param who
+     * @param who {Session}
      * @param offset
      * @param limit
      * @returns {Promise}
      */
-    async getAttachments(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
+    async getAttachments(value, module, by = "id", who, offset = 0, limit = 10) {
         value = {[by]: value};
         if (module) value.module = module;
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
@@ -34,7 +35,7 @@ class AttachmentService extends ApiService {
         }, offset, limit, 'created_at', 'desc')).records;
         for (let attachment of attachments) {
             attachment.user = (await attachment.user()).records.shift() || {};
-            attachment.file_url = Utils.makeAttachmentURL(attachment);
+            attachment.getPublicUrl();
             delete attachment.file_path;
             if (attachment.location) {
                 attachment.location.address = await Utils.getAddressFromPoint(attachment.location.x, attachment.location.y).catch(console.error);
@@ -45,16 +46,17 @@ class AttachmentService extends ApiService {
 
     /**
      *
-     * @param body
-     * @param files
-     * @param who
-     * @param API
+     * @param body {Object}
+     * @param files {Array}
+     * @param who {Session}
+     * @param API {API}
      */
-    async createAttachment(body = {}, who = {}, files = [], API) {
+    async createAttachment(body = {}, who, files = [], API) {
+        const authUser = who.getAuthUser();
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
 
         const [isValid, location] = (body.location) ? Utils.isJson(body.location) : [false, null];
-        const aLocation = (isValid) ? this.context.database.raw(`POINT(${location.x}, ${location.y})`) : null;
+        const aLocation = (isValid) ? this.context.db().raw(`POINT(${location.x}, ${location.y})`) : null;
 
         let attachments = [];
         if (files.length) {
@@ -66,14 +68,16 @@ class AttachmentService extends ApiService {
                 file_path: file.path,
                 file_type: file.mimetype,
                 location: aLocation,
-                created_by: who.sub,
-                group_id: (who.group && who.group.length) ? who.group[0] : null
+                created_by: authUser.getUserId(),
+                group_id: authUser.getGroups().shift() || null
             })));
         } else {
-            body['created_by'] = who.sub;
-            body['group_id'] = (Array.isArray(who.group) && who.group.length) ? who.group[0] : 1;
+            body['created_by'] = authUser.getUserId();
+            body['group_id'] = authUser.getGroups().shift() || 1;
             body['location'] = aLocation;
-            attachments.push(new Attachment(body));
+            const attachment = new Attachment(body);
+            if (!attachment.validate()) return Promise.reject(Error.ValidationFailure(attachment.getErrors().all()));
+            attachments.push(attachment);
         }
 
         if (location) {
@@ -82,7 +86,7 @@ class AttachmentService extends ApiService {
 
         //Get Mapper
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        return AttachmentMapper.createDomainRecord(null, attachments).then(attachment => {
+        return AttachmentMapper.createDomainRecord(null, attachments, who).then(attachment => {
             if (!attachment) return Promise.reject(false);
 
             if (Array.isArray(attachment)) for (let att of attachment) att.location = location;
@@ -98,6 +102,7 @@ class AttachmentService extends ApiService {
      * @param who
      * @param files
      * @param API
+     * @deprecated
      */
     addIncomingAttachments(body = {}, who = {}, files = [], API) {
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
@@ -178,19 +183,15 @@ class AttachmentService extends ApiService {
      * @param by
      * @param value
      * @param module
+     * @param who {Session}
      * @returns {*}
      */
-    deleteAttachment(by = "id", value, module) {
+    deleteAttachment(by = "id", value, module, who) {
         value = {[by]: value, module};
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
-        return AttachmentMapper.deleteDomainRecord({value}).then(count => {
-            if (!count) {
-                return Promise.reject(Utils.buildResponse({
-                    status: "fail",
-                    data: {message: "The specified record doesn't exist"}
-                }));
-            }
-            return Utils.buildResponse({data: {[by]: value, message: "Attachment deleted"}});
+        return AttachmentMapper.deleteDomainRecord({value}, true, who).then(count => {
+            if (!count) return Promise.reject(Error.RecordNotFound());
+            return Utils.buildResponse({data: {message: "Attachment deleted"}});
         });
     }
 }

@@ -1,5 +1,4 @@
 const EventEmitter = require('events').EventEmitter;
-const _ = require('lodash');
 const DomainFactory = require('../modules/DomainFactory');
 const Utils = require('../core/Utility/Utils');
 const {isEqual} = require('lodash');
@@ -116,10 +115,9 @@ class ApplicationEvent extends EventEmitter {
         const asset = (await fault.asset()).records.shift();
         //check if the asset status is already in-active before setting it to in-active
         if (`${asset.status}` === "0") return false;
-
         const res = await this.api.assets().updateAsset(asset.id, {status: "0"}, who).catch(console.error);
         //TODO update all sub-assets
-        return res.data.status === "success";
+        return res && res.data.status === "success";
     }
 
     /**
