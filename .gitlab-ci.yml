@@ -17,6 +17,7 @@ build:
 before_script:
   - apt-get update -yqq
   - 'which ssh-agent || (apt-get install openssh-client -y)'
+  - eval $(ssh-agent -s)
   - mkdir -p ~/.ssh
   - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
 
@@ -32,12 +33,11 @@ test:
 deploy_staging:
   stage:  deploy
   script:
-  - eval $(ssh-agent -s)
   - echo "$SSH_PRIVATE_KEY" > private_ssh.key
   - chmod 600 private_ssh.key
   - cat private_ssh.key
   - ssh-add private_ssh.key
-  - ssh -v paul@85.25.103.81 -p 942 -t 'cd /var/www/html/mrworking-api'
+  - ssh -v paul@85.25.103.81 -p 942 -t 'cd /var/www/html/mrworking-api && git pull origin dev && npm install && pm2 restart mrworking-api --log-date-format="YYYY-MM-DD HH:mm Z"'
   environment:
     name: staging
     url: http://85.25.103.81/mrworking-web/public/login
