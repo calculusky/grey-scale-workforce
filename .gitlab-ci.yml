@@ -18,7 +18,8 @@ before_script:
   - apt-get update -yqq
   - 'which ssh-agent || (apt-get install openssh-client -y )'
   - eval $(ssh-agent -s)
-  - ssh-add < (echo "$SSH_PRIVATE_KEY")
+  - echo "$SSH_PRIVATE_KEY" > private_ssh.key
+  - ssh-add private_ssh.key
 
 test:
   stage: test
