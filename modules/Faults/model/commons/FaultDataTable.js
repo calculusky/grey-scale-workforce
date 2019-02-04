@@ -7,9 +7,9 @@ class FaultDataTable extends MDataTables {
      *
      * @param db
      * @param mapper {GroupMapper}
-     * @param who
+     * @param who {Session}
      */
-    constructor(db, mapper, who = {}) {
+    constructor(db, mapper, who) {
         super(db, mapper);
         this.setSession(who);
     }

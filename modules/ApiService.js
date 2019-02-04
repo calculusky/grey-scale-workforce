@@ -14,17 +14,18 @@ class ApiService {
     /**
      *
      * @param data
-     * @param who - Basically the user session|json web token
+     * @param who {Session}
      */
     static insertPermissionRights(data, who) {
-        if (!who || !who.sub) return;
-        data['created_by'] = who.sub;
-        if (!data['group_id']) data['group_id'] = (Array.isArray(who.group)) ? who.group[0] : 1;
+        if (!who || !who.getAuthUser()) return;
+        const authUser = who.getAuthUser();
+        data['created_by'] = authUser.getUserId();
+        if (!data['group_id']) data['group_id'] = authUser.getGroups().shift() || 1;
 
         let assignedTo = data['assigned_to'];
         const setDefaultAssignedTo = () => {
             data['assigned_to'] = JSON.stringify([
-                {id: who.sub, 'created_at': Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s')}
+                {id: authUser.getUserId(), 'created_at': Utils.date.dateToMysql(new Date(), 'YYYY-MM-DD H:m:s')}
             ]);
         };
         if (typeof assignedTo === "string" && (assignedTo === "[]" || assignedTo.length === 0)) setDefaultAssignedTo();
@@ -32,55 +33,59 @@ class ApiService {
     }
 
     /**
+     * Checks if the user is permitted to particular permission key(s)
      *
-     * @param who
+     * @param who {Session}
      * @param keys
      */
     static hasPermissions(who, ...keys) {
-        if (who && (!who.permissions || isEmpty(who.permissions))) return false;
+        if (!who) return false;
+        const permission = who.getAuthUser().getPermission();
+        if (!permission || isEmpty(permission)) return false;
         let permitted = true;
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
-            if (!who.permissions.hasOwnProperty(key)) permitted = false;
-            if ([false, 'false', 'none'].includes(who.permissions[key])) permitted = false;
+            if (!permission.hasOwnProperty(key)) permitted = false;
+            if ([false, 'false', 'none'].includes(permission[key])) permitted = false;
         }
-        console.log("Permitted:", permitted);
         return permitted;
     }
 
     /**
      *
      * @param key
-     * @param knexQuery
+     * @param dbQuery
      * @param modelMapper
      * @param who
      */
-    static queryWithPermissions(key, knexQuery, modelMapper, who) {
-        if (!ApiService.hasPermissions(who, key)) return knexQuery;
-        const permType = who.permissions[key];
+    static queryWithPermissions(key, dbQuery, modelMapper, who) {
+        if (!ApiService.hasPermissions(who, key)) return dbQuery;
+        const permType = who.getAuthUser().getPermission()[key];
         const table = modelMapper.tableName;
+        const userId = who.getAuthUser().getUserId(), groups = who.getPermittedGroups();
+
         switch (permType) {
             case 'group': {
                 const groupCol = (table !== "groups") ? `${table}.group_id` : `${table}.id`;
-                knexQuery.where(builder => {
-                    builder.whereIn(groupCol, Array.isArray(who.group) ? who.group : [])
-                        .orWhere(`${table}.created_by`, who.sub)
-                        .orWhereRaw(`JSON_CONTAINS(${table}.assigned_to, '{"id":${who.sub}}')`);
+                dbQuery.where(builder => {
+                    builder.whereIn(groupCol, groups)
+                        .orWhere(`${table}.created_by`, userId)
+                        .orWhereRaw(`JSON_CONTAINS(${table}.assigned_to, '{"id":${userId}}')`);
                 });
-                return knexQuery;
+                return dbQuery;
             }
-            case "owner":{
-                knexQuery.where(builder => {
-                    builder.where(`${table}.created_by`, who.sub)
-                        .orWhereRaw(`JSON_CONTAINS(${table}.assigned_to, '{"id":${who.sub}}')`);
+            case "owner": {
+                dbQuery.where(builder => {
+                    builder.where(`${table}.created_by`, userId)
+                        .orWhereRaw(`JSON_CONTAINS(${table}.assigned_to, '{"id":${userId}}')`);
                 });
-                return knexQuery;
+                return dbQuery;
             }
-            case "all":{
-                return knexQuery;
+            case "all": {
+                return dbQuery;
             }
-            case "none":{
-                return knexQuery.where(modelMapper.primaryKey, null);
+            case "none": {
+                return dbQuery.where(modelMapper.primaryKey, null);
             }
         }
     }

@@ -4,7 +4,7 @@ const Utils = require('../../../../core/Utility/Utils');
 const NetworkUtils = require('../../../../core/Utility/NetworkUtils');
 const validate = require('validatorjs');
 const request = require('request');
-const _ = require("lodash");
+const {flatten} = require("lodash");
 const Error = require('../../../../core/Utility/ErrorUtils')();
 
 /**
@@ -19,35 +19,34 @@ class NotificationService {
         MapperFactory = this.context.modelMappers;
     }
 
-
-    createNotification(body) {
-        const Notification = DomainFactory.build(DomainFactory.NOTIFICATION);
-        let notification = new Notification(body);
-        const validator = new validate(notification, notification.rules(), notification.customErrorMessages());
-
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({
-                status: "fail",
-                data: validator.errors.all(),
-                code: 'VALIDATION_ERROR'
-            }, 400));
-        }
-
-        //Get Mapper
+    /**
+     * Creates a new notification.
+     *
+     * @param body {Object}
+     * @param who {Session}
+     * @returns {*}
+     */
+    createNotification(body, who) {
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
-        return NotificationMapper.createDomainRecord(notification).then(notification => {
+        const Notification = DomainFactory.build(DomainFactory.NOTIFICATION);
+        const notification = new Notification(body);
+
+        if (!notification.validate()) return Promise.reject(Error.ValidationFailure(notification.getErrors().all()));
+
+        return NotificationMapper.createDomainRecord(notification, who).then(notification => {
             if (!notification) return Promise.reject(notification);
             return Utils.buildResponse({data: notification});
         });
     }
 
     /**
+     * Retrieves notifications
      *
-     * @param value
-     * @param by
-     * @param who
-     * @param offset
-     * @param limit
+     * @param value {String|Number}
+     * @param by {String}
+     * @param who {Session}
+     * @param offset {Number}
+     * @param limit {Number}
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getNotifications(value, by = "to", who = {}, offset = 0, limit = 10) {
@@ -67,12 +66,18 @@ class NotificationService {
     }
 
     /**
+     * Updates notification
      *
-     * @param value
-     * @param by
-     * @param body
-     * @param who
-     * @param API
+     * Note: This function is mostly used to update the status of a notification.
+     * e.g updating that a notification has been read/seen.
+     *
+     * @since v2.0.0-alpha02 To update multiple notifications use {@link NotificationService#updateMultipleNotifications}
+     *
+     * @param value {Number|String}
+     * @param by {String}
+     * @param body {Object}
+     * @param who {Session}
+     * @param API {API}
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async updateNotification(value, by = "id", body = {}, who, API) {
@@ -90,7 +95,7 @@ class NotificationService {
                         by,
                         value: notification.id,
                         domain: notification
-                    }));
+                    }, who));
                 } else errors.push(validator.errors.first('id'))
             }
             const [...updates] = await Promise.all(promises);
@@ -98,26 +103,51 @@ class NotificationService {
         }
 
         const notification = new Notification(body);
-        const [domain, itemsUpdated] = await NotificationMapper.updateDomainRecord({by, value, domain: notification});
-        if (!itemsUpdated) return Promise.reject(Utils.buildResponse({status: 'fail', data: domain}, 404));
+        const [domain, updated] = await NotificationMapper.updateDomainRecord({by, value, domain: notification}, who);
+
+        if (!updated) return Promise.reject(Error.RecordNotFound());
 
         return Utils.buildResponse({data: domain});
     }
 
     /**
+     * Update multiple notifications
      *
-     * @param body
-     * @param who
+     * Body should contain notification ids and the corresponding object that will be used to update
+     * e.g {
+     *     1:{status:1},
+     *     2:{status:2}
+     * }
+     * Iterates through each object item and calls {@link NotificationService#updateNotification}
+     * The response code of each update operation is returned to the client
+     *
+     * @param body {Object}
+     * @param who {Session}
+     * @param API {API}
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async updateMultipleNotifications(body, who, API) {
+        const ids = Object.keys(body), response = [];
+        for (let id of ids) {
+            const update = await this.updateNotification(id, 'id', body[id], who, API).catch(e => !response.push(e.code));
+            if (update) response.push(200);
+        }
+        return Utils.buildResponse({data: response});
+    }
+
+    /**
+     *
+     * @param body {Object}
+     * @param who {Session}
      * @param API {API}
      */
-    async sendNotification(body = {}, who = {}, API) {
+    async sendNotification(body = {}, who, API) {
         const Notification = DomainFactory.build(DomainFactory.NOTIFICATION);
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
-        const db = this.context.database;
         const notification = new Notification(body);
-        const validator = new validate(notification, notification.rules(), notification.customErrorMessages());
+        const db = this.context.db();
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+        if (!notification.validate()) return Promise.reject(Error.ValidationFailure(notification.getErrors().all()));
 
         let userIds = [];
         //The to column is an array
@@ -134,38 +164,23 @@ class NotificationService {
         if (userIds.length === 0) return Promise.resolve(Utils.buildResponse({data: {message: "Nothing to do"}}));
 
         const fcmTokens = await db.select(['fire_base_token']).from('users').whereIn('id', userIds);
-
-        let payload = {
-            data: {
-                'title': 'IE Force',
-                body: notification.message,
-                type: notification.type
-            },
-            priority: "high",
-            ttl: 3600,
-            registration_ids: _.flatten(fcmTokens.map(({fire_base_token}) => fire_base_token))
-        };
+        const payload = notification.buildCloudNotification(flatten(fcmTokens.map(({fire_base_token}) => fire_base_token)));
 
         if (payload.registration_ids.length) this.push(payload, API).catch(console.error);
-        else return Promise.reject(Utils.buildResponse({
-            status: "fail",
-            data: {message: "Device not registered"}
-        }, 400));
+        else return Promise.reject(Error.DeviceNotRegistered);
 
-        return NotificationMapper.createDomainRecord(notification).then(n => Utils.buildResponse({data: {items: n}}));
+        return NotificationMapper.createDomainRecord(notification, who).then(n => Utils.buildResponse({data: n}));
     }
 
     /**
-     * @param by
-     * @param value
+     * @param by {String}
+     * @param value {String|Number}
      * @returns {*}
      */
     deleteNotification(by = "id", value) {
         const NotificationMapper = MapperFactory.build(MapperFactory.NOTIFICATION);
         return NotificationMapper.deleteDomainRecord({by, value}).then(count => {
-            if (!count) {
-                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
-            }
+            if (!count) return Promise.reject(Error.RecordNotFound());
             return Utils.buildResponse({data: {by, message: "Notification deleted"}});
         });
     }
@@ -188,7 +203,6 @@ class NotificationService {
                     console.log('FCM:', err);
                     return;
                 }
-                console.log(body);
                 if (body.failure === 0 && body['canonical_ids'] === 0) return resolve(true); //everything was successful
                 let results = body.results;
                 results.forEach((err, index) => {
@@ -198,11 +212,10 @@ class NotificationService {
                             //update the old registration id
                             let oldReg = (payload.registration_ids) ? payload.registration_ids[index] : payload.to;
                             //Update the Old Token
-                            API.users().unRegisterFcmToken(oldReg, err['registration_id']);
+                            API.users().unRegisterFcmToken(oldReg, err['registration_id']).catch(console.error);
                             if (retrying) return resolve();
                         }
                     } else {
-
                         //There must have been an ERROR
                         if (err.error === "Unavailable") {
                             if (!retrying) {
@@ -219,7 +232,7 @@ class NotificationService {
                             if (retrying) return resolve();
                         } else if (err.error === "NotRegistered") {
                             let oldReg = (payload.registration_ids) ? payload.registration_ids[index] : payload.to;
-                            API.users().unRegisterFcmToken(oldReg);
+                            API.users().unRegisterFcmToken(oldReg).catch(console.error);
                             if (retrying) return resolve();
                         }
                     }
@@ -229,5 +242,6 @@ class NotificationService {
         return new Promise(executor);
     }
 }
+
 
 module.exports = NotificationService;

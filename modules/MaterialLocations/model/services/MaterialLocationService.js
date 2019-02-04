@@ -3,7 +3,6 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
-const Events = require('../../../../events/events');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 
 /**
@@ -33,25 +32,23 @@ class MaterialLocationService extends ApiService {
     }
 
     /**
-     * @param body
-     * @param who
+     * @param body {Object}
+     * @param who {Session}
      * @param API {API}
      * @returns {Promise<*>}
      */
-    async createMaterialLocation(body = {}, who = {}, API) {
+    async createMaterialLocation(body = {}, who, API) {
         const MaterialLocation = DomainFactory.build(DomainFactory.MATERIAL_LOCATION);
         let materialLocation = new MaterialLocation(body);
 
-        materialLocation.assigned_to = Utils.serializeAssignedTo(materialLocation.assigned_to);
+        materialLocation.serializeAssignedTo();
 
-        let validator = new validate(materialLocation, materialLocation.rules(), materialLocation.customErrorMessages());
+        if(!materialLocation.validate()) return Promise.reject(Error.ValidationFailure(materialLocation.getErrors().all()));
 
         ApiService.insertPermissionRights(materialLocation, who);
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
-        //Get Mapper
         const MaterialLocationMapper = MapperFactory.build(MapperFactory.MATERIAL_LOCATION);
-        return MaterialLocationMapper.createDomainRecord(materialLocation).then(result => {
+        return MaterialLocationMapper.createDomainRecord(materialLocation, who).then(result => {
             if (!result) return Promise.reject(false);
             API.stockMovements().createStockMovement({
                 material_id: materialLocation.material_id,

@@ -6,6 +6,11 @@ Validator.register("string-array", (value, req, attr) => {
     return (isValid) ? Array.isArray(obj) : false;
 }, "The :attribute must be a string-array or an array");
 
+Validator.register("string-object", (value, req, attr) => {
+    const [isValid, obj] = Utils.isJson(value);
+    return isValid;
+}, "The :attribute must be a json object string literal");
+
 
 if (!String.prototype.padStart) {
     String.prototype.padStart = function padStart(targetLength, padString) {

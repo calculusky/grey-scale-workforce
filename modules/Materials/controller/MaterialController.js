@@ -84,7 +84,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
-
     /**
      * @swagger
      * /materials/{offset}/{limit}:
@@ -115,7 +114,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(err);
             });
     });
-
 
     /**
      * @swagger
@@ -196,7 +194,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/material_id'
      */
     app.delete('/materials/:id', urlencodedParser, (req, res) => {
-        API.materials().deleteMaterial("id", req.params.id)
+        API.materials().deleteMaterial("id", req.params.id, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

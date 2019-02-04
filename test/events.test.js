@@ -1,101 +1,253 @@
 /**
  * @type {API}
  */
-const [API,ctx] = require('../index').test(); //Array Destructuring
-// API = new API(ctx);
+const [API, ctx] = require('../index').test(); //Array Destructuring
+const globalMock = require('./setup/ApplicationDependency');
+const Utils = require('../core/Utility/Utils');
 
 const EmailEvent = require('../events/EmailEvent');
 const IntegratorEvent = require('../events/IntegratorEvent');
 const ApplicationEvent = require('../events/ApplicationEvent');
 const LocationEvent = require('../events/LocationEvent');
-EmailEvent.init();
-IntegratorEvent.init();
-ApplicationEvent.init(undefined, undefined, API, {client: {1: 1}});
-LocationEvent.init(ctx, undefined, API, {clients: {1: 1}});
+const MessageEvent = require('../events/MessageEvent');
+const WebEvent = require('../events/WebEvent');
 
+MessageEvent.init(ctx, undefined, API);
 
-test("Egg", async () => {
-    const t = await EmailEvent.onPaymentPlanAssigned(1, [1]);
-    expect(t).toEqual("erer");
-});
-
-
-test("Events:onNotesAdded", async () => {
-    const t = await EmailEvent.onNotesAdded({
-        module: "disconnection_billings",
-        relation_id: 7,
-        created_by: 3
-    }, {sub: 3});
-    expect(t).toEqual("erer");
-});
-
-
-test("Events:onFaultAdded", async () => {
-    const fault = {
-        id: 3,
-        category_id: 2,
-        status: 1,
-        priority: 4,
-        summary: "lorep posim",
-        related_to: "assets",
-        relation_id: "54"
-    };
-    const t = await IntegratorEvent.onFaultAdded(fault, {});
-    expect(t).toEqual(1);
-});
-
-test("Events:onFaultUpdated", async () => {
-    const t = await IntegratorEvent.onFaultUpdated(3, {});
-    expect(t).toEqual("1");
-});
-
-test("Events:onRoleUpdated", async () => {
-    const t = await ApplicationEvent.onRoleUpdated({permissions: {name: "2"}}, {}, {permissions: {name: "22"}});
-    expect(t).toEqual("err");
-});
-
-
-it("Events:onFaultAdded", async () => {
-    const Fault = require('../modules/Faults/model/domain-objects/Fault');
-    const fault = new Fault({
-        id: 2,
-        related_to: "assets",
-        relation_id: 1071
-    });
-    expect.assertions(1);
-    const t = await ApplicationEvent.onFaultAdded(fault, {sub: 1});
-    expect(t).toBeTruthy();
-});
-
-it("Events:onWorkOrderUpdate", async () => {
-    const WorkOrder = require('../modules/WorkOrders/model/domain-objects/WorkOrder');
-    const workOrder = new WorkOrder({
-        id: 2,
-        related_to: "faults",
-        relation_id: 1,
-        status: 4,
-        type_id: 3
-    });
-    expect.assertions(1);
-    const t = await ApplicationEvent.onWorkOrderUpdate(workOrder, {sub: 1}, {});
-    expect(t).toBeTruthy();
-});
-
-
-it("Events:broadCastLocation", async () => {
-    expect.assertions(1);
-    const location = {
-        "locations": [
-            {
-                "lat": -34.7868114,
-                "lon": -55.2337042,
-                "bearing": 0,
-                "speed": 0,
-                "accuracy": 4235,
-                "altitude": 0
+WebEvent.init(ctx, {
+    sockets: {
+        connected: {
+            1: {
+                emit: () => {}
             }
-        ]
-    };
-    const t = await LocationEvent.broadcastLocation(location, {id: 1});
-    expect(t).toBeTruthy();
+        }
+    }
+}, API, {clients: {1: [1, 2]}});
+
+EmailEvent.init(ctx, undefined, API);
+IntegratorEvent.init(ctx, undefined, API);
+ApplicationEvent.init(ctx, undefined, API, {client: {1: 1}});
+LocationEvent.init(ctx, {sockets: {adapter: {rooms: {"location_update_1": ["test_room"]}}}}, API, {clients: {1: 1}});
+
+let knexMock, tracker, session;
+
+beforeAll(async (done) => {
+    [knexMock, tracker, session] = await globalMock.applicationBeforeAll(ctx);
+    done();
+});
+
+afterAll(async done => {
+    await ctx.getPersistence().disconnect();
+    knexMock.unmock(ctx.db(), 'knex@0.15.2');
+    done();
+});
+
+describe("EmailEvents", () => {
+
+    beforeAll(() => {
+        EmailEvent.sendEmail = jest.fn(() => true);
+        tracker.on('query', query => {
+            if (query.sql.indexOf('from `payment_plans`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    disc_order_id: 2,
+                    period: "2M",
+                    amount: 2000.29,
+                    approval_status: 1,
+                    approved_by: 1,
+                    assigned_to: [{id: 1, created_at: '2018-11-01 11:52:01'}]
+                }]);
+            }
+            else if (query.sql.indexOf('from `work_orders`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    assigned_to: [{id: 1, created_at: "20-01-2019"}]
+                }]);
+            }
+            else if (query.sql.indexOf('from `users`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    username: "paulex10",
+                    first_name: "Paul",
+                    last_name: "Okeke",
+                    wf_user_pass: "ac37cf7a8126c7db1595c03c5658a1f0"
+                }]);
+            }
+        });
+    });
+
+    it("Events:OnPaymentPlanAssigned should run successfully", () => {
+        return expect(EmailEvent.onPaymentPlanAssigned(1, [1])).resolves.toBeTruthy();
+    });
+
+    it("Events:onNotesAdded should run successfully", async () => {
+        const body = {module: "work_orders", relation_id: 7, created_by: 3};
+        return expect(EmailEvent.onNotesAdded(body, session)).resolves.toBeTruthy();
+    });
+
+    it("Events:onPaymentPlanApproval should run successfully", async () => {
+        return expect(EmailEvent.onPaymentPlanApproval(1, session)).resolves.toBeTruthy();
+    });
+
+});
+
+describe("Integrator Events", () => {
+
+    beforeAll(() => {
+        Utils.requestPromise = jest.fn(() => (Promise.resolve(true)));
+        tracker.on('query', query => {
+            if (query.sql.indexOf('from `assets`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    asset_name: "Example1",
+                    status: 1,
+                    ext_code: "222"
+                }]);
+            } else if (query.sql.indexOf('from `faults`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    fault_no: "ABC22",
+                    related_to: "assets",
+                    relation_id: "12",
+                    labels: ["test", "abc"]
+                }]);
+            }
+            return query.response([]);
+        });
+    });
+
+    it("onFaultAdded Should fail if the fault source is not crm", () => {
+        return expect(IntegratorEvent.onFaultAdded({source: 'crm'}, session)).resolves.toBeFalsy();
+    });
+
+    it("onFaultAdded Should run successfully", () => {
+        const body = {
+            relation_id: 1,
+            category_id: 1
+        };
+        return expect(IntegratorEvent.onFaultAdded(body, session)).resolves.toBeTruthy();
+    });
+
+    it("onFaultUpdated should throw error if fault id is not set", () => {
+        const body = {relation_id: 1,};
+        return expect(IntegratorEvent.onFaultUpdated(body, session)).rejects.toThrowError("The fault.id is not set.");
+    });
+
+    it("onFaultUpdated Should run successfully", () => {
+        const body = {
+            relation_id: 1,
+            category_id: 1,
+            id: 1
+        };
+        return expect(IntegratorEvent.onFaultUpdated(body, session)).resolves.toBeTruthy();
+    });
+});
+
+
+describe("Location Events", () => {
+
+    beforeAll(() => {
+        tracker.on('query', query => {
+            if (query.sql.indexOf('from `users`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    username: "paulex10",
+                    first_name: "Paul",
+                    last_name: "Okeke",
+                    gender: "M",
+                    avatar: "test.jpg"
+                }]);
+            }
+        });
+    });
+
+    it("onLocationUpdate should run successfully", () => {
+        const data = {
+            locations: [{
+                lat: 13.0,
+                lon: 22.1
+            }]
+        };
+        LocationEvent.broadcastLocation = jest.fn(() => {
+        });
+        const socket = {id: 1};
+        LocationEvent.onLocationUpdate(data, socket, session).then(res => {
+            expect(res).toBeTruthy();
+            return expect(LocationEvent.broadcastLocation).toHaveBeenCalled();
+        });
+    });
+});
+
+
+describe("Message Events", () => {
+    beforeAll(() => {
+        tracker.on('query', query => {
+            if (query.sql.indexOf('from `users`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    username: "paulex10",
+                    first_name: "Paul",
+                    last_name: "Okeke",
+                    gender: "M",
+                    avatar: "test.jpg",
+                    fire_base_token: []
+                }]);
+            }
+            if (query.method === 'insert') {
+                return query.response([1, {}]);
+            }
+        });
+    });
+
+    it("OnWorkOrderAssigned should run successfully", () => {
+        const workOrder = {
+            work_order_no: "number-10",
+            summary: "A big difference",
+            priority: "1"
+        };
+        return expect(MessageEvent.onWorkOrderAssigned(workOrder, [{id: 1}], session)).resolves.toBeTruthy();
+    });
+
+});
+
+describe("Web Events", () => {
+
+    beforeAll(() => {
+        tracker.on('query', query => {
+            if (query.sql.indexOf('from `users`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    username: "paulex",
+                    first_name: "Paul",
+                    last_name: "Okeke"
+                }]);
+            } else if (query.sql.indexOf('from `work_orders`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    assigned_to: [{id: 1, created_at: ""}]
+                }]);
+            }
+        });
+    });
+
+    it("OnNotesAdded should fail when note object misses mandatory key", () => {
+        const note = {};
+        return expect(
+            WebEvent.onNotesAdded(note, session)
+        ).rejects.toThrowError("relation_id, module and note must be set in note");
+    });
+
+    it("OnNotesAdded should run successfully", () => {
+        const note = {
+            module: "work_orders",
+            relation_id: "1",
+            note: "Something happened"
+        };
+        return expect(WebEvent.onNotesAdded(note, session)).resolves.toBeTruthy();
+    });
+
+    it("OnUploadComplete should run successfully", () => {
+        return expect(WebEvent.onUploadComplete("test", 1, "test.xlxs", 1)).resolves.toBeTruthy();
+    });
+
 });

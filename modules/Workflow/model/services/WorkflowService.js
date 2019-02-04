@@ -55,7 +55,7 @@ class WorkflowService {
      */
     async updateUser(by, value, body = {}) {
         if (!this.token) await ProcessAPI.login(this.username, this.password);
-        const db = this.context.database;
+        const db = this.context.db();
         // //we need to get the updated user record
         let dbUser = await db.table("users").where(by, value).select([
             'username',
@@ -105,6 +105,8 @@ class WorkflowService {
     async createUser(body = {}, who = {}, retry = true) {
         if (!this.token) await ProcessAPI.login(this.username, this.password);
 
+        if(Object.keys(body).length === 0) return Promise.reject(false);
+
         const pUser = toPMUser(body);
 
         return ProcessAPI.request('/users', pUser, 'POST', this.token).catch(err => {
@@ -125,7 +127,7 @@ class WorkflowService {
     async removeUserFromGroup(wfUserId, groupId) {
         if (!this.token) await ProcessAPI.login(this.username, this.password);
 
-        let group = await this.context.database.table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
+        let group = await this.context.db().table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
         group = group.shift();
         let resp = null;
         if (group) {
@@ -193,7 +195,7 @@ class WorkflowService {
      */
     async updateGroup(group) {
         if (!this.token) await ProcessAPI.login(this.username, this.password);
-        const db = this.context.database;
+        const db = this.context.db();
         //let's check if the group already exist on process maker
         let dbGroup = await db.table("groups").where("id", group.id).select(['id', 'name', 'wf_group_id']);
 
@@ -233,7 +235,7 @@ class WorkflowService {
     async addUserToGroup(wfUserId, groupId) {
         if (!this.token) await ProcessAPI.login(this.username, this.password);
 
-        const db = this.context.database;
+        const db = this.context.db();
 
         //first let get the wf_group_id of this group
         let group = await db.table("groups").where("id", groupId).select(['id', 'name', 'wf_group_id']);
@@ -259,23 +261,23 @@ class WorkflowService {
      *
      *
      * @param domain {DomainObject}
-     * @param who
+     * @param who {Session}
      * @param processKey
      * @returns {Promise<void>}
      */
     async startCase(processKey, who, domain) {
-        if (!who['pmToken']) return Promise.reject(Utils.buildResponse({status: 'fail', msg: 'Unauthorized'}, 401));
-        const db = this.context.database;
-        let process = processes[processKey];
+        const pmToken = who.getExtraKey("pmToken");
+        const db = this.context.db();
+        const process = processes[processKey];
+
+        if (!pmToken) return Promise.reject(Utils.buildResponse({status: 'fail', msg: 'Unauthorized'}, 401));
 
         if (!process) return;
 
         //lets get the wf_user_id of the user
-        let user = await db.table("users").where("id", who.sub).select(['wf_user_id']);
+        const user = (await db.table("users").where("id", who.getAuthUser().getUserId()).select(['wf_user_id'])).shift();
 
-        if (!user.length) return;
-
-        user = user.shift();
+        if (!user) return;
 
         let payload = {};
         if (process['saveAs']) {
@@ -289,7 +291,7 @@ class WorkflowService {
         payload['dateDue'] = Utils.date.moment(new Date(), "YYYY-MM-DD HH:MM:SS").add(30, 'days');
 
         payload = PUtils.buildCaseVars(process['processId'], process['taskStartId'], payload);
-        let response = await ProcessAPI.request('/cases', payload, 'POST', who['pmToken']).catch(err => {
+        let response = await ProcessAPI.request('/cases', payload, 'POST', pmToken).catch(err => {
             return Promise.reject(Utils.processMakerError(err));
         });
 
@@ -297,8 +299,9 @@ class WorkflowService {
     }
 
     async deleteCase(caseId, who) {
-        if (!who['pmToken']) return;
-        return await ProcessAPI.request(`/cases/${caseId}`, null, 'DELETE', who['pmToken']).catch(err => {
+        const pmToken = who.getExtraKey("pmToken");
+        if (!pmToken) return;
+        return await ProcessAPI.request(`/cases/${caseId}`, null, 'DELETE', pmToken).catch(err => {
             return Promise.reject(Utils.processMakerError(err));
         });
     }
@@ -313,10 +316,11 @@ class WorkflowService {
      * @returns {Promise<*>}
      */
     async routeCase(caseId, who, delIndex = "1", data = {}) {
-        if (!who['pmToken']) await ProcessAPI.login(this.username, this.password);//TODO revert
+        const pmToken = who.getExtraKey("pmToken");
+        if (!pmToken) await ProcessAPI.login(this.username, this.password);//TODO revert
         const routeUrl = `/cases/${caseId}/route-case`;
         data['del_index'] = delIndex;
-        return ProcessAPI.request(routeUrl, data, 'PUT', who['pmToken']);
+        return ProcessAPI.request(routeUrl, data, 'PUT', pmToken);
     }
 
     /**
@@ -352,8 +356,9 @@ class WorkflowService {
      * @returns {Promise<*>}
      */
     async getCase(caseId, who) {
-        if (!who['pmToken'] && !this.token) await ProcessAPI.login(this.username, this.password);
-        let resp = await ProcessAPI.request(`/cases/${caseId}`, null, 'GET', who['pmToken']).catch(err => {
+        const pmToken = who.getExtraKey("pmToken");
+        if (!pmToken && !this.token) await ProcessAPI.login(this.username, this.password);
+        let resp = await ProcessAPI.request(`/cases/${caseId}`, null, 'GET', pmToken).catch(err => {
             return err;
         });
         resp = JSON.parse(resp);

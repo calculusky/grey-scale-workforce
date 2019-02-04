@@ -69,6 +69,8 @@ class DomainFactory {
                     return require('./FaultCategories/model/domain-objects/FaultCategory');
                 case DomainFactory.LOCATION_HISTORY:
                     return require('./LocationHistory/model/domain-objects/LocationHistory');
+                case DomainFactory.PASSWORD_RESET:
+                    return require('./Users/model/domain-objects/PasswordReset');
             }
         } catch (e) {
             if (e.code === "MODULE_NOT_FOUND") {
@@ -105,5 +107,6 @@ DomainFactory.FAULT_CATEGORY = "FaultCategory";
 DomainFactory.ACTIVITY = "Activity";
 DomainFactory.PENDING_REASON = "PendingReason";
 DomainFactory.LOCATION_HISTORY = "LocationHistory";
+DomainFactory.PASSWORD_RESET = "PasswordReset";
 
 module.exports = DomainFactory;

@@ -42,6 +42,19 @@ class MaterialRequisition extends DomainObject {
         };
     }
 
+    /**
+     * Get materials associated with a material requisition
+     *
+     * @param db
+     * @param cols
+     * @returns {*}
+     */
+    getMaterials(db, cols = ['id', 'name', 'unit_of_measurement', 'unit_price', 'total_quantity', 'created_at', 'updated_at', 'assigned_to']) {
+        if (!this.materials || this.materials.length === 0) return [];
+        const filtered = this.materials.filter(i => i['id']);
+        return db.table("materials").whereIn('id', filtered.map(({id}) => id)).where("deleted_at", null).select(cols)
+    }
+
     requestedBy() {
         return this.relations().belongsTo("User", "requested_by", ['id', 'username', 'first_name', 'last_name']);
     }

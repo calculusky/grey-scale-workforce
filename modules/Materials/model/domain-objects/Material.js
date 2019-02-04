@@ -39,14 +39,10 @@ class Material extends DomainObject {
     rules() {
         return {
             name: 'string|required',
-            unit_of_measurement: "numeric|required"
+            unit_of_measurement: "string|required"
         };
     }
 
-
-    user() {
-        return this.relations().belongsTo("User", "assigned_to");
-    }
 }
 
 //noinspection JSUnresolvedVariable

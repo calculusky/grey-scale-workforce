@@ -40,6 +40,10 @@ class Activity extends DomainObject {
         }
     }
 
+    isAuditAble(){
+        return false;
+    }
+
     activityBy(...cols) {
         if (cols.length === 0) cols[0] = "*";
         return this.relations().belongsTo("User", "activity_by", cols);

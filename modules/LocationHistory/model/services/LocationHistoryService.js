@@ -2,7 +2,6 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const ApiService = require('../../../ApiService');
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 
 
@@ -18,24 +17,22 @@ class LocationHistoryService extends ApiService {
     }
 
     /**
-     *
-     * @param body
-     * @param who
+     * @param body {Object}
+     * @param who {Session}
      * @returns {Promise<*>}
      */
     async createLocationHistory(body, who) {
         const LocationHistory = DomainFactory.build(DomainFactory.LOCATION_HISTORY);
         const locationHistory = new LocationHistory(body);
-        let validator = new validate(locationHistory, locationHistory.rules(), locationHistory.customErrorMessages());
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+        if(!locationHistory.validate()) return Promise.reject(Error.ValidationFailure(locationHistory.getErrors().all()));
 
         const location = locationHistory.location;
 
-        locationHistory.location = this.context.database.raw(`POINT(${location.x}, ${location.y})`);
+        locationHistory.location = this.context.db().raw(`POINT(${location.x}, ${location.y})`);
 
         const LocationHistoryMapper = MapperFactory.build(MapperFactory.LOCATION_HISTORY);
-        return LocationHistoryMapper.createDomainRecord(locationHistory).then(history => {
+        return LocationHistoryMapper.createDomainRecord(locationHistory, who).then(history => {
             history.location = location;
             return Utils.buildResponse({data: history});
         });
@@ -43,12 +40,12 @@ class LocationHistoryService extends ApiService {
 
     /**
      *
-     * @param query
-     * @param who
-     * @param API
+     * @param query {Object}
+     * @param who {Session}
+     * @param API {API}
      * @returns {Promise<{data?: *, code?: *}>}
      */
-    async getLocationHistory(query, who = {}, API) {
+    async getLocationHistory(query, who, API) {
         const {group_id, user_id} = query;
         let users = [];
         if (group_id) users = await API.groups().getGroupUsers(group_id);

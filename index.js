@@ -4,6 +4,10 @@
 require('dotenv').config();
 const Context = require('./core/Context.js');
 const ctx = new Context(require('./config.json'));
+/**
+ *
+ * @type {API}
+ */
 const API = require("./boostrap")(ctx);
 
 

@@ -3,10 +3,10 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
-const Events = require('../../../../events/events');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 
 /**
+ * @todo TEST
  * @name StockMovementService
  * Created by paulex on 6/05/18.
  */
@@ -39,17 +39,15 @@ class StockMovementService extends ApiService {
      */
     async createStockMovement(body = {}, who = {}) {
         const StockMovement = DomainFactory.build(DomainFactory.STOCK_MOVEMENT);
-        let stockMovement = new StockMovement(body);
+        const stockMovement = new StockMovement(body);
 
-        let validator = new validate(stockMovement, stockMovement.rules(), stockMovement.customErrorMessages());
+        if(!stockMovement.validate()) return Promise.reject(Error.ValidationFailure(stockMovement.getErrors().all()));
 
         ApiService.insertPermissionRights(stockMovement, who);
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
-        //Get Mapper
         const StockMovementMapper = MapperFactory.build(MapperFactory.STOCK_MOVEMENT);
-        return StockMovementMapper.createDomainRecord(stockMovement).then(result => {
-            if (!result) return Promise.reject(false);
+        return StockMovementMapper.createDomainRecord(stockMovement, who).then(result => {
+            if (!result) return Promise.reject(Error.InternalServerError);
             return Utils.buildResponse({data: result});
         });
     }

@@ -181,11 +181,6 @@ module.exports.getAddressFromPoint = function (lat, lng) {
     return new Promise(executor);
 };
 
-module.exports.makeAttachmentURL = function(attachment){
-    return `${process.env.APP_URL}:${process.env.PORT}/attachment/${attachment.module}/download/${attachment.file_name}`
-};
-
-
 module.exports.validatePayLoad = function (payLoad, checks) {
     const pKeys = Object.keys(payLoad);
     let valid = true;
@@ -392,7 +387,7 @@ module.exports.redisGet = function (redis, key, toJson = true) {
 module.exports.getBUAndUT = function (group, groups) {
     if (!group) return [null, []];
     let bu, ut = [];
-    const type = group.type.toLowerCase();
+    const type = (group.type) ? group.type.toLowerCase() : "";
     const findUT = (item) => {
         if (!item) return;
         item.forEach(child => {
@@ -434,13 +429,6 @@ module.exports.getBUAndUT = function (group, groups) {
     Object.assign(undertaking, ut);
     return [businessUnit, undertaking];
 };
-
-
-module.exports.validateEmail = function (email) {
-    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(email);
-};
-
 
 module.exports.authFailData = function (code) {
     switch (code) {
@@ -542,25 +530,6 @@ module.exports.numericToInteger = function (body, ...keys) {
     }
 };
 
-module.exports.spotDifferenceInRecord = function (newRecord = {}, oldRecord = {}) {
-    let isDifferent = false;
-    let changeSummary = [];
-    for (let [key, value] of Object.entries(newRecord)) {
-        let oldRecordValue = oldRecord[key];
-        if ((oldRecordValue || oldRecordValue === "") && (oldRecordValue != value)) {
-            //check for keys like assigned_to
-            if (typeof oldRecordValue !== "object") {
-                changeSummary.push(`${key}:${oldRecord[key]}__::::__${newRecord[key]}`);
-                isDifferent = true;
-            } else if (typeof oldRecordValue === 'object') {
-                //We'd need to check this object
-
-            }
-        }
-    }
-    return [isDifferent, changeSummary];
-};
-
 module.exports.upsert = function (db, table, data, update) {
     if (!update) update = data;
     let insertSQL = db.insert(data).into(table).toString();
@@ -618,12 +587,6 @@ module.exports.getModuleName = function (module) {
         default:
             return "Module";
     }
-};
-
-module.exports.invokeInSequence = function (args, ...promises) {
-    (async function () {
-        for (let promise of promises) await promise.catch(console.error);
-    })().catch(console.error);
 };
 
 module.exports.paymentPlanProcessed = function (appStatus) {

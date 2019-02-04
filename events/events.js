@@ -1,6 +1,8 @@
 /**
  * Created by paulex on 10/18/17.
  */
+const Session = require('../core/Session');
+
 exports.init = function (context, io, API) {
     this.eventListeners = [];
     this.sharedData = {
@@ -15,7 +17,6 @@ exports.init = function (context, io, API) {
             './WebEvent',
             './ApplicationEvent',
             './MessageEvent',
-            './AuditEvent',
             './IntegratorEvent'
         ];
 
@@ -67,11 +68,11 @@ exports.init = function (context, io, API) {
         |---------------------------------------------------
          */
         socket.on("update_location", data => {
+            //@todo build a session for the user
             this.eventListeners.forEach(listener => listener.emit('update_location', data, socket));
             io.sockets.emit("update_location", data);
         });
 
-        //data : {id:1, username:""}
         socket.on("register_location_update", (data) => {
             socket.join(`location_update_${data.id}`);
         });

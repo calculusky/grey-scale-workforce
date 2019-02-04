@@ -1,5 +1,4 @@
 const EventEmitter = require('events').EventEmitter;
-const _ = require('lodash');
 const Utils = require("../core/Utility/Utils");
 const DomainFactory = require("../modules/DomainFactory");
 
@@ -37,17 +36,18 @@ class IntegratorEvent extends EventEmitter {
      */
     async onFaultAdded(fault = {}, who) {
         if (fault.source === "crm") return false;
+        if (!fault.relation_id) throw new TypeError("relation_id is not set");
 
         const iFault = Object.assign({}, fault);
-        const db = this.context.database;
+        const db = this.context.db();
 
-        const categories = await Utils.getFromPersistent(this.context, "fault:categories", true);
-        iFault.category = categories[iFault['category_id']].name;
-        iFault['fault_type'] = categories[iFault['category_id']].type;
+        const categories = await this.context.getKey("fault:categories", true);
+        const category = categories[iFault['category_id']];
+        iFault.category = (category) ? category.name : null;
+        iFault['fault_type'] = (category) ? category.type : null;
 
         //get the assets
-        const record = await db.table("assets").where("id", iFault.relation_id).select(["ext_code"]);
-        const asset = record.shift();
+        const asset = (await db.table("assets").where("id", iFault.relation_id).select(["ext_code"])).shift();
 
         if (!asset) return;
 
@@ -74,10 +74,11 @@ class IntegratorEvent extends EventEmitter {
      *
      * @param uFault
      * @param who
-     * @returns {Promise<void>}
+     * @returns {Promise<Boolean>}
      */
     async onFaultUpdated(uFault, who) {
-        const db = this.context.database;
+        if(!uFault.id) throw new TypeError("The fault.id is not set.");
+        const db = this.context.db();
         const fCols = [
             "id",
             "related_to",
@@ -92,19 +93,20 @@ class IntegratorEvent extends EventEmitter {
 
         const fault = await db.table("faults").where("id", uFault.id).select(fCols);
 
-        if (!fault.length) return;
+        if (!fault.length) return false;
 
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const iFault = Object.assign({}, new Fault(fault.shift()));
-        const categories = await Utils.getFromPersistent(this.context, "fault:categories", true);
-        iFault.category = categories[iFault['category_id']].name;
-        iFault['fault_type'] = categories[iFault['category_id']].type;
+        const categories = await this.context.getKey("fault:categories", true);
+        const category = categories[iFault['category_id']];
+        iFault.category = (category) ? category.name : null;
+        iFault['fault_type'] = (category) ? category.type : null;
 
         //get the assets
         const record = await db.table("assets").where("id", iFault.relation_id).select(["ext_code"]);
         const asset = record.shift();
 
-        if (!asset) return;
+        if (!asset) return false;
 
         iFault['ext_code'] = asset['ext_code'];
 

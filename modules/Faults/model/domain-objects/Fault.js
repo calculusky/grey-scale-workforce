@@ -57,6 +57,73 @@ class Fault extends DomainObject {
         };
     }
 
+    setIssueDate(date) {
+        this.issue_date = date;
+        return this;
+    }
+
+    /**
+     *
+     * @param date
+     * @returns {Fault}
+     */
+    setIssueDateIfNull(date) {
+        if (!this.issue_date)
+            this.issue_date = date;
+        return this;
+    }
+
+    /**
+     * Sets the category using the categoryId
+     *
+     * @param source
+     */
+    setCategory(source) {
+        if (!this.category_id || !source) return;
+        this.category = source[this.category_id] || null;
+    }
+
+    /**
+     *
+     * @param db
+     * @returns {Promise<boolean>}
+     */
+    async validateSource(db) {
+        if (this.source && this.source.toLowerCase() === "crm") {
+            const asset = (await db(this.related_to).where('id', this.relation_id)
+                .orWhere('ext_code', this.relation_id).select(['id', 'group_id'])).shift();
+            if (!asset) return false;
+            this.relation_id = `${asset.id}`;
+        }
+        return true;
+    }
+
+    getNotesCount(db) {
+        if (!this.id) return console.assert(this.id, "Fault ID is not set");
+        return db.count('note as notes_count')
+            .from("notes").where("module", "faults").where("relation_id", this.id);
+    }
+
+    getAttachmentsCount(db) {
+        if (!this.id) return console.assert(this.id, "Fault ID is not set");
+        return db.count('id as attachments_count')
+            .from("notes").where("module", "faults").where("relation_id", this.id);
+    }
+
+    getWorkOrdersCount(db) {
+        if (!this.id) return console.assert(this.id, "Fault ID is not set");
+        return db.count('id as works_count')
+            .from("work_orders").where("related_to", "faults").where("relation_id", this.id)
+    }
+
+    getRelatedRecordCount(db) {
+        return [
+            this.getNotesCount(db),
+            this.getAttachmentsCount(db),
+            this.getWorkOrdersCount(db)
+        ];
+    }
+
     /**
      *
      * @returns {*}

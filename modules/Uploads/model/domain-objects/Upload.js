@@ -6,7 +6,7 @@ const map = require('./map.json');
 /**
  * @author Paul Okeke
  * Created by paulex on 8/22/17.
- * @name Note
+ * @name Upload
  */
 class Upload extends DomainObject {
 

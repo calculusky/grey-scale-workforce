@@ -37,7 +37,11 @@ class Customer extends DomainObject {
 
     rules() {
         return {
-            account_no: String
+            account_no: "required|string",
+            customer_name:"required|string",
+            created_by:"integer|required",
+            customer_type:"string|required",
+            email:"email"
         };
     }
 

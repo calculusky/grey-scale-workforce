@@ -26,7 +26,6 @@ class Notification extends DomainObject {
 
     guard() {
         return [
-            'api_instance_id',
             'id'
         ];
     }
@@ -46,6 +45,25 @@ class Notification extends DomainObject {
             from: 'integer|required',
             record_ids:'string-array',
             to: 'required'
+        };
+    }
+
+    /**
+     *
+     * @param registrationIds
+     * @param title
+     * @returns {{data: {title: string, body: *, type: *}, priority: string, ttl: number, registration_ids: *}}
+     */
+    buildCloudNotification(registrationIds, title="IE Force"){
+        return {
+            data: {
+                title,
+                body: this.message,
+                type: this.type
+            },
+            priority: "high",
+            ttl: 3600,
+            registration_ids: registrationIds
         };
     }
 

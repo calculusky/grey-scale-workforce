@@ -1,7 +1,6 @@
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const ApiService = require('../../../ApiService');
-const Utils = require('../../../../core/Utility/Utils');
 const crypto = require('crypto');
 
 /**
@@ -15,7 +14,7 @@ class ActivationService extends ApiService {
         MapperFactory = this.context.modelMappers;
     }
 
-    activateUser(userId, who = {}) {
+    async activateUser(userId, who = {}) {
         const Activation = DomainFactory.build(DomainFactory.ACTIVATION);
         const ActivationMapper = MapperFactory.build(MapperFactory.ACTIVATION);
 
@@ -25,14 +24,9 @@ class ActivationService extends ApiService {
             completed: 1
         });
 
-        const executor = (resolve, reject) => {
-            return ActivationMapper.createDomainRecord(activation).then(act => {
-                return resolve(act);
-            }).catch(err => {
-                return reject(err);
-            });
-        };
-        return new Promise(executor);
+        if (!activation.validate()) return Promise.reject("UserId wasn't specified");
+
+        return await ActivationMapper.createDomainRecord(activation);
     }
 }
 

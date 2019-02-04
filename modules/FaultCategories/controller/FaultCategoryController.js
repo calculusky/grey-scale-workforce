@@ -19,6 +19,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      * @swagger
      * /fault_categories:
      *   get:
+     *     deprecated: true
      *     summary: Retrieves a List of Fault Categories
      *     description: ''
      *     tags: [Faults]

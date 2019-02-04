@@ -2,7 +2,6 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
-const validate = require('validatorjs');
 const DisconnectionBillingDataTable = require('../commons/DisconnectionBillingDataTable');
 let MapperFactory = null;
 
@@ -21,40 +20,27 @@ class DisconnectionBillingService extends ApiService {
         MapperFactory = this.context.modelMappers;
     }
 
-
     /**
-     *
-     * @param query
-     * @param who
-     * @returns {Promise}
-     */
-    async getDisconnectionBillings(query = {}, who = {}) {
-        return Utils.buildResponse({data: {items: []}});
-    }
-
-    /**
-     *
+     * Creates a disconnection billing record
      *
      * @param body {Object}
-     * @param who
-     * @param files
+     * @param who {Session}
+     * @param files {Array}
      * @param API {API}
      */
-    async createDisconnectionBilling(body = {}, who = {}, files = [], API) {
-        console.log(body);
-        const db = this.context.database;
-        let {work_order: workOrder} = body;
+    async createDisconnectionBilling(body = {}, who, files = [], API) {
+        const db = this.context.db();
+        const {work_order: workOrder} = body;
         const DisconnectionBilling = DomainFactory.build(DomainFactory.DISCONNECTION_ORDER);
         const dBilling = new DisconnectionBilling(body);
 
         Utils.numericToInteger(dBilling, 'current_bill', 'arrears');
 
-        dBilling.assigned_to = Utils.serializeAssignedTo(dBilling.assigned_to);
+        dBilling.serializeAssignedTo();
 
         ApiService.insertPermissionRights(dBilling, who);
 
-        const validator = new validate(dBilling, dBilling.rules(), dBilling.customErrorMessages());
-        if (validator.fails(null)) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+        if(!dBilling.validate()) return Promise.reject(Error.ValidationFailure(dBilling.getErrors().all()));
 
         //We need to check if the customer exist and get the customer tariff
         const {data: {data: {items: [customer]}}} = await API.customers().getCustomer(dBilling.account_no, 'account_no', who);
@@ -65,18 +51,18 @@ class DisconnectionBillingService extends ApiService {
         let [{amount: fee}] = await db.table("rc_fees").where('name', customer.tariff).select(['amount']);
         fee = (fee) ? fee : 3000;
 
-        dBilling.min_amount_payable = dBilling.current_bill + dBilling.arrears;
-        dBilling.reconnection_fee = fee;
-        dBilling.total_amount_payable = dBilling.current_bill + dBilling.arrears + fee;
+        dBilling.calculateMinAmount();
+        dBilling.setReconnectionFee(fee);
+        dBilling.calculateTotalAmount();
 
         const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
-        const record = await DisconnectionBillingMapper.createDomainRecord(dBilling).catch(err => (Promise.reject(err)));
+        const record = await DisconnectionBillingMapper.createDomainRecord(dBilling, who).catch(err => (Promise.reject(err)));
         if (workOrder) {
             if (typeof workOrder === 'string') workOrder = Utils.isJson(workOrder).pop();
             workOrder.related_to = "disconnection_billings";
             workOrder.relation_id = `${record.id}`;
             workOrder.type_id = 1;
-            const {data: {data: work_order}} = await API.workOrders().createWorkOrder(workOrder, who, files, API).catch(err => {
+            const {data: {data: order}} = await API.workOrders().createWorkOrder(workOrder, who, files, API).catch(err => {
                 this.deleteDisconnectionBilling('id', record.id, who, API).catch(console.error);
                 return Promise.reject(err);
             });
@@ -89,35 +75,30 @@ class DisconnectionBillingService extends ApiService {
     /**
      * For getting dataTable records
      *
-     * @param body
-     * @param who
+     * @param body {Object}
+     * @param who {Session}
      * @returns {Promise<IDtResponse>}
      */
     async getDisconnectionBillingDataTableRecords(body, who){
-        console.log(body);
-        const billingDataTable = new DisconnectionBillingDataTable(this.context.database, MapperFactory.build(MapperFactory.DISCONNECTION_ORDER));
-        const editor = await billingDataTable.addBody(body).make().catch(err=>{
-            console.log(err);
-        });
+        const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
+        const billingDataTable = new DisconnectionBillingDataTable(this.context.db(), DisconnectionBillingMapper, who);
+        const editor = await billingDataTable.addBody(body).make().catch(console.error);
         return editor.data();
     }
 
-
-
     /**
+     * Deletes a disconnection billing
      *
-     * @param by
-     * @param value
-     * @param who
-     * @param API
+     * @param by {String}
+     * @param value {String|Number}
+     * @param who {Session}
+     * @param API {API}
      * @returns {*}
      */
     deleteDisconnectionBilling(by = "id", value, who, API) {
         const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
         return DisconnectionBillingMapper.deleteDomainRecord({by, value}, true, who).then(count => {
-            if (!count) {
-                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
-            }
+            if (!count) return Promise.reject(Error.RecordNotFound());
             return Utils.buildResponse({data: {by, message: "DisconnectionBilling deleted"}});
         });
     }

@@ -13,6 +13,7 @@ class Note extends DomainObject {
     constructor(data) {
         super(data, map);
         /*PLEASE DON'T PUT instance fields here that are not mapped to DB*/
+        this.note = null;
     }
 
     required() {

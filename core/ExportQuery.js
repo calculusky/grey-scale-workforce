@@ -3,6 +3,7 @@ const Excel = require('exceljs');
 /**
  * @author Paul Okeke
  * Created by paulex on 26/11/18.
+ * @name ExportQuery
  */
 class ExportQuery {
 
@@ -36,8 +37,12 @@ class ExportQuery {
         }
     }
 
+    /**
+     * @abstract
+     * @param query
+     */
     onQuery(query) {
-        throw new Error("onQuery Method is not overridden");
+        throw new Error("onQuery must be implemented.");
     }
 
     /**
@@ -74,7 +79,7 @@ class ExportQuery {
      */
     async getAudits(relationId) {
         const rQuery = {module: this.modelMapper.tableName, relation_id: relationId};
-        const {data: {data: {items}}} = await this.api.activities().getActivities(rQuery, {}, this.api).catch(console.error);
+        const {data: {data: {items}}} = await this.api.activities().getActivities(rQuery, this.who, this.api).catch(console.error);
         return items;
     }
 

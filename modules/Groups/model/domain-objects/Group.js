@@ -25,7 +25,6 @@ class Group extends DomainObject {
 
     guard() {
         return [
-            'api_instance_id',
             'id'
         ];
     }

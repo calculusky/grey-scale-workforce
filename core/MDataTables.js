@@ -1,5 +1,6 @@
 const {Editor} = require('datatables.net-editor-server');
 const ApiService = require('../modules/ApiService');
+const Session = require('./Session');
 
 /**
  * @name MDataTables
@@ -9,7 +10,7 @@ class MDataTables {
     /**
      *
      * @param db
-     * @param modelMapper {ModelMapper|NoteMapper|WorkOrderMapper}
+     * @param modelMapper {ModelMapper|NoteMapper|WorkOrderMapper|RoleMapper}
      */
     constructor(db, modelMapper) {
         if (!modelMapper) throw new TypeError("ModelMapper cannot be null");
@@ -62,6 +63,10 @@ class MDataTables {
     }
 
 
+    /**
+     * @param who {Session}
+     * @returns {MDataTables}
+     */
     setSession(who) {
         this.session = who;
         return this;
@@ -74,8 +79,12 @@ class MDataTables {
      */
     beforeProcess(editor) {
         if (!this.isFieldSet) this.addFields();
-        if (this.usePermission && this.permissionKey)
+        //if permission is enabled, the session variable must be an instance of Session
+        if (this.usePermission && this.permissionKey) {
+            if (!(this.session instanceof Session))
+                throw new Error("session is required when permissions is enabled.");
             ApiService.queryWithPermissions(this.permissionKey, editor, this.mapper, this.session);
+        }
         this.editor.where(`${this.mapper.tableName}.deleted_at`, null);
     }
 

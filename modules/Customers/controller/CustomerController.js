@@ -176,7 +176,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /customers/search/{keyword}/{offset}/{limit}:
+     * /customers/search/{keyword}:
      *   get:
      *     summary: Search for a customer either by the account_no or meter_no
      *     description: ''
@@ -195,8 +195,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/customers/search/:keyword/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
-        return API.customers().searchCustomers(req.params['keyword'], req.params['offset'], req.params['limit'])
+    app.get('/customers/search/:keyword', urlencodedParser, (req, res)=> {
+        return API.customers().searchCustomers(req.params['keyword'], req.query['offset'], req.query['limit'])
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -283,7 +283,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/account_no'
      */
     app.delete('/customers/:account_no', urlencodedParser, (req, res)=> {
-        API.customers().deleteCustomer("id", req.params.account_no)
+        API.customers().deleteCustomer("id", req.params.account_no, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })

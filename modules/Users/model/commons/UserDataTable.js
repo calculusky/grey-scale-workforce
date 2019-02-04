@@ -7,9 +7,9 @@ class UserDataTable extends MDataTables {
      *
      * @param db
      * @param mapper {UserMapper}
-     * @param who
+     * @param who {Session}
      */
-    constructor(db, mapper, who = {}) {
+    constructor(db, mapper, who) {
         super(db, mapper);
         this.setSession(who);
     }
@@ -20,7 +20,6 @@ class UserDataTable extends MDataTables {
      * @returns {MDataTables}
      */
     addFields(...fields) {
-        console.log(this.body);
         fields.push(
             new Field('first_name'),
             new Field('last_name'),

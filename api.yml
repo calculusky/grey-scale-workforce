@@ -806,10 +806,8 @@ definitions:
     type: object
     required:
       - account_no
-      - old_account_no
-      - meter_no
       - customer_name
-      - plain_address
+      - customer_type
     properties:
       account_no:
         type: string
@@ -825,6 +823,9 @@ definitions:
         type: string
       customer_type:
         type: string
+        enum:
+          - residential
+          - commercial
       tariff:
         type: string
       group_id:
