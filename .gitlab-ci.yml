@@ -32,7 +32,7 @@ deploy_staging:
   - eval $(ssh-agent -s)
   - echo "$SSH_PRIVATE_KEY" > private_ssh.key
   - chmod 600 private_ssh.key
-  - cat private.ssh_key
+  - cat private_ssh.key
   - ssh-add private_ssh.key
   - ssh -v paul@85.25.103.81 -p 942 -t 'cd /var/www/html/mrworking-api'
   environment:
