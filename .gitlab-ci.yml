@@ -19,6 +19,7 @@ before_script:
   - 'which ssh-agent || (apt-get install openssh-client -y )'
   - eval $(ssh-agent -s)
   - echo "$SSH_PRIVATE_KEY" > private_ssh.key
+  - chmod 600 private.ssh_key
   - ssh-add private_ssh.key
 
 test:
