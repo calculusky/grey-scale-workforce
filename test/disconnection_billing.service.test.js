@@ -24,7 +24,7 @@ afterAll(async done => {
 function registerGeneralTracker() {
     tracker.on('query', query => {
         if (query.sql.indexOf("customers") !== -1 && !query.bindings.includes("01006567PP")) {
-            query.response([{
+            return query.response([{
                 account_no: "0100656722",
                 customer_name: "Paul Okeke",
                 status: 1,
@@ -36,6 +36,13 @@ function registerGeneralTracker() {
                 fieldCount: 0,
                 affectedRows: 1,
             }]);
+        }
+        if (query.sql.indexOf('`amount` from `rc_fees`') !== -1) {
+            return query.response([{
+                id:1,
+                name:"R2STP",
+                amount:3000
+            }])
         }
     });
 }
