@@ -32,7 +32,7 @@ class EmailEvent extends EventEmitter {
         });
         //Register events
         this.on('payment_plan_assigned', this.onPaymentPlanAssigned);
-        this.on('note_added', this.onNotesAdded);
+        // this.on('note_added', this.onNotesAdded);
         this.on('payment_plan_approval', this.onPaymentPlanApproval);
     }
 
