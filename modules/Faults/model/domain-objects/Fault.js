@@ -2,6 +2,7 @@
 const DomainObject = require('../../../../core/model/DomainObject');
 //noinspection JSUnresolvedFunction
 const map = require('./map.json');
+const {getFaultStatus, getFaultPriority} = require('../../../../core/Utility/Utils');
 
 /**
  * @author Paul Okeke
@@ -122,6 +123,46 @@ class Fault extends DomainObject {
             this.getAttachmentsCount(db),
             this.getWorkOrdersCount(db)
         ];
+    }
+
+    /**
+     *
+     * @param context
+     * @return {{}|*}
+     */
+    toAuditAbleFormat(context) {
+        const newData = {...this};
+        for (const [key, value] of Object.entries(newData)) {
+            switch (key) {
+                case 'relation_id': {
+                    //TODO check if the related value is an asset
+                    break;
+                }
+                case 'category_id' || 'fault_category_id': {
+                    context.getKey("fault:categories", true).then(categories => {
+                        newData[key] = categories[value].name;
+                    });
+                    break;
+                }
+                case 'status': {
+                    newData[key] = getFaultStatus(value);
+                    break;
+                }
+                case 'priority': {
+                    newData[key] = getFaultPriority(value);
+                    break;
+                }
+                case 'labels': {
+                    if (typeof value === 'string') newData[key] = JSON.parse(value);
+                    break;
+                }
+                case 'assigned_to': {
+                    if (typeof value === 'string') newData[key] = JSON.parse(value);
+                    break;
+                }
+            }
+        }
+        return newData;
     }
 
     /**

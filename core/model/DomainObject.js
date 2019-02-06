@@ -69,7 +69,12 @@ class DomainObject {
         return true;
     }
 
-    toAuditAbleFormat() {
+    /**
+     *
+     * @param context
+     * @return {DomainObject}
+     */
+    toAuditAbleFormat(context) {
         return this;
     }
 

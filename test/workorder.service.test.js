@@ -44,8 +44,8 @@ describe("Work Order Creation", () => {
             assigned_to: `["1"]`,
             status: '1',
             group_id: 1,
-            'issue_date': '2017/10/5'
-        }, session, [], API)).rejects.toEqual(expect.objectContaining({
+            'issue_date': '2019-10-05'
+        }, session, API, [])).rejects.toEqual(expect.objectContaining({
             code: 400,
             err: expect.objectContaining({
                 code: "VALIDATION_ERROR"
@@ -62,10 +62,9 @@ describe("Work Order Creation", () => {
             summary: "Fix it",
             assigned_to: `["1"]`,
             status: '1',
-            group_id: 1,
-            'issue_date': '2017/10/5'
+            group_id: 1
         };
-        return expect(API.workOrders().createWorkOrder(workOrderDummy, session, [], API)).resolves.toMatchObject({
+        return expect(API.workOrders().createWorkOrder(workOrderDummy, session, API)).resolves.toMatchObject({
             code: 200,
             data: {
                 data: Object.assign(workOrderDummy, {assigned_to: expect.any(Array), labels: expect.any(Array)})
@@ -83,9 +82,9 @@ describe("Work Order Creation", () => {
             assigned_to: `["1"]`,
             status: '1',
             group_id: 3232,
-            'issue_date': '2017/10/5'
+            'issue_date': '2019-12-05'
         };
-        return expect(API.workOrders().createWorkOrder(workOrderDummy, session, [], API)).rejects.toMatchObject({
+        return expect(API.workOrders().createWorkOrder(workOrderDummy, session, API)).rejects.toMatchObject({
             code: 400,
             err: {
                 data: {

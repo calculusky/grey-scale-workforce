@@ -29,14 +29,14 @@ class WorkOrderService extends ApiService {
      * @param body {Object}
      * @param who {Session}
      * @param files {Array}
-     * @param {API} API
+     * @param API {API}
      * @returns {Promise<*>}
      */
-    async createWorkOrder(body = {}, who, files = [], API) {
+    async createWorkOrder(body = {}, who, API, files = []) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const workOrder = new WorkOrder(body);
 
-        workOrder.serializeAssignedTo();
+        workOrder.serializeAssignedTo().setIssueDate();
 
         if (!workOrder.validate()) return Promise.reject(Error.ValidationFailure(workOrder.getErrors().all()));
 
@@ -59,7 +59,7 @@ class WorkOrderService extends ApiService {
 
     /**
      *
-     * @param value
+     * @param value {String|Number}
      * @param by
      * @param who {Session}
      * @param offset {Number}
@@ -159,9 +159,9 @@ class WorkOrderService extends ApiService {
     /**
      * Searches for work orders.
      *
-     * @param keyword
-     * @param offset
-     * @param limit
+     * @param keyword {String}
+     * @param offset {Number}
+     * @param limit {Number}
      * @returns {Promise.<*>}
      */
     async searchWorkOrders(keyword = "", offset = 0, limit = 10) {
@@ -219,7 +219,7 @@ class WorkOrderService extends ApiService {
      */
     async changeWorkOrderStatus(value/*WorkOrderId*/, status, who, note, files = [], API) {
         const updated = await this.updateWorkOrder("id", value, {status}, who, [], API);
-        if (note && note.note) API.notes().createNote(note, who, files, API).catch(console.error);
+        if (note && note.note) API.notes().createNote(note, who, API, files).catch(console.error);
         return updated;
     }
 

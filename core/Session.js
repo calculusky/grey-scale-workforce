@@ -36,11 +36,11 @@ module.exports = (function () {
             return token;
         };
 
-        getExtras(){
+        getExtras() {
             return extras;
         }
 
-        getExtraKey(key){
+        getExtraKey(key) {
             return extras[key];
         }
 
@@ -107,7 +107,7 @@ module.exports = (function () {
              * @returns {Session.Builder}
              */
             addExtra: function (key, value) {
-                extras[key] = value;
+                if (value) extras[key] = value;
                 return this;
             },
 
@@ -148,6 +148,24 @@ module.exports = (function () {
             },
 
             /**
+             * @internal
+             * @return {Promise<Session>}
+             */
+            default: async () => {
+                if (user && user instanceof User) {
+                    const task = [user.userGroups(), context.getKey("groups", true)];
+                    const [userGroup = {records: []}, groups] = await Promise.all(task).catch(console.error);
+                    authUser.setGroups((userGroup.records.length) ? userGroup.records.map(({id}) => id) : []);
+                    permittedGroups = flatten(authUser.getGroups().map(id => {
+                        return (({ids}) => ids)(Utils.getGroupChildren(groups[id]))
+                    }));
+                    permittedGroups.push(...authUser.getGroups());
+                }
+                setAuthUser(authUser);
+                return session;
+            },
+
+            /**
              * Builds the session
              *
              * @returns {Promise<Session>}
@@ -161,7 +179,7 @@ module.exports = (function () {
                 };
                 if (user && user instanceof User) {
                     const task = [user.userGroups(), user.roles(), context.getKey("groups", true)];
-                    const [userGroup = {records: []}, {records: [{permissions="{}"}]}, groups] = await Promise.all(task).catch(err => {
+                    const [userGroup = {records: []}, {records: [{permissions = "{}"}]}, groups] = await Promise.all(task).catch(err => {
                         console.error(err);
                     });
                     token.group = (userGroup.records.length) ? userGroup.records.map(({id}) => id) : [];

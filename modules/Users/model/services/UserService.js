@@ -17,11 +17,11 @@ class UserService extends ApiService {
 
     /**
      *
-     * @param value
-     * @param by
-     * @param who
-     * @param offset
-     * @param limit
+     * @param value {String|Number}
+     * @param by {String}
+     * @param who {Session}
+     * @param offset {Number}
+     * @param limit {Number}
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getUsers(value = '?', by = "id", who, offset = 0, limit = 10) {
@@ -40,7 +40,7 @@ class UserService extends ApiService {
 
     /**
      *
-     * @param body
+     * @param body {Object}
      * @param who {Session}
      * @param API {API}
      */

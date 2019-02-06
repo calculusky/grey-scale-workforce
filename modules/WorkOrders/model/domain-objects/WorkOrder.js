@@ -2,6 +2,7 @@
 const DomainObject = require('../../../../core/model/DomainObject');
 //noinspection JSUnresolvedFunction
 const map = require('./map.json');
+const {getGroupParent, date: moment, getWorkPriorities, getWorkOrderType, getWorkStatuses} = require('../../../../core/Utility/Utils');
 
 /**
  * Created by paulex on 7/5/17.
@@ -44,7 +45,7 @@ class WorkOrder extends DomainObject {
             relation_id: 'string|required',
             status: 'numeric|required',
             summary: 'string|required',
-            issue_date: 'date|required',
+            issue_date: 'date',
             labels: 'string-array',
             assigned_to: 'string-array'
         }
@@ -56,6 +57,12 @@ class WorkOrder extends DomainObject {
 
     setRelationId(relationId) {
         this.relation_id = relationId;
+    }
+
+    setIssueDate(date = this.issue_date) {
+        if (!date) this.issue_date = moment.dateToMysql();
+        else this.issue_date = moment.dateFormat(date);
+        return this;
     }
 
     setRelatedTo(relatedTo) {
@@ -92,8 +99,8 @@ class WorkOrder extends DomainObject {
      *
      * @returns {string|*}
      */
-    humanizeWorkOrderNo(){
-        if(!this.work_order_no) return;
+    humanizeWorkOrderNo() {
+        if (!this.work_order_no) return;
         let formattedNo = "";
         let stringItems = this.work_order_no.split("");
         for (let i = 0; i < stringItems.length; i++) {
@@ -144,7 +151,7 @@ class WorkOrder extends DomainObject {
      */
     async generateWorkOrderNo(ctx, group = {}) {
         const Utils = require('../../../../core/Utility/Utils');
-        const bu = Utils.getGroupParent(group, 'business_unit') || group;
+        const bu = getGroupParent(group, 'business_unit') || group;
         const prefix = WorkOrder.getWorkOrderPrefix(this.type_id);
         const uniqueNo = await Utils.generateUniqueSystemNumber(prefix, bu['short_name'], 'work_orders', ctx);
         this.work_order_no = uniqueNo.toUpperCase();
@@ -163,6 +170,49 @@ class WorkOrder extends DomainObject {
                 return "F";
         }
         return "W";
+    }
+
+    /**
+     *
+     * @param context
+     * @return {{}|*}
+     */
+    toAuditAbleFormat(context) {
+        const newData = {...this};
+        const typeId = newData['type_id'] || 1;
+        for (const [key, value] of Object.entries(newData)) {
+            switch (key) {
+                case 'status': {
+                    newData[key] = getWorkStatuses(typeId, value);
+                    break;
+                }
+                case 'type_id': {
+                    newData[key] = getWorkOrderType(typeId).name;
+                    break;
+                }
+                case 'group_id': {
+                    context.getKey("groups", true).then(groups=>{
+                        newData[key] = groups[value].name;
+                    });
+                    break;
+                }
+                case 'priority': {
+                    newData[key] = getWorkPriorities(1, value);
+                    break;
+                }
+                case 'labels': {
+                    newData[key] = JSON.parse(value);
+                    break;
+                }
+                case 'assigned_to': {
+                    newData[key] = JSON.parse(value);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        return newData;
     }
 
 

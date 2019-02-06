@@ -56,7 +56,7 @@ class FaultService extends ApiService {
      * @param files {Array}
      * @param API {API}
      */
-    async createFault(body = {}, who, files = [], API) {
+    async createFault(body = {}, who,  API, files = []) {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const fault = new Fault(body);
 

@@ -54,7 +54,7 @@ describe("Create Disconnection Billing", () => {
     });
 
     test("Should throw error if the required fields are not specified", () => {
-        return expect(API.disconnections().createDisconnectionBilling({}, session, [], API)).rejects.toEqual(expect.objectContaining({
+        return expect(API.disconnections().createDisconnectionBilling({}, session, API)).rejects.toEqual(expect.objectContaining({
             code: 400,
             err: expect.any(Object)
         }));
@@ -68,7 +68,7 @@ describe("Create Disconnection Billing", () => {
         disconnection.calculateTotalAmount();
         disconnection.serializeAssignedTo();
 
-        return expect(API.disconnections().createDisconnectionBilling(disconnections, session, [], API)).resolves.toMatchObject({
+        return expect(API.disconnections().createDisconnectionBilling(disconnections, session, API)).resolves.toMatchObject({
             code: 200,
             data: {
                 data: disconnection
@@ -78,7 +78,7 @@ describe("Create Disconnection Billing", () => {
 
     it("Should fail if customer doesn't exist", () => {
         const disconnections = {account_no: '01006567PP', current_bill: 3000, arrears: 2000};
-        return expect(API.disconnections().createDisconnectionBilling(disconnections, session, [], API))
+        return expect(API.disconnections().createDisconnectionBilling(disconnections, session, API))
             .rejects.toEqual(expect.objectContaining({
                 code: 400,
                 err: {data: {"account_no": ["The account_no doesn't exist."]}, status: "fail"},
@@ -102,7 +102,7 @@ describe("CreateDisconnectionBilling with WorkOrder", () => {
             arrears: 2000,
             work_order: {}
         };
-        return expect(API.disconnections().createDisconnectionBilling(disconnections, session, [], API))
+        return expect(API.disconnections().createDisconnectionBilling(disconnections, session, API))
             .rejects.toMatchObject({
                 code: 400,
                 err: {
@@ -121,7 +121,7 @@ describe("CreateDisconnectionBilling with WorkOrder", () => {
             work_order: {}
         };
         const deleteFn = jest.spyOn(API.disconnections(), "deleteDisconnectionBilling");
-        return API.disconnections().createDisconnectionBilling(disconnections, session, [], API).catch(() => {
+        return API.disconnections().createDisconnectionBilling(disconnections, session, API).catch(() => {
             return expect(deleteFn).toHaveBeenCalled();
         });
     });
@@ -138,7 +138,7 @@ describe("CreateDisconnectionBilling with WorkOrder", () => {
                 status: 1
             }
         };
-        return expect(API.disconnections().createDisconnectionBilling(disconnections, session, [], API))
+        return expect(API.disconnections().createDisconnectionBilling(disconnections, session, API))
             .resolves.toEqual(expect.objectContaining({
                 code: 200,
                 data: expect.any(Object)

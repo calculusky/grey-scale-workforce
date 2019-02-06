@@ -19,12 +19,12 @@ class CustomerService extends ApiService {
     }
 
     /**
-     * @param value
-     * @param by
+     * @param value {String|Number}
+     * @param by {String}
      * @param who {Session}
-     * @param offset
-     * @param limit
-     * @param includes
+     * @param offset {Number}
+     * @param limit {Number}
+     * @param includes {Array}
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getCustomer(value, by = "account_no", who, offset = 0, limit = 10, includes = ['assets']) {
@@ -38,28 +38,17 @@ class CustomerService extends ApiService {
     }
 
     /**
-     * @param query
-     * @param who
+     * Queries for customer records
+     *
+     * @param query {Object}
+     * @param who {Session}
      * @returns {Promise<{data?: *, code?: *}>}
      */
-    async getCustomers(query, who = {}) {
-        const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
-        const {meter_no, type, tariff, status, offset = 0, limit = 10} = query;
-
+    async getCustomers(query = {}, who) {
+        const results = await this.buildQuery(query).catch(() => Error.InternalServerError);
         const groups = await this.context.getKey("groups", true);
-
-        const resultSets = this.context.db().select(['*']).from('customers');
-
-        if (meter_no) resultSets.where("meter_no", meter_no);
-        if (type) resultSets.where("customer_type", type);
-        if (tariff) resultSets.where("tariff", tariff);
-        if (status) resultSets.whereIn('status', `${status}`.split(","));
-
-        resultSets.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy('account_no', 'asc');
-
-        const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
+        const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
         const assets = CustomerService.addBUAndUTAttributes(results, groups, Customer);
-
         return Utils.buildResponse({data: {items: assets}});
     }
 
@@ -74,7 +63,7 @@ class CustomerService extends ApiService {
         ApiService.insertPermissionRights(customer, who);
 
         if (!customer.validate()) return Promise.reject(Error.ValidationFailure(customer.getErrors().all()));
-        //Get Mapper
+
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         return CustomerMapper.createDomainRecord(customer, [], who).then(customer => {
             if (!customer) return Promise.reject();
@@ -201,6 +190,24 @@ class CustomerService extends ApiService {
     }
 
     /**
+     * @param query {Object}
+     * @return {Promise<*>}
+     */
+    async buildQuery(query = {}) {
+        const {meter_no, type, tariff, status, offset = 0, limit = 10} = query;
+        const resultSets = this.context.db().select(['*']).from('customers');
+
+        if (meter_no) resultSets.where("meter_no", meter_no);
+        if (type) resultSets.where("customer_type", type);
+        if (tariff) resultSets.where("tariff", tariff);
+        if (status) resultSets.whereIn('status', `${status}`.split(","));
+
+        resultSets.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy('account_no', 'asc');
+
+        return resultSets;
+    }
+
+    /**
      * @param results
      * @param groups
      * @param Customer {Customer} - The customer domain object
@@ -219,6 +226,7 @@ class CustomerService extends ApiService {
             return customer;
         })
     }
+
 }
 
 module.exports = CustomerService;

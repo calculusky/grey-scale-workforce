@@ -14,6 +14,7 @@ class AuditAble {
     constructor(context, API) {
         if (AuditAble._instance) return AuditAble._instance;
         this.api = API;
+        this.context = context;
         AuditAble._instance = this;
     }
 
@@ -30,7 +31,7 @@ class AuditAble {
         const primaryKey = mapper.primaryKey;
         const tableName = mapper.tableName;
         if (!domain[primaryKey]) return console.warn("AuditFailed:", `Can't audit a ${domain.constructor.name} without it's primary key`);
-        const record = domain.toAuditAbleFormat();
+        const record = domain.toAuditAbleFormat(this.context);
         const activity = {
             module: tableName,
             relation_id: domain[primaryKey],

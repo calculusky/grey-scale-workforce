@@ -21,11 +21,11 @@ class RoleService extends ApiService {
 
     /**
      *
-     * @param value
-     * @param by
+     * @param value {String|Number}
+     * @param by {String}
      * @param who {Session}
-     * @param offset
-     * @param limit
+     * @param offset {Number}
+     * @param limit {Number}
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getRoles(value, by = "id", who, offset = 0, limit = 10) {
@@ -37,7 +37,7 @@ class RoleService extends ApiService {
     /**
      * Creates a new role
      *
-     * @param body
+     * @param body {Object}
      * @param who {Session}
      */
     createRole(body = {}, who) {
@@ -58,10 +58,10 @@ class RoleService extends ApiService {
     /**
      * TODO check that the permission is a string-object literal
      *
-     * @param value
-     * @param body
+     * @param value {String|Number}
+     * @param body {Object}
      * @param who {Session}
-     * @param by
+     * @param by {String}
      */
     async updateRole(value, body = {}, who, by = "id") {
         const Role = DomainFactory.build(DomainFactory.ROLE);
@@ -86,10 +86,10 @@ class RoleService extends ApiService {
      *
      * @param roleId - The Role ID
      * @param userId - The User ID
-     * @param who
-     * @param API
+     * @param who {Session}
+     * @param API {API}
      */
-    async addUserToRole(roleId, userId, who = {}, API) {
+    async addUserToRole(roleId, userId, who, API) {
         const user_roles = {role_id: roleId, user_id: userId};
 
         Utils.numericToInteger(user_roles, 'role_id', 'user_id');
@@ -114,7 +114,7 @@ class RoleService extends ApiService {
      *
      * @param userId {Number} - The user id
      * @param oldRoleId {Number} - The id the user was initially assigned to
-     * @param body
+     * @param body {Object}
      * @param who {Session}
      * @param API {API}
      * @returns {Promise<void>|*}
@@ -128,15 +128,11 @@ class RoleService extends ApiService {
             .where('user_id', userId).update(user_roles).catch(console.error);
     }
 
-    async detachUserFromRole(roleId, userId, who = {}) {
-        return await this.context.db().table("role_users").where('role_id', roleId).where('user_id', userId).del();
-    }
-
     /**
      * For getting dataTable records
      *
-     * @param body
-     * @param who
+     * @param body {Object}
+     * @param who {Session}
      * @returns {Promise<IDtResponse>}
      */
     async getRoleTableRecords(body, who) {
@@ -147,8 +143,8 @@ class RoleService extends ApiService {
 
     /**
      *
-     * @param by
-     * @param value
+     * @param by {String}
+     * @param value {String|Number}
      * @param who {Session}
      * @returns {*}
      */

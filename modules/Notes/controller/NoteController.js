@@ -39,9 +39,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.post('/notes', multiPart.array("files", 5), (req, res) => {
         console.log(req.body);
-        API.notes().createNote(req.body, req.who, req.files, API)
+        API.notes().createNote(req.body, req.who, API, req.files)
             .then(({data, code}) => {
-                // console.log(data);
                 return res.status(code).send(data);
             })
             .catch(({err, code}) => {
@@ -49,42 +48,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 return res.status(code).send(err);
             });
     });
-
-    // /**
-    //  * @swag
-    //  * /notes:
-    //  *   put:
-    //  *     summary: Updates a Note
-    //  *     description: ''
-    //  *     tags: [Notes]
-    //  *     consumes:
-    //  *     - application/json
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: updateNote
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successfully Added
-    //  *     parameters:
-    //  *      - $ref: '#/parameters/sessionId'
-    //  *      - in: body
-    //  *        name: 'fault'
-    //  *        required: true
-    //  *        schema:
-    //  *          $ref: '#/definitions/postNoteInput'
-    //  */
-    // app.put('/notes', jsonParser, (req, res)=> {
-    //     API.notes().updateNote(req.body, req.who)
-    //         .then(({data, code})=> {
-    //             console.log(data);
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             console.log(code, err);
-    //             return res.status(code).send(err);
-    //         });
-    // });
-
 
     /**
      * @swag
@@ -117,36 +80,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-
-    // /**
-    //  * @swagger
-    //  * /notes/{offset}/{limit}:
-    //  *   get:
-    //  *     summary: Gets List of notes
-    //  *     description: ''
-    //  *     tags: [Note]
-    //  *     produces:
-    //  *     - application/json
-    //  *     operationId: getNotes
-    //  *     responses:
-    //  *       '200':
-    //  *         description: Successful
-    //  *         schema:
-    //  *           $ref: '#/definitions/getNoteOutput'
-    //  *     parameters:
-    //  *     - $ref: '#/parameters/sessionId'
-    //  *     - $ref: '#/parameters/offset'
-    //  *     - $ref: '#/parameters/limit'
-    //  */
-    // app.get('/notes/:offset?/:limit?', urlencodedParser, (req, res)=> {
-    //     return API.notes().getNotes(req.params['user_id'], "assigned_to", req.who, req.params.offset, req.params.limit)
-    //         .then(({data, code})=> {
-    //             return res.status(code).send(data);
-    //         })
-    //         .catch(({err, code})=> {
-    //             return res.status(code).send(err);
-    //         });
-    // });
 
     /**
      * @swag

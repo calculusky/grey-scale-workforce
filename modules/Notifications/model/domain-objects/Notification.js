@@ -48,6 +48,10 @@ class Notification extends DomainObject {
         };
     }
 
+    isAuditAble() {
+        return false;
+    }
+
     /**
      *
      * @param registrationIds

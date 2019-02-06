@@ -22,6 +22,13 @@ describe("Session Initialization", () => {
         return expect(session.getToken()).toBeDefined();
     });
 
+    it("Retrieve Default Session for a user", async ()=>{
+        const User = require('../modules/Users/model/domain-objects/User');
+        const session = await Session.Builder(ctx).setUser(new User({id: 1})).setExpiry(3000).default();
+        expect(session.getPermittedGroups()).toHaveLength(1);
+        return expect(session.getAuthUser().getUserId()).toEqual(1);
+    });
+
 });
 
 describe("Retrieve userGroups, roles and permissions", () => {
