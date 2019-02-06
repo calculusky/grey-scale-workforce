@@ -150,7 +150,7 @@ class PaymentService {
                 "issue_date": Utils.date.dateToMysql()
             };
             console.log('Reconnection', reconnectionOrder);
-            API.workOrders().createWorkOrder(reconnectionOrder, who, [], API).catch(err => console.error('PAYMENTS', err));
+            API.workOrders().createWorkOrder(reconnectionOrder, who, API).catch(err => console.error('PAYMENTS', err));
         };
 
         if (auto) {

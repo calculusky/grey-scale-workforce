@@ -1,10 +1,9 @@
 const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
-const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validatorjs');
 const Events = require('../../../../events/events');
 const Error = require('../../../../core/Utility/ErrorUtils')();
+const {getAddressFromPoint, buildResponse, convertLocationToPoints} = require('../../../../core/Utility/Utils');
 
 /**
  * @name NoteService
@@ -17,78 +16,88 @@ class NoteService extends ApiService {
         MapperFactory = this.context.modelMappers;
     }
 
-    async getNotes(value, module, by = "id", who = {api: -1}, offset = 0, limit = 10) {
-        value = {[by]: value, "module": module};
+    /**
+     *
+     * @param val {String|Number}
+     * @param module {String}
+     * @param who {Session}
+     * @param by {String}
+     * @param offset {Number}
+     * @param limit {Number}
+     * @return {Promise<{data?: *, code?: *}>}
+     */
+    async getNotes(val, module, who, by = "id", offset = 0, limit = 10) {
+        const value = {[by]: val, module};
         const NoteMapper = MapperFactory.build(MapperFactory.NOTE);
         const notes = (await NoteMapper.findDomainRecord({by, value}, offset, limit)).records;
-        for(const note of notes){
-            const [{records:[user]}, {records:attachments}] = await Promise.all([note.user(), note.attachments()]);
+        for (const note of notes) {
+            const [{records: [user]}, {records: attachments}] = await Promise.all([note.user(), note.attachments()]);
             note.user = user;
             note.attachments = attachments;
-            if(note.location){
-                note.location.address = await Utils.getAddressFromPoint(note.location.x, note.location.y).catch(console.error);
+            if (note.location) {
+                note.location.address = await getAddressFromPoint(note.location.x, note.location.y).catch(console.error);
             }
             sweepNoteResponsePayload(note);
         }
-        return Utils.buildResponse({data: {items: notes}});
+        return buildResponse({data: {items: notes}});
     }
 
     /**
      *
-     * @param body
-     * @param who
-     * @param files
+     * @param body {Object}
+     * @param who {Session}
+     * @param files {Array}
      * @param API {API}
      */
-    async createNote(body = {}, who = {}, files = [], API) {
+    async createNote(body = {}, who, API, files = []) {
+        const NoteMapper = MapperFactory.build(MapperFactory.NOTE);
         const Note = DomainFactory.build(DomainFactory.NOTE);
-        const [isValid, location] = (body.location) ? Utils.isJson(body.location) : [false, null];
-        const aLocation = (isValid) ? this.context.database.raw(`POINT(${location.x}, ${location.y})`) : null;
-
-        let note = new Note(body);
-        note.created_by = who.sub;
-        note.location = aLocation;
+        const note = new Note(body);
+        let location = null;
 
         ApiService.insertPermissionRights(note, who);
 
-        let validator = new validate(note, note.rules(), note.customErrorMessages());
+        if (!note.validate()) return Promise.reject(Error.ValidationFailure(note.getErrors().all()));
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
+        ({point: note.location, location} = await convertLocationToPoints(this.context.db(), body));
 
-        if(location){
-            location.address = await Utils.getAddressFromPoint(location.x, location.y).catch(console.error);
-        }
-
-        //Get Mapper
-        const NoteMapper = MapperFactory.build(MapperFactory.NOTE);
-        return NoteMapper.createDomainRecord(note).then(note => {
-            if (!note) return Promise.reject(false);
+        return NoteMapper.createDomainRecord(note, who).then(note => {
+            if (!note) return Promise.reject(Error.InternalServerError);
             note.location = location;
-            if (files.length) {
-                API.attachments().createAttachment({module: "notes", relation_id: note.id, location}, who, files, API).then();
-            }
-
-            Events.emit("note_added", note, who);
-            return Utils.buildResponse({data: note});
+            onNoteAdded(note, who, API, files);
+            return buildResponse({data: note});
         });
     }
 
     /**
      *
-     * @param by
-     * @param value
+     * @param by {String}
+     * @param value {String|Number}
      * @returns {*}
      */
     deleteNote(by = "id", value) {
         const NoteMapper = MapperFactory.build(MapperFactory.NOTE);
         return NoteMapper.deleteDomainRecord({by, value}).then(count => {
-            if (!count) {
-                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
-            }
-            return Utils.buildResponse({data: {by, message: "Note deleted"}});
+            if (!count) return Promise.reject(Error.RecordNotFound());
+            return buildResponse({data: {by, message: "Note deleted"}});
         });
     }
 }
+
+/**
+ *
+ * @param note {Object}
+ * @param who {Session}
+ * @param API {API}
+ * @param files {Array}
+ */
+function onNoteAdded(note, who, API, files) {
+    if (files.length) {
+        API.attachments().createAttachment({module: "notes", relation_id: note.id, location}, who, files, API).then();
+    }
+    Events.emit("note_added", note, who);
+}
+
 
 function sweepNoteResponsePayload(note) {
     note.attachments.forEach(attachment => {
@@ -99,20 +108,6 @@ function sweepNoteResponsePayload(note) {
         delete attachment.details;
         delete attachment.relation_id;
     });
-    if (note.user) {
-        delete note.user.password;
-        delete note.user.permissions;
-        delete note.user.group_id;
-        delete note.user.assigned_to;
-        delete note.user.created_by;
-        delete note.user.address_id;
-        delete note.user.last_login;
-        delete note.user.firebase_token;
-        delete note.user.location;
-        delete note.user.middle_name;
-        delete note.user.created_at;
-        delete note.user.updated_at;
-    }
     delete note.source;
     delete note.source_id;
     delete note.source_name;

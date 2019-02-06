@@ -41,13 +41,14 @@ class IntegratorEvent extends EventEmitter {
         const iFault = Object.assign({}, fault);
         const db = this.context.db();
 
-        const categories = await this.context.getKey("fault:categories", true);
+        const [[asset], categories] = await Promise.all([
+            db.table("assets").where("id", iFault.relation_id).select(["ext_code"]),
+            this.context.getKey("fault:categories", true)
+        ]);
         const category = categories[iFault['category_id']];
+
         iFault.category = (category) ? category.name : null;
         iFault['fault_type'] = (category) ? category.type : null;
-
-        //get the assets
-        const asset = (await db.table("assets").where("id", iFault.relation_id).select(["ext_code"])).shift();
 
         if (!asset) return;
 
@@ -66,7 +67,7 @@ class IntegratorEvent extends EventEmitter {
             form: iFault,
             timeout: 1500
         };
-        return await Utils.requestPromise(options, "POST", headers);
+        return await Utils.requestPromise(options, "POST", headers).catch(console.error);
     }
 
     /**
@@ -77,7 +78,7 @@ class IntegratorEvent extends EventEmitter {
      * @returns {Promise<Boolean>}
      */
     async onFaultUpdated(uFault, who) {
-        if(!uFault.id) throw new TypeError("The fault.id is not set.");
+        if (!uFault.id) throw new TypeError("The fault.id is not set.");
         const db = this.context.db();
         const fCols = [
             "id",

@@ -39,7 +39,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postFaultInput'
      */
     app.post('/faults', multiPart.array("files", 5), (req, res) => {
-        API.faults().createFault(req.body, req.who, req.files, API).then(({data, code}) => {
+        API.faults().createFault(req.body, req.who, API, req.files).then(({data, code}) => {
             console.log(data);
             return res.status(code).json(data);
         }).catch(({err, code}) => {
@@ -188,7 +188,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/limit'
      */
     app.get('/faults/:id/notes', urlencodedParser, (req, res) => {
-        return API.notes().getNotes(req.params['id'], "faults", "relation_id", req.who, req.query.offset || 0, req.query.limit || 10)
+        return API.notes().getNotes(req.params['id'], "faults", req.who, "relation_id", req.query.offset || 0, req.query.limit || 10)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

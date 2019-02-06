@@ -20,7 +20,7 @@ class ApiService {
         if (!who || !who.getAuthUser()) return;
         const authUser = who.getAuthUser();
         data['created_by'] = authUser.getUserId();
-        if (!data['group_id']) data['group_id'] = authUser.getGroups().shift() || 1;
+        if (!data['group_id']) data['group_id'] = authUser.getGroups()[0] || 1;
 
         let assignedTo = data['assigned_to'];
         const setDefaultAssignedTo = () => {

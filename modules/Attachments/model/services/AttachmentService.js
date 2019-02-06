@@ -1,7 +1,7 @@
 const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
-const Utils = require('../../../../core/Utility/Utils');
+const {getAddressFromPoint, buildResponse, convertLocationToPoints} = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 
 /**
@@ -38,10 +38,10 @@ class AttachmentService extends ApiService {
             attachment.getPublicUrl();
             delete attachment.file_path;
             if (attachment.location) {
-                attachment.location.address = await Utils.getAddressFromPoint(attachment.location.x, attachment.location.y).catch(console.error);
+                attachment.location.address = await getAddressFromPoint(attachment.location.x, attachment.location.y).catch(console.error);
             }
         }
-        return Utils.buildResponse({data: {items: attachments}});
+        return buildResponse({data: {items: attachments}});
     }
 
     /**
@@ -54,10 +54,7 @@ class AttachmentService extends ApiService {
     async createAttachment(body = {}, who, files = [], API) {
         const authUser = who.getAuthUser();
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
-
-        const [isValid, location] = (body.location) ? Utils.isJson(body.location) : [false, null];
-        const aLocation = (isValid) ? this.context.db().raw(`POINT(${location.x}, ${location.y})`) : null;
-
+        const {point, location} = await convertLocationToPoints(this.context.db(), body);
         let attachments = [];
         if (files.length) {
             files.forEach(file => attachments.push(new Attachment({
@@ -67,32 +64,26 @@ class AttachmentService extends ApiService {
                 file_size: file.size || 1,
                 file_path: file.path,
                 file_type: file.mimetype,
-                location: aLocation,
+                location: point,
                 created_by: authUser.getUserId(),
                 group_id: authUser.getGroups().shift() || null
             })));
         } else {
             body['created_by'] = authUser.getUserId();
             body['group_id'] = authUser.getGroups().shift() || 1;
-            body['location'] = aLocation;
+            body['location'] = point;
             const attachment = new Attachment(body);
             if (!attachment.validate()) return Promise.reject(Error.ValidationFailure(attachment.getErrors().all()));
             attachments.push(attachment);
         }
 
-        if (location) {
-            location.address = await Utils.getAddressFromPoint(location.x, location.y).catch(console.error);
-        }
-
-        //Get Mapper
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         return AttachmentMapper.createDomainRecord(null, attachments, who).then(attachment => {
             if (!attachment) return Promise.reject(false);
-
             if (Array.isArray(attachment)) for (let att of attachment) att.location = location;
             else attachment.location = location;
             //reset the attachment location to what it is
-            return Utils.buildResponse({data: Array.isArray(attachment) ? attachment.pop() : attachment});
+            return buildResponse({data: Array.isArray(attachment) ? attachment.pop() : attachment});
         });
     }
 
@@ -108,7 +99,7 @@ class AttachmentService extends ApiService {
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
         //for incoming request , the module name and request-id is required and there must be a file
         if (!body.module || !body['request_id'] || files.length === 0) {
-            return Promise.reject(Utils.buildResponse({
+            return Promise.reject(buildResponse({
                 status: "fail",
                 data: {message: 'Nothing to do'}
             }, 400));
@@ -118,7 +109,7 @@ class AttachmentService extends ApiService {
 
         if (!this.context.getIncoming(requestId)) {
             console.log("Not Request ID found");
-            return Promise.reject(Utils.buildResponse({
+            return Promise.reject(buildResponse({
                 status: "fail",
                 data: {message: 'Request ID Not Found'}
             }, 404));
@@ -147,7 +138,7 @@ class AttachmentService extends ApiService {
                     if (++processed === rowLen) {
                         attachmentIds.push(response.data.data.id);
                         this.context.deleteIncoming(requestId);
-                        return resolve(Utils.buildResponse({data: true}));
+                        return resolve(buildResponse({data: true}));
                     }
                 }).catch(err => {
                     console.log(err);
@@ -191,7 +182,7 @@ class AttachmentService extends ApiService {
         const AttachmentMapper = MapperFactory.build(MapperFactory.ATTACHMENT);
         return AttachmentMapper.deleteDomainRecord({value}, true, who).then(count => {
             if (!count) return Promise.reject(Error.RecordNotFound());
-            return Utils.buildResponse({data: {message: "Attachment deleted"}});
+            return buildResponse({data: {message: "Attachment deleted"}});
         });
     }
 }

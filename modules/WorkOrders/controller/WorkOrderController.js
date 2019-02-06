@@ -37,7 +37,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.post('/work_orders', [multiPart.array("files"), jsonParser], (req, res) => {
         console.log(req.body);
-        API.workOrders().createWorkOrder(req.body, req.who, req.files, API)
+        API.workOrders().createWorkOrder(req.body, req.who, API, req.files)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -265,7 +265,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/limit'
      */
     app.get('/work_orders/:id/notes', urlencodedParser, (req, res) => {
-        return API.notes().getNotes(req.params['id'], "work_orders", "relation_id", req.who, req.query.offset || 0, req.query.limit || 10)
+        return API.notes().getNotes(req.params['id'], "work_orders", req.who, "relation_id", req.query.offset || 0, req.query.limit || 10)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

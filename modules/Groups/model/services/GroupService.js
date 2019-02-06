@@ -21,11 +21,11 @@ class GroupService extends ApiService {
 
     /**
      *
-     * @param value
-     * @param by
+     * @param value {String|Number}
+     * @param by {String}
      * @param who {Session}
-     * @param offset
-     * @param limit
+     * @param offset {Number}
+     * @param limit {Number}
      */
     async getGroup(value, by = "id", who, offset = 0, limit = 10) {
         const GroupMapper = MapperFactory.build(MapperFactory.GROUP);
@@ -36,21 +36,19 @@ class GroupService extends ApiService {
     /**
      * Create Group
      *
-     * @param body
+     * @param body {Object}
      * @param who {Session}
      * @param API {API}
      */
     async createGroup(body = {}, who, API) {
         const Group = DomainFactory.build(DomainFactory.GROUP);
-        let group = new Group(body);
+        const group = new Group(body);
 
         if (!group.validate()) return Promise.reject(Error.ValidationFailure(group.getErrors().all()));
 
         ApiService.insertPermissionRights(group, who);
 
-        const pmGroup = await API.workflows().createGroup(group).catch(err => {
-            return Promise.reject(err);
-        });
+        const pmGroup = await API.workflows().createGroup(group).catch(err => (Promise.reject(err)));
 
         group['wf_group_id'] = pmGroup['grp_uid'];
 
@@ -69,64 +67,14 @@ class GroupService extends ApiService {
     }
 
     /**
-     *
-     * @param body {Object}
-     * @param who {Session}
-     */
-    linkGroup(body = {}, who) {
-        let multi = (body.multi) ? body.multi : [];
-        delete body.multi;
-
-        multi.push(body);
-
-        const errors = [];
-        const date = Utils.date.dateToMysql();
-        const rules = {'parent_id': 'required|integer', 'child_id': 'required|integer'};
-
-        multi = multi.map(item => {
-            Utils.numericToInteger(item, "parent_id", "child_id");
-            const validator = new validate(item, rules);
-            if (validator.passes(null)) {
-                if (item.parent_id === item.child_id) {
-                    errors.push("parent_id and child_id cannot be the same");
-                    return;
-                }
-                return {
-                    parent_group_id: item['parent_id'],
-                    child_group_id: item['child_id'],
-                    created_at: date,
-                    updated_at: date,
-                };
-            }
-            errors.push(validator.errors.all());
-            return undefined;
-        }).filter(item => item !== undefined && (item.parent_group_id !== item.child_group_id));
-
-        if (!multi.length) return Promise.reject(Utils.buildResponse({status: 'fail', data: errors.shift()}, 400));
-
-        const executor = (resolve, reject) => {
-            return this.context.db()('group_subs').insert(multi).then(r => {
-                return resolve(Utils.buildResponse({data: multi}));
-            }).catch(err => {
-                if (err.errno === 1062) return resolve(Utils.buildResponse({
-                    msg: "Record already exist",
-                    code: "DUPLICATE"
-                }));
-                return reject(Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400));
-            });
-        };
-        return new Promise(executor);
-    }
-
-    /**
      * Adds a user to a group
      *
      * Note that for iForce this function doesn't allow you
      * add a user to multiple groups as at the time this was
      * written.
      *
-     * @param body
-     * @param who
+     * @param body {Object}
+     * @param who {Session}
      * @param API {API}
      */
     async addUserToGroup(body = {user_id: null, group_id, wf_user_id: null}, who, API) {
@@ -153,7 +101,6 @@ class GroupService extends ApiService {
 
         return Utils.buildResponse({data: body});
     }
-
 
     /**
      * Updates a user group
@@ -183,12 +130,11 @@ class GroupService extends ApiService {
         return true;
     }
 
-
     /**
      * Updates a group
      *
-     * @param value
-     * @param body
+     * @param value {String|Number}
+     * @param body {Object}
      * @param who {Session}
      * @param API {API}
      */
@@ -258,8 +204,8 @@ class GroupService extends ApiService {
     /**
      * For getting dataTable records
      *
-     * @param body
-     * @param who
+     * @param body {Object}
+     * @param who {Session}
      * @returns {Promise<IDtResponse>}
      */
     async getGroupTableRecords(body, who) {
@@ -284,9 +230,9 @@ class GroupService extends ApiService {
 
     /**
      *
-     * @param by
-     * @param value
-     * @param who
+     * @param by {String}
+     * @param value {String|Number}
+     * @param who {Session}
      * @param API {API}
      * @returns {*}
      */
@@ -306,6 +252,57 @@ class GroupService extends ApiService {
             return Utils.buildResponse({data: {by, message: "Group deleted"}});
         });
     }
+
+    /**
+     *
+     * @param body {Object}
+     * @param who {Session}
+     */
+    linkGroup(body = {}, who) {
+        let multi = (body.multi) ? body.multi : [];
+        delete body.multi;
+
+        multi.push(body);
+
+        const errors = [];
+        const date = Utils.date.dateToMysql();
+        const rules = {'parent_id': 'required|integer', 'child_id': 'required|integer'};
+
+        multi = multi.map(item => {
+            Utils.numericToInteger(item, "parent_id", "child_id");
+            const validator = new validate(item, rules);
+            if (validator.passes(null)) {
+                if (item.parent_id === item.child_id) {
+                    errors.push("parent_id and child_id cannot be the same");
+                    return;
+                }
+                return {
+                    parent_group_id: item['parent_id'],
+                    child_group_id: item['child_id'],
+                    created_at: date,
+                    updated_at: date,
+                };
+            }
+            errors.push(validator.errors.all());
+            return undefined;
+        }).filter(item => item !== undefined && (item.parent_group_id !== item.child_group_id));
+
+        if (!multi.length) return Promise.reject(Utils.buildResponse({status: 'fail', data: errors.shift()}, 400));
+
+        const executor = (resolve, reject) => {
+            return this.context.db()('group_subs').insert(multi).then(r => {
+                return resolve(Utils.buildResponse({data: multi}));
+            }).catch(err => {
+                if (err.errno === 1062) return resolve(Utils.buildResponse({
+                    msg: "Record already exist",
+                    code: "DUPLICATE"
+                }));
+                return reject(Utils.buildResponse({status: 'fail', data: Utils.getMysqlError(err)}, 400));
+            });
+        };
+        return new Promise(executor);
+    }
+
 }
 
 module.exports = GroupService;

@@ -1,3 +1,4 @@
+
 const [API, ctx] = require('../index').test();
 const globalMock = require('./setup/ApplicationDependency');
 const Utils = require('../core/Utility/Utils');
@@ -23,7 +24,6 @@ describe("Fault Creation and Update", () => {
 
     beforeAll(() => {
         Utils.requestPromise = jest.fn(() => (Promise.resolve()));
-
         tracker.on('query', query => {
             if (query.method === 'insert') {
                 return query.response([1, {
@@ -40,7 +40,6 @@ describe("Fault Creation and Update", () => {
             }]);
         });
     });
-
     it("Test that createFault is defined", () => {
         return expect(API.faults().createFault()).rejects.toBeDefined()
     });
@@ -70,7 +69,7 @@ describe("Fault Creation and Update", () => {
             priority: 1,
             labels: []
         };
-        return expect(API.faults().createFault(fault, session, [], API)).resolves.toMatchObject({
+        return expect(API.faults().createFault(fault, session, API)).resolves.toMatchObject({
             code: 200,
             data: {
                 data: fault
@@ -122,7 +121,6 @@ describe("Retrieve Faults", () => {
             return query.response([]);
         });
     });
-
     it("GetFaults should pass with returned fault items", () => {
         return expect(API.faults().getFaults({assigned_to: 1},session)).resolves.toMatchObject({
             code: 200,

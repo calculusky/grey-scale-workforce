@@ -98,7 +98,8 @@ module.exports.convertDataKeyToJson = function (data, ...keys) {
     return data;
 };
 
-module.exports.isJson = function (str) {
+module.exports.isJson = isJson;
+function isJson(str) {
     if (typeof str !== "string" || `${str}`.length === 0) return [false, str];
     let json = "";
     let isValid = false;
@@ -110,7 +111,7 @@ module.exports.isJson = function (str) {
     }
     if (!json || typeof json !== "object") isValid = false;
     return [isValid, json]
-};
+}
 
 module.exports.verifyRelatedSource = async function (db, domain) {
     if (domain.source && domain.source.toLowerCase() === "crm") {
@@ -153,7 +154,9 @@ module.exports.mapper = function () {
     return MapperUtils;
 };
 
-module.exports.getAddressFromPoint = function (lat, lng) {
+module.exports.getAddressFromPoint = getAddressFromPoint;
+
+function getAddressFromPoint(lat, lng) {
     if (request === null) request = require('request');
     const geocodeEndPoint = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.GOOGLE_API_KEY}`;
     const executor = (resolve, reject) => {
@@ -179,6 +182,21 @@ module.exports.getAddressFromPoint = function (lat, lng) {
         });
     };
     return new Promise(executor);
+}
+
+/**
+ *
+ * @param db
+ * @param body {Object}
+ * @return {Promise<{point: null, location: *}>}
+ */
+module.exports.convertLocationToPoints = async function convertLocationToPoints(db, body) {
+    const [isValid, location] = (body.location) ? isJson(body.location) : [false, null];
+    const point = (isValid) ? db.raw(`POINT(${location.x}, ${location.y})`) : null;
+    if (location) {
+        location.address = await getAddressFromPoint(location.x, location.y).catch(console.error);
+    }
+    return {point, location};
 };
 
 module.exports.validatePayLoad = function (payLoad, checks) {
@@ -717,12 +735,12 @@ module.exports.getWorkOrderType = function (typeId) {
     return type[typeId];
 };
 
-module.exports.identifyWorkOrderDataTableType = function(columns=[]){
+module.exports.identifyWorkOrderDataTableType = function (columns = []) {
     for (let i = 0; i < columns.length; i++) {
         const key = columns[i].data;
-        if(key === 'fault_no') {
+        if (key === 'fault_no') {
             return 3;
-        }else if(key === 'account_no') {
+        } else if (key === 'account_no') {
             return 1;
         }
     }
@@ -825,21 +843,27 @@ module.exports.getWorkPriorities = function (type, key = null) {
     else return ""
 };
 
-module.exports.getUploadStatus = function(val){
-  switch (val) {
-      case '1': return 'Pending';
-      case '2': return 'Running';
-      case '3': return 'Error';
-      case '4': return 'Finished';
-      case '5': return 'Incomplete';
-      default: return 'something';
-  }
+module.exports.getUploadStatus = function (val) {
+    switch (val) {
+        case '1':
+            return 'Pending';
+        case '2':
+            return 'Running';
+        case '3':
+            return 'Error';
+        case '4':
+            return 'Finished';
+        case '5':
+            return 'Incomplete';
+        default:
+            return 'something';
+    }
 };
 
 
 module.exports.auditDifference = function (items) {
     if (!Array.isArray(items)) return [items];
-    items = items.filter(item=>item.record !== null);
+    items = items.filter(item => item.record !== null);
     const [...records] = items.map(item => item.record);
     let len = records.length - 1;
     const changes = [];

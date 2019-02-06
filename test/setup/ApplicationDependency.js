@@ -32,6 +32,5 @@ exports.applicationBeforeAll = async function (ctx) {
     });
     const session = await Session.Builder(ctx).addExtra("pmToken", "test")
         .setUser(new User({id: 1, username: "admin"})).build();
-
     return [knexMock, tracker, session];
 };

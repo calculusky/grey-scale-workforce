@@ -28,7 +28,7 @@ class DisconnectionBillingService extends ApiService {
      * @param files {Array}
      * @param API {API}
      */
-    async createDisconnectionBilling(body = {}, who, files = [], API) {
+    async createDisconnectionBilling(body = {}, who, API, files = []) {
         const db = this.context.db();
         const {work_order: workOrder} = body;
         const DisconnectionBilling = DomainFactory.build(DomainFactory.DISCONNECTION_ORDER);
@@ -40,16 +40,13 @@ class DisconnectionBillingService extends ApiService {
 
         ApiService.insertPermissionRights(dBilling, who);
 
-        if(!dBilling.validate()) return Promise.reject(Error.ValidationFailure(dBilling.getErrors().all()));
+        if (!dBilling.validate()) return Promise.reject(Error.ValidationFailure(dBilling.getErrors().all()));
 
-        //We need to check if the customer exist and get the customer tariff
         const {data: {data: {items: [customer]}}} = await API.customers().getCustomer(dBilling.account_no, 'account_no', who);
 
         if (!customer) return Promise.reject(Error.FormRecordNotFound('account_no'));
 
-        //Get the default reconnection fee for this customer tariff
-        let [{amount: fee}] = await db.table("rc_fees").where('name', customer.tariff).select(['amount']);
-        fee = (fee) ? fee : 3000;
+        const fee = await customer.getReconnectionFee(db);
 
         dBilling.calculateMinAmount();
         dBilling.setReconnectionFee(fee);
@@ -57,18 +54,22 @@ class DisconnectionBillingService extends ApiService {
 
         const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
         const record = await DisconnectionBillingMapper.createDomainRecord(dBilling, who).catch(err => (Promise.reject(err)));
-        if (workOrder) {
-            workOrder.related_to = "disconnection_billings";
-            workOrder.relation_id = `${record.id}`;
-            workOrder.type_id = 1;
-            const {data: {data: work_order}} = await API.workOrders().createWorkOrder(workOrder, who, files, API).catch(err => {
-                this.deleteDisconnectionBilling('id', record.id, who, API).catch(console.error);
-                return Promise.reject(err);
-            });
-            db.table("disconnection_billings").update({work_order_id: work_order.work_order_no}).where('id', record.id).catch(console.error);
-            return Utils.buildResponse({data: {...record, work_order}});
-        }
+
+        if (workOrder) return this.onCreateWorkOrder(record, workOrder, who, files, API, db);
+
         return Utils.buildResponse({data: record});
+    }
+
+    async onCreateWorkOrder(dBilling, workOrder, who, files, API, db){
+        workOrder.related_to = "disconnection_billings";
+        workOrder.relation_id = `${dBilling.id}`;
+        workOrder.type_id = 1;
+        const {data: {data: work_order}} = await API.workOrders().createWorkOrder(workOrder, who, API, files).catch(err => {
+            this.deleteDisconnectionBilling('id', dBilling.id, who, API).catch(console.error);
+            return Promise.reject(err);
+        });
+        db.table("disconnection_billings").update({work_order_id: work_order.work_order_no}).where('id', dBilling.id).catch(console.error);
+        return Utils.buildResponse({data: {...dBilling, work_order}});
     }
 
     /**
@@ -78,7 +79,7 @@ class DisconnectionBillingService extends ApiService {
      * @param who {Session}
      * @returns {Promise<IDtResponse>}
      */
-    async getDisconnectionBillingDataTableRecords(body, who){
+    async getDisconnectionBillingDataTableRecords(body, who) {
         const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
         const billingDataTable = new DisconnectionBillingDataTable(this.context.db(), DisconnectionBillingMapper, who);
         const editor = await billingDataTable.addBody(body).make().catch(console.error);
@@ -102,5 +103,6 @@ class DisconnectionBillingService extends ApiService {
         });
     }
 }
+
 
 module.exports = DisconnectionBillingService;
