@@ -274,7 +274,7 @@ describe("Register and Unregister FCM Token", () => {
                     changedRows: 1
                 }]);
             } else if (query.sql.indexOf('FROM users') !== -1) {
-                dummyUser.fire_base_token = "tere";
+                dummyUser.fire_base_token = ["ekY2r-BX0Mc:APA91bEiOWiXgFsSf_XIc2y3ACI-DvSZtFeG2M0485Azw4iGusX8tLlhK_Pou46a9_u03HAQSFQFN-5ZuC8qJmNTRxL3oeV7R0AoZg2iTNHGmhhipDhxgRc24FeEZn-bOdakRQ3x7WyW"];
                 return query.response([dummyUser]);
             }
         });
@@ -314,6 +314,14 @@ describe("Register and Unregister FCM Token", () => {
         });
     });
 
+    it("UnRegisterFcmToken should do nothing when token doesn't exist", () => {
+        let token = 'InvalidToken';
+        const raw = jest.spyOn(ctx.db(), "raw");
+        return API.users().unRegisterFcmToken(token, token + "ddd").then(res=>{
+            const updateVal = `JSON_REMOVE(fire_base_token, '$[${0}]') where users.id = ?`;
+            return expect(raw).not.toHaveBeenCalledWith(`update users set fire_base_token = ${updateVal}`, [token + "ddd", 1]);
+        });
+    });
 });
 
 describe("Delete User", () => {
