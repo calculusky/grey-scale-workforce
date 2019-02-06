@@ -260,7 +260,9 @@ describe("Multiple Update and Delete", () => {
                 return query.response([{
                     id: 1,
                     work_order_no: "",
-                    type_id: 1
+                    type_id: 1,
+                    relation_id:2,
+                    assigned_to:[{"id":2, created_at:""}]
                 }])
             }
             return query.response([]);
@@ -269,9 +271,24 @@ describe("Multiple Update and Delete", () => {
 
     it("UpdateMultipleWorkOrders should return appropriate response code for action", () => {
         const body = {
-            5: {summary: "yEs5"},
-            6: {summary: "yEs6"},
-            7: {summary: "yEs7"}
+            "5": {
+                "summary": "Disconnect this customer.",
+                "status": 2,
+                "start_date": "2019-02-20",
+                "assigned_to": "1"
+            },
+            "6": {
+                "summary": "Disconnect this customer.",
+                "status": 2,
+                "start_date": "2019-02-20",
+                "assigned_to": "1"
+            },
+            "7": {
+                "summary": "Disconnect this customer.",
+                "status": 2,
+                "start_date": "2019-02-20",
+                "assigned_to": "1"
+            }
         };
         return expect(API.workOrders().updateMultipleWorkOrders(body, session, API)).resolves.toMatchObject({
             code: 200,

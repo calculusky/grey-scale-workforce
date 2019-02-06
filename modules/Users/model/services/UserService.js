@@ -299,7 +299,7 @@ class UserService extends ApiService {
             const tokens = user['fire_base_token'];
             const index = (tokens) ? tokens.indexOf(fcmToken) : -1;
 
-            if (!index) continue;
+            if (index === -1) continue;
 
             if (newToken) {
                 const updateVal = `JSON_REPLACE(${col}, '$[${index}]', ?) where users.id = ?`;
