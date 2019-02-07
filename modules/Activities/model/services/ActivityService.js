@@ -60,7 +60,7 @@ class ActivityService extends ApiService {
 
         if (module) resultSet.where('module', module);
         if (relation_id) resultSet.where("relation_id", relation_id);
-        if (activity_by) resultSet.where("activity", activity_by);
+        if (activity_by) resultSet.where("activity_by", activity_by);
 
         const activities = await resultSet.limit(Number(limit)).offset(Number(offset)).orderBy("id", "asc");
 

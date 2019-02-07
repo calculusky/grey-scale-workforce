@@ -37,7 +37,7 @@ describe("Retrieve userGroups, roles and permissions", () => {
     beforeAll(() => {
         tracker.on('query', query => {
             if (query.sql.indexOf('`role_users`')) {
-                query.response([{
+                return query.response([{
                     id: 1,
                     name: "admin",
                     permissions: '{"assets.access": "true","assets.index": "all"}',
@@ -46,7 +46,14 @@ describe("Retrieve userGroups, roles and permissions", () => {
                     created_by: "2018-10-29 15:46:59",
                     updated_at: "2018-10-29 15:46:59"
                 }])
-            } else {
+            }
+            else if(query.sql.indexOf('`user_groups`')){
+                console.log(query);
+                return query.response([{
+
+                }]);
+            }
+            else {
                 query.response([{id: 1, name: "Abule-Egba-BU"}])
             }
         });
@@ -58,8 +65,15 @@ describe("Retrieve userGroups, roles and permissions", () => {
             .setExpiry(3600)
             .addExtra("pmToken", "12345")
             .build();
-        expect(session.getAuthUser().getPermission()).toBeDefined();
+        return expect(session.getAuthUser().getPermission()).toBeDefined();
     });
+
+    it("Permitted groups should contain user own groups", async ()=>{
+        const user = new User({id: 1, username:"paulex10"});
+        const session = await Session.Builder(ctx).setUser(user).setExpiry(3600).build();
+        const session2 = await Session.Builder(ctx).validateToken(session.getToken());
+        return expect(session2.getPermittedGroups()).toEqual(expect.arrayContaining([1]))
+    })
 });
 
 
