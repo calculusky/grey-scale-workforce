@@ -10,7 +10,7 @@ const fs = require('fs');
 const swagger = require('./swagger');
 const express = require("express");
 const events = require('./events/events.js');
-const cors = require('cors');
+const AuditAble = require('./core/AuditAble');
 
 module.exports = function route(context) {
 
@@ -85,7 +85,7 @@ module.exports = function route(context) {
             else if (path === 'uploads') saveAt = `${saveAt}/uploads/${req.body['upload_type']}`;
             else if (req.method === "PUT" && path.toLowerCase() === "users") {
                 const userFolderPath = `${saveAt}/profile/${req.params['id']}`;
-                if (!fs.existsSync(userFolderPath)) fs.mkdirSync(`${saveAt}/profile/${req.params['id']}`);
+                if (!fs.existsSync(userFolderPath)) fs.mkdirSync(`${saveAt}/profile/${req.params['id']}`, {recursive:true});
                 saveAt = `${saveAt}/profile/${req.params['id']}`
             }
             else if (path === "work_orders") {
@@ -141,7 +141,7 @@ module.exports = function route(context) {
     | Initialize Events - Socket IO
     *--------------------------------------*/
     events.init(context, io, API);
-
+    AuditAble.initialize(context, API);
     /*-----------------------------------------------
      | Start the scheduler
      |----------------------------------------------*/

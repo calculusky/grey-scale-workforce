@@ -1,35 +1,99 @@
 /**
  * @type {API}
  */
-const API = require('../index').test();
+const [API, ctx] = require('../index').test();
+const globalMock = require('./setup/ApplicationDependency');
+/**
+ * @param session {Session}
+ */
+let knexMock, tracker, session;
 
-
-test("Update fault delay reasons", () => {
-    const body = {name:"tester"};
-    return expect(API.baseRecords().updatePendingReason("id", "1", body , {sub: 1})).resolves.toEqual(expect.objectContaining({
-        code: expect.any(Number),
-        data: expect.any(Object)
-    }));
+beforeAll(async (done) => {
+    [knexMock, tracker, session] = await globalMock.applicationBeforeAll(ctx);
+    done();
 });
 
-
-test("Create Fault Categories", () => {
-    const body = {
-        name:"Category1",
-        type:"HT_FAULT"
-    };
-    return expect(API.baseRecords().createFaultCategory(body , {sub: 1})).resolves.toEqual(expect.objectContaining({
-        code: expect.any(Number),
-        data: expect.any(Object)
-    }));
+afterAll(async done => {
+    await ctx.getPersistence().disconnect();
+    knexMock.unmock(ctx.db(), 'knex@0.15.2');
+    done();
 });
 
-test("Update Fault Categories", () => {
-    const body = {
-        name:"Category222"
-    };
-    return expect(API.baseRecords().updateFaultCategory("id", "185", body , {sub: 1})).resolves.toEqual(expect.objectContaining({
-        code: expect.any(Number),
-        data: expect.any(Object)
-    }));
+describe("Creating and Updating Base Records", () => {
+
+    beforeAll(() => {
+        tracker.on('query', query => {
+            if (query.method === 'insert') {
+                return query.response([1, {
+                    fieldCount: 0,
+                    affectedRows: 1,
+                }]);
+            }
+        });
+    });
+
+    it("CreatePendingReason should fail when mandatory fields are missing", () => {
+        return expect(API.baseRecords().createPendingReason({}, session)).rejects.toMatchObject({
+            code: 400,
+            err: {
+                code: "VALIDATION_ERROR",
+                data: {
+                    'name': ['The name is required.']
+                }
+            }
+        });
+    });
+
+    it("CreateFaultCategory should fail when mandatory fields are missing", () => {
+        return expect(API.baseRecords().createFaultCategory({}, session)).rejects.toMatchObject({
+            code: 400,
+            err: {
+                code: "VALIDATION_ERROR",
+                data: {
+                    'name': ['The name is required.'],
+                    'type': ['The type is required.'],
+                }
+            }
+        });
+    });
+
+    it("UpdatePendingReason should update successfully", () => {
+        const updateBody = {name: "PendingReason!!!"};
+        return expect(API.baseRecords().updatePendingReason('id', 1, updateBody, session, API)).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: updateBody
+            }
+        });
+    });
+
+    it("UpdateFaultCategory should update successfully", () => {
+        const updateBody = {name: "FaultCategory!!!"};
+        return expect(API.baseRecords().updateFaultCategory('id', 1, updateBody, session, API)).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: updateBody
+            }
+        });
+    });
+
+});
+
+describe("Retrieve Base Records", () => {
+
+    it("GetFaultCategories should return a list of categories", () => {
+        return expect(API.baseRecords().getFaultCategories({type: "default"}, session)).resolves.toMatchObject({
+            code:200,
+            data:{
+                data:{
+                    items:[{
+                        id:1,
+                        name:"ApplicationDependency",
+                        type:"default"
+                    }]
+                }
+            }
+        });
+    });
+
 });

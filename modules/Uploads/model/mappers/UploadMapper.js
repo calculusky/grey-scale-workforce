@@ -6,7 +6,7 @@
 const ModelMapper = require('../../../../core/model/ModelMapper');
 
 
-class NoteMapper extends ModelMapper{
+class UploadMapper extends ModelMapper{
     constructor(context) {
         super(context);
         this.primaryKey = "id";
@@ -15,4 +15,4 @@ class NoteMapper extends ModelMapper{
     }
 }
 
-module.exports = NoteMapper;
+module.exports = UploadMapper;

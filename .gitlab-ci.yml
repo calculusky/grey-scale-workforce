@@ -5,16 +5,55 @@ cache:
   - node_modules/
 
 stages:
-  - build
-  - test
-  - deploy
+- build
+- test
+- deploy
 
 build:
   stage: build
   script:
-    - npm install
+  - npm install
+
+before_script:
+  - apt-get update -yqq
+  - 'which ssh-agent || (apt-get install openssh-client -y)'
+  - eval $(ssh-agent -s)
+  - mkdir -p ~/.ssh
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
 
 test:
   stage: test
+  variables:
+    NODE_ENV: "test"
   script:
-    - "npm test test/material_requisition.service.test.js"
+  - "npm test"
+
+#Deploy to Test
+deploy_staging:
+  stage:  deploy
+  script:
+  - echo "$SSH_PRIVATE_KEY" > private_ssh.key
+  - chmod 600 private_ssh.key
+  - ssh-add private_ssh.key
+  - ssh -v paul@85.25.103.81 -p 942 -t 'cd /var/www/html/mrworking-api && git pull origin dev && npm install && pm2 restart mrworking-api --log-date-format="YYYY-MM-DD HH:mm Z"'
+  environment:
+    name: staging
+    url: http://85.25.103.81/mrworking-web/public/login
+  only:
+  - dev
+
+# Deploy to production when merged
+deploy_production:
+  stage: deploy
+  script:
+  - echo "$SSH_PRIVATE_KEY" > private_ssh.key
+  - chmod 600 private_ssh.key
+  - ssh-add private_ssh.key
+  - ssh -v paul@62.138.8.136 -p 942 -t 'cd /var/www/html/mrworking-api && git pull origin production && npm install && pm2 restart mrworking-api --log-date-format="YYYY-MM-DD HH:mm Z"'
+  environment:
+    name: production
+    url: http://62.138.8.136/iforce/public/login
+  only:
+  - tags
+  except:
+  - branches

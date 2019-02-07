@@ -5,6 +5,14 @@
 const Log = require(`${__dirname}/../../../core/logger`);
 const RecognitionService = require('../../Users/model/services/RecognitionService');
 
+/**
+ *
+ * @param app
+ * @param API {API}
+ * @param jsonParser
+ * @param urlencodedParser
+ * @param multiPart
+ */
 module.exports.controller = function (app, {API, jsonParser, urlencodedParser, multiPart}) {
     app.use('/uploads*', (req, res, next)=>API.recognitions().auth(req, res, next));
 
@@ -32,7 +40,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postUploadInput'
      */
     app.post('/uploads', multiPart.array('files', 2), (req, res)=> {
-        API.uploads().uploadFile(req.body, req.who, req.files, API)
+        API.uploads().uploadFile(req.body, req.who, API, req.files)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -41,6 +49,36 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
                 return res.status(code).send(err);
             });
     });
+
+    /**
+     * @swagger
+     * /uploads/data-tables/records:
+     *  get:
+     *   description: "Get uploads record for data-tables"
+     *   summary: "Get uploads in data-tables format"
+     *   tags: [Uploads]
+     *   produces:
+     *   - application/json
+     *   operationId: getUploadDataTableRecords
+     *   responses:
+     *     '200':
+     *       description: "Upload"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/uploads/data-tables/records", (req, res) => {
+        API.uploads().getUploadDataTableRecords(req.query, req.who).then(data => {
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
+        });
+    });
+
 
     /**
      * @swag

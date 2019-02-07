@@ -113,6 +113,33 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
 
     /**
      * @swag
+     * /notifications:
+     *  put:
+     *    summary: Updates multiple notification
+     *    description: "Updates multiple Notification status etc."
+     *    tags: [Notification]
+     *    produces:
+     *    - application/json
+     *    operationId: updateMultipleNotifications
+     *    responses:
+     *      '200':
+     *        description: Returns an array of status code for each updated notification
+     *    parameters:
+     *    - $ref: '#/parameters/sessionId'
+     *    - $ref: '#/parameters/fault_id'
+     */
+    app.put('/notifications', urlencodedParser, (req, res) => {
+        API.notifications().updateMultipleNotifications( req.body, req.who, API)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
+                return res.status(code).send(err);
+            });
+    });
+
+    /**
+     * @swag
      * /notifications/{id}:
      *  delete:
      *    summary: Deletes a Notification

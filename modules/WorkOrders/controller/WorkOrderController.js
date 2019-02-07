@@ -37,7 +37,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.post('/work_orders', [multiPart.array("files"), jsonParser], (req, res) => {
         console.log(req.body);
-        API.workOrders().createWorkOrder(req.body, req.who, req.files, API)
+        API.workOrders().createWorkOrder(req.body, req.who, API, req.files)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -81,7 +81,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             });
     });
 
-    //user/:userId/:fromDate/:toDate/:offset(\d+)?/:limit(\d+)?
     /**
      * @swagger
      * /work_orders:
@@ -135,13 +134,11 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.get('/work_orders/:id', urlencodedParser, (req, res, next) => {
         if (req.params.id === 'export') return next();
-        API.workOrders().getWorkOrder(req.params.id, undefined, req.who)
-            .then(({data, code}) => {
-                return res.status(code).send(data);
-            })
-            .catch(({err, code}) => {
-                return res.status(code).send(err);
-            });
+        API.workOrders().getWorkOrders({id: req.params.id}, req.who).then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code}) => {
+            return res.status(code).send(err);
+        });
     });
 
 
@@ -201,7 +198,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/work_order_id'
      */
     app.get('/work_orders/:id/material_requisitions', urlencodedParser, (req, res) => {
-        API.workOrders().getWorkOrderMaterialRequisitions(req.params.id, req.query, req.who)
+        API.workOrders().getWorkOrderMaterialRequisitions(req.params.id, req.query, req.who, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -268,7 +265,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/limit'
      */
     app.get('/work_orders/:id/notes', urlencodedParser, (req, res) => {
-        return API.notes().getNotes(req.params['id'], "work_orders", "relation_id", req.who, req.query.offset || 0, req.query.limit || 10)
+        return API.notes().getNotes(req.params['id'], "work_orders", req.who, "relation_id", req.query.offset || 0, req.query.limit || 10)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })
@@ -302,13 +299,43 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/exportWith'
      */
     app.get('/work_orders/export', urlencodedParser, (req, res) => {
-        return API.workOrders().exportWorkOrders(req.query, req.who, API).then(workBook=>{
+        return API.workOrders().exportWorkOrders(req.query, req.who, API).then(workBook => {
             res.setHeader('Content-disposition', 'attachment; filename=' + workBook['subject'] || "mrworking_export.xlsx");
             res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             return workBook.xlsx.write(res);
         }).catch(({err, code}) => {
             res.set("Connection", "close");
             return res.status(code).send(err);
+        });
+    });
+
+    /**
+     * @swagger
+     * /work_orders/data-tables/records:
+     *  get:
+     *   description: "Get work_orders record for data-tables"
+     *   summary: "Get work orders records for data-tables"
+     *   tags: [Work Orders]
+     *   produces:
+     *   - application/json
+     *   operationId: getWorkOrderDataTableRecords
+     *   responses:
+     *     '200':
+     *       description: "WorkOrder"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/work_orders/data-tables/records", (req, res) => {
+        API.workOrders().getWorkDataTableRecords(req.query, req.who).then(data => {
+            console.log(data);
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
         });
     });
 
@@ -328,7 +355,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        description: Returns true with the id of the Work Order deleted
      *    parameters:
      *    - $ref: '#/parameters/sessionId'
-     *    - $ref: '#/parameters/work_order_id'
+     *    - $ref: '#/parameters/work_   order_id'
      */
     app.delete('/work_orders/:id', (req, res) => {
         API.workOrders().deleteWorkOrder("id", req.params.id, req.who)
@@ -338,6 +365,36 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
             return res.status(code).send(err);
         });
     });
+
+    /**
+     * @swagger
+     * /work_orders:
+     *  patch:
+     *    summary: Updates multiple work orders
+     *    description: "Updates multiple work orders"
+     *    tags: ['Work Orders']
+     *    produces:
+     *    - application/json
+     *    operationId: deleteWorkOrder
+     *    responses:
+     *      '200':
+     *        description: Returns true with the id of the Work Order deleted
+     *    parameters:
+     *    - name: 'work_order'
+     *      in: body
+     *      required: true
+     *      schema:
+     *        $ref: '#/definitions/patchWorkOrderMultipleUpdateInput'
+     */
+    app.patch('/work_orders', (req, res) => {
+        API.workOrders().updateMultipleWorkOrders(req.body, req.who)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            }).catch(({err, code}) => {
+            return res.status(code).send(err);
+        });
+    });
+
 
     /**
      * @swagger

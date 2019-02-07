@@ -2,10 +2,26 @@ const Utils = require('./Utils');
 const status = 'fail';
 module.exports = function () {
     return {
+        DeviceNotRegistered:Utils.buildResponse({status, msg:"Device not registered."},400),
+        UnAuthorizedAccess: Utils.buildResponse({
+            status: 'fail', data: {
+                message: "Unauthorized Access",
+                description: "Unauthorized. Send a valid token on the header [x-working-token]"
+            },
+            isRoute: false
+        }),
+        InvalidPasswordResetToken: Utils.buildResponse({
+            status: "fail",
+            msg: "Invalid Token or Token has expired"
+        }, 403),
         RecordNotFound: (msg = "Record Not Found.") => Utils.buildResponse({status, msg}, 404),
         InternalServerError: Utils.buildResponse({status, msg: 'Internal Server Error'}, 500),
         ValidationFailure: data => Utils.buildResponse({status: "fail", data, code: 'VALIDATION_ERROR'}, 400),
         GroupNotFound: Utils.buildResponse({status: "fail", data: {group_id: ["The group_id doesn't exist."]}}, 400),
+        FormRecordNotFound: (key) => Utils.buildResponse({
+            status: "fail",
+            data: {[key]: [`The ${key} doesn't exist.`]}
+        }, 400),
         InvalidWorkOrderNo: system_id => Utils.buildResponse({
             status: "fail",
             msg: "Invalid Work Order Number",
@@ -29,7 +45,7 @@ module.exports = function () {
             msg: "Invalid state to acknowledge payment",
             code: "INVALID_ACK_STATE",
             desc: "The work order is not in the right state to acknowledge payments. " +
-            "Only when the status is disconnected can payments be acknowledged"
+                "Only when the status is disconnected can payments be acknowledged"
         }, 403),
         InvalidDisconnectionAmount: amount => Utils.buildResponse({
             status: "fail",

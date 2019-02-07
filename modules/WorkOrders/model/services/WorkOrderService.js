@@ -6,9 +6,10 @@ const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
 const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
-const _ = require("lodash");
+const {differenceBy} = require("lodash");
 const Events = require('../../../../events/events');
 const ExportQuery = require('../WorkOrderExportQuery');
+const WorkOrderDataTable = require('../commons/WorkOrderDataTable');
 let MapperFactory = null;
 
 /**
@@ -20,169 +21,147 @@ class WorkOrderService extends ApiService {
         super(context);
         MapperFactory = this.context.modelMappers;
         this.moduleName = "work_orders";
-        // Note this is irrelevant but also relevant
-        // It is used only when redis fails in a split seconds to
-        // respond with the work order types
-        this.fallBackType = {
-            '1': {id: 1, name: 'Disconnections'},
-            '2': {id: 2, name: 'Re-connections'},
-            '3': {id: 3, name: 'Faults'}
-        };
+    }
+
+    /**
+     * Creates a new work order
+     *
+     * @param body {Object}
+     * @param who {Session}
+     * @param files {Array}
+     * @param API {API}
+     * @returns {Promise<*>}
+     */
+    async createWorkOrder(body = {}, who, API, files = []) {
+        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
+        const workOrder = new WorkOrder(body);
+
+        workOrder.serializeAssignedTo().setIssueDate();
+
+        if (!workOrder.validate()) return Promise.reject(Error.ValidationFailure(workOrder.getErrors().all()));
+
+        ApiService.insertPermissionRights(workOrder, who);
+
+        const group = await API.groups().isGroupIdValid(workOrder.group_id);
+
+        if (!group) return Promise.reject(Error.GroupNotFound);
+
+        await workOrder.generateWorkOrderNo(this.context, group).catch(() => (Promise.reject(Error.InternalServerError)));
+
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+
+        const record = await WorkOrderMapper.createDomainRecord(workOrder, who).catch(err => (Promise.reject(err)));
+
+        onWorkOrderCreated(record, body, who, files, API);
+
+        return Utils.buildResponse({data: record});
     }
 
     /**
      *
-     * @param value
+     * @param value {String|Number}
      * @param by
-     * @param who
-     * @param offset
-     * @param limit
+     * @param who {Session}
+     * @param offset {Number}
+     * @param limit {Number}
      * @returns {Promise}
+     * @deprecated Since v2.0.0-alpha01
+     * @see getWorkOrders
      */
     async getWorkOrder(value = '?', by = "id", who = {}, offset, limit) {
+        console.warn("Calling a deprecated function!");
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        //check if it is a work order number that is supplied
-        if (by === 'id' && (typeof value !== 'object' && Utils.isWorkOrderNo(value))) {
+        if (typeof value === 'string' && Utils.isWorkOrderNo(value)) {
             by = "work_order_no";
             value = value.replace(/-/g, "");
         }
-        //If the value is in type of an object we can say the request
-        //is not for fetching just a single work order
-        const isSingle = typeof value !== 'object';
-
-        //Prepare the static data from persistence storage
-        let [groups, workTypes, faultCategories] = await Promise.all([
-            Utils.getFromPersistent(this.context, "groups", true),
-            Utils.getFromPersistent(this.context, "work:types", true),
-            Utils.getFromPersistent(this.context, "fault:categories", true)
-        ]);
-
-        workTypes = (workTypes) ? workTypes : this.fallBackType;
 
         const results = await WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
             .catch(err => {
                 return Promise.reject(err)
             });
+
         const workOrders = results.records;
 
         if (!workOrders.length) return Utils.buildResponse({data: {items: results.records}});
 
-        const extras = {groups, workTypes, faultCategories, includes: ["fault", "billing"]};
-        return _doWorkOrderList(workOrders, this.context, this.moduleName, isSingle, extras);
+        return onListWorkOrders(workOrders, this.context, this.moduleName, true);
     }
 
     /**
+     * Updates a work order
      *
-     * @param by
-     * @param value
-     * @param body
-     * @param who
-     * @param files
-     * @param API
+     * @param by {String}
+     * @param value {String|Number}
+     * @param body {Object}
+     * @param who {Session}
+     * @param files {Array}
+     * @param API {API}
      * @returns {Promise<void>|*}
      */
     async updateWorkOrder(by, value, body = {}, who, files = [], API) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const model = (await WorkOrderMapper.findDomainRecord({by, value})).records.shift();
-
-        if (!model) return Promise.reject(Error.RecordNotFound("Work Order doesn't exist."));
-
         const workOrder = new WorkOrder(body);
-        const newAssignees = Utils.serializeAssignedTo(workOrder.assigned_to);
 
-        if (workOrder.assigned_to) workOrder.assigned_to = Utils.updateAssigned(model.assigned_to, newAssignees);
+        if (!model) return Promise.reject(Error.RecordNotFound());
 
-        /*The work order type is needed for auditing*/
-        if (!workOrder.type_id) workOrder.type_id = model.type_id;
+        workOrder.updateAssignedTo(model.assigned_to);
+
+        if (!workOrder.type_id) workOrder.setType(model.type_id);
 
         return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}, who).then(result => {
-            const assignees = _.differenceBy((workOrder.assigned_to) ? JSON.parse(workOrder.assigned_to) : [], model.assigned_to, 'id');
-            Events.emit("assign_work_order",
-                {id: model.id, work_order_no: model.work_order_no, summary: model.summary},
-                (assignees.length) ? assignees : workOrder.assigned_to, who);
-
-            Events.emit("work_order_updated", workOrder, who, model);
-
-            if (files.length) {
-                API.attachments().createAttachment({
-                    module: "work_orders",
-                    relation_id: workOrder.id
-                }, who, files, API).then();
-            }
-            const updatedRec = result.shift();
-            Utils.convertDataKeyToJson(updatedRec, "labels", "assigned_to");
-            return Utils.buildResponse({data: updatedRec});
+            const [updateRecord] = result;
+            onWorkOrderUpdated(updateRecord, model, who, files, API);
+            return Utils.buildResponse({data: updateRecord});
         });
     }
 
     /**
-     * Gets list of work orders by date. However this can be used to get work-orders regardless of supplying
-     * the dates.
-     * @param query
-     * @param who
+     * Updates multiple work orders
+     *
+     * @param body {Object}
+     * @param who {Session}
+     * @param API {API}
+     * @returns {Promise<{data?: *, code?: *}>}
      */
-    async getWorkOrders(query, who = {}) {
-        const offset = query.offset || 0,
-            limit = query.limit || 10,
-            workOderNo = query['work_order_no'],
-            relationId = query['relation_id'],
-            relationTo = query['related_to'],
-            assignedTo = query['assigned_to'],
-            createdBy = query['created_by'],
-            fromDate = query['from_date'],
-            toDate = query['to_date'],
-            type = query['type_id'],
-            status = query['status'];
+    async updateMultipleWorkOrders(body, who, API) {
+        const ids = Object.keys(body), response = [];
+        for (let id of ids) {
+            const update = await this.updateWorkOrder('id', id, body[id], who, [], API).catch(e => !response.push(e.code));
+            if (update) response.push(200);
+        }
+        return Utils.buildResponse({data: response});
+    }
 
-        let includes = query['include'] || ["fault", "billing"];//by default we'd request for fault and billing
-        if (typeof includes === "string") includes = includes.split(',');
 
-        //Prepare the static data from persistence storage
-        let [groups, workTypes, faultCategories] = await Promise.all([
-            Utils.getFromPersistent(this.context, "groups", true),
-            Utils.getFromPersistent(this.context, "work:types", true),
-            Utils.getFromPersistent(this.context, "fault:categories", true)
-        ]);
-
-        let resultSet = this.context.database.select(['*']).from("work_orders");
-
-        if (fromDate && toDate) resultSet.whereBetween('start_date', [fromDate, toDate]);
-        if (assignedTo) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assignedTo}}')`);
-        if (status) resultSet.whereIn('status', status.split(","));
-        if (type) resultSet.whereIn("type_id", type.split(","));
-        if (createdBy) resultSet.where("created_by", createdBy);
-        if (relationId) resultSet.where("relation_id", relationId);
-        if (relationTo) resultSet.where("related_to", relationTo);
-        if (workOderNo) resultSet.where('work_order_no', 'like', `%${workOderNo}%`);
-
-        resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
-        const records = await resultSet.catch(err => {
+    /**
+     * Queries and returns a list of work orders.
+     *
+     * @param query {Object}
+     * @param who {Session}
+     * @returns {Promise<*>}
+     */
+    async getWorkOrders(query, who) {
+        const records = await this.buildQuery(query).catch(err => {
             return Promise.reject(Utils.buildResponse(Utils.getMysqlError(err), 400));
         });
-
-
-        let workOrders = [];
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
-        records.forEach(record => {
-            let domain = new WorkOrder(record);
-            domain.serialize(undefined, "client");
-            workOrders.push(domain);
-        });
+        const workOrders = records.map(record => new WorkOrder(record));
 
         if (!records.length) return Utils.buildResponse({data: {items: workOrders}});
 
-        // Process the work order list
-        const extras = {groups, workTypes, faultCategories, includes};
-        return _doWorkOrderList(workOrders, this.context, this.moduleName, false, extras).catch(console.error);
+        return onListWorkOrders(workOrders, this.context, this.moduleName, false).catch(console.error);
     }
 
 
     /**
-     * We are majorly searching for work order
-     * @param keyword
-     * @param offset
-     * @param limit
+     * Searches for work orders.
+     *
+     * @param keyword {String}
+     * @param offset {Number}
+     * @param limit {Number}
      * @returns {Promise.<*>}
      */
     async searchWorkOrders(keyword = "", offset = 0, limit = 10) {
@@ -197,7 +176,7 @@ class WorkOrderService extends ApiService {
             'status'
         ];
         keyword = keyword.replace(/g/, "");
-        let resultSets = this.context.database.select(fields).from('work_orders')
+        let resultSets = this.context.db().select(fields).from('work_orders')
             .where('work_order_no', 'like', `%${keyword}%`).where("deleted_at", null)
             .limit(parseInt(limit)).offset(parseInt(offset)).orderBy('work_order_no', 'asc');
 
@@ -210,136 +189,70 @@ class WorkOrderService extends ApiService {
 
 
     /**
+     * Get material requisition belonging to a work order
      *
-     * @param workOrderId
-     * @param query
-     * @param who
+     * @param workOrderId {String}
+     * @param query {Object}
+     * @param who {Session}
+     * @param API {API}
      * @returns {Promise<{data?: *, code?: *}>}
      */
-    async getWorkOrderMaterialRequisitions(workOrderId, query = {}, who = {}) {
-        const db = this.context.database;
-        const records = await db.table("material_requisitions").where("work_order_id", workOrderId);
-        const MaterialRequisition = DomainFactory.build(DomainFactory.MATERIAL_REQUISITION);
-        const materialCols = [
-            'id', 'name', 'unit_of_measurement',
-            'unit_price', 'total_quantity',
-            'created_at', 'updated_at', 'assigned_to'
-        ], requisitions = [];
-
-        for (let requisition of records) {
-            requisition = new MaterialRequisition(requisition);
-            const [materials, assignedTo] = await Promise.all([
-                Utils.getModels(db, "materials", requisition['materials'], materialCols),
-                Utils.getAssignees(requisition.assigned_to || [], db)
-            ]);
-            requisition.materials = materials.map((mat, i) => {
-                mat.qty = requisition.materials[i]['qty'];
-                return mat;
-            });
-            requisition.assigned_to = assignedTo;
-            requisitions.push(requisition);
-        }
-
-        let response = requisitions;
-
-        if (query['includeOnly'] && query['includeOnly'] === "materials") {
-            response = [];
-            requisitions.forEach(req => response.push(req.materials));
-            response = _.flattenDeep(response);
-            return Utils.buildResponse({data: {items: response, work_order_id: workOrderId}});
-        }
-        return Utils.buildResponse({data: {items: response}});
-    }
-
-
-    /**
-     *
-     * @param body
-     * @param who
-     * @param files
-     * @param {API} API
-     * @returns {*}
-     */
-    async createWorkOrder(body = {}, who = {}, files = [], API) {
-        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
-        let workOrder = new WorkOrder(body);
-
-        workOrder.assigned_to = Utils.serializeAssignedTo(workOrder.assigned_to);
-
-        //enforce the validation
-        if (!workOrder.validate) return Promise.reject(Error.ValidationFailure(workOrder.errors.all()));
-
-        ApiService.insertPermissionRights(workOrder, who);
-
-        const groups = await Utils.getFromPersistent(this.context, "groups", true).catch(_ => (Promise.reject(Error.InternalServerError)));
-
-        const group = groups[workOrder.group_id];
-
-        if (!group) return Promise.reject(Error.GroupNotFound);
-
-        let bu = Utils.getGroupParent(group, 'business_unit') || group;
-
-        const uniqueNo = await Utils.generateUniqueSystemNumber(
-            _prefix(workOrder.type_id),
-            bu['short_name'],
-            'work_orders',
-            this.context
-        ).catch(_ => (Promise.reject(Error.InternalServerError)));
-
-        workOrder.work_order_no = uniqueNo.toUpperCase();
-
-        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-
-        workOrder = await WorkOrderMapper.createDomainRecord(workOrder).catch(err => (Promise.reject(err)));
-
-        Utils.convertDataKeyToJson(workOrder, "labels", "assigned_to");
-
-        Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
-
-
-        if (files.length) {
-            API.attachments().createAttachment({
-                module: "work_orders",
-                relation_id: workOrder.id
-            }, who, files, API).then();
-        }
-        workOrder['created_by'] = {id: who.sub, username: who.name};
-        return Utils.buildResponse({data: workOrder});
+    async getWorkOrderMaterialRequisitions(workOrderId, query = {}, who, API) {
+        query.work_order_id = workOrderId;
+        return API.materialRequisitions().getMaterialRequisitions(query, who).then((resp) => {
+            resp.data.data.work_order_id = workOrderId;
+            return resp;
+        });
     }
 
     /**
+     * Changes a work order status.
+     * Note: This method can also be used to quickly add a note
      *
-     * @param value - The Work Order Id
-     * @param status
-     * @param note
-     * @param files
-     * @param who
+     * @param value {Number} The Work Order Id
+     * @param status {Number}
+     * @param note {Note|Object}
+     * @param files {Array}
+     * @param who {Session}
      * @param API {API}
      * @returns {Promise.<WorkOrder>|*}
      */
-    async changeWorkOrderStatus(value/*WorkOrderId*/, status, who = {}, note, files = [], API) {
+    async changeWorkOrderStatus(value/*WorkOrderId*/, status, who, note, files = [], API) {
         const updated = await this.updateWorkOrder("id", value, {status}, who, [], API);
-        if (note && note.note) API.notes().createNote(note, who, files, API).catch(console.error);
+        if (note && note.note) API.notes().createNote(note, who, API, files).catch(console.error);
         return updated;
     }
 
     /**
+     * Exports work orders to excel
      *
-     * @param query
-     * @param who
-     * @param API
+     * @param query {Object}
+     * @param who {Session}
+     * @param API {API}
      * @returns {Promise<void>}
      */
-    async exportWorkOrders(query, who = {}, API) {
+    async exportWorkOrders(query, who, API) {
         const validator = new validate(query, {type_id: "required"});
         if (validator.fails(null)) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const exportWorkOrderQuery = new ExportQuery(query, WorkOrderMapper, who, API);
-        const groups = await Utils.getFromPersistent(this.context, "groups", true);
-        return exportWorkOrderQuery.setGroups(groups).export().catch(err => {
-            console.error(err);
+        const groups = await this.context.getKey("groups", true);
+        return exportWorkOrderQuery.setGroups(groups).export().catch(() => {
             return Utils.buildResponse({status: "fail", data: {message: "There was an error fetching the export"}});
         });
+    }
+
+    /**
+     * For getting dataTable records
+     *
+     * @param body {Object}
+     * @param who {Session}
+     * @returns {Promise<IDtResponse>}
+     */
+    async getWorkDataTableRecords(body, who) {
+        const workDataTable = new WorkOrderDataTable(this.context.db(), MapperFactory.build(MapperFactory.WORK_ORDER), who);
+        const editor = await workDataTable.addBody(body).make();
+        return editor.data();
     }
 
     /**
@@ -347,10 +260,10 @@ class WorkOrderService extends ApiService {
      *
      * @param by
      * @param value
-     * @param who
+     * @param who {Session}
      * @returns {*|Promise|PromiseLike<T>|Promise<T>}
      */
-    deleteWorkOrder(by = "id", value, who = {}) {
+    deleteWorkOrder(by = "id", value, who) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         return WorkOrderMapper.deleteDomainRecord({by, value}, true, who).then(count => {
             if (!count) {
@@ -363,39 +276,125 @@ class WorkOrderService extends ApiService {
     /**
      * Delete multiple work orders
      *
-     * @param ids
-     * @param who
-     * @param by
+     * @param ids {Array} ids of the work orders to be deleted
+     * @param who {Session}
+     * @param by {String}
      * @returns {Promise<*>}
      */
-    async deleteMultipleWorkOrder(ids = [], who = {}, by = "id") {
+    async deleteMultipleWorkOrder(ids = [], who, by = "id") {
         if (!Array.isArray(ids)) return Promise.reject(Utils.buildResponse({data: {message: "Expected an array of work order id"}}));
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const task = ids.map(value => WorkOrderMapper.deleteDomainRecord({by, value}, false, who));
         const items = (await Promise.all(task)).map(([{id}, del]) => ({id, deleted: del > 0}));
         return Utils.buildResponse({data: {items}});
     }
+
+    /**
+     *
+     * @param query
+     * @throws TypeError
+     * @returns {*}
+     * @private
+     */
+    buildQuery(query) {
+        if (typeof query !== 'object') throw new TypeError("Query parameter must be an object");
+
+        const offset = query.offset || 0,
+            limit = query.limit || 10,
+            id = query['id'],
+            workOderNo = query['work_order_no'],
+            relationId = query['relation_id'],
+            relationTo = query['related_to'],
+            assignedTo = query['assigned_to'],
+            createdBy = query['created_by'],
+            fromDate = query['from_date'],
+            toDate = query['to_date'],
+            type = query['type_id'],
+            status = query['status'];
+
+        const resultSet = this.context.db().select(['*']).from("work_orders");
+
+        if (id) {
+            if (Utils.isWorkOrderNo(id)) resultSet.where('work_order_no', id);
+            else resultSet.where('id', id);
+        }
+        if (fromDate && toDate) resultSet.whereBetween('start_date', [fromDate, toDate]);
+        if (assignedTo) resultSet.whereRaw(`JSON_CONTAINS(assigned_to, '{"id":${assignedTo}}')`);
+        if (status) resultSet.whereIn('status', status.split(","));
+        if (type) resultSet.whereIn("type_id", type.split(","));
+        if (createdBy) resultSet.where("created_by", createdBy);
+        if (relationId) resultSet.where("relation_id", relationId);
+        if (relationTo) resultSet.where("related_to", relationTo);
+        if (workOderNo) resultSet.where('work_order_no', 'like', `%${workOderNo}%`);
+
+        resultSet.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
+
+        return resultSet;
+    }
 }
 
-function _prefix(typeId) {
-    if (!typeId) return "W";
-    switch (parseInt(typeId)) {
-        case 1:
-            return "D";
-        case 2:
-            return "R";
-        case 3:
-            return "F";
+/**
+ * Called internally when a work order has been created
+ *
+ * @param workOrder
+ * @param body
+ * @param who
+ * @param files
+ * @param API
+ * @private
+ */
+function onWorkOrderCreated(workOrder, body, who, files, API) {
+    Utils.convertDataKeyToJson(workOrder, "labels", "assigned_to");
+    Events.emit("assign_work_order", workOrder, workOrder.assigned_to, who);
+
+    if (files.length) {
+        API.attachments().createAttachment({
+            module: this.moduleName,
+            relation_id: workOrder.id
+        }, who, files, API).then();
     }
-    return "W";
+    workOrder['created_by'] = {id: who.getAuthUser().getUserId(), username: who.getAuthUser().getUsername()};
 }
+
+/**
+ *
+ * @param workOrder
+ * @param model
+ * @param who
+ * @param files
+ * @param API
+ */
+function onWorkOrderUpdated(workOrder, model, who, files, API) {
+    const newAssigned = (workOrder.assigned_to) ? JSON.parse(workOrder.assigned_to) : [];
+
+    const assignees = differenceBy(newAssigned, model.assigned_to, 'id');
+
+    const assignmentPayload = {
+        id: model.id,
+        work_order_no: model.work_order_no,
+        summary: model.summary
+    };
+
+    Events.emit("assign_work_order", assignmentPayload, (assignees.length) ? assignees : workOrder.assigned_to, who);
+    Events.emit("work_order_updated", workOrder, who, model);
+
+    if (files.length) {
+        API.attachments().createAttachment({
+            module: "work_orders",
+            relation_id: workOrder.id
+        }, who, files, API).then();
+    }
+    Utils.convertDataKeyToJson(workOrder, "labels", "assigned_to");
+}
+
 
 function sweepWorkOrderResponsePayload(workOrder) {
     let keys = Object.keys(workOrder);
     keys.forEach(key => (workOrder[key] == null) ? delete workOrder[key] : undefined);
+    const group = workOrder['group'];
     if (workOrder['request_id']) delete workOrder['request_id'];
-    if (workOrder['group']['children']) delete workOrder['group']['children'];
-    if (workOrder['group']['parent']) delete workOrder['group']['parent'];
+    if (group && workOrder['group']['children']) delete workOrder['group']['children'];
+    if (group && workOrder['group']['parent']) delete workOrder['group']['parent'];
 }
 
 /**
@@ -404,86 +403,49 @@ function sweepWorkOrderResponsePayload(workOrder) {
  * @param context
  * @param module
  * @param isSingle
- * @param groups
- * @param workTypes
- * @param faultCategories
- * @param includes
  * @private
  */
 
-async function _doWorkOrderList(workOrders, context, module, isSingle = false, {groups, workTypes, faultCategories, includes = []}) {
-    const db = context.database;
-    for (let workOrder of workOrders) {
+async function onListWorkOrders(workOrders, context, module, isSingle = false) {
+    const [groups, workTypes, faultCategories] = await Promise.all([
+        context.getKey("groups", true),
+        context.getKey("work:types", true),
+        context.getKey("fault:categories", true)
+    ]);
 
-        let promises = [];
-
-        let workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
+    for (const workOrder of workOrders) {
+        const workType = workOrder['type_name'] = workTypes[workOrder.type_id].name;
         workOrder['group'] = groups[workOrder['group_id']];
 
-        //Get the entity related to this work order
-        if ((workOrder.related_to === "faults" && includes.includes("fault"))
-            || (workOrder.related_to === "disconnection_billings" && includes.includes("billing"))) {
-            promises.push(workOrder.relatedTo(workOrder.related_to))
-        } else promises.push(null);
+        const promises = [
+            workOrder.relatedTo(workOrder),
+            workOrder.getAssignedUsers(context.db()),
+            workOrder.createdBy(),
+            ...workOrder.getRelatedRecordCount(context.db())
+        ];
 
-        promises.push(Utils.getAssignees(workOrder.assigned_to, db), workOrder.createdBy());
+        const [
+            relatedTo,
+            assignedTo,
+            createdBy,
+            nCount,
+            aCount,
+            mCount
+        ] = await Promise.all(promises).catch(err => (Promise.reject(err)));
 
-        //If we're loading for a list view let's get the counts of notes, attachments etc.
-        if (!isSingle) {
-            let nNotes = db.count('note as notes_count').from("notes")
-                .where("module", module).where("relation_id", workOrder.id);
+        workOrder['notes_count'] = (nCount && nCount[0]) ? nCount[0]['notes_count'] : 0;
+        workOrder['attachments_count'] = (aCount && aCount[0]) ? aCount[0]['attachments_count'] : 0;
+        workOrder['materials_utilized_count'] = (mCount && mCount[0]) ? mCount[0]['mat_count'] : 0;
+        workOrder['assigned_to'] = assignedTo || [];
+        workOrder['created_by'] = createdBy.records.shift() || {};
 
-            let nAttachments = db.count('id as attachments_count').from("attachments")
-                .where("module", module).where("relation_id", workOrder.id);
-
-            let utilizedCount = db.count("id as mat_count").from("material_utilizations")
-                .where("work_order_id", workOrder.id);
-
-            promises.push(nNotes, nAttachments, utilizedCount);
-        }
-
-        const [relatedTo, assignedTo, createdBy, nCount, aCount, mCount] = await Promise.all(promises).catch(err => {
-            return Promise.reject(err);
-        });
-        //its compulsory that we check that a record exist
-        if (nCount && aCount) {
-            workOrder['notes_count'] = nCount.shift()['notes_count'];
-            workOrder['attachments_count'] = aCount.shift()['attachments_count'];
-            workOrder['materials_utilized_count'] = mCount.shift()['mat_count'];
-        }
-
-        if (assignedTo) workOrder.assigned_to = assignedTo;
-        if (createdBy) workOrder.created_by = createdBy.records.shift();
-
-        //First thing lets get the work order type details
         if (relatedTo && relatedTo.records.length) {
-            let relatedModel = relatedTo.records.shift();
-            if (relatedModel) {
-                // delete relatedModel['created_at'];
-                delete relatedModel['updated_at'];
-            }
-            workOrder[workType.toLowerCase()] = relatedModel;
-            switch (workOrder.related_to.toLowerCase()) {
-                case "disconnection_billings":
-                    const [customer, plan] = await Promise.all([relatedModel.customer(), relatedModel.paymentPlan()]);
-                    workOrder['customer'] = customer.records.shift() || {};
-                    workOrder['payment_plans'] = plan.records;
-                    break;
-                case "faults":
-                    if (relatedModel.related_to.toLowerCase() === "assets") {
-                        const asset = await relatedModel.asset();
-                        workOrder['faults']['asset'] = asset.records.shift() || {};
-                    } else if (relatedModel.related_to.toLowerCase() === "customers") {
-                        const cus = await relatedModel.customer();
-                        workOrder['faults']['customer'] = cus.records.shift() || {};
-                    }
-                    workOrder['faults']['category'] = faultCategories[workOrder['faults']['category_id']];
-                    delete workOrder['faults']['category_id'];
-                    break;
-            }
+            const relatedModel = relatedTo.records.shift();
+            await workOrder.setRelatedModelData(workType, relatedModel);
+            if (workOrder['faults']) workOrder['faults'].setCategory(faultCategories);
         }
+        workOrder.humanizeWorkOrderNo();
         sweepWorkOrderResponsePayload(workOrder);
-        workOrder['work_order_no'] = Utils.humanizeUniqueSystemNumber(workOrder['work_order_no']);
     }
     return Utils.buildResponse({data: {items: workOrders}});
 }

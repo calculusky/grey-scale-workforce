@@ -110,4 +110,32 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             .then(({data, code}) => res.status(code).send(data))
             .catch(({err, code}) => res.status(code).send(err))
     });
+
+    /**
+     * @swagger
+     * /base_records/fault_categories:
+     *   get:
+     *     summary: Retrieves a List of Fault Categories
+     *     description: ''
+     *     tags: [Base Records]
+     *     produces:
+     *     - application/json
+     *     operationId: getFaultCategories
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getFaultCategories'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/offset'
+     *     - $ref: '#/parameters/limit'
+     */
+    app.get('/base_records/fault_categories', urlencodedParser, (req, res) => {
+        API.baseRecords().getFaultCategories(req.query, req.who).then(({data, code}) => {
+            return res.status(code).send(data);
+        }).catch(({err, code}) => {
+            return res.status(code).send(err);
+        });
+    });
 };

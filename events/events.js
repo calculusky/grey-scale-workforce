@@ -1,6 +1,11 @@
 /**
  * Created by paulex on 10/18/17.
  */
+const Session = require('../core/Session');
+const DomainFactory = require('../modules/DomainFactory');
+const User = DomainFactory.build(DomainFactory.USER);
+
+
 exports.init = function (context, io, API) {
     this.eventListeners = [];
     this.sharedData = {
@@ -15,7 +20,6 @@ exports.init = function (context, io, API) {
             './WebEvent',
             './ApplicationEvent',
             './MessageEvent',
-            './AuditEvent',
             './IntegratorEvent'
         ];
 
@@ -36,10 +40,13 @@ exports.init = function (context, io, API) {
 
     //Listen for connections and emitted client events
     io.on("connection", socket => {
-
+        let session = null;
         //lets create an event for registering clients
         socket.on("add_me", user => {
             if (user && (user.username || user.id)) {
+                Session.Builder(context)
+                    .setUser(new User({id:user.id, username:user.username}))
+                    .default().then(result => session = result);
                 const clientSocs = this.sharedData.clients[user.id] || [];
                 clientSocs.push(socket.id);
                 this.sharedData.clients[user.id] = clientSocs;
@@ -67,16 +74,15 @@ exports.init = function (context, io, API) {
         |---------------------------------------------------
          */
         socket.on("update_location", data => {
+            //@todo build a session for the user
             this.eventListeners.forEach(listener => listener.emit('update_location', data, socket));
-            io.sockets.emit("update_location", data);
+            io.sockets.emit("update_location", data, session);
         });
 
-        //data : {id:1, username:""}
         socket.on("register_location_update", (data) => {
             socket.join(`location_update_${data.id}`);
         });
 
-        //data : {id:1, username:""}
         socket.on("unregister_location_update", (data) => {
             socket.leave(`location_update_${data.id}`, (err) => {
                 if (err) console.log(`Couldn't remove user from room: location_update_${data.id}`);

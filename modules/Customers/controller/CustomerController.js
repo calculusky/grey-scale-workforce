@@ -48,40 +48,42 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
-    /**
-     * @swagger
-     * /customers:
-     *   put:
-     *     summary: Updates a Customer
-     *     description: ''
-     *     tags: [Customers]
-     *     consumes:
-     *     - application/json
-     *     produces:
-     *     - application/json
-     *     operationId: updateCustomer
-     *     responses:
-     *       '200':
-     *         description: Successfully Added
-     *     parameters:
-     *      - $ref: '#/parameters/sessionId'
-     *      - in: body
-     *        name: 'customer'
-     *        required: true
-     *        schema:
-     *          $ref: '#/definitions/postCustomerInput'
-     */
-    app.put('/customers', jsonParser, (req, res)=> {
-        API.customers().updateCustomer(req.body, req.who)
-            .then(({data, code})=> {
-                console.log(data);
-                return res.status(code).send(data);
-            })
-            .catch(({err, code})=> {
-                console.log(code, err);
-                return res.status(code).send(err);
-            });
-    });
+    // /**
+    //  * @swagger
+    //  * /customers:
+    //  *   put:
+    //  *     summary: Updates a Customer
+    //  *     description: ''
+    //  *     tags: [Customers]
+    //  *     consumes:
+    //  *     - application/json
+    //  *     produces:
+    //  *     - application/json
+    //  *     operationId: updateCustomer
+    //  *     responses:
+    //  *       '200':
+    //  *         description: Successfully Added
+    //  *     parameters:
+    //  *      - $ref: '#/parameters/sessionId'
+    //  *      - in: body
+    //  *        name: 'customer'
+    //  *        required: true
+    //  *        schema:
+    //  *          $ref: '#/definitions/postCustomerInput'
+    //  */
+    // app.put('/customers', jsonParser, (req, res)=> {
+    //     API.customers().updateCustomer(req.body, req.who)
+    //         .then(({data, code})=> {
+    //             console.log(data);
+    //             return res.status(code).send(data);
+    //         })
+    //         .catch(({err, code})=> {
+    //             console.log(code, err);
+    //             return res.status(code).send(err);
+    //         });
+    // });
+
+
 
     /**
      * @swagger
@@ -174,7 +176,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /customers/search/{keyword}/{offset}/{limit}:
+     * /customers/search/{keyword}:
      *   get:
      *     summary: Search for a customer either by the account_no or meter_no
      *     description: ''
@@ -193,8 +195,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/customers/search/:keyword/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res)=> {
-        return API.customers().searchCustomers(req.params['keyword'], req.params['offset'], req.params['limit'])
+    app.get('/customers/search/:keyword', urlencodedParser, (req, res)=> {
+        return API.customers().searchCustomers(req.params['keyword'], req.query['offset'], req.query['limit'])
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
@@ -232,6 +234,36 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
+    /**
+     * @swagger
+     * /customers/data-tables/records:
+     *  get:
+     *   description: "Get customers record for data-tables"
+     *   summary: "Update a User"
+     *   tags: [Customers]
+     *   produces:
+     *   - application/json
+     *   operationId: getCustomerTableRecords
+     *   responses:
+     *     '200':
+     *       description: "Customer"
+     *       schema:
+     *         type: array
+     *         items:
+     *           $ref: '#/definitions/getDataTablesOutput'
+     *   parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get("/customers/data-tables/records", (req, res) => {
+        API.customers().getCustomerTableRecords(req.query, req.who).then(data => {
+            console.log(data);
+            return res.send(JSON.stringify(data));
+        }).catch(err => {
+            console.error('err', err);
+            return res.status(500).send(err);
+        });
+    });
+
 
     /**
      * @swagger
@@ -251,7 +283,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/account_no'
      */
     app.delete('/customers/:account_no', urlencodedParser, (req, res)=> {
-        API.customers().deleteCustomer("id", req.params.account_no)
+        API.customers().deleteCustomer("id", req.params.account_no, req.who)
             .then(({data, code})=> {
                 return res.status(code).send(data);
             })
