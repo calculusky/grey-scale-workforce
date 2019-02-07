@@ -56,6 +56,13 @@ class WorkOrderExportQuery extends ExportQuery {
         return this;
     }
 
+    /**
+     *
+     * @param query {Object}
+     * @param query.type_id {String|Number} 1 represents disconnection billings
+     *                                      2 represents re-connection billings
+     *                                      3 represents faults
+     */
     onQuery(query) {
         const db = this.modelMapper.context.database;
         this.sqlQuery = db.table(this.modelMapper.tableName);
@@ -93,9 +100,10 @@ class WorkOrderExportQuery extends ExportQuery {
                     break;
                 }
                 case 'group_id': {
-                    const groupIds = [].concat(...value.split(',').map(id => Utils.getGroupChildren(this.groups[id]).ids));
+                    const _groups = value.split(',');
+                    const groupIds = _groups.concat(..._groups.map(id => Utils.getGroupChildren(this.groups[id]).ids));
                     (['1', '2'].includes(`${query['type_id']}`))
-                        ? this.sqlQuery.whereIn('c.group_id', groupIds)
+                        ? this.sqlQuery.whereIn('db.group_id', groupIds)
                         : this.sqlQuery.whereIn('a2.group_id', groupIds);
                     break;
                 }
