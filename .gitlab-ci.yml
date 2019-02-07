@@ -45,10 +45,15 @@ deploy_staging:
 # Deploy to production when merged
 deploy_production:
   stage: deploy
+  script:
+  - echo "$SSH_PRIVATE_KEY" > private_ssh.key
+  - chmod 600 private_ssh.key
+  - ssh-add private_ssh.key
+  - ssh -v paul@62.138.8.136 -p 942 -t 'cd /var/www/html/mrworking-api && git pull origin production && npm install && pm2 restart mrworking-api --log-date-format="YYYY-MM-DD HH:mm Z"'
   environment:
     name: production
     url: http://62.138.8.136/iforce/public/login
   only:
-  - production
-  script:
-  - echo 'deployed to production'
+  - tags
+  except:
+  - branches
