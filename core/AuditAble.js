@@ -28,6 +28,8 @@ class AuditAble {
      */
     audit(mapper, domain, session, action = "CREATE") {
         if (!mapper || !domain || !session) throw new Error("Invalid arguments given");
+        console.warn("AuditTable", mapper.domainName);
+        console.warn("AuditTable", domain);
         const primaryKey = mapper.primaryKey;
         const tableName = mapper.tableName;
         if (!domain[primaryKey]) return console.warn("AuditFailed:", `Can't audit a ${domain.constructor.name} without it's primary key`);
