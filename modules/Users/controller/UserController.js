@@ -44,7 +44,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
         Log.info('/login', req.body);
         API.recognitions().login(req.body.username, req.body.password, req)
             .then(({data, code}) => {
-                // console.log(data);
                 res.status(code).send(data);
             }).catch(({err, code}) => {
             console.log(err);

@@ -46,8 +46,9 @@ class RecognitionService {
         const pmToken = await ProcessAPI.login(username, password).catch(e => {
             console.warn('UserPMLogin', e);
         });
-
-        const session = await Session.Builder(this.context).setUser(user).addExtra("pmToken", pmToken).build();
+        console.log("Okay...");
+        const session = await Session.Builder(this.context).setUser(user).addExtra("pmToken", pmToken).build()
+            .catch(console.error);
 
         return Utils.buildResponse({
             data: {
