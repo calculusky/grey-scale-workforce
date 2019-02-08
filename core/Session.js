@@ -187,6 +187,8 @@ module.exports = (function () {
                     permittedGroups = flatten(token.group.map(id => {
                         return (({ids}) => ids)(Utils.getGroupChildren(groups[id]))
                     }));
+
+                    console.log(permissions);
                     permittedGroups.push(...token.group);
 
                     authUser.setPermission(JSON.parse(permissions));
