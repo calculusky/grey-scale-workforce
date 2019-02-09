@@ -41,6 +41,11 @@ class Attachment extends DomainObject {
         ];
     }
 
+    toAuditAbleFormat(context) {
+        if (this.location) this.location = this.location.sql;
+        return this;
+    }
+
     rules() {
         return {
             relation_id: 'integer|required',

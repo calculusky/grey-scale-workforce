@@ -75,6 +75,7 @@ exports.init = function (context, io, API) {
          */
         socket.on("update_location", data => {
             //@todo build a session for the user
+            console.log(`Updating User location ${data.id}`);
             this.eventListeners.forEach(listener => listener.emit('update_location', data, socket));
             io.sockets.emit("update_location", data, session);
         });
