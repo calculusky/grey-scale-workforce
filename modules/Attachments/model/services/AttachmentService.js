@@ -54,7 +54,7 @@ class AttachmentService extends ApiService {
     async createAttachment(body = {}, who, files = [], API) {
         const authUser = who.getAuthUser();
         const Attachment = DomainFactory.build(DomainFactory.ATTACHMENT);
-        const {point, location} = await convertLocationToPoints(this.context.db(), body);
+        const {point=null, location=null} = await convertLocationToPoints(this.context.db(), body);
         let attachments = [];
         if (files.length) {
             files.forEach(file => attachments.push(new Attachment({
