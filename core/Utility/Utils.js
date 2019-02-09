@@ -178,7 +178,6 @@ function getAddressFromPoint(lat, lng) {
                 else if (types === "administrative_area_level_1") mAddress.state = comp.long_name;
                 else if (types === "country") mAddress.country = comp.long_name;
             });
-            // console.log(mAddress);
             return resolve(mAddress);
         });
     };
@@ -197,7 +196,6 @@ module.exports.convertLocationToPoints = async function convertLocationToPoints(
     if (location) {
         location.address = await getAddressFromPoint(location.x, location.y);//.catch(console.error);
     }
-    console.log(location);
     return {point, location};
 };
 

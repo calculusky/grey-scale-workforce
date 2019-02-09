@@ -78,12 +78,21 @@ describe("Attachment(s) Creation", () => {
             file_type: "image/jpeg",
             relation_id: "1",
             module: "work_orders",
-            file_size: "12"
+            file_size: "12",
+            // location:'{"x":44.3323, "y":4.64232}'
         };
         return expect(API.attachments().createAttachment(attachment, session, [], API)).resolves.toMatchObject({
             code: 200,
             data: {
-                data: attachment
+                data: {
+                    file_name: "test_file",
+                    file_path: "path2",
+                    file_type: "image/jpeg",
+                    relation_id: "1",
+                    module: "work_orders",
+                    file_size: "12",
+                    // location: expect.any(Object)
+                }
             }
         });
     });
