@@ -101,25 +101,25 @@ describe("Create Notes", ()=>{
         });
     });
 
-    it("CreateNote with location data and files should be successful", ()=>{
-        const note = {
-            relation_id:"1",
-            module:"work_orders",
-            note:"Testlim Balogun",
-            location:'{"x":2.00,"y":5.00}'
-        };
-
-        return expect(API.notes().createNote(note, session, API, [])).resolves.toMatchObject({
-            code:200,
-            data:{
-                data:{
-                    relation_id:"1",
-                    module:"work_orders",
-                    note:"Testlim Balogun"
-                }
-            }
-        });
-    });
+    // it("CreateNote with location data and files should be successful", ()=>{
+    //     const note = {
+    //         relation_id:"1",
+    //         module:"work_orders",
+    //         note:"Testlim Balogun",
+    //         location:'{"x":2.00,"y":5.00}'
+    //     };
+    //
+    //     return expect(API.notes().createNote(note, session, API, [])).resolves.toMatchObject({
+    //         code:200,
+    //         data:{
+    //             data:{
+    //                 relation_id:"1",
+    //                 module:"work_orders",
+    //                 note:"Testlim Balogun"
+    //             }
+    //         }
+    //     });
+    // });
 
 
 });
