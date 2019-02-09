@@ -64,7 +64,7 @@ class NoteService extends ApiService {
         return NoteMapper.createDomainRecord(note, who).then(note => {
             if (!note) return Promise.reject(Error.InternalServerError);
             note.location = location;
-            onNoteAdded(note, who, API, files);
+            onNoteAdded(note, body, who, API, files);
             return buildResponse({data: note});
         });
     }
@@ -87,11 +87,13 @@ class NoteService extends ApiService {
 /**
  *
  * @param note {Object}
+ * @param body
  * @param who {Session}
  * @param API {API}
  * @param files {Array}
  */
-function onNoteAdded(note, who, API, files) {
+function onNoteAdded(note, body, who, API, files) {
+    const location = (body.location) ? body.location : undefined;
     if (files.length) {
         API.attachments().createAttachment({module: "notes", relation_id: note.id, location}, who, files, API).then();
     }

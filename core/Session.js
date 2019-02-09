@@ -10,50 +10,52 @@ const User = require('../modules/Users/model/domain-objects/User');
  * @type {Session}
  */
 module.exports = (function () {
-    let token,
-        user,
-        authUser,
-        expiryTime = 3600 * 3600,
-        permittedGroups,
-        extras = {};
-
-    function _setUser(u) {
-        user = u;
-    }
-
-    function setAuthUser(aUser) {
-        authUser = aUser;
-    }
-
     /**
      * @name Session
      */
     class Session {
-        constructor() {
+        /**
+         *
+         * @param token {String}
+         * @param extras {Object}
+         * @param user {User}
+         * @param authUser {AuthUser}
+         * @param expiryTime {Number}
+         * @param permittedGroups {Array}
+         */
+        constructor(token, extras, user, authUser, expiryTime, permittedGroups) {
+            Object.defineProperties(this, {
+                "token": {value: token, writable: false},
+                "extras": {value: extras, writable: false},
+                "user": {value: user, writable: false},
+                "authUser": {value: authUser, writable: false},
+                "expiryTime": {value: expiryTime, writable: false},
+                "permittedGroups": {value: permittedGroups, writable: false}
+            })
         }
 
         getToken() {
-            return token;
+            return this.token;
         };
 
         getExtras() {
-            return extras;
+            return this.extras;
         }
 
         getExtraKey(key) {
-            return extras[key];
+            return this.extras[key];
         }
 
         getUser() {
-            return user;
+            return this.user;
         }
 
         getAuthUser() {
-            return authUser;
+            return this.authUser;
         }
 
         getExpiryTime() {
-            return Math.floor(Date.now() / 1000) + expiryTime;
+            return Math.floor(Date.now() / 1000) + this.expiryTime;
         };
 
         /**
@@ -63,7 +65,7 @@ module.exports = (function () {
          * @return {*}
          */
         getPermittedGroups() {
-            return permittedGroups;
+            return this.permittedGroups;
         }
     }
 
@@ -74,19 +76,26 @@ module.exports = (function () {
      * @constructor
      */
     Session.Builder = function (context) {
-        const session = new Session();
+        let token,
+            /**
+             * @type User
+             */
+            user,
+            expiryTime = 3600 * 3600,
+            permittedGroups,
+            extras = {};
         const authUser = new AuthUser({});
         return {
             /**
              *
-             * @param user {User} - The authorized user in which a session is needed
+             * @param _user {User} - The authorized user in which a session is needed
              * @returns {Session.Builder}
              */
-            setUser: function (user) {
-                if (!user) return this;
-                _setUser(user);
-                authUser.setUserId(user.id);
-                authUser.setUsername(user.username || null);
+            setUser: function (_user) {
+                if (!_user) return this;
+                user = _user;
+                authUser.setUserId(_user.id);
+                authUser.setUsername(_user.username || null);
                 return this;
             },
 
@@ -111,7 +120,6 @@ module.exports = (function () {
                 return this;
             },
 
-
             /**
              *
              * @param _token
@@ -131,7 +139,7 @@ module.exports = (function () {
                         extras = decoded.extras;
                         expiryTime = decoded.exp;
                         token = _token;
-                        const session = new Session();
+
                         const authUser = new AuthUser(user);
 
                         permittedGroups = flatten(decoded.group.map(id => {
@@ -141,7 +149,7 @@ module.exports = (function () {
 
                         authUser.setGroups(...decoded.group || []);
                         authUser.setPermission((permission) ? JSON.parse(permission) : {});
-                        setAuthUser(authUser);
+                        const session = new Session(_token, extras, user, authUser, expiryTime, permittedGroups);
                         return res(session);
                     });
                 });
@@ -161,8 +169,7 @@ module.exports = (function () {
                     }));
                     permittedGroups.push(...authUser.getGroups());
                 }
-                setAuthUser(authUser);
-                return session;
+                return new Session(null, {}, user, authUser, expiryTime, permittedGroups);
             },
 
             /**
@@ -188,7 +195,6 @@ module.exports = (function () {
                         return (({ids}) => ids)(Utils.getGroupChildren(groups[id]))
                     }));
 
-                    console.log(permissions);
                     permittedGroups.push(...token.group);
 
                     authUser.setPermission(JSON.parse(permissions));
@@ -196,8 +202,7 @@ module.exports = (function () {
                 }
                 token = jwt.sign(token, process.env.JWT_SECRET);
                 context.setKey(token, true, 'EX', expiryTime);
-                setAuthUser(authUser);
-                return session;
+                return new Session(token, extras, user, authUser, expiryTime, permittedGroups);
             }
         }
     };

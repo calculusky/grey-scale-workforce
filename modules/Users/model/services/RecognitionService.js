@@ -47,26 +47,15 @@ class RecognitionService {
             console.warn('UserPMLogin', e);
         });
 
-        try{
-            const session = await Session.Builder(this.context).setUser(user).addExtra("pmToken", pmToken).build()
-                .catch((err)=>{
-                    return Promise.reject(Utils.buildResponse({status:'fail', data:err}))
-                });
+        const session = await Session.Builder(this.context).setUser(user).addExtra("pmToken", pmToken).build();
 
-
-            console.log('RecognitionService',session);
-
-            return Utils.buildResponse({
-                data: {
-                    token: session.getToken(),
-                    user: session.getUser(),
-                    permitted_groups: session.getPermittedGroups()
-                }
-            });
-        }catch (e) {
-            console.log(e);
-            return Utils.buildResponse({status:'fail', data:err})
-        }
+        return Utils.buildResponse({
+            data: {
+                token: session.getToken(),
+                user: session.getUser(),
+                permitted_groups: session.getPermittedGroups()
+            }
+        });
     }
 
     /**
