@@ -53,13 +53,13 @@ class NoteService extends ApiService {
         const NoteMapper = MapperFactory.build(MapperFactory.NOTE);
         const Note = DomainFactory.build(DomainFactory.NOTE);
         const note = new Note(body);
-        let location = null;
 
         ApiService.insertPermissionRights(note, who);
 
         if (!note.validate()) return Promise.reject(Error.ValidationFailure(note.getErrors().all()));
 
-        ({point: note.location, location} = await convertLocationToPoints(this.context.db(), body));
+        const {point = null, location = null} = await convertLocationToPoints(this.context.db(), body);
+        note.location = point;
 
         return NoteMapper.createDomainRecord(note, who).then(note => {
             if (!note) return Promise.reject(Error.InternalServerError);
