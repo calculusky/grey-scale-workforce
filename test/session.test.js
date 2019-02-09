@@ -73,7 +73,18 @@ describe("Retrieve userGroups, roles and permissions", () => {
         const session = await Session.Builder(ctx).setUser(user).setExpiry(3600).build();
         const session2 = await Session.Builder(ctx).validateToken(session.getToken());
         return expect(session2.getPermittedGroups()).toEqual(expect.arrayContaining([1]))
-    })
+    });
+
+    it("Values in session are new and not copies", async ()=>{
+        const user = new User({id: 1, username:"paulex10"});
+        const session = await Session.Builder(ctx).setUser(user).addExtra('pmToken', {text:"1"}).setExpiry(3600).build();
+        const session2 = await Session.Builder(ctx).validateToken(session.getToken());
+        const session3 = await Session.Builder(ctx).setUser(user).setExpiry(3600).build();
+        expect(session.getExtras()).toEqual({'pmToken':{text:"1"}});
+        expect(session2.getExtras()).toEqual({'pmToken':{text:"1"}});
+        expect(session2.getAuthUser().getUserId()).toEqual(1);
+        return expect(session3.getExtras()).toEqual({});
+    });
 });
 
 

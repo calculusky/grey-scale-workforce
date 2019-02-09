@@ -3,6 +3,7 @@
  */
 const [API, ctx] = require('../index').test();
 const globalMock = require('./setup/ApplicationDependency');
+let Utils = require('../core/Utility/Utils');
 
 let knexMock, tracker, session;
 
@@ -63,6 +64,9 @@ describe("Create Notes", ()=>{
             }
             return query.response([]);
         });
+        // Utils.convertLocationToPoints = jest.fn(()=> {
+        //     return Promise.resolve({point: ctx.db().raw(`POINT(${2.3}, ${3.4})`), location:{x:10, y:10, address:"test"}});
+        // })
     });
     afterAll(() => tracker.uninstall());
     it("CreateNote should fail if mandatory fields are missing", ()=>{
@@ -86,6 +90,26 @@ describe("Create Notes", ()=>{
             note:"Testlim Balogun"
         };
         return expect(API.notes().createNote(note, session)).resolves.toMatchObject({
+            code:200,
+            data:{
+                data:{
+                    relation_id:"1",
+                    module:"work_orders",
+                    note:"Testlim Balogun"
+                }
+            }
+        });
+    });
+
+    it("CreateNote with location data and files should be successful", ()=>{
+        const note = {
+            relation_id:"1",
+            module:"work_orders",
+            note:"Testlim Balogun",
+            location:'{"x":2.00,"y":5.00}'
+        };
+
+        return expect(API.notes().createNote(note, session, API, [])).resolves.toMatchObject({
             code:200,
             data:{
                 data:{

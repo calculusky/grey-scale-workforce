@@ -163,6 +163,7 @@ function getAddressFromPoint(lat, lng) {
         const mAddress = {};
         request(geocodeEndPoint, (err, res, body) => {
             if (err) return reject(err);
+            console.log(body);
             body = JSON.parse(body);
             if (body.status && body.status !== "OK") return reject(false);
             if (!body.results) return resolve("Unknown");
@@ -177,7 +178,7 @@ function getAddressFromPoint(lat, lng) {
                 else if (types === "administrative_area_level_1") mAddress.state = comp.long_name;
                 else if (types === "country") mAddress.country = comp.long_name;
             });
-            console.log(mAddress);
+            // console.log(mAddress);
             return resolve(mAddress);
         });
     };
@@ -194,8 +195,9 @@ module.exports.convertLocationToPoints = async function convertLocationToPoints(
     const [isValid, location] = (body.location) ? isJson(body.location) : [false, null];
     const point = (isValid) ? db.raw(`POINT(${location.x}, ${location.y})`) : null;
     if (location) {
-        location.address = await getAddressFromPoint(location.x, location.y).catch(console.error);
+        location.address = await getAddressFromPoint(location.x, location.y);//.catch(console.error);
     }
+    console.log(location);
     return {point, location};
 };
 
