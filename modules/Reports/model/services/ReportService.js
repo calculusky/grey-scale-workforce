@@ -12,9 +12,14 @@ class ReportService {
         MapperFactory = this.context.modelMappers;
     }
 
-    getBasicDashboard(who = {}) {
+    /**
+     *
+     * @param who
+     * @return {Promise<{data?: *, code?: *} | never>}
+     */
+    getBasicDashboard(who) {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.getTotalWorkOderByUserAndStatus(who.sub, 2, 3, 4).then(records => {
+        return WorkOrderMapper.getTotalWorkOderByUserAndStatus(who.getAuthUser().getUserId(), 2, 3, 4).then(records => {
 
             const _temp = {Assigned: 0, Closed: 0, Pending: 0};
 
