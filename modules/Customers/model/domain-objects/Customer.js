@@ -61,7 +61,7 @@ class Customer extends DomainObject {
             tariff = await this.getTariff(db);
             this.tariff = tariff;
         }
-        const [{amount = 3000}] = await db.table("rc_fees").where('name', tariff).select(['amount']);
+        const {amount = 3000} = (await db.table("rc_fees").where('name', tariff).select(['amount'])).shift() || {};
         return amount;
     }
 
