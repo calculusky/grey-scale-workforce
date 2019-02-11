@@ -105,8 +105,8 @@ describe("Create Notes", ()=>{
         const note = {
             relation_id:"1",
             module:"work_orders",
-            note:"Testlim Balogun",
-            location:'{"x":44.3323, "y":4.64232}'
+            note:"Testlim Balogun"
+            // location:'{"x":44.3323, "y":4.64232}'
         };
 
         return expect(API.notes().createNote(note, session, API, [])).resolves.toMatchObject({
