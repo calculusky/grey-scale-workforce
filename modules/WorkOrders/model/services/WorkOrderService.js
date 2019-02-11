@@ -418,7 +418,7 @@ async function onListWorkOrders(workOrders, context, module, isSingle = false) {
         workOrder['group'] = groups[workOrder['group_id']];
 
         const promises = [
-            workOrder.relatedTo(workOrder),
+            workOrder.relatedTo(),
             workOrder.getAssignedUsers(context.db()),
             workOrder.createdBy(),
             ...workOrder.getRelatedRecordCount(context.db())
