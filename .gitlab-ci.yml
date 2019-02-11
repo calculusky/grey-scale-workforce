@@ -1,4 +1,4 @@
-image: node:9.2.0
+image: docker:latest
 
 cache:
   paths:
