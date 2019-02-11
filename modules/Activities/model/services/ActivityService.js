@@ -37,7 +37,7 @@ class ActivityService extends ApiService {
 
         const ActivityMapper = MapperFactory.build(MapperFactory.ACTIVITY);
 
-        const record = await ActivityMapper.createDomainRecord(activity).catch(err => (Promise.reject(err)));
+        const record = await ActivityMapper.createDomainRecord(activity, who).catch(err => (Promise.reject(err)));
 
         Utils.convertDataKeyToJson(record, "assigned_to");
 
