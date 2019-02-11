@@ -114,7 +114,7 @@ class ApplicationEvent extends EventEmitter {
         if (fault.related_to && fault.related_to.toLowerCase() !== "assets") return false;
         const asset = (await fault.asset()).records.shift();
         //check if the asset status is already in-active before setting it to in-active
-        if (`${asset.status}` === "0") return false;
+        if (asset && `${asset.status}` === "0") return false;
         const res = await this.api.assets().updateAsset(asset.id, {status: "0"}, who).catch(console.error);
         //TODO update all sub-assets
         return res && res.data.status === "success";

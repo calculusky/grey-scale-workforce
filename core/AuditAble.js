@@ -36,7 +36,7 @@ class AuditAble {
             module: tableName,
             relation_id: domain[primaryKey],
             activity_type: action,
-            record: JSON.stringify(record),
+            record: JSON.stringify(record, circularReplacer()),
             description: record['description'] || "...",
             model_type: mapper.domainName,
             activity_by: session.getAuthUser().getUserId(),
@@ -63,6 +63,19 @@ class AuditAble {
     static getInstance() {
         if (AuditAble._instance === null) throw new Error("AuditAble has not been initialized");
         return AuditAble._instance;
+    }
+}
+
+function circularReplacer() {
+    const seen = new WeakSet();
+    return (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+            const construct = value.constructor;
+            if (construct && construct.name === 'Raw') return;
+            if (seen.has(value)) return;
+            seen.add(value);
+        }
+        return value;
     }
 }
 

@@ -56,11 +56,11 @@ class FaultService extends ApiService {
      * @param files {Array}
      * @param API {API}
      */
-    async createFault(body = {}, who,  API, files = []) {
+    async createFault(body = {}, who, API, files = []) {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const fault = new Fault(body);
 
-        if (!fault.validateSource(this.context.db()))
+        if (!(await fault.validateSource(this.context.db())))
             return Promise.reject(Error.ValidationFailure({relation_id: ["The related record doesn't exist."]}));
 
         fault.serializeAssignedTo().setIssueDateIfNull(Utils.date.dateToMysql());
