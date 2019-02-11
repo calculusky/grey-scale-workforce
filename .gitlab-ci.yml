@@ -1,4 +1,4 @@
-image: docker:latest
+image: ubuntu:17.10
 
 cache:
   paths:
