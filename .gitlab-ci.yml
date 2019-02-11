@@ -12,6 +12,7 @@ stages:
 build:
   stage: build
   script:
+  - sudo apt-get install npm
   - npm install
 
 before_script:
