@@ -68,7 +68,7 @@ class LocationEvent extends EventEmitter {
                 'id',
                 'work_order_no'
             ]);
-            const {data: {data: {items}}} = await this.api.attachments().getAttachments(user.id, "notes", "created_by", {}, 0, 900);
+            const {data: {data: {items}}} = await this.api.attachments().getAttachments(user.id, "notes", "created_by", who, 0, 900);
 
             broadcastMsg.attachements = items.map(attachment => {
                 delete attachment.user;
