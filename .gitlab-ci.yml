@@ -1,4 +1,4 @@
-image: ubuntu:17.10
+image: node:9.2.0
 
 cache:
   paths:
@@ -12,7 +12,6 @@ stages:
 build:
   stage: build
   script:
-  - apt-get install npm -y
   - npm install
 
 before_script:
@@ -27,7 +26,7 @@ test:
   variables:
     NODE_ENV: "test"
   script:
-  - "npm test"
+  - npm test
 
 #Deploy to Test
 deploy_staging:
