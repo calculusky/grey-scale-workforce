@@ -67,6 +67,37 @@ describe("Customers Creation", () => {
 
 });
 
+describe("Update Customers", () => {
+
+    const customer = {
+        account_no: "0100002122",
+        customer_name: "Paul Okeke",
+        customer_type: "residential",
+    };
+
+    beforeAll(() => {
+        tracker.on('query', query => {
+            return query.response([customer]);
+        });
+    });
+
+    it("UpdateCustomer Should update customers", () => {
+        return expect(API.customers().updateCustomer(
+            "account_no",
+            "0100002122",
+            customer,
+            session,
+            API
+        )).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: customer
+            }
+        })
+    })
+
+});
+
 describe("Retrieve Customer(s)", () => {
     const customer = {
         account_no: "0100002122",
@@ -190,22 +221,22 @@ describe("Customers Related Data", () => {
 });
 
 
-describe("Customer Deletion", ()=>{
-    it("DeleteCustomer should resolve", ()=>{
+describe("Customer Deletion", () => {
+    it("DeleteCustomer should resolve", () => {
         return expect(API.customers().deleteCustomer(undefined, "101010", session)).resolves.toMatchObject({
-            code : 200,
-            data:{
-                data:{message:"Customer successfully deleted."}
+            code: 200,
+            data: {
+                data: {message: "Customer successfully deleted."}
             }
         })
     });
 });
 
 
-describe("Customers DataTable", ()=>{
-    it("GetCustomerTableRecords should fetch customer records in dataTable format", ()=>{
+describe("Customers DataTable", () => {
+    it("GetCustomerTableRecords should fetch customer records in dataTable format", () => {
         return expect(API.customers().getCustomerTableRecords({}, session)).resolves.toMatchObject({
-            data:[]
+            data: []
         });
     });
 });
