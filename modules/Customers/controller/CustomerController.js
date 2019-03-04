@@ -50,7 +50,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /customers/{id}:
+     * /customers/{account_no}:
      *   put:
      *     summary: Updates a Customer
      *     description: ''
@@ -65,6 +65,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *         description: Successfully Added
      *     parameters:
      *      - $ref: '#/parameters/sessionId'
+     *      - $ref: '#/parameters/account_no'
      *      - in: body
      *        name: 'customer'
      *        required: true
