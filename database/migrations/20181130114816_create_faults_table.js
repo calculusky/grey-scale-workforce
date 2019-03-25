@@ -15,6 +15,7 @@ exports.up = function(knex, Promise) {
         table.dateTime("completed_date").nullable();
         table.string("source").nullable();
         table.string("source_id").nullable();
+        table.json("metadata").nullable();
         table.string("request_id").nullable();
         table.string("signature").nullable();
         table.string("permit_no").nullable();
