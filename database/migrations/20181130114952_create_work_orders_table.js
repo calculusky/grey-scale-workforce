@@ -24,12 +24,15 @@ exports.up = function(knex, Promise) {
         table.string("source_id").nullable();
 
         table.date("issue_date");
-        table.dateTime("start_date").nullable();
-        table.dateTime("completed_date").nullable();
+        table.dateTime("start_date").nullable();//expected start date
+        table.dateTime("end_date").nullable();//expected end date
+        table.dateTime("actual_start_date").nullable();//
+        table.dateTime("completed_date").nullable();//actual_end_date
         table.string("signature").nullable();
 
         table.string('parent_id').nullable();
         table.string("request_id").nullable().comment="For internal usage";
+        table.json("metadata").nullable();
         table.json("assigned_to").nullable();
         table.integer("group_id").unsigned().nullable();
         table.integer("created_by").unsigned().nullable();

@@ -47,7 +47,8 @@ class WorkOrder extends DomainObject {
             summary: 'string|required',
             issue_date: 'date',
             labels: 'string-array',
-            assigned_to: 'string-array'
+            assigned_to: 'string-array',
+            metadata:'string-object'
         }
     }
 
