@@ -18,7 +18,8 @@ WebEvent.init(ctx, {
     sockets: {
         connected: {
             1: {
-                emit: () => {}
+                emit: () => {
+                }
             }
         }
     }
@@ -250,4 +251,23 @@ describe("Web Events", () => {
         return expect(WebEvent.onUploadComplete("test", 1, "test.xlxs", 1)).resolves.toBeTruthy();
     });
 
+});
+
+
+describe("Application Events", () => {
+    beforeAll(() => {
+        tracker.on('query', query => {
+            if (query.sql.indexOf('from `work_orders`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    assigned_to: [{id: 1, created_at: ""}]
+                }]);
+            }
+        });
+    });
+    it("OnWorkOrderUpdate should run successfully", () => {
+        const workOrder = {id: 1, type_id: 1, status: 3, relation_id:3};
+        const oldWorkOrder = {status: 2};
+        return expect(ApplicationEvent.onWorkOrderUpdate(workOrder, session, oldWorkOrder)).resolves.toBeTruthy();
+    });
 });

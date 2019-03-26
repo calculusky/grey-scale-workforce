@@ -112,6 +112,7 @@ describe("Fault Creation and Update", () => {
             related_to: "assets",
             relation_id: "1",
             status: 3,
+            status_comment:"Something else happened",
             summary: "Creeping",
             group_id: 1,
             priority: 3,

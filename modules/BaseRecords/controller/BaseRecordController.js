@@ -138,4 +138,52 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             return res.status(code).send(err);
         });
     });
+
+    /**
+     * @swagger
+     * /base_records/status:
+     *   post:
+     *     summary: Creates a new status
+     *     description: ''
+     *     tags: [Base Records]
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: createStatus
+     *     responses:
+     *       '200':
+     *         description: Successfully Added
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.post('/base_records/status', jsonParser, (req, res) => {
+        API.baseRecords().createStatus(req.body, req.who)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * @swagger
+     * /base_records/status:
+     *   get:
+     *     summary: Retrieves status defined for the application
+     *     description: ''
+     *     tags: [Base Records]
+     *     produces:
+     *     - application/json
+     *     operationId: getStatuses
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getStatuses'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get('/base_records/status', urlencodedParser, (req, res) => {
+        API.baseRecords().getStatuses(req.query, req.who)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
 };
