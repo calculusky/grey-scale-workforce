@@ -746,6 +746,20 @@ module.exports.identifyWorkOrderDataTableType = function (columns = []) {
     return 0;
 };
 
+module.exports.getFaultPriority = function (key) {
+    switch (key) {
+        case '0':
+            return "Low";
+        case '1':
+            return "Medium";
+        case '2':
+            return "High";
+        case '3':
+            return "Urgent";
+        default:
+            return "/Unknown";
+    }
+};
 
 module.exports.getFaultStatus = function (key) {
     switch (key) {
@@ -762,57 +776,22 @@ module.exports.getFaultStatus = function (key) {
     }
 };
 
-module.exports.getFaultPriority = function (key) {
-    switch (key) {
-        case '0':
-            return "Low";
-        case '1':
-            return "Medium";
-        case '2':
-            return "High";
-        case '3':
-            return "Urgent";
-        default:
-            return "/Unknown";
-    }
-};
-
 module.exports.getWorkStatuses = function (type, key = null) {
-    // console.log(type, key);
-    //Assumptions of the type are 1: Disconnection, 2: Reconnection , 3: Faults
+    const constants = require('../contants');
+    //for backward compatibility we are using a typeMap to represent old type values
+    const typeMap = {'1':'DW', '2':'RW', '3':'FW', 'F':'F'};
+
     if (!key && isNaN(type)) return [];
     if ((key && isNaN(type)) || isNaN(key)) return "/invalid-status";
 
-    const status = {
-        "1": {
-            1: "New",
-            2: "Assigned",
-            3: "Disconnected",
-            4: "Escalated",
-            5: "Payment Received",
-            6: "Closed",
-            7: "Customer Already Paid",
-            8: "Regulatory Issues"
-        },
-        "2": {
-            1: "New",
-            2: "Assigned",
-            3: "Reconnected",
-            4: "Escalated",
-            5: "Closed"
-        },
-        "3": {
-            1: "New",
-            2: "Assigned",
-            3: "Pending",
-            4: "Closed"
-        }
-    };
-    if (key !== null && status[type][key]) return status[type][key];
-    else if (key !== null && !status[type][key]) return '/unknown';
-    else if (type && status[type]) return status[type];
-    else if (type && !status[type]) return [];
-    else return ""
+    const status = constants.statuses[typeMap[type]];
+
+    if(!status) return '/unknown';
+    if (key !== null && status[key]) return status[key]['name'];
+    else if (key !== null && !status[key]) return '/unknown';
+    else if (key && status[key]) return status[key];
+    else if (key && !status[key]) return [];
+    else return "";
 };
 
 

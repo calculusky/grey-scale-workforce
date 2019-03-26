@@ -7,6 +7,7 @@
   "labels": "labels",
   "priority": "priority",
   "status": "status",
+  "status_comment": "status_comment",
   "affected_areas": "affected_areas",
   "summary": "summary",
   "resolution": "resolution",

@@ -1,6 +1,6 @@
 const MDataTables = require('../../../../core/MDataTables');
 const {Field} = require('datatables.net-editor-server');
-const Utils = require('../../../../core/Utility/Utils');
+const {getAssignees, humanizeUniqueSystemNumber, getWorkStatuses, identifyWorkOrderDataTableType} = require('../../../../core/Utility/Utils');
 
 class WorkOrderDataTable extends MDataTables {
 
@@ -16,7 +16,7 @@ class WorkOrderDataTable extends MDataTables {
 
         //After rows have been fetched, get the assigned to records from the users table
         this.editor.on("postGet", async (editor, id, data) => {
-            for (const row of data) row.assigned = await Utils.getAssignees(row.assigned, this.editor.db());
+            for (const row of data) row.assigned = await getAssignees(row.assigned, this.editor.db());
         });
     }
 
@@ -26,12 +26,12 @@ class WorkOrderDataTable extends MDataTables {
      * @returns {MDataTables}
      */
     addFields(...fields) {
-        const type = Utils.identifyWorkOrderDataTableType(this.body.columns);
+        const type = identifyWorkOrderDataTableType(this.body.columns);
         fields.push(
             new Field('work_orders.id', 'checkbox'),
-            new Field('work_orders.work_order_no', 'work_order_no').getFormatter(Utils.humanizeUniqueSystemNumber),
+            new Field('work_orders.work_order_no', 'work_order_no').getFormatter(humanizeUniqueSystemNumber),
             new Field('work_orders.type_id'),
-            new Field('work_orders.status', 'status').getFormatter((val, row) => Utils.getWorkStatuses(row['work_orders.type_id'], val)),
+            new Field('work_orders.status', 'status').getFormatter((val, row) => getWorkStatuses(row['work_orders.type_id'], val)),
             new Field("work_orders.assigned_to", 'assigned'),
             new Field('work_orders.created_at', 'created_at')
         );

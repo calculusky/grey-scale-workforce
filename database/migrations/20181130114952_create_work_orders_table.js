@@ -8,6 +8,7 @@ exports.up = function(knex, Promise) {
         table.integer("type_id").unsigned();
         table.json("labels").nullable();
         table.integer("status").default(1);
+        table.string("status_comment").nullable();
         table.string("priority").default("1").comment = "0 - Low, 1 -  Medium, 2 - High";
         table.text("summary").nullable();
         table.string("address_line").nullable();

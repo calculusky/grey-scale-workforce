@@ -8,6 +8,7 @@ exports.up = function(knex, Promise) {
         table.json("labels").nullable();
         table.string("priority").nullable();
         table.integer("status").default(1);
+        table.string("status_comment").nullable();
         table.integer("fault_category_id").unsigned();
         table.text("summary").nullable();
         table.text("resolution").nullable();

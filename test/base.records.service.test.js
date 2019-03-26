@@ -77,20 +77,59 @@ describe("Creating and Updating Base Records", () => {
         });
     });
 
+    it("CreateStatus should fail when mandatory fields are missing", () => {
+        return expect(API.baseRecords().createStatus({}, session)).rejects.toMatchObject({
+            code: 400,
+            err: {
+                code: "VALIDATION_ERROR",
+                data: {
+                    'name': ['The name is required.'],
+                    'type': ['The type is required.'],
+                }
+            }
+        });
+    });
+
+    it("CreateStatus should create successfully", () => {
+        const data = {
+            name: "test",
+            type: "DW"
+        };
+        return expect(API.baseRecords().createStatus(data, session)).resolves.toMatchObject({
+            code: 200,
+            data: {data: data}
+        });
+    });
+
 });
 
 describe("Retrieve Base Records", () => {
 
     it("GetFaultCategories should return a list of categories", () => {
         return expect(API.baseRecords().getFaultCategories({type: "default"}, session)).resolves.toMatchObject({
-            code:200,
-            data:{
-                data:{
-                    items:[{
-                        id:1,
-                        name:"ApplicationDependency",
-                        type:"default"
+            code: 200,
+            data: {
+                data: {
+                    items: [{
+                        id: 1,
+                        name: "ApplicationDependency",
+                        type: "default"
                     }]
+                }
+            }
+        });
+    });
+
+    it("GetStatuses should return a list of status", () => {
+        return expect(API.baseRecords().getStatuses({}, session)).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: {
+                    "DW": [{
+                        id: 1,
+                        name: "New",
+                        comments: []
+                    }, expect.any(Object), expect.any(Object)]
                 }
             }
         });
