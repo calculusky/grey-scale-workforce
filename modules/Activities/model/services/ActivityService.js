@@ -2,9 +2,7 @@ const DomainFactory = require('../../../DomainFactory');
 let MapperFactory = null;
 const ApiService = require('../../../ApiService');
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validatorjs');
 const Error = require('../../../../core/Utility/ErrorUtils')();
-const Excel = require('exceljs');
 
 
 /**
@@ -22,29 +20,24 @@ class ActivityService extends ApiService {
      *
      * @param body
      * @param who
+     * @param API {API}
      * @returns {Promise<*>}
      */
-    async createActivity(body, who) {
+    async createActivity(body, who, API) {
         const Activity = DomainFactory.build(DomainFactory.ACTIVITY);
         const activity = new Activity(body);
 
-        activity.assigned_to = Utils.serializeAssignedTo(activity.assigned_to);
+        activity.serializeAssignedTo();
 
         ApiService.insertPermissionRights(activity, who);
 
-        const validator = new validate(activity, activity.rules(), activity.customErrorMessages());
+        if (!activity.validate()) return Promise.reject(Error.ValidationFailure(activity.getErrors().all()));
 
-        if (validator.fails()) return Promise.reject(Error.ValidationFailure(validator.errors.all()));
-
-        const groups = await Utils.getFromPersistent(this.context, "groups", true).catch(_ => (Promise.reject(Error.InternalServerError)));
-
-        const group = groups[activity.group_id];
-
-        if (!group) return Promise.reject(Error.GroupNotFound);
+        if (!(await API.groups().isGroupIdValid(activity.group_id))) return Promise.reject(Error.GroupNotFound);
 
         const ActivityMapper = MapperFactory.build(MapperFactory.ACTIVITY);
 
-        const record = await ActivityMapper.createDomainRecord(activity).catch(err => (Promise.reject(err)));
+        const record = await ActivityMapper.createDomainRecord(activity, who).catch(err => (Promise.reject(err)));
 
         Utils.convertDataKeyToJson(record, "assigned_to");
 
@@ -59,7 +52,7 @@ class ActivityService extends ApiService {
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getActivities(query, who = {}, API) {
-        const db = this.context.database;
+        const db = this.context.db();
 
         const {module, relation_id, activity_by, offset = 0, limit = 10} = query;
 
@@ -67,14 +60,14 @@ class ActivityService extends ApiService {
 
         if (module) resultSet.where('module', module);
         if (relation_id) resultSet.where("relation_id", relation_id);
-        if (activity_by) resultSet.where("activity", activity_by);
+        if (activity_by) resultSet.where("activity_by", activity_by);
 
         const activities = await resultSet.limit(Number(limit)).offset(Number(offset)).orderBy("id", "asc");
 
         const items = Utils.auditDifference(activities)
             .filter(item => !['id', 'updated_at'].includes(item.field_name)).reverse();
 
-        const cols = ['id','username','first_name', 'last_name'];
+        const cols = ['id', 'username', 'first_name', 'last_name'];
         for (const item of items) {
             item.by = (await db.table("users").where("id", item.by).select(cols)).shift();
         }

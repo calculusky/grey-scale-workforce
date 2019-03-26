@@ -43,7 +43,7 @@ class MaterialUtilization extends DomainObject {
         };
     }
 
-    materialModel() {
+    getMaterial() {
         return this.relations().belongsTo("Material", "material_id");
     }
 }

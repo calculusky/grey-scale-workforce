@@ -32,7 +32,7 @@ class EmailEvent extends EventEmitter {
         });
         //Register events
         this.on('payment_plan_assigned', this.onPaymentPlanAssigned);
-        this.on('note_added', this.onNotesAdded);
+        // this.on('note_added', this.onNotesAdded);
         this.on('payment_plan_approval', this.onPaymentPlanApproval);
     }
 
@@ -64,11 +64,27 @@ class EmailEvent extends EventEmitter {
         return this;
     }
 
-    async onPaymentPlanAssigned(planId, assignedTo) {
-        const db = this.context.database;
-        let paymentPlan = await db.table("payment_plans").where("id", planId).select(['assigned_to', 'disc_order_id']);
+    /**
+     *
+     * @param template
+     * @param message
+     * @param locals
+     */
+    sendEmail(template, message, locals) {
+        this.email.send({template, message, locals}).then(EmailEvent.onEmailSuccess).catch(EmailEvent.onEmailFail);
+    }
 
-        if (!paymentPlan.length) return;
+    /**
+     *
+     * @param planId
+     * @param assignedTo
+     * @returns {Promise<boolean>}
+     */
+    async onPaymentPlanAssigned(planId, assignedTo) {
+        const db = this.context.db();
+        const paymentPlan = await db.table("payment_plans").where("id", planId).select(['assigned_to', 'disc_order_id']);
+
+        if (!paymentPlan.length) return false;
 
         const users = await db.table("users").whereIn("id", assignedTo)
             .select(['id', 'email', 'username', 'first_name', 'last_name', 'group_id', 'wf_user_pass']);
@@ -89,17 +105,14 @@ class EmailEvent extends EventEmitter {
 
             //Generate a one time token
             let token = jwt.sign(tokenOpt, process.env.JWT_SECRET);
-            this.context.persistence.set(token, true, 'EX', 3241999);
+            this.context.setKey(token, true, 'EX', 3241999);
 
-            this.email.send({
-                template: 'payment_plan',
-                message: {to: user.email},
-                locals: {
-                    recipient: `${user.first_name} ${user.last_name}`,
-                    link: `${process.env.APP_WEB_URL}/payment-plan-approval/${planId}/${token}`
-                }
-            }).then(EmailEvent.onEmailSuccess).catch(EmailEvent.onEmailFail);
+            this.sendEmail('payment_plan', {to: user.email}, {
+                recipient: `${user.first_name} ${user.last_name}`,
+                link: `${process.env.APP_WEB_URL}/payment-plan-approval/${planId}/${token}`
+            });
         });
+        return true;
     }
 
     /**
@@ -107,79 +120,64 @@ class EmailEvent extends EventEmitter {
      *
      * @param note
      * @param who
-     * @returns {Promise<void>}
+     * @returns {Promise<Boolean>}
      */
     async onNotesAdded(note, who) {
-        //So we are going to send email to all users assigned to the record this note was meant for
-        const db = this.context.database;
+        const db = this.context.db();
+        const record = (await db.table(note.module).where('id', note.relation_id).select(['id', 'assigned_to'])).shift();
 
-        const record = await db.table(note.module).where('id', note.relation_id).select(['id', 'assigned_to']);
+        if (!record) return false;
 
-        if (!record.length) return;
-
-        let assignedTo = record.shift();
-        assignedTo = ((assignedTo['assigned_to'])) ? assignedTo['assigned_to'] : [];
-
+        const assignedTo = ((record['assigned_to'])) ? record['assigned_to'] : [];
         const userIds = assignedTo.map(({id}) => id);
-
         let users = await db.table("users").whereIn('id', userIds).select(['id', 'email', 'first_name', 'last_name']);
 
-        if (!users.length) return;
+        if (!users.length) return false;
         //Remove the user that added this note from the list of users
         users = users.filter(user => user.id !== note.created_by);
 
         const emails = users.map(({email}) => email);
 
-        this.email.send({
-            template: 'note_added',
-            message: {to: emails.join(',')},
-            locals: {
-                module: Utils.getModuleName(note.module),
-                note: note.note,
-                noteBy: who.name
-            }
-        }).then(EmailEvent.onEmailSuccess).catch(EmailEvent.onEmailFail);
+        this.sendEmail('note_added', {to: emails.join(',')}, {
+            module: Utils.getModuleName(note.module),
+            note: note.note,
+            noteBy: who.getAuthUser().getUsername()
+        });
+        return true;
     }
 
     /**
      * Handles events when a payment plan is received
      *
-     * @param planId
-     * @param who
-     * @param approval
+     * @param planId {String|Number}
+     * @param who {Session}
+     * @param approval {Boolean}
      * @returns {Promise<void>|*}
      */
-    async onPaymentPlanApproval(planId, who, approval = true) {
-        const db = this.context.database;
-        //We only send notification to the user than created it and users assigned to it
-        let plan = await db.table("payment_plans").where("id", planId).select(['assigned_to', 'created_by']);
-        //[{created_by:1, assigned_to:[{}]}]
-        plan = plan.shift();
+    async onPaymentPlanApproval(planId = -1, who, approval = true) {
+        const db = this.context.db();
+        const plan = (await db.table("payment_plans").where("id", planId).select(['assigned_to', 'created_by'])).shift();
 
-        if (!plan) return;
+        if (!plan) return false;
 
-        let assignedTo = ((plan['assigned_to'])) ? plan['assigned_to'] : [];
-
+        const assignedTo = ((plan['assigned_to'])) ? plan['assigned_to'] : [];
         const userIds = assignedTo.map(({id}) => id);
 
         if (!userIds.includes(plan['created_by']) && plan['created_by']) userIds.push(plan['created_by']);
 
         let users = await db.table("users").whereIn('id', userIds).select(['id', 'email', 'first_name', 'last_name']);
 
-        if (!users.length) return;
+        if (!users.length) return false;
         //Remove the user that added this note from the list of users
-        users = users.filter(user => user.id !== who.sub);
+        users = users.filter(user => user.id !== who.getAuthUser().getUserId());
 
         const emails = users.map(({email}) => email);
 
-        this.email.send({
-            template: 'payment_plan_approval',
-            message: {to: emails.join(',')},
-            locals: {
-                link: `${process.env.APP_WEB_URL}/payment-plan/${planId}`,
-                approval
-            }
-        }).then(EmailEvent.onEmailSuccess).catch(EmailEvent.onEmailFail);
+        this.sendEmail('payment_plan_approval', {to: emails.join(',')}, {
+            link: `${process.env.APP_WEB_URL}/payment-plan/${planId}`,
+            approval
+        });
+        return true;
     }
 }
 

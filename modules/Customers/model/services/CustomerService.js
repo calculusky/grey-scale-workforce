@@ -1,26 +1,36 @@
 const DomainFactory = require('../../../DomainFactory');
+const ApiService = require('../../../ApiService');
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 const {orderBy} = require("lodash");
 const CustomerDataTable = require('../commons/CustomerDataTable');
-
 
 /**
  * @name CustomerService
  * Created by paulex on 09/4/17.
  */
-class CustomerService {
+class CustomerService extends ApiService {
 
     constructor(context) {
+        super(context);
         this.context = context;
         MapperFactory = this.context.modelMappers;
     }
 
-
-    async getCustomer(value, by = "account_no", who = {}, offset = 0, limit = 10, includes = ['assets']) {
+    /**
+     * @param value {String|Number}
+     * @param by {String}
+     * @param who {Session}
+     * @param offset {Number}
+     * @param limit {Number}
+     * @param includes {Array}
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getCustomer(value, by = "account_no", who, offset = 0, limit = 10, includes = ['assets']) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
         const results = await CustomerMapper.findDomainRecord({by, value}, offset, limit);
-        const groups = await Utils.getFromPersistent(this.context, "groups", true);
+        const groups = await this.context.getKey("groups", true);
         const customers = CustomerService.addBUAndUTAttributes(results.records, groups);
         if (includes.includes("assets"))
             for (const customer of customers) customer.assets = (await customer.asset()).records;
@@ -28,59 +38,73 @@ class CustomerService {
     }
 
     /**
+     * Queries for customer records
      *
-     * @param query
-     * @param who
+     * @param query {Object}
+     * @param who {Session}
      * @returns {Promise<{data?: *, code?: *}>}
      */
-    async getCustomers(query, who = {}) {
+    async getCustomers(query = {}, who) {
+        const results = await this.buildQuery(query).catch(() => Error.InternalServerError);
+        const groups = await this.context.getKey("groups", true);
         const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
-        const {meter_no, type, tariff, status, offset = 0, limit = 10} = query;
-
-        const groups = await Utils.getFromPersistent(this.context, "groups", true);
-
-        const resultSets = this.context.database.select(['*']).from('customers');
-
-        if (meter_no) resultSets.where("meter_no", meter_no);
-        if (type) resultSets.where("customer_type", type);
-        if (tariff) resultSets.where("tariff", tariff);
-        if (status) resultSets.whereIn('status', status.split(","));
-
-        resultSets.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy('account_no', 'asc');
-
-        const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
         const assets = CustomerService.addBUAndUTAttributes(results, groups, Customer);
-
         return Utils.buildResponse({data: {items: assets}});
     }
 
     /**
-     *
      * @param body
-     * @param who
+     * @param who {Session}
      */
-    createCustomer(body = {}, who = {}) {
+    createCustomer(body = {}, who) {
         const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
-        body['api_instance_id'] = who.api;
-        let customer = new Customer(body);
+        const customer = new Customer(body);
 
+        ApiService.insertPermissionRights(customer, who);
 
-        //Get Mapper
+        if (!customer.validate()) return Promise.reject(Error.ValidationFailure(customer.getErrors().all()));
+
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
-        return CustomerMapper.createDomainRecord(customer).then(customer => {
+        return CustomerMapper.createDomainRecord(customer, [], who).then(customer => {
             if (!customer) return Promise.reject();
             return Utils.buildResponse({data: customer});
         });
     }
 
     /**
+     *
+     * @param by
+     * @param value
+     * @param body
+     * @param who
+     * @param API
+     * @param files
+     * @return {Promise<*>}
+     */
+    async updateCustomer(by = "account_no", value, body = {}, who, API, files = []) {
+        const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
+        const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
+        const model = (await CustomerMapper.findDomainRecord({by, value})).records.shift();
+        const customer = new Customer(body);
+
+        if (!model) return Promise.reject(Error.RecordNotFound());
+
+        return CustomerMapper.updateDomainRecord({by, value, domain: customer}, who).then(result => {
+            const [updateRecord] = result;
+            return Utils.buildResponse({data: updateRecord});
+        });
+    }
+
+    /**
      * We are majorly searching for customers by account_no and meter_no
+     *
      * @param keyword
+     * @param who {Session}
      * @param offset
      * @param limit
      * @returns {Promise.<*>}
      */
-    async searchCustomers(keyword, offset = 0, limit = 10) {
+    async searchCustomers(keyword, who, offset = 0, limit = 10) {
         const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
         let fields = [
             'first_name',
@@ -92,28 +116,30 @@ class CustomerService {
             'account_no',
             'old_account_no'
         ];
-        let resultSets = this.context.database.select(fields).from('customers')
+        let resultSets = this.context.db().select(fields).from('customers')
             .where('account_no', 'like', `%${keyword}%`)
             .where("deleted_at", null)
             .orWhere('meter_no', 'like', `%${keyword}%`)
             .limit(parseInt(limit)).offset(parseInt(offset)).orderBy('account_no', 'asc');
 
-        const groups = await Utils.redisGet(this.context.persistence, "groups");
-
+        const groups = await this.context.getKey("groups", true);
         const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
+        const customers = CustomerService.addBUAndUTAttributes(results, groups, Customer);
 
-        const assets = CustomerService.addBUAndUTAttributes(results, groups, Customer);
-        return Utils.buildResponse({data: {items: assets}});
+        return Utils.buildResponse({data: {items: customers}});
     }
 
     /**
-     * Fetches work-orders that has a level of relationship with a customer
+     * Fetches work-orders that has a relationship with customers
+     *
+     * Note : Work Orders might not be directly related to customers, however a relationship
+     *        through other entities might exist
      *
      * Most work-orders are primarily not related to a customer, thus it is
      * quite not direct.
      *
      * @param accountNo
-     * @param who
+     * @param who {Session}
      */
     async getCustomerWorkOrders(accountNo, who) {
         const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
@@ -145,47 +171,64 @@ class CustomerService {
                 workOrders.push(...workOrder.records);
             }
         }
-
-        //from asset we need to get all the fault and then the work orders
+        //From asset we need to get all the fault and then the work orders
         //For lack of proper DB Queries we are going to fetch this one after the other
         for (let asset of assets.records) {
             const faults = await asset.faults();
             for (const fault of faults.records) {
                 const workOrder = await fault.workOrders(cols);
+                workOrder.records.forEach(work => work['fault'] = fault);
                 if (workOrder.records.length > 0) workOrders.push(...workOrder.records);
             }
         }
         return Utils.buildResponse({data: {items: orderBy(workOrders, ["id"], ["desc"])}});
     }
 
-
     /**
      * For getting dataTable records
      *
-     * @param body
-     * @param who
+     * @param body {Object}
+     * @param who {Session}
      * @returns {Promise<IDtResponse>}
      */
-    async getCustomerTableRecords(body, who){
-        const customerDataTable = new CustomerDataTable(this.context.database, MapperFactory.build(MapperFactory.CUSTOMER));
+    async getCustomerTableRecords(body, who) {
+        const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
+        const customerDataTable = new CustomerDataTable(this.context.db(), CustomerMapper, who);
         const editor = await customerDataTable.addBody(body).make();
         return editor.data();
     }
 
     /**
      *
-     * @param by
-     * @param value
+     * @param by {String}
+     * @param value {String|Number}
+     * @param who {Session}
      * @returns {*}
      */
-    deleteCustomer(by = "account_no", value) {
+    deleteCustomer(by = "account_no", value, who) {
         const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
-        return CustomerMapper.deleteDomainRecord({by, value}).then(count => {
-            if (!count) {
-                return Utils.buildResponse({status: "fail", data: {message: "The specified record doesn't exist"}});
-            }
-            return Utils.buildResponse({data: {by, message: "Customer deleted"}});
+        return CustomerMapper.deleteDomainRecord({by, value}, true, who).then(count => {
+            if (!count) return Error.RecordNotFound();
+            return Utils.buildResponse({data: {message: "Customer successfully deleted."}});
         });
+    }
+
+    /**
+     * @param query {Object}
+     * @return {Promise<*>}
+     */
+    async buildQuery(query = {}) {
+        const {meter_no, type, tariff, status, offset = 0, limit = 10} = query;
+        const resultSets = this.context.db().select(['*']).from('customers');
+
+        if (meter_no) resultSets.where("meter_no", meter_no);
+        if (type) resultSets.where("customer_type", type);
+        if (tariff) resultSets.where("tariff", tariff);
+        if (status) resultSets.whereIn('status', `${status}`.split(","));
+
+        resultSets.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy('account_no', 'asc');
+
+        return resultSets;
     }
 
     /**
@@ -207,6 +250,7 @@ class CustomerService {
             return customer;
         })
     }
+
 }
 
 module.exports = CustomerService;

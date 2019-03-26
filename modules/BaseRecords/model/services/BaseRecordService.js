@@ -1,12 +1,12 @@
 const DomainFactory = require('../../../DomainFactory');
 const ApiService = require('../../../ApiService');
+const Error = require('../../../../core/Utility/ErrorUtils')();
 let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
-const validate = require('validatorjs');
 
 /**
- * @name BaseRecordService
  * Created by paulex on 8/30/18.
+ * @name BaseRecordService
  */
 class BaseRecordService extends ApiService {
 
@@ -18,22 +18,18 @@ class BaseRecordService extends ApiService {
     /**
      * Creates fault pending reasons
      *
-     * @param body
-     * @param who
+     * @param body {Object}
+     * @param who {Session}
      * @returns {Promise<*>}
      */
-    async createPendingReason(body = {}, who = {}) {
+    async createPendingReason(body = {}, who) {
+        const PendingReasonMapper = MapperFactory.build(MapperFactory.PENDING_REASON);
         const PendingReason = DomainFactory.build(DomainFactory.PENDING_REASON);
         const reason = new PendingReason(body);
 
+        if (!reason.validate()) return Promise.reject(Error.ValidationFailure(reason.getErrors().all()));
+
         ApiService.insertPermissionRights(reason, who);
-
-        let validator = new validate(reason, reason.rules(), reason.customErrorMessages());
-
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({status: "fail", data: validator.errors.all()}, 400));
-        }
-        const PendingReasonMapper = MapperFactory.build(MapperFactory.PENDING_REASON);
 
         return PendingReasonMapper.createDomainRecord(reason).then(reason => {
             return Utils.buildResponse({data: reason});
@@ -43,19 +39,19 @@ class BaseRecordService extends ApiService {
     /**
      * Updates a pending reason value
      *
-     * @param by
-     * @param value
-     * @param body
-     * @param who
+     * @param by {String}
+     * @param value {String|Number}
+     * @param body {Object}
+     * @param who {Session}
+     * @param API {API}
      * @returns {Promise<*|Promise|PromiseLike<{data?: *, code?: *}>|Promise<{data?: *, code?: *}>>}
      */
-    async updatePendingReason(by, value, body = {}, who) {
+    async updatePendingReason(by, value, body = {}, who, API) {
+        const PendingReasonMapper = MapperFactory.build(MapperFactory.PENDING_REASON);
         const PendingReason = DomainFactory.build(DomainFactory.PENDING_REASON);
         const reason = new PendingReason(body);
 
-        const PendingReasonMapper = MapperFactory.build(MapperFactory.PENDING_REASON);
-
-        return PendingReasonMapper.updateDomainRecord({by, value, domain: reason}).then(result => {
+        return PendingReasonMapper.updateDomainRecord({by, value, domain: reason}, who).then(result => {
             return Utils.buildResponse({data: result.shift()});
         });
     }
@@ -68,29 +64,40 @@ class BaseRecordService extends ApiService {
      * @returns {Promise<*>}
      */
     async createFaultCategory(body = {}, who = {}) {
+        const FaultCategoryMapper = MapperFactory.build(MapperFactory.FAULT_CATEGORY);
         const FaultCategory = DomainFactory.build(DomainFactory.FAULT_CATEGORY);
         const category = new FaultCategory(body);
 
+        if (!category.validate()) return Promise.reject(Error.ValidationFailure(category.getErrors().all()));
+
         ApiService.insertPermissionRights(category, who);
 
-        let validator = new validate(category, category.rules(), category.customErrorMessages());
-
-        if (validator.fails()) {
-            return Promise.reject(Utils.buildResponse({status: "fail", data: validator.errors.all()}, 400));
-        }
-        const FaultCategoryMapper = MapperFactory.build(MapperFactory.FAULT_CATEGORY);
-
         return FaultCategoryMapper.createDomainRecord(category).then(category => {
-            if (body.parent_id) {
-                // The database should enforce that a category can only have one parent
-                this.context.database.table("fault_categories").insert({
-                    parent_category_id: body.parent_id,
-                    child_category_id: category.id,
-                    created_at: category.created_at,
-                    updated_at: category.updated_at
-                }).then();
-            }
+            if (body.parent_id) this.createFaultSubCategories(body.parent_id, category.id);
             return Utils.buildResponse({data: category});
+        });
+    }
+
+    /**
+     * Create a fault sub categories
+     *
+     * Note: The database enforces that a category can only have one parent
+     *
+     * @todo update the parent of a child category
+     * @param parentId {Number}
+     * @param childId {Number}
+     */
+    createFaultSubCategories(parentId, childId) {
+        const subCategories = {
+            parent_category_id: parentId,
+            child_category_id: childId,
+            created_at: Utils.date.dateToMysql(),
+            updated_at: Utils.date.dateToMysql()
+        };
+        return this.context.db().table("fault_categories").insert(subCategories).then(() => {
+            return true;
+        }).catch(() => {
+            return false;
         });
     }
 
@@ -98,27 +105,55 @@ class BaseRecordService extends ApiService {
     /**
      * Updates a fault category
      *
-     * @param by
-     * @param value
-     * @param body
-     * @param who
+     * @param by {String}
+     * @param value {String|Number}
+     * @param body {Object}
+     * @param who {Session}
+     * @param API {API}
      * @returns {Promise<*|Promise|PromiseLike<{data?: *, code?: *}>|Promise<{data?: *, code?: *}>>}
      */
-    async updateFaultCategory(by, value, body = {}, who) {
+    async updateFaultCategory(by, value, body = {}, who, API) {
+        const FaultCategoryMapper = MapperFactory.build(MapperFactory.FAULT_CATEGORY);
         const FaultCategory = DomainFactory.build(DomainFactory.FAULT_CATEGORY);
         const category = new FaultCategory(body);
 
-        const FaultCategoryMapper = MapperFactory.build(MapperFactory.FAULT_CATEGORY);
-
-        return FaultCategoryMapper.updateDomainRecord({by, value, domain: category}).then(result => {
+        return FaultCategoryMapper.updateDomainRecord({by, value, domain: category}, who).then(result => {
             if (body.parent && category.id) {
-                this.context.database.table("fault_categories_subs")
+                this.context.db().table("fault_categories_subs")
                     .update({parent_category_id: body.parent_id})
                     .where('child_category_id', category.id)
                     .then()
             }
             return Utils.buildResponse({data: result.shift()});
         });
+    }
+
+    /**
+     * Gets fault categories
+     *
+     * @param query {Object}
+     * @param who {Session}
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getFaultCategories(query = {}, who) {
+        const offset = (query.offset) ? parseInt(query.offset) : undefined,
+            limit = (query.limit) ? parseInt(query.limit) : undefined,
+            type = query['type'],
+            weight = query['weight'];
+
+        const faultCategories = await this.context.getKey("fault:categories", true);
+
+        let items = [];
+        Object.entries(faultCategories).forEach(([key, value]) => {
+            if (value.hasOwnProperty("children")) delete value['children'];
+            if (type && !type.split(",").map(i => i.toLowerCase()).includes(`${value['type']}`.toLowerCase())) return;
+            if (weight && value['weight'] !== weight) return;
+            items.push(value);
+        });
+
+        if (offset && limit) items = items.slice(offset, offset + limit);
+
+        return Utils.buildResponse({data: {items}});
     }
 
 }

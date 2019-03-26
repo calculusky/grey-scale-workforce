@@ -41,6 +41,11 @@ class Activation extends DomainObject {
             'completed': 'integer'
         }
     }
+
+    isAuditAble() {
+        return false;
+    }
 }
+
 
 module.exports = Activation;

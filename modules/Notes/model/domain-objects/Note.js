@@ -47,8 +47,7 @@ class Note extends DomainObject {
         };
     }
 
-
-    user(cols=["id", "username", "first_name", "last_name", "mobile_no", "gender", "avatar"]) {
+    user(cols = ["id", "username", "first_name", "last_name", "mobile_no", "gender", "avatar"]) {
         return this.relations().belongsTo("User", "created_by", "id", cols);
     }
 
@@ -56,7 +55,7 @@ class Note extends DomainObject {
      * Returns all the attachment on the note if any
      * @returns {Promise}
      */
-    attachments(){
+    attachments() {
         return this.relations().morphMany("Attachment", "module", "relation_id");
     }
 }

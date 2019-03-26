@@ -44,7 +44,6 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
         Log.info('/login', req.body);
         API.recognitions().login(req.body.username, req.body.password, req)
             .then(({data, code}) => {
-                // console.log(data);
                 res.status(code).send(data);
             }).catch(({err, code}) => {
             console.log(err);
@@ -364,7 +363,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *   tags: [Users]
      *   produces:
      *   - application/json
-     *   operationId: getUserTableRecords
+     *   operationId: getUserDataTableRecords
      *   responses:
      *     '200':
      *       description: "User"
@@ -376,7 +375,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/sessionId'
      */
     app.get("/users/data-tables/records", (req, res) => {
-        API.users().getUserTableRecords(req.query, req.who).then(data => {
+        API.users().getUserDataTableRecords(req.query, req.who).then(data => {
             console.log(data);
             return res.send(JSON.stringify(data));
         }).catch(err => {

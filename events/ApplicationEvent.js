@@ -1,5 +1,4 @@
 const EventEmitter = require('events').EventEmitter;
-const _ = require('lodash');
 const DomainFactory = require('../modules/DomainFactory');
 const Utils = require('../core/Utility/Utils');
 const {isEqual} = require('lodash');
@@ -72,7 +71,9 @@ class ApplicationEvent extends EventEmitter {
         const oldStatus = Utils.getWorkStatuses(workOrder.type_id || oldRecord.type_id, oldRecord.status);
         const status = Utils.getWorkStatuses(workOrder.type_id || oldRecord.type_id, workOrder.status);
 
-        if (!status || (typeof oldStatus === "string" && oldStatus.toLowerCase().includes("closed"))) return false;
+        const closedStatuses = ['disconnected', 'closed'];
+
+        if (!status || (typeof oldStatus === "string" && closedStatuses.includes(oldStatus.toLowerCase()))) return false;
 
         if (status.toLowerCase().includes("closed")) {
             const compDate = {completed_date: Utils.date.dateToMysql()};
@@ -80,7 +81,7 @@ class ApplicationEvent extends EventEmitter {
             const res = await this.api.workOrders().updateWorkOrder("id", workId, compDate, who, [], this.api).catch(
                 err => console.error("onWorkOrderUpdate:", err)
             );
-
+            console.warn('onWorkOrderUpdate:success', res);
             if (!res) return false;
 
             /*
@@ -96,6 +97,7 @@ class ApplicationEvent extends EventEmitter {
                 const sumClosed = workOrders.reduce((acc, wo) => acc + (statuses[wo.status].includes("Closed") ? 1 : 0), 0);
                 if (sumClosed === workOrders.length) {
                     const update = {status: 4, completed_date: Utils.date.dateToMysql()};
+                    console.warn('TAIL', update);
                     this.api.faults().updateFault("id", fault.id, update, who, [], this.api).catch(err => {
                         console.error("onWorkOrderUpdate:Fault:", err);
                     });
@@ -115,11 +117,10 @@ class ApplicationEvent extends EventEmitter {
         if (fault.related_to && fault.related_to.toLowerCase() !== "assets") return false;
         const asset = (await fault.asset()).records.shift();
         //check if the asset status is already in-active before setting it to in-active
-        if (`${asset.status}` === "0") return false;
-
+        if (asset && `${asset.status}` === "0") return false;
         const res = await this.api.assets().updateAsset(asset.id, {status: "0"}, who).catch(console.error);
         //TODO update all sub-assets
-        return res.data.status === "success";
+        return res && res.data.status === "success";
     }
 
     /**

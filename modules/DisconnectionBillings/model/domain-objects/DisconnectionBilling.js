@@ -37,6 +37,20 @@ class DisconnectionBilling extends DomainObject {
         };
     }
 
+    calculateMinAmount(){
+        this.min_amount_payable = this.current_bill + this.arrears;
+        return this.min_amount_payable;
+    }
+
+    calculateTotalAmount(){
+        this.total_amount_payable = this.current_bill + this.arrears + this.reconnection_fee;
+        return this.total_amount_payable;
+    }
+
+    setReconnectionFee(fee){
+        this.reconnection_fee =fee;
+    }
+
     paymentPlan() {
         return this.relations().belongsTo("PaymentPlan", "id", "disc_order_id");
     }

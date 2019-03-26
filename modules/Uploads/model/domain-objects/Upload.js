@@ -6,7 +6,7 @@ const map = require('./map.json');
 /**
  * @author Paul Okeke
  * Created by paulex on 8/22/17.
- * @name Note
+ * @name Upload
  */
 class Upload extends DomainObject {
 
@@ -41,10 +41,6 @@ class Upload extends DomainObject {
 
     rules() {
         return {
-            // file_name: String,
-            // file_size: Number,
-            // file_path: String,
-            // status: Number,
             upload_type: 'string|required',
             group_id: 'numeric|required'
         };

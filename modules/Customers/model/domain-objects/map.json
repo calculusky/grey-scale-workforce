@@ -12,6 +12,7 @@
   "mobile_no": "mobile_no",
   "plain_address": "plain_address",
   "customer_type": "customer_type",
+  "metadata":"metadata",
   "meter_type": "meter_type",
   "meter_status": "meter_status",
   "tariff": "tariff",

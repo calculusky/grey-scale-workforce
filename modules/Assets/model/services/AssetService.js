@@ -1,14 +1,18 @@
 const DomainFactory = require('../../../DomainFactory');
-let MapperFactory = null;
+const ApiService = require('../../../ApiService');
 const Utils = require('../../../../core/Utility/Utils');
+const Error = require('../../../../core/Utility/ErrorUtils')();
+let MapperFactory = null;
+
 
 /**
  * @name AssetService
  * Created by paulex on 8/22/17.
  */
-class AssetService {
+class AssetService extends ApiService {
 
     constructor(context) {
+        super(context);
         this.context = context;
         MapperFactory = this.context.modelMappers;
     }
@@ -16,7 +20,7 @@ class AssetService {
     async getAsset(value, by = "id", who = {api: -1}, offset = 0, limit = 10) {
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
         const results = await AssetMapper.findDomainRecord({by, value}, offset, limit);
-        const groups = await Utils.redisGet(this.context.persistence, "groups");
+        const groups = await this.context.getKey("groups", true);
         const assets = AssetService.addBUAndUTAttributes(results.records, groups);
         return Utils.buildResponse({data: {items: assets}});
     }
@@ -34,13 +38,13 @@ class AssetService {
             'serial_no',
             'location'
         ];
-        const resultSets = this.context.database.select(fields).from('assets');
+        const resultSets = this.context.db().select(fields).from('assets');
         if (group_id) resultSets.where("group_id", group_id);
         if (status) resultSets.whereIn("status", status.split(","));
 
         resultSets.where('deleted_at', null).limit(Number(limit)).offset(Number(offset)).orderBy("id", "desc");
 
-        const groups = await Utils.redisGet(this.context.persistence, "groups");
+        const groups = await this.context.getKey("groups", true);
 
         const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
 
@@ -49,31 +53,46 @@ class AssetService {
     }
 
     /**
+     * Creates a new asset
      *
      * @param body
-     * @param who
+     * @param who {Session}
      */
-    createAsset(body = {}, who = {}) {
+    createAsset(body = {}, who) {
         const Asset = DomainFactory.build(DomainFactory.ASSET);
-        body['api_instance_id'] = who.api;
-        let staff = new Asset(body);
+        const asset = new Asset(body);
 
+        if (!asset.validate()) return Promise.reject(Error.ValidationFailure(asset.getErrors().all()));
 
-        //Get Mapper
+        ApiService.insertPermissionRights(asset, who);
+
         const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        return AssetMapper.createDomainRecord(staff).then(staff => {
+        return AssetMapper.createDomainRecord(asset, who).then(staff => {
             if (!staff) return Promise.reject();
             return Utils.buildResponse({data: staff});
         });
     }
 
-
-    updateAsset(value, body = {}, who = {}, by = "id") {
+    /**
+     * Updates an existing asset
+     *
+     * @param value
+     * @param body
+     * @param who {Session}
+     * @param by
+     * @returns {Bluebird<{data?: *, code?: *}> | * | void | Bluebird<{data?: *, code?: *} | never> | PromiseLike<{data?: *, code?: *} | never> | Promise<{data?: *, code?: *} | never>}
+     */
+    async updateAsset(value, body = {}, who, by = "id") {
         const Asset = DomainFactory.build(DomainFactory.ASSET);
+        const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
+        const model = (await this.context.db()("assets").where(by, value).select()).shift();
         const domain = new Asset(body);
 
-        const AssetMapper = MapperFactory.build(MapperFactory.ASSET);
-        return AssetMapper.updateDomainRecord({by, value, domain}).then(asset => {
+        if (!model) return Promise.reject(Error.RecordNotFound());
+
+        domain.updateAssignedTo(model.assigned_to);
+
+        return AssetMapper.updateDomainRecord({by, value, domain}, who).then(asset => {
             return Utils.buildResponse({data: asset});
         });
     }
@@ -98,13 +117,13 @@ class AssetService {
             'serial_no',
             'location'
         ];
-        let resultSets = this.context.database.select(fields).from('assets')
+        let resultSets = this.context.db().select(fields).from('assets')
             .where('asset_name', 'like', `%${keyword}%`)
             .where("deleted_at", null)
             .orWhere('asset_type_name', 'like', `%${keyword}%`)
             .limit(Number(limit)).offset(Number(offset)).orderBy('asset_name', 'asc');
 
-        const groups = await Utils.getFromPersistent(this.context, "groups", true);
+        const groups = await this.context.getKey("groups", true);
 
         const results = await resultSets.catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
         const assets = AssetService.addBUAndUTAttributes(results, groups, Asset);

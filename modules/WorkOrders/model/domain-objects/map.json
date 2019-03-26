@@ -16,6 +16,7 @@
   "contact_email": "contact_email",
   "source": "source",
   "source_id": "source_id",
+  "metadata": "metadata",
   "assigned_to": "assigned_to",
   "group_id": "group_id",
   "issue_date": "issue_date",

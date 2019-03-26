@@ -53,6 +53,30 @@ class Payment extends DomainObject {
         };
     }
 
+    setPaymentAmount(amount = this.amount) {
+        let amt = amount;
+        if (!isNaN(amount)) amt = parseFloat(amount);
+        this.amount = amt;
+    }
+
+    setPaymentDate(date) {
+        if (date) this.payment_date = date;
+    }
+
+    setSystemId(systemId = this.system_id) {
+        if (systemId) this.system_id = systemId.replace(/-/g, "").toUpperCase();
+    }
+
+    setGroupId(groupId) {
+        this.group_id = groupId;
+    }
+
+    setAssignedTo(assignedTo = this.assigned_to) {
+        if (assignedTo) {
+            this.assigned_to = JSON.stringify(assignedTo);
+        }
+    }
+
 }
 
 //noinspection JSUnresolvedVariable

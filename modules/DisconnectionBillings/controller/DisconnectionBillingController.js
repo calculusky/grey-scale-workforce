@@ -39,7 +39,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postDisconnectionBillingInput'
      */
     app.post('/disconnection_billings', multiPart.array("files", 5), (req, res) => {
-        API.disconnections().createDisconnectionBilling(req.body, req.who, req.files, API).then(({data, code}) => {
+        API.disconnections().createDisconnectionBilling(req.body, req.who, API, req.files).then(({data, code}) => {
             console.log(data);
             return res.status(code).json(data);
         }).catch(({err, code}) => {

@@ -174,7 +174,7 @@ class PaymentPlanService extends ApiService {
                     relation_id: `${planId}`,
                     module: 'payment_plans',
                     note: `Payment Plan Approval : ${comments}`
-                }, who).catch(console.error);
+                }, who, API).catch(console.error);
             }
             Events.emit("payment_plan_approval", planId, who);
         }
@@ -222,7 +222,7 @@ class PaymentPlanService extends ApiService {
                     relation_id: planId,
                     module: 'payment_plans',
                     note: `Payment Plan Rejection : ${comments}`
-                }, who).catch(console.error);
+                }, who, API).catch(console.error);
             }
             Events.emit("payment_plan_approval", planId, who, false);
         }

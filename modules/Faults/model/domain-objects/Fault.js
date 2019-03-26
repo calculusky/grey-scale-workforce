@@ -2,6 +2,7 @@
 const DomainObject = require('../../../../core/model/DomainObject');
 //noinspection JSUnresolvedFunction
 const map = require('./map.json');
+const {getFaultStatus, getFaultPriority} = require('../../../../core/Utility/Utils');
 
 /**
  * @author Paul Okeke
@@ -53,8 +54,116 @@ class Fault extends DomainObject {
             priority: 'numeric|required',
             issue_date: 'date|required',
             labels: 'string-array',//please note that this are customer-validators
-            assigned_to: 'string-array'
+            assigned_to: 'string-array',
+            metadata:'string-object'
         };
+    }
+
+    setIssueDate(date) {
+        this.issue_date = date;
+        return this;
+    }
+
+    /**
+     *
+     * @param date
+     * @returns {Fault}
+     */
+    setIssueDateIfNull(date) {
+        if (!this.issue_date)
+            this.issue_date = date;
+        return this;
+    }
+
+    /**
+     * Sets the category using the categoryId
+     *
+     * @param source
+     */
+    setCategory(source) {
+        if (!this.category_id || !source) return;
+        this.category = source[this.category_id] || null;
+    }
+
+    /**
+     *
+     * @param db
+     * @returns {Promise<boolean>}
+     */
+    async validateSource(db) {
+        if (this.source && this.source.toLowerCase() === "crm") {
+            const asset = (await db(this.related_to).where('id', this.relation_id)
+                .orWhere('ext_code', this.relation_id).select(['id', 'group_id'])).shift();
+            if (!asset) return false;
+            this.relation_id = `${asset.id}`;
+        }
+        return true;
+    }
+
+    getNotesCount(db) {
+        if (!this.id) return console.assert(this.id, "Fault ID is not set");
+        return db.count('note as notes_count')
+            .from("notes").where("module", "faults").where("relation_id", this.id);
+    }
+
+    getAttachmentsCount(db) {
+        if (!this.id) return console.assert(this.id, "Fault ID is not set");
+        return db.count('id as attachments_count')
+            .from("notes").where("module", "faults").where("relation_id", this.id);
+    }
+
+    getWorkOrdersCount(db) {
+        if (!this.id) return console.assert(this.id, "Fault ID is not set");
+        return db.count('id as works_count')
+            .from("work_orders").where("related_to", "faults").where("relation_id", this.id)
+    }
+
+    getRelatedRecordCount(db) {
+        return [
+            this.getNotesCount(db),
+            this.getAttachmentsCount(db),
+            this.getWorkOrdersCount(db)
+        ];
+    }
+
+    /**
+     *
+     * @param context
+     * @return {{}|*}
+     */
+    toAuditAbleFormat(context) {
+        const newData = {...this};
+        for (const [key, value] of Object.entries(newData)) {
+            switch (key) {
+                case 'relation_id': {
+                    //TODO check if the related value is an asset
+                    break;
+                }
+                case 'category_id' || 'fault_category_id': {
+                    context.getKey("fault:categories", true).then(categories => {
+                        newData[key] = categories[value].name;
+                    });
+                    break;
+                }
+                case 'status': {
+                    newData[key] = getFaultStatus(value);
+                    break;
+                }
+                case 'priority': {
+                    newData[key] = getFaultPriority(value);
+                    break;
+                }
+                case 'labels': {
+                    if (typeof value === 'string') newData[key] = JSON.parse(value);
+                    break;
+                }
+                case 'assigned_to': {
+                    if (typeof value === 'string') newData[key] = JSON.parse(value);
+                    break;
+                }
+            }
+        }
+        return newData;
     }
 
     /**

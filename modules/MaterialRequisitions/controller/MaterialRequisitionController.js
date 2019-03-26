@@ -162,7 +162,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *    - $ref: '#/parameters/asset_id'
      */
     app.delete('/material_requisitions/:id', urlencodedParser, (req, res) => {
-        API.materialRequisitions().deleteMaterialRequisition("id", req.params.id)
+        API.materialRequisitions().deleteMaterialRequisition("id", req.params.id, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

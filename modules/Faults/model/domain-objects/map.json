@@ -15,6 +15,7 @@
   "permit_no":"permit_no",
   "source": "source",
   "source_id": "source_id",
+  "metadata":"metadata",
   "request_id": "request_id",
   "resolved_by": "resolved_by",
   "assigned_to": "assigned_to",

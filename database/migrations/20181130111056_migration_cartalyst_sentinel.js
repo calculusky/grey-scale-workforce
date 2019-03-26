@@ -39,7 +39,9 @@ exports.up = function(knex, Promise) {
             table.json('permissions').nullable();
             table.json("assigned_to").nullable();
             table.integer("group_id").unsigned().nullable();
+            table.timestamp('deleted_at').nullable();
             table.integer("created_by").unsigned().nullable();
+            table.integer("deleted_by").unsigned().nullable();
             table.timestamps();
 
             table.foreign("group_id").references("id").on("groups");
@@ -99,6 +101,7 @@ exports.up = function(knex, Promise) {
             table.integer("deleted_by").unsigned().nullable();
             table.integer("group_id").unsigned().nullable();
             table.specificType('location', 'POINT').nullable();
+            // table.softDeletes();
             table.timestamp('deleted_at').nullable();
             table.timestamps();
             table.unique('email');
@@ -113,9 +116,15 @@ exports.up = function(knex, Promise) {
         .alterTable('roles', (t) => {
             t.foreign("created_by").references("id").on("users");
         })
+        .alterTable('roles', (t) => {
+            t.foreign("deleted_by").references("id").on("users");
+        })
         .alterTable('groups', (t) => {
             t.foreign("created_by").references("id").on("users");
         });
+
+    // db.statement('ALTER TABLE roles ADD CONSTRAINT `roles_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)');
+    // db.statement('ALTER TABLE `groups` ADD CONSTRAINT groups_created_by_foreign FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)');
 };
 
 exports.down = function(knex, Promise) {

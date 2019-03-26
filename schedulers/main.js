@@ -8,6 +8,11 @@ const spawn = require('child_process').spawn;
 const Utils = require('../core/Utility/Utils');
 const AWS = require('aws-sdk');
 const _ = require('lodash');
+const DomainFactory = require('../modules/DomainFactory');
+const Session = require('../core/Session');
+/**
+ * @type API
+ * */
 let API = null;
 const Events = require('../events/events.js');
 
@@ -18,15 +23,19 @@ module.exports = function main(context, Api) {
     API = Api;
 
     //lock.d for delinquency list, lock.c for customer
-    this.lock = {d: false, g: false};
-    //all cron jobs
-    console.log('* * * * * * Registered CronJobs');
-    //schedule job for running createDelinquencyList
-    cron.scheduleJob('*/2 * * * *', main.createDelinquencyList.bind(this));
+    this.lock = {d: false, g: false, ca: false};
 
-    //schedule job for running updateAssetLocation
-    cron.scheduleJob('*/2 * * * *', main.updateAssetLocation.bind(this));
+    if (process.env.NODE_ENV !== 'test') {
+        //all cron jobs
+        console.log('* * * * * * Registered CronJobs');
+        //schedule job for running createDelinquencyList
+        cron.scheduleJob('*/2 * * * *', main.createDelinquencyList.bind(this));
 
+        //schedule job for running updateAssetLocation
+        cron.scheduleJob('*/3 * * * *', main.updateAssetLocation.bind(this));
+
+        cron.scheduleJob('*/3 * * * *', main.updateCustomerAssets.bind(this));
+    }
     //schedule job for running a database backup
     if (process.env.NODE_ENV === 'production') {
         const s3 = new AWS.S3({
@@ -37,16 +46,30 @@ module.exports = function main(context, Api) {
         });
         cron.scheduleJob('0 10,15,18,22 * * *', main.backUpDatabase.bind(this, s3));
     }
-
-    //schedule job for creating meter readings
-    cron.scheduleJob('*/1 * * * *', main.createMeterReadings.bind(this));
-
-    // schedule job for creating meter readings
-    cron.scheduleJob('*/30 * * * *', main.createCustomers.bind(this));
 };
 
 /**
+ * makes a default session
+ *
+ * @param context
+ * @param id
+ * @return {Promise<*>}
+ */
+async function getSession(context, id/*userID*/) {
+    const User = DomainFactory.build(DomainFactory.USER);
+    return Session.Builder(context).setUser(new User({id})).default();
+}
+
+/**
  * Read the imported delinquency list and create a record on the database
+ *
+ * Read excel documents from a directory
+ * confirm that the excel conforms to what is expected for the process
+ *  if it doesn't return an error message that the file is invalid and terminate the process
+ * check that the uploaded file is recorded in the database
+ *  if it isn't return an error as well that the file is not found and terminate the process
+ * iterate through each row of the excel file
+ *
  * @returns {*}
  */
 module.exports.createDelinquencyList = function () {
@@ -63,7 +86,7 @@ module.exports.createDelinquencyList = function () {
         currentFile = file;
         const currDate = new Date();
         const logMgs = [];
-        const db = this.context.database;
+        const db = this.context.db();
         let uploadData;
         let groups;
 
@@ -76,7 +99,7 @@ module.exports.createDelinquencyList = function () {
         };
 
         const task = [
-            Utils.getFromPersistent(this.context, "groups", true),
+            this.context.getKey("groups", true),
             db.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to', 'created_by']),
             workbook.xlsx.readFile(file)
         ];
@@ -92,6 +115,8 @@ module.exports.createDelinquencyList = function () {
 
         uploadData = uploadData.shift();
 
+        const assignedTo = uploadData.assigned_to[0];
+        const who = await getSession(this.context, uploadData.assigned_to[0].id);
         const workSheet = workbook.getWorksheet(1);
         let rowLen = workSheet.rowCount,
             actualRowCount = rowLen - 1,
@@ -107,27 +132,24 @@ module.exports.createDelinquencyList = function () {
         //if the file is empty or just includes the column heads... lets delete the file and release lock
         if (rowLen <= 1) return logMgs.push("Empty file uploaded.") && onComplete(5);
 
-
         //Determines if onComplete should be called or not depending on the number of rows processed
         const endProcess = (totalRowsVisited) => {
             if ((totalRowsVisited === rowLen) || (totalRowsVisited === workSheet.actualRowCount)) {
-                logMgs.push(`${processedDisc} of ${actualRowCount}` + " delinquent records imported successfully");
-                logMgs.push(`${processedWO ? processedWO : "No"} work order(s) was generated from the total of`
-                    + ` ${processedDisc}` + " delinquency record imported.");
+                logMgs.push(`${processedDisc} of ${actualRowCount} delinquent records imported successfully`);
+                logMgs.push(`${processedWO ? processedWO : "No"} work order(s) was generated from the total of ${processedDisc} delinquency record imported.`);
                 console.log(logMgs);
                 return onComplete((processedDisc === actualRowCount) ? 4 : 5);
             }
             return totalRowsVisited === rowLen;
         };
 
-
+        //@loop
         workSheet.eachRow(async (row, rn) => {
             if (isBadTemplate) return;
             if (rn === 1) {
                 colHeaderIndex = getColumnsByNameIndex(row, columnLen);
                 if (!_.difference(delinquentCols, Object.keys(colHeaderIndex)).length) return;
-                logMgs.push("Invalid delinquency template uploaded. Template doesn't contain either one of " +
-                    `this column headers; ${delinquentCols.join(', ')}`);
+                logMgs.push(`Invalid delinquency template uploaded. Template doesn't contain either one of this column headers; ${delinquentCols.join(', ')}`);
                 return onComplete(3) && (isBadTemplate = true);
             }
 
@@ -148,24 +170,17 @@ module.exports.createDelinquencyList = function () {
             let hubGroup = {id: utIndex.result};
             let hubManagerId = null;
 
-            let assignedTo = uploadData.assigned_to[0];
-            assignedTo.created_at = Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s");
-
             /*-----------------------------------------------------------------------------------------
             | Checks if the customer exist
             | Checks also if the customer specified belongs to the undertaking specified in the excel file
             |-------------------------------------------------------------------------------------------
              */
-            let customer = await db.table("customers").where("account_no", accountNo).select(['group_id', 'tariff']);
-            customer = customer.pop();
+            const customer = (await db.table("customers").where("account_no", accountNo).select(['group_id', 'tariff'])).pop();
 
             if (!customer) {
                 logMgs.push(`The specified account no (${accountNo}) in row(${rn}) does not exist.`);
                 return ++processed && endProcess(++total);
             }
-
-            let reconnection_fee = await db.table("rc_fees").where("name", customer.tariff).select(['amount']);
-            reconnection_fee = (reconnection_fee[0]) ? reconnection_fee[0].amount : 3000;
 
             const customerUT = Utils.getGroupParent(groups[customer.group_id], "undertaking");
 
@@ -179,27 +194,22 @@ module.exports.createDelinquencyList = function () {
                 "account_no": accountNo,
                 "current_bill": cBill,
                 "arrears": arrears,
-                "min_amount_payable": cBill + arrears,
-                "total_amount_payable": cBill + arrears + reconnection_fee,
-                reconnection_fee,
                 "group_id": uploadData.group_id,
-                "created_by": assignedTo.id,
-                "assigned_to": JSON.stringify([assignedTo]),
-                "created_at": assignedTo.created_at,
-                "updated_at": assignedTo.created_at
+                "created_by": who.getAuthUser().getUserId(),
+                "assigned_to": JSON.stringify([assignedTo])
             };
 
-            const inserted = await db.table(tableName).insert(delinquency).catch(_ => {
-                logMgs.push(`An error occurred while processing row(${rn})` + "." +
-                    " It could be that the account number doesn't exist.");
+            const disc = await API.disconnections().createDisconnectionBilling(delinquency, who, API).catch((err) => {
+                logMgs.push(`An error occurred while processing row(${rn}). It could be that the account number doesn't exist.`);
+                console.log(err);
                 return null;
             });
 
-            if (!inserted) return ++processed && endProcess(++total);
+            if (!disc) return ++processed && endProcess(++total);
 
             ++processedDisc;
 
-            const discId = inserted.shift();
+            const {data: {data: {id: discId}}} = disc;
 
             if (!generateWO) {
                 return logMgs.push("Work order was not auto-generated for row(" + rn + ")") && endProcess(++total);
@@ -246,18 +256,15 @@ module.exports.createDelinquencyList = function () {
                 created_by: assignedTo.id,
                 assigned_to: `[${hubManagerId}]`,
                 issue_date: Utils.date.dateToMysql(currDate, "YYYY-MM-DD"),
-                created_at: assignedTo.created_at,
-                updated_at: assignedTo.created_at
-            }, {sub: assignedTo.id}, [], API).then(res => {
+            }, who, API).then(res => {
                 db.table('disconnection_billings').where('id', '=', discId)
                     .update({
                         work_order_id: res.data.data.work_order_no,
                         assigned_to: JSON.stringify([assignedTo, {
                             "id": hubManagerId,
-                            "created_at": assignedTo.created_at
+                            "created_at": Utils.date.dateToMysql(currDate, "YYYY-MM-DD H:m:s")
                         }])
                     }).then();
-
                 ++processedWO;
                 return ++processed && endProcess(++total);
             }).catch(err => {
@@ -279,6 +286,152 @@ module.exports.createDelinquencyList = function () {
     console.log("Lock for delinquency list is held, i'll wait till it is released");
 };
 
+/**
+ * Get the uploaded excel file from the customer_assets folder
+ * Check if the filename exist in the uploads database
+ *   if it doesn't we should end the process completely
+ * check if the file contains the right headers
+ *   if it doesn't we should end the process and return a "bad file"
+ *
+ * iterate through each row of the excel
+ * check if the assets exist using the DT_Number and check if the customer exist as well
+ *   if it doesn't exist add an error to the log that it doesn't exist
+ *   if it exist
+ *    we should link the customer to the assets
+ */
+module.exports.updateCustomerAssets = function updateCustomerAssets() {
+//lets retrieve the path where asset locations list is saved
+    const directory = `${this.context.config.storage.path}/uploads/customers_assets`;
+    const workbook = new Excel.Workbook();
+    let currentFile = null;
+    const cols = ['account_no', 'dt_no'];
+    const tableName = "customers_assets";
+
+    //This function processes the excel document
+    const startProcessor = async (file/*.xlsx*/, fileName) => {
+        this.lock.ca = true;
+        currentFile = file;
+        const logMgs = [];
+        const db = this.context.db();
+
+        //onComplete is called when the file is done processing
+        const onComplete = (status, update = true) => {
+            deleteFile(currentFile);
+            this.lock.ca = false;//release the lock here
+            Events.emit("upload_completed", "asset_location", status, fileName, (uploadData) ? uploadData.created_by : 0);
+            return (update) ? _updateUploadStatus(this, fileName, status, JSON.stringify(logMgs)) : true;
+        };
+
+        const task = [
+            db.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to', 'created_by']),
+            workbook.xlsx.readFile(file)
+        ];
+
+        //Fetch Groups and the Uploaded record before hand
+        let [uploadData] = await Promise.all(task).catch(_ => {
+            return logMgs.push("There was an error reading the file") && onComplete(3);
+        });
+
+        console.log(uploadData);
+
+        //check that the uploaded data is intact.. if we can't find the uploaded record we can end this right now
+        if (!uploadData.length) return logMgs.push("Couldn't find the uploaded record.") && onComplete(5, false);
+
+        uploadData = uploadData.shift();
+
+        const workSheet = workbook.getWorksheet(1);
+        let rowLen = workSheet.rowCount,
+            actualRowCount = rowLen - 1,
+            columnLen = workSheet.actualColumnCount,
+            processed = 0,
+            processedAsset = 0,
+            isBadTemplate = false,
+            total = 1;
+
+        let colHeaderIndex = {};
+
+        //if the file is empty or just includes the column heads... lets delete the file and release lock
+        if (rowLen <= 1) return logMgs.push("Empty file uploaded.") && onComplete(5);
+
+        //Determines if onComplete should be called or not, depending on the number of rows processed
+        const endProcess = (totalRowsVisited) => {
+            console.log(totalRowsVisited, workSheet.actualRowCount, rowLen);
+            if ((totalRowsVisited === rowLen) || (totalRowsVisited === workSheet.actualRowCount)) {
+                logMgs.push(`${processedAsset} of ${actualRowCount}` + " customers assets updated successfully");
+                console.log(logMgs);
+                return onComplete((processedAsset === actualRowCount) ? 4 : 5);
+            }
+            return totalRowsVisited === rowLen;
+        };
+
+        workSheet.eachRow(async (row, rn) => {
+            if (isBadTemplate) return;
+            if (rn === 1) {
+                colHeaderIndex = getColumnsByNameIndex(row, columnLen);
+                if (!_.difference(cols, Object.keys(colHeaderIndex)).length) return;
+                logMgs.push(`Invalid customer assets template uploaded. Template doesn't contain either one of these column headers; ${cols.join(', ')}`);
+                return onComplete(3) && (isBadTemplate = true);
+            }
+            const accountCell = row.getCell(colHeaderIndex['account_no']);
+            let accountNo = (accountCell.value) ? accountCell.value.text || accountCell.value : null;
+            let dtNo = row.getCell(colHeaderIndex['dt_no']).value;
+            //check if the the row is empty
+            if (row.actualCellCount < cols.length) {
+                console.log(row.actualCellCount, cols.length);
+                return --actualRowCount && endProcess(++total);
+            }
+            if (!accountNo || !dtNo) return ++processed && endProcess(++total);
+
+            accountNo = `${accountNo}`.replace(/[^a-zA-Z0-9]/g, '');
+            dtNo = `${dtNo}`.replace(/[^a-zA-Z0-9]/g, '');
+
+            const [[customer], [asset]] = await Promise.all([
+                db.table("customers").where('account_no', accountNo).select(['account_no']),
+                db.table("assets").where('serial_no', `${dtNo}`).select(['id', 'ext_code']),
+            ]);
+            if (!customer) {
+                logMgs.push(`The account no "${accountNo}" specified in row ${rn} doesn't exist.`);
+                return ++processed && endProcess(++total);
+            }
+            if (!asset) {
+                logMgs.push(`The asset with DT NO "${dtNo}" specified in row ${rn} doesn't exist.`);
+                return ++processed && endProcess(++total);
+            }
+            const customerAssets = {
+                customer_id: customer.account_no,
+                asset_id: asset.id,
+                created_at: Utils.date.dateToMysql(),
+                updated_at: Utils.date.dateToMysql()
+            };
+            return db.table(tableName).insert(customerAssets).then(() => {
+                const headers = {'Content-type': "application/x-www-form-urlencoded"};
+                const options = {
+                    url:process.env.CRM_URL + "/index.php?entryPoint==customer-asset-link",
+                    headers,
+                    form: {account_number:accountNo, ext_code:asset.ext_code},
+                    timeout: 1500
+                };
+                Utils.requestPromise(options, 'POST', headers).catch(console.error);
+                return ++processedAsset && endProcess(++total);
+            }).catch(err => {
+                console.error("CustomerAssets:", err);
+                return endProcess(++total);
+            })
+        });
+    };
+    //if the lock is currently released we can start processing another file
+    if (!this.lock.ca) {
+        return fs.readdir(directory, (err, files) => {
+            if (err) return console.log(err);
+            //start processing the files.. we are processing one file at a time from a specific folder
+            //TODO check that this files are indeed excel files e.g xlsx or csv
+            const fileName = files.shift();
+            if (fileName) startProcessor(`${directory}/${fileName}`, fileName).catch(console.error);
+        });
+    }
+    console.log("Lock for asset locations list is held, i'll wait till it is released");
+};
+
 
 module.exports.updateAssetLocation = function () {
     //lets retrieve the path where asset locations list is saved
@@ -288,15 +441,12 @@ module.exports.updateAssetLocation = function () {
     const cols = ['asset_id', 'lat', 'lng'];
     const tableName = "assets";
 
-
     //This function processes the excel document
     const startProcessor = async (file/*.xlsx*/, fileName) => {
         this.lock.g = true;
         currentFile = file;
-        // const currDate = new Date();
         const logMgs = [];
-        const db = this.context.database;
-
+        const db = this.context.db();
 
         //onComplete is called when the file is done processing
         const onComplete = (status, update = true) => {
@@ -307,7 +457,6 @@ module.exports.updateAssetLocation = function () {
         };
 
         const task = [
-            // Utils.getFromPersistent(this.context, "groups", true),
             db.table("uploads").where("file_name", fileName).select(['group_id', 'assigned_to', 'created_by']),
             workbook.xlsx.readFile(file)
         ];
@@ -412,89 +561,6 @@ module.exports.backUpDatabase = function (s3) {
  * Read the imported customer files and create records for customers
  * @returns {*}
  */
-module.exports.createCustomers = function () {
-    const directory = `${this.context.config.storage.path}/uploads/customer`;
-    const workbook = new Excel.Workbook();
-    let currentFile = null;
-
-    const startProcessor = (file/*.xlsx*/, fileName) => {
-        this.lock.c = true;
-        _updateUploadStatus(this, fileName, 2);
-        currentFile = file;
-        workbook.xlsx.readFile(file).then(() => {
-            const workSheet = workbook.getWorksheet(1);
-            let rowLen = workSheet.rowCount, processed = 0, columnLen = workSheet.actualColumnCount;
-            let colHeaderIndex = {};
-            let customers = [];
-            //iterate through each row
-            workSheet.eachRow((row, rn) => {
-                //the first row returned is the column header so lets skip
-                //for the first row we need to get all the column head
-                //TODO we should be able to validate the columns supplied
-                if (rn === 1) colHeaderIndex = getColumnsByNameIndex(row, columnLen);
-                else if (rn > 1) {
-                    //so we should basically know the columns we are expecting since we provided the template
-                    //lets build the customer data
-                    let status = (getRowValueOrEmpty(row, colHeaderIndex, 'status') === 'Active') ? 1 : 0;
-                    let customer = {
-                        "account_no": getRowValueOrEmpty(row, colHeaderIndex, 'account_no'),
-                        "old_account_no": getRowValueOrEmpty(row, colHeaderIndex, 'old_account_no'),
-                        "meter_no": getRowValueOrEmpty(row, colHeaderIndex, 'meter_no'),
-                        "first_name": getRowValueOrEmpty(row, colHeaderIndex, 'first_name'),
-                        "last_name": getRowValueOrEmpty(row, colHeaderIndex, 'last_name'),
-                        "email": row.getCell(colHeaderIndex['email']).value.text,
-                        "customer_name": getRowValueOrEmpty(row, colHeaderIndex, 'customer_name'),
-                        status,
-                        "plain_address": getRowValueOrEmpty(row, colHeaderIndex, 'address'),
-                        "customer_type": getRowValueOrEmpty(row, colHeaderIndex, 'customer_type'),
-                        "tariff": getRowValueOrEmpty(row, colHeaderIndex, 'tariff'),
-                        "created_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s"),
-                        "updated_at": Utils.date.dateToMysql(new Date(), "YYYY-MM-DD H:m:s")
-                    };
-
-                    //ORGANIZE THE BUSINESS UNIT HERE AND DT
-
-                    //get it ready for batch insert
-                    customers.push(customer);
-                    if (++processed === rowLen - 1) {
-                        //for now lets ignore duplicates... TODO handle duplicates
-                        this.context.database.insert(customers).into("customers").catch(r => console.log());
-                        deleteFile(file);
-                        _updateUploadStatus(this, fileName, 4);
-                        //we can release the lock here
-                        console.log(`Lock has been released for customers process... I imported ${rowLen - 1} customer(s)`);
-                        this.lock.c = false;
-                    }
-                }
-            });
-            //if it is empty or just includes the column heads... lets delete the file and release lock
-            if (rowLen === 0 || rowLen === 1) {
-                deleteFile(file);
-                _updateUploadStatus(this, fileName, 4);
-                //we can release the lock here
-                console.log("Lock has been released for customers processes.. there was nothing to do");
-                this.lock.c = false;
-            }
-        }).catch(err => {
-            //should in-case an error occurs we can release the lock to allow a retry
-            _updateUploadStatus(this, fileName, 3);
-            this.lock.c = false;
-            console.log(err)
-        });
-    };
-    //if the lock is currently released we can start processing another file
-    if (!this.lock.c) {
-        return fs.readdir(directory, (err, files) => {
-            if (err) return;
-            //start processing the files.. we are processing one file at a time from a specific folder
-            //TODO check that this files are indeed excel files e.g xlsx or csv
-            const fileName = files.shift();
-            if (fileName) startProcessor(`${directory}/${fileName}`, fileName);
-        });
-    }
-    console.log("Lock for customers transaction is held... i'll be waiting till it is released!!!")
-};
-
 
 module.exports.createMeterReadings = function () {
     const directory = `${this.context.config.storage.path}/uploads/meter`;
