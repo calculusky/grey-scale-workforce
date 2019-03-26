@@ -14,7 +14,7 @@ exports.up = function(knex, Promise) {
         table.integer("created_by").unsigned().nullable();
         table.timestamp("created_at");
         table.timestamp("updated_at");
-        table.foreign("parent_id").references("id").on("users");
+        table.foreign("parent_id").references("id").on("statuses");
         table.foreign("deleted_by").references("id").on("users");
         table.foreign("created_by").references("id").on("users");
         table.foreign("group_id").references("id").on("groups");
