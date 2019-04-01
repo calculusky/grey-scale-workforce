@@ -65,9 +65,9 @@ class FaultService extends ApiService {
 
         fault.serializeAssignedTo().setIssueDateIfNull(Utils.date.dateToMysql());
 
-        if (!fault.validate()) return Promise.reject(Error.ValidationFailure(fault.getErrors().all()));
-
         ApiService.insertPermissionRights(fault, who);
+
+        if (!fault.validate()) return Promise.reject(Error.ValidationFailure(fault.getErrors().all()));
 
         if (!(await API.groups().isGroupIdValid(fault.group_id))) return Promise.reject(Error.GroupNotFound);
 
