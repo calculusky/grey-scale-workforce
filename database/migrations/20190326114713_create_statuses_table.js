@@ -2,10 +2,10 @@
 exports.up = function(knex, Promise) {
 
     return knex.schema.createTable('statuses', function (table) {
-        table.increments('id');
+        table.integer('id');
         table.string("type");
         table.string("name");
-        table.json("reasons");
+        table.json("comments");
         table.json("assigned_to");
         table.integer("group_id").unsigned().nullable();
         table.integer("parent_id").unsigned().nullable();
@@ -18,6 +18,8 @@ exports.up = function(knex, Promise) {
         table.foreign("deleted_by").references("id").on("users");
         table.foreign("created_by").references("id").on("users");
         table.foreign("group_id").references("id").on("groups");
+
+        table.unique(["id","type"]);
     });
 
 };
