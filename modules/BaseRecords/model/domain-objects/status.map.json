@@ -1,0 +1,13 @@
+{
+  "id": "id",
+  "name":"name",
+  "type":"type",
+  "parent_id":"parent_id",
+  "comments":"comments",
+  "deleted_at": "deleted_at",
+  "created_by": "created_by",
+  "assigned_to":"assigned_to",
+  "group_id":"group_id",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}
