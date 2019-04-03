@@ -40,6 +40,8 @@ class FaultService extends ApiService {
         const faults = [], results = await this.buildQuery(query);
 
         for (const item of results) {
+            //@temporary fix
+            item['category_id'] = item['fault_category_id'];
             const fault = new Fault(item);
             await renderFaultDetails(fault, db, groups, categories);
             faults.push(fault);

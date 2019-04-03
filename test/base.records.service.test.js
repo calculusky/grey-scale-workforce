@@ -135,4 +135,21 @@ describe("Retrieve Base Records", () => {
         });
     });
 
+    it("GetMobileFilterConfigs", () => {
+        return expect(API.baseRecords().getMobileFilterConfigs()).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: {
+                    "FW": expect.arrayContaining([{
+                        checkedValues: expect.any(Array),
+                        keyName: expect.any(String),
+                        label: expect.any(String),
+                        type: expect.any(String),
+                        values: expect.any(Array)
+                    }])
+                }
+            }
+        })
+    });
+
 });

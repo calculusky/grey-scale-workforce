@@ -186,4 +186,29 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             .then(({data, code}) => res.status(code).send(data))
             .catch(({err, code}) => res.status(code).send(err));
     });
+
+    /**
+     * @swagger
+     * /base_records/mobile_filter_configs:
+     *   get:
+     *     summary: Retrieves mobile filterable configurations
+     *     description: ''
+     *     tags: [Base Records]
+     *     produces:
+     *     - application/json
+     *     operationId: getMobileFilterConfigs
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getMobileFilterConfigs'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/moduleType'
+     */
+    app.get('/base_records/mobile_filter_configs', urlencodedParser, (req, res) => {
+        API.baseRecords().getMobileFilterConfigs(req.who)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
 };
