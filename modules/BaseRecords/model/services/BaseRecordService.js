@@ -196,6 +196,36 @@ class BaseRecordService extends ApiService {
         return Utils.buildResponse({data: items});
     }
 
+
+    async getMobileFilterConfigs(who) {
+        const configJson = require('../domain-objects/filter_config');
+        const configKeys = Reflect.ownKeys(configJson);
+        const {data: {data: statuses}} = await this.getStatuses({type: configKeys.join(",")}, who);
+
+        configKeys.forEach(key => {
+            configJson[key].forEach(filterItem => {
+                switch (filterItem.keyName.toLowerCase()) {
+                    case "status": {
+                        filterItem.values = statuses[key].map(({id: key, name: value}) => ({key, value}));
+                        break;
+                    }
+                    //TODO get the priority from a single accessible function
+                    case "priority": {
+                        filterItem.values = [
+                            {"key": "0", "value": "Low"},
+                            {"key": "1", "value": "Medium"},
+                            {"key": "2", "value": "High"},
+                            {"key": "3", "value": "Urgent"}
+                            ];
+                        break;
+                    }
+                }
+            })
+        });
+
+        return Utils.buildResponse({data: configJson});
+    }
+
 }
 
 module.exports = BaseRecordService;

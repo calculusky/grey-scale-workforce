@@ -1,0 +1,51 @@
+{
+  "FW": [
+    {
+      "keyName": "status",
+      "label": "Status",
+      "values": [],
+      "type": "radio",
+      "checkedValues": [
+        "2",
+        "3",
+        "5"
+      ]
+    },
+    {
+      "keyName": "priority",
+      "label": "Priority",
+      "values": [],
+      "type": "radio",
+      "checkedValues": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    }
+  ],
+  "DW": [
+    {
+      "keyName": "status",
+      "label": "Status",
+      "values": [],
+      "type": "radio",
+      "checkedValues": [
+        "2",
+        "4"
+      ]
+    },
+    {
+      "keyName": "priority",
+      "label": "Priority",
+      "values": [],
+      "type": "radio",
+      "checkedValues": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    }
+  ]
+}
