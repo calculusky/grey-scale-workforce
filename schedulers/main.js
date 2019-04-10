@@ -199,12 +199,13 @@ module.exports.createDelinquencyList = function () {
                 "assigned_to": JSON.stringify([assignedTo])
             };
 
-            const disc = await API.disconnections().createDisconnectionBilling(delinquency, who, API).catch(() => {
+            const disc = await API.disconnections().createDisconnectionBilling(delinquency, who, API).catch((err) => {
                 logMgs.push(`An error occurred while processing row(${rn}). It could be that the account number doesn't exist.`);
+                console.log(err);
                 return null;
             });
 
-            if (disc.err) return ++processed && endProcess(++total);
+            if (!disc) return ++processed && endProcess(++total);
 
             ++processedDisc;
 

@@ -184,7 +184,7 @@ class WorkOrderExportQuery extends ExportQuery {
                 notes = (row['notes'] || "").split("<@>"),
                 assignedTo = row['assigned_to'] || [];
             row['status'] = Utils.getWorkStatuses(this.query.type_id, row['status']);
-            row['priority'] = Utils.getWorkStatuses(this.query.type_id, row['priority']);
+            row['priority'] = Utils.getWorkPriorities(this.query.type_id, row['priority']);
             const url = `${process.env.APP_URL}:${process.env.PORT}`;
             row['attachments'] = attachments.filter(i => i !== null).map(file => `${url}/attachment/notes/download/${file}`).join('\r\n');
             row['notes'] = notes.filter(i => i !== null).join('\r\n');

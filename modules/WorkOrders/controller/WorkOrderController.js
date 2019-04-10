@@ -36,7 +36,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        $ref: '#/definitions/postWorkOrderInput'
      */
     app.post('/work_orders', [multiPart.array("files"), jsonParser], (req, res) => {
-        console.log(req.body);
+        console.log('...Create WorkOrders...');
         API.workOrders().createWorkOrder(req.body, req.who, API, req.files)
             .then(({data, code}) => {
                 return res.status(code).send(data);
@@ -72,6 +72,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *           $ref: '#/definitions/postWorkOrderInput'
      */
     app.put('/work_orders/:id', [multiPart.array("files"), jsonParser], (req, res) => {
+        console.log('...Update WorkOrders...');
         API.workOrders().updateWorkOrder('id', req.params['id'], req.body, req.who, req.files, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
@@ -104,6 +105,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/workOrderInclude'
      */
     app.get('/work_orders', urlencodedParser, (req, res) => {
+        console.log('...Fetch WorkOrders...');
         API.workOrders().getWorkOrders(req.query, req.who).then(({data, code}) => {
             return res.status(code).send(data);
         }).catch(({err, code}) => {
@@ -134,6 +136,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.get('/work_orders/:id', urlencodedParser, (req, res, next) => {
         if (req.params.id === 'export') return next();
+        console.log('...Get WorkOrder...');
         API.workOrders().getWorkOrders({id: req.params.id}, req.who).then(({data, code}) => {
             return res.status(code).send(data);
         }).catch(({err, code}) => {
@@ -232,6 +235,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *      - $ref: '#/parameters/limit'
      */
     app.put('/work_orders/:id/status/:statusId', multiPart.array("files", 10), (req, res) => {
+        console.log('...Change WorkOrder Status...');
         let {id, statusId} = req.params;
         API.workOrders().changeWorkOrderStatus(id, statusId, req.who, req.body, req.files, API)
             .then(({data, code}) => {
@@ -265,6 +269,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/limit'
      */
     app.get('/work_orders/:id/notes', urlencodedParser, (req, res) => {
+        console.log('...Get WorkOrder Notes...');
         return API.notes().getNotes(req.params['id'], "work_orders", req.who, "relation_id", req.query.offset || 0, req.query.limit || 10)
             .then(({data, code}) => {
                 return res.status(code).send(data);
@@ -387,7 +392,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *        $ref: '#/definitions/patchWorkOrderMultipleUpdateInput'
      */
     app.patch('/work_orders', (req, res) => {
-        API.workOrders().updateMultipleWorkOrders(req.body, req.who)
+        console.log('...Update Multiple WorkOrders...');
+        API.workOrders().updateMultipleWorkOrders(req.body, req.who, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             }).catch(({err, code}) => {

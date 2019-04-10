@@ -18,6 +18,7 @@ exports.up = function(knex, Promise) {
         table.string("meter_status").nullable();
         table.string("tariff").nullable();
         table.string("ext_code").nullable();
+        table.json("metadata").nullable();
         table.json("assigned_to").nullable();
         table.integer("created_by").unsigned().nullable();
         table.integer("deleted_by").unsigned().nullable();

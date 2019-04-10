@@ -40,6 +40,8 @@ class FaultService extends ApiService {
         const faults = [], results = await this.buildQuery(query);
 
         for (const item of results) {
+            //@temporary fix
+            item['category_id'] = item['fault_category_id'];
             const fault = new Fault(item);
             await renderFaultDetails(fault, db, groups, categories);
             faults.push(fault);
@@ -56,18 +58,18 @@ class FaultService extends ApiService {
      * @param files {Array}
      * @param API {API}
      */
-    async createFault(body = {}, who,  API, files = []) {
+    async createFault(body = {}, who, API, files = []) {
         const Fault = DomainFactory.build(DomainFactory.FAULT);
         const fault = new Fault(body);
 
-        if (!fault.validateSource(this.context.db()))
+        if (!(await fault.validateSource(this.context.db())))
             return Promise.reject(Error.ValidationFailure({relation_id: ["The related record doesn't exist."]}));
 
         fault.serializeAssignedTo().setIssueDateIfNull(Utils.date.dateToMysql());
 
-        if (!fault.validate()) return Promise.reject(Error.ValidationFailure(fault.getErrors().all()));
-
         ApiService.insertPermissionRights(fault, who);
+
+        if (!fault.validate()) return Promise.reject(Error.ValidationFailure(fault.getErrors().all()));
 
         if (!(await API.groups().isGroupIdValid(fault.group_id))) return Promise.reject(Error.GroupNotFound);
 

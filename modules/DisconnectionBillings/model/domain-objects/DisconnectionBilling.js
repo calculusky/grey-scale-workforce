@@ -33,7 +33,8 @@ class DisconnectionBilling extends DomainObject {
         return {
             account_no:'string|required',
             current_bill:'numeric|required',
-            arrears:'numeric|required'
+            arrears:'numeric|required',
+            work_order:'string-object'
         };
     }
 

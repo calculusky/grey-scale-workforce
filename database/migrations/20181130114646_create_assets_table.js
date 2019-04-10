@@ -12,6 +12,7 @@ exports.up = function(knex, Promise) {
         table.text("inst_address").nullable();
         table.date("date_installed").nullable();
         table.string("ext_code").nullable().comment = "The id that represents this record in a different database";
+        table.json("metadata").nullable();
         table.json("assigned_to").nullable();
         table.integer("group_id").unsigned().nullable();
         table.integer("created_by").unsigned().nullable();

@@ -44,10 +44,15 @@ class WorkOrder extends DomainObject {
             related_to: 'string|required|in:faults,disconnection_billings',
             relation_id: 'string|required',
             status: 'numeric|required',
+            status_comment: 'string',
             summary: 'string|required',
             issue_date: 'date',
+            start_date: 'date',
+            end_date: 'date',
+            actual_start_date: 'date',
             labels: 'string-array',
-            assigned_to: 'string-array'
+            assigned_to: 'string-array',
+            metadata:'string-object'
         }
     }
 

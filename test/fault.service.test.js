@@ -1,4 +1,3 @@
-
 const [API, ctx] = require('../index').test();
 const globalMock = require('./setup/ApplicationDependency');
 const Utils = require('../core/Utility/Utils');
@@ -29,6 +28,14 @@ describe("Fault Creation and Update", () => {
                 return query.response([1, {
                     fieldCount: 0,
                     affectedRows: 1,
+                }]);
+            }
+            if (query.sql.indexOf('from `assets`') !== -1) {
+                return query.response([{
+                    id: 1,
+                    asset_name: "Asset Example",
+                    asset_type: 1,
+                    status: 1
                 }]);
             }
             return query.response([{
@@ -78,12 +85,34 @@ describe("Fault Creation and Update", () => {
     });
 
 
+    it("CreateFault should pass when created from external source", () => {
+        const fault = {
+            category_id: 1,
+            related_to: "assets",
+            relation_id: "1",
+            source: "crm",
+            status: 1,
+            summary: "test",
+            group_id: 1,
+            priority: 1,
+            labels: []
+        };
+        return expect(API.faults().createFault(fault, session, API)).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: fault
+            }
+        })
+    });
+
+
     it("UpdateFault should pass with expected values", () => {
         const fault = {
             category_id: 1,
             related_to: "assets",
             relation_id: "1",
             status: 3,
+            status_comment:"Something else happened",
             summary: "Creeping",
             group_id: 1,
             priority: 3,
@@ -122,7 +151,7 @@ describe("Retrieve Faults", () => {
         });
     });
     it("GetFaults should pass with returned fault items", () => {
-        return expect(API.faults().getFaults({assigned_to: 1},session)).resolves.toMatchObject({
+        return expect(API.faults().getFaults({assigned_to: 1}, session)).resolves.toMatchObject({
             code: 200,
             data: {
                 data: {
@@ -147,14 +176,14 @@ describe("Retrieve Faults", () => {
     });
 });
 
-describe("Fault Deletion", ()=>{
+describe("Fault Deletion", () => {
 
-    it("DeleteFault should successfully delete the specified fault", ()=>{
+    it("DeleteFault should successfully delete the specified fault", () => {
         return expect(API.faults().deleteFault('id', 1, session, API)).resolves.toMatchObject({
-            code:200,
-            data:{
-                data:{
-                    message:"Fault successfully deleted."
+            code: 200,
+            data: {
+                data: {
+                    message: "Fault successfully deleted."
                 }
             }
         });
@@ -163,15 +192,15 @@ describe("Fault Deletion", ()=>{
 });
 
 
-describe("Faults DataTable", ()=>{
-    beforeAll(()=>{
-       tracker.on('query', query=>{
-          return query.response([]);
-       });
+describe("Faults DataTable", () => {
+    beforeAll(() => {
+        tracker.on('query', query => {
+            return query.response([]);
+        });
     });
-    it("GetFaultTableRecords should fetch fault records in dataTable format", ()=>{
+    it("GetFaultTableRecords should fetch fault records in dataTable format", () => {
         return expect(API.faults().getFaultTableRecords({}, session)).resolves.toMatchObject({
-            data:expect.any(Array)
+            data: expect.any(Array)
         });
     });
 });

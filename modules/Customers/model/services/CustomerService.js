@@ -72,6 +72,30 @@ class CustomerService extends ApiService {
     }
 
     /**
+     *
+     * @param by
+     * @param value
+     * @param body
+     * @param who
+     * @param API
+     * @param files
+     * @return {Promise<*>}
+     */
+    async updateCustomer(by = "account_no", value, body = {}, who, API, files = []) {
+        const Customer = DomainFactory.build(DomainFactory.CUSTOMER);
+        const CustomerMapper = MapperFactory.build(MapperFactory.CUSTOMER);
+        const model = (await CustomerMapper.findDomainRecord({by, value})).records.shift();
+        const customer = new Customer(body);
+
+        if (!model) return Promise.reject(Error.RecordNotFound());
+
+        return CustomerMapper.updateDomainRecord({by, value, domain: customer}, who).then(result => {
+            const [updateRecord] = result;
+            return Utils.buildResponse({data: updateRecord});
+        });
+    }
+
+    /**
      * We are majorly searching for customers by account_no and meter_no
      *
      * @param keyword

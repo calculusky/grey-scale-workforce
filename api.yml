@@ -216,6 +216,14 @@ parameters:
     enum: [1, 2 ,3]
     description: The Work Order Type
 
+  statusType:
+    name: type
+    type: string
+    required: false
+    in: query
+    enum: ["FW", "DW", "FF"]
+    description: The short key for the work order you are retrieving a status for.
+
 #----------------------Definitions-------------------------------
 definitions:
   loginInput:

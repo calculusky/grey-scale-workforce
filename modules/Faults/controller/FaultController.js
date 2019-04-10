@@ -39,6 +39,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postFaultInput'
      */
     app.post('/faults', multiPart.array("files", 5), (req, res) => {
+        console.log('...Create Faults...');
         API.faults().createFault(req.body, req.who, API, req.files).then(({data, code}) => {
             console.log(data);
             return res.status(code).json(data);
@@ -72,6 +73,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *          $ref: '#/definitions/postFaultInput'
      */
     app.put('/faults/:id', [multiPart.array("files", 5), jsonParser], (req, res) => {
+        console.log('...Update Faults...');
         API.faults().updateFault('id', req.params['id'], req.body, req.who).then(({data, code}) => {
             console.log(data);
             return res.status(code).send(data);
@@ -101,7 +103,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/sessionId'
      */
     app.get('/faults', urlencodedParser, (req, res) => {
-        console.log(req.query);
+        console.log('...Retrieve Faults...');
         return API.faults().getFaults(req.query, req.who).then(({data, code}) => {
             return res.status(code).send(data);
         }).catch(({err, code}) => {
@@ -130,7 +132,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/fault_id'
      */
     app.get('/faults/:id(\\d+)', urlencodedParser, (req, res) => {
-        console.log(req.params['id']);
+        console.log('...Get Fault...');
         return API.faults().getFaults({"id": req.params['id']}, req.who).then(({data, code}) => {
             return res.status(code).send(data);
         }).catch(({err, code}) => {
@@ -158,6 +160,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/fault_id'
      */
     app.get('/faults/:id/work_orders', urlencodedParser, (req, res) => {
+        console.log('...Get Fault WorkOrders...');
         const query = {relation_id: req.params['id'], type_id: "3"};
         return API.workOrders().getWorkOrders(query, req.who).then(({data, code}) => {
             return res.status(code).send(data);
@@ -188,6 +191,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/limit'
      */
     app.get('/faults/:id/notes', urlencodedParser, (req, res) => {
+        console.log('...Create Fault Notes...');
         return API.notes().getNotes(req.params['id'], "faults", req.who, "relation_id", req.query.offset || 0, req.query.limit || 10)
             .then(({data, code}) => {
                 return res.status(code).send(data);
