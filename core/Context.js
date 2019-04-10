@@ -102,7 +102,7 @@ class Context extends EventEmitter {
             fCols = ['fault_categories_subs.parent_category_id as parent', db.raw('GROUP_CONCAT(child_category_id) AS children')],
             fLeftJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.child_category_id'],
             fInnerJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.parent_category_id'],
-            statusCols = ['type', db.raw("JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name, 'type', type, 'comments', comments)) as `statuses`")];
+            statusCols = ['type', db.raw("JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name, 'type', type, 'comments', comments, 'next_status_ids', next_status_ids)) as `statuses`")];
 
         const [dbGroups, groupChildren, woTypes, aTypes, dbFCategories, fCatChildren, dbStatus] = await
             Promise.all([

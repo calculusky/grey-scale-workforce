@@ -11,8 +11,28 @@ const constants = {
             },
             "3": {
                 "id": 3,
-                "name": "Closed",
+                "name": "Disconnected",
                 "type": "DW",
+                "comments": []
+            }
+        },
+        "FW": {
+            "1": {
+                "id": 1,
+                "name": "New",
+                "type": "FW",
+                "comments": []
+            },
+            "2": {
+                "id": 2,
+                "name": "Assigned",
+                "type": "FW",
+                "comments": []
+            },
+            "3": {
+                "id": 3,
+                "name": "Closed",
+                "type": "FW",
                 "comments": []
             }
         },
