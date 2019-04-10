@@ -75,7 +75,9 @@ class ApplicationEvent extends EventEmitter {
 
         if (!status || (typeof oldStatus === "string" && closedStatuses.includes(oldStatus.toLowerCase()))) return false;
 
-        if (status.toLowerCase().includes("closed")) {
+        const workflowEndRegex = /(close|disconnect)/gi;
+
+        if (status.toLowerCase().match(workflowEndRegex)) {
             const compDate = {completed_date: Utils.date.dateToMysql()};
             //TODO Broadcast to the UI that a work order has been closed
             const res = await this.api.workOrders().updateWorkOrder("id", workId, compDate, who, [], this.api).catch(
@@ -94,7 +96,9 @@ class ApplicationEvent extends EventEmitter {
                 const fault = new Fault({id: relationId});
                 const workOrders = (await fault.workOrders()).records;
                 const statuses = Utils.getWorkStatuses(typeId);
-                const sumClosed = workOrders.reduce((acc, wo) => acc + (statuses[wo.status].includes("Closed") ? 1 : 0), 0);
+                const sumClosed = workOrders.reduce((acc, wo) => {
+                    return acc + (statuses[wo.status]['name'].includes("Closed") ? 1 : 0)
+                }, 0);
                 if (sumClosed === workOrders.length) {
                     const update = {status: 4, completed_date: Utils.date.dateToMysql()};
                     console.warn('TAIL', update);
@@ -103,8 +107,9 @@ class ApplicationEvent extends EventEmitter {
                     });
                 }
             }
+            return true;
         }
-        return true;
+        return false;
     }
 
     /**

@@ -55,7 +55,7 @@ class DisconnectionBillingService extends ApiService {
         const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
         const record = await DisconnectionBillingMapper.createDomainRecord(dBilling, who).catch(err => (Promise.reject(err)));
 
-        if (workOrder) return this.onCreateWorkOrder(record, workOrder, who, files, API, db);
+        if (workOrder) return this.onCreateWorkOrder(record, JSON.parse(workOrder), who, files, API, db);
 
         return Utils.buildResponse({data: record});
     }

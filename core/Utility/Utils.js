@@ -99,6 +99,7 @@ module.exports.convertDataKeyToJson = function (data, ...keys) {
 };
 
 module.exports.isJson = isJson;
+
 function isJson(str) {
     if (typeof str !== "string" || `${str}`.length === 0) return [false, str];
     let json = "";
@@ -779,14 +780,15 @@ module.exports.getFaultStatus = function (key) {
 module.exports.getWorkStatuses = function (type, key = null) {
     const constants = require('../contants');
     //for backward compatibility we are using a typeMap to represent old type values
-    const typeMap = {'1':'DW', '2':'RW', '3':'FW', 'F':'F'};
+    const typeMap = {'1': 'DW', '2': 'RW', '3': 'FW', 'F': 'F'};
 
     if (!key && isNaN(type)) return [];
     if ((key && isNaN(type)) || isNaN(key)) return "/invalid-status";
 
     const status = constants.statuses[typeMap[type]];
 
-    if(!status) return '/unknown';
+    if (!status) return '/unknown';
+    if (key === null) return status;
     if (key !== null && status[key]) return status[key]['name'];
     else if (key !== null && !status[key]) return '/unknown';
     else if (key && status[key]) return status[key];

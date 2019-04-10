@@ -6,6 +6,7 @@ exports.up = function(knex, Promise) {
         table.string("type");
         table.string("name");
         table.json("comments");
+        table.json("next_status_ids");
         table.json("assigned_to");
         table.integer("group_id").unsigned().nullable();
         table.integer("parent_id").unsigned().nullable();
