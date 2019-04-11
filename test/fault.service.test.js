@@ -112,7 +112,7 @@ describe("Fault Creation and Update", () => {
             related_to: "assets",
             relation_id: "1",
             status: 3,
-            status_comment:"Something else happened",
+            status_comment: "Something else happened",
             summary: "Creeping",
             group_id: 1,
             priority: 3,
@@ -201,6 +201,21 @@ describe("Faults DataTable", () => {
     it("GetFaultTableRecords should fetch fault records in dataTable format", () => {
         return expect(API.faults().getFaultTableRecords({}, session)).resolves.toMatchObject({
             data: expect.any(Array)
+        });
+    });
+});
+
+
+describe("Export Faults to Excel", () => {
+    beforeAll(() => {
+        tracker.on('query', query => {
+            return query.response([]);
+        });
+    });
+    it("ExportFaults: should export faults in excel format successfully", () => {
+        return expect(API.faults().exportFaults({status:2}, session, API)).resolves.toMatchObject({
+            _definedNames: {matrixMap: expect.any(Object)},
+            subject: "mrworking-file-export.xlsx"
         });
     });
 });

@@ -289,7 +289,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     tags: [Work Orders]
      *     produces:
      *     - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-     *     operationId: exportWorkOrders
+     *     operationId: exportFaults
      *     responses:
      *       '200':
      *         description: An Excel Document

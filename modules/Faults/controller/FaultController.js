@@ -131,8 +131,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      *     - $ref: '#/parameters/sessionId'
      *     - $ref: '#/parameters/fault_id'
      */
-    app.get('/faults/:id(\\d+)', urlencodedParser, (req, res) => {
-        console.log('...Get Fault...');
+    app.get('/faults/:id(\\d+)', urlencodedParser, (req, res, next) => {
+        if (req.params.id === 'export') return next();
         return API.faults().getFaults({"id": req.params['id']}, req.who).then(({data, code}) => {
             return res.status(code).send(data);
         }).catch(({err, code}) => {
@@ -227,6 +227,40 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
         }).catch(err => {
             console.error('err', err);
             return res.status(500).send(err);
+        });
+    });
+
+
+    /**
+     * @swagger
+     * /faults/export:
+     *   get:
+     *     summary: "Export Faults to Excel(xlsx)"
+     *     description: ''
+     *     tags: [Faults]
+     *     produces:
+     *     - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+     *     operationId: exportFaults
+     *     responses:
+     *       '200':
+     *         description: An Excel Document
+     *         content:
+     *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+     *             schema:
+     *               type: string
+     *               format: binary
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/exportWith'
+     */
+    app.get('/faults/export', urlencodedParser, (req, res) => {
+        return API.faults().exportFaults(req.query, req.who, API).then(workBook => {
+            res.setHeader('Content-disposition', 'attachment; filename=' + workBook['subject'] || "mrworking_export.xlsx");
+            res.setHeader('Content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            return workBook.xlsx.write(res);
+        }).catch(({err, code}) => {
+            res.set("Connection", "close");
+            return res.status(code).send(err);
         });
     });
 
