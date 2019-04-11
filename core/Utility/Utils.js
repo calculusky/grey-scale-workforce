@@ -763,7 +763,7 @@ module.exports.getFaultPriority = function (key) {
 };
 
 module.exports.getFaultStatus = function (key) {
-    switch (key) {
+    switch (`${key}`) {
         case '1':
             return "New";
         case '2':

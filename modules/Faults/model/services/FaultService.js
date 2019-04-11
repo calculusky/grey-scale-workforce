@@ -1,9 +1,11 @@
 const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
+const validate = require('validatorjs')
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const Events = require('../../../../events/events');
 const FaultDataTable = require('../commons/FaultDataTable');
+const ExportQuery = require('../FaultExportQuery');
 let MapperFactory = null;
 
 /**
@@ -124,6 +126,25 @@ class FaultService extends ApiService {
         const faultDataTable = new FaultDataTable(this.context.database, MapperFactory.build(MapperFactory.FAULT), who);
         const editor = await faultDataTable.addBody(body).make();
         return editor.data();
+    }
+
+
+    /**
+     * Exports fault to excel
+     *
+     * @param query {Object}
+     * @param who {Session}
+     * @param API {API}
+     * @returns {Promise<void>}
+     */
+    async exportFaults(query, who, API) {
+        const FaultMapper = MapperFactory.build(MapperFactory.FAULT);
+        const exportFaultQuery = new ExportQuery(query, FaultMapper, who, API);
+        const groups = await this.context.getKey("groups", true);
+        return exportFaultQuery.setGroups(groups).export().catch((e) => {
+            console.log(e);
+            return Utils.buildResponse({status: "fail", data: {message: "There was an error fetching the export"}});
+        });
     }
 
     /**
