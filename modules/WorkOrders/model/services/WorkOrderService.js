@@ -36,6 +36,8 @@ class WorkOrderService extends ApiService {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const workOrder = new WorkOrder(body);
 
+        console.log(workOrder);
+
         workOrder.serializeAssignedTo().setIssueDate();
 
         if (!workOrder.validate()) return Promise.reject(Error.ValidationFailure(workOrder.getErrors().all()));
@@ -218,7 +220,12 @@ class WorkOrderService extends ApiService {
      * @returns {Promise.<WorkOrder>|*}
      */
     async changeWorkOrderStatus(value/*WorkOrderId*/, status, who, note, files = [], API) {
-        const updated = await this.updateWorkOrder("id", value, {status}, who, [], API);
+        const updateObj = {
+            status,
+            status_comment: note['status_comment'],
+            actual_start_date: note['actual_start_date']
+        };
+        const updated = await this.updateWorkOrder("id", value, updateObj, who, [], API);
         if (note && note.note) API.notes().createNote(note, who, API, files).catch(console.error);
         return updated;
     }

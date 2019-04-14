@@ -101,7 +101,6 @@ class BaseRecordService extends ApiService {
         });
     }
 
-
     /**
      * Updates a fault category
      *
@@ -154,6 +153,77 @@ class BaseRecordService extends ApiService {
         if (offset && limit) items = items.slice(offset, offset + limit);
 
         return Utils.buildResponse({data: {items}});
+    }
+
+    /**
+     * Creates status
+     *
+     * @param body {Object}
+     * @param who {Session}
+     * @returns {Promise<*>}
+     */
+    async createStatus(body = {}, who) {
+        const StatusMapper = MapperFactory.build(MapperFactory.STATUS);
+        const Status = DomainFactory.build(DomainFactory.STATUS);
+        const status = new Status(body);
+
+        if (!status.validate()) return Promise.reject(Error.ValidationFailure(status.getErrors().all()));
+
+        ApiService.insertPermissionRights(status, who);
+
+        return StatusMapper.createDomainRecord(status).then(reason => {
+            return Utils.buildResponse({data: reason});
+        });
+    }
+
+    /**
+     * Get status
+     *
+     * @param query {Object}
+     * @param who {Session}
+     * @returns {Promise<{data?: *, code?: *}>}
+     */
+    async getStatuses(query = {}, who) {
+        const type = query['type'];
+        const statuses = await this.context.getKey("statuses", true);
+
+        let items = {};
+        Object.entries(statuses).forEach(([key, value]) => {
+            if (type && !type.split(",").map(i => i.toLowerCase()).includes(`${key}`.toLowerCase())) return;
+            Reflect.set(items, key, value);
+        });
+
+        return Utils.buildResponse({data: items});
+    }
+
+
+    async getMobileFilterConfigs(who) {
+        const configJson = require('../domain-objects/filter_config');
+        const configKeys = Reflect.ownKeys(configJson);
+        const {data: {data: statuses}} = await this.getStatuses({type: configKeys.join(",")}, who);
+
+        configKeys.forEach(key => {
+            configJson[key].forEach(filterItem => {
+                switch (filterItem.keyName.toLowerCase()) {
+                    case "status": {
+                        filterItem.values = statuses[key].map(({id: key, name: value}) => ({key, value}));
+                        break;
+                    }
+                    //TODO get the priority from a single accessible function
+                    case "priority": {
+                        filterItem.values = [
+                            {"key": "0", "value": "Low"},
+                            {"key": "1", "value": "Medium"},
+                            {"key": "2", "value": "High"},
+                            {"key": "3", "value": "Urgent"}
+                            ];
+                        break;
+                    }
+                }
+            })
+        });
+
+        return Utils.buildResponse({data: configJson});
     }
 
 }

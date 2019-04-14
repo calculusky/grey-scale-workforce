@@ -9,8 +9,11 @@ exports.up = function(knex, Promise) {
         table.string("related_to");
         table.string("relation_id");
         table.integer("status").default(0);
-        table.dateTime("start_date");
-        table.dateTime("completion_date");
+        table.string("status_comment").nullable();
+        table.dateTime("start_date").nullable();//expected start date
+        table.dateTime("end_date").nullable();//expected end date
+        table.dateTime("actual_start_date").nullable();//
+        table.dateTime("completed_date").nullable();//actual_end_date
         table.json("assigned_to");
         table.integer("group_id").unsigned().nullable();
         table.timestamps();

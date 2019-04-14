@@ -7,6 +7,7 @@ const MapperFactory = require('./factory/MapperFactory');
 const knexConfig = require('../knexfile');
 const Persistence = require('../core/persistence/Persistence');
 const EventEmitter = require('events');
+const constants = require('./contants');
 let globalContext = null;
 
 //Private Fields
@@ -100,20 +101,22 @@ class Context extends EventEmitter {
             fCols1 = ['id', 'name', 'type', 'weight', 'parent_category_id'],
             fCols = ['fault_categories_subs.parent_category_id as parent', db.raw('GROUP_CONCAT(child_category_id) AS children')],
             fLeftJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.child_category_id'],
-            fInnerJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.parent_category_id'];
+            fInnerJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.parent_category_id'],
+            statusCols = ['type', db.raw("JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name, 'type', type, 'comments', comments, 'next_status_ids', next_status_ids)) as `statuses`")];
 
-        const [dbGroups, groupChildren, woTypes, aTypes, dbFCategories, fCatChildren] = await
+        const [dbGroups, groupChildren, woTypes, aTypes, dbFCategories, fCatChildren, dbStatus] = await
             Promise.all([
                 db.select(iCols).from("groups").leftJoin(...gLeftJoin).where('deleted_at', null),
                 db.select(tCols).from('groups').innerJoin(...gInnerJoin).where('deleted_at', null).groupBy('parent_group_id'),
                 db.select(['id', 'name']).from("work_order_types"),
                 db.select(['id', 'name']).from("asset_types"),
                 db.select(fCols1).from("fault_categories").leftJoin(...fLeftJoin).where("fault_categories.deleted_at", null),
-                db.select(fCols).from("fault_categories").innerJoin(...fInnerJoin).where("fault_categories.deleted_at", null).groupBy('parent_category_id')
+                db.select(fCols).from("fault_categories").innerJoin(...fInnerJoin).where("fault_categories.deleted_at", null).groupBy('parent_category_id'),
+                db.select(statusCols).from("statuses").groupBy('type')
             ]);
 
         const groups = {}, groupParentChild = {}, workTypes = {}, assetTypes = {},
-            faultCategories = {}, fCatParentChild = {};
+            faultCategories = {}, fCatParentChild = {}, statuses = {};
 
         groupChildren.forEach(item => {
             if (item['children']) groupParentChild[item.parent] = item['children'].split(',').reverse()
@@ -144,6 +147,16 @@ class Context extends EventEmitter {
             });
         };
 
+        dbStatus.forEach(item => {
+            constants.statuses[item.type] = {};//item['statuses'];
+            statuses[item.type] = item['statuses'];
+            if (item.statuses) {
+                item.statuses.forEach(n => {
+                    constants.statuses[item.type][n.id] = n;
+                });
+            }
+        });
+
         mergeParent(dbGroups, 'parent_group_id', groups);
         mergeParent(dbFCategories, 'parent_category_id', faultCategories);
 
@@ -154,6 +167,7 @@ class Context extends EventEmitter {
         this.setKey("work:types", JSON.stringify(workTypes));
         this.setKey("asset:types", JSON.stringify(assetTypes));
         this.setKey("fault:categories", JSON.stringify(faultCategories));
+        this.setKey("statuses", JSON.stringify(statuses));
 
         this.emit('loaded_static', true);
         return true;

@@ -114,7 +114,8 @@ describe("WorkOrder Update", () => {
     it("UpdateGroup should update the group successfully", () => {
         return expect(API.workOrders().updateWorkOrder("id", 3, {
             summary: "Changerrrrr",
-            status: 5
+            status: 5,
+            status_comment: "Should Happen"
         }, session)).resolves.toMatchObject({
             code: 200,
             data: {
@@ -123,6 +124,7 @@ describe("WorkOrder Update", () => {
                     type_id: 2,
                     summary: "Changerrrrr",
                     status: 5,
+                    status_comment:"Should Happen",
                     updated_at: expect.any(String)
                 }
             }
@@ -261,8 +263,8 @@ describe("Multiple Update and Delete", () => {
                     id: 1,
                     work_order_no: "",
                     type_id: 1,
-                    relation_id:2,
-                    assigned_to:[{"id":2, created_at:""}]
+                    relation_id: 2,
+                    assigned_to: [{"id": 2, created_at: ""}]
                 }])
             }
             return query.response([]);

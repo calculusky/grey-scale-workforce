@@ -38,6 +38,8 @@ class ExportQuery {
     }
 
     /**
+     * This method must be implemented by all sub-classes
+     *
      * @abstract
      * @param query
      */
@@ -66,6 +68,7 @@ class ExportQuery {
 
     /**
      * This function is immediately triggered after the query is executed
+     * Override this function to modify the results
      *
      * @param result - The database result
      */
