@@ -38,7 +38,7 @@ class FaultExportQuery extends ExportQuery {
         const addAssets = () => {
             this.sqlQuery.innerJoin('assets AS a2', `${tableName}.relation_id`, 'a2.id');
             selectCols.push('a2.asset_name as asset_name', "a2.group_id as undertaking");
-            groupBy.push('asset_name')
+            groupBy.push('asset_name');
         };
 
         for (const [key, value] of Object.entries(query)) {
@@ -79,7 +79,8 @@ class FaultExportQuery extends ExportQuery {
                     break;
                 }
                 case 'related_to': {
-                    return this.sqlQuery.where(`${tableName}.${key}`, value);
+                    this.sqlQuery.where(`${tableName}.${key}`, value);
+                    break;
                 }
                 case 'relation_id': {
                     this.sqlQuery.where(`${tableName}.${key}`, value);
@@ -118,6 +119,7 @@ class FaultExportQuery extends ExportQuery {
         const fResults = results.map(row => {
             const undertaking = Utils.getGroupParent(this.groups[row['undertaking']], 'undertaking');
             const assignedTo = row['assigned_to'] || [];
+            console.log(assignedTo);
             row['id'] = `#${row['id']}`;
             row['source'] = (row['source'] == null) ? "IE-Force" : row['source'].toUpperCase();
             row['status'] = Utils.getFaultStatus(row['status']);
