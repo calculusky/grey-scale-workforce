@@ -89,14 +89,13 @@ class RecognitionService {
         if (!token) return res.status(401).send(Utils.buildResponse(Error.UnAuthorizedAccess));
 
         req.who = await Session.Builder(this.context).validateToken(token).catch(err => {
-            return (err) ? res.status(401).send(Utils.buildResponse({
+            (err) ? res.status(401).send(Utils.buildResponse({
                 status: 'fail',
                 data: Utils.jwtTokenErrorMsg(err),
                 isRoute: false
             })) : res.status(401).send(Utils.buildResponse(Error.UnAuthorizedAccess));
         });
-
-        return next();
+        if (req.who) return next();
     }
 }
 

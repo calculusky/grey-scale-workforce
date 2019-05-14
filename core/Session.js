@@ -127,7 +127,7 @@ module.exports = (function () {
              */
             validateToken: async function (_token) {
                 token = await context.getKey(_token);
-                if (!token || token !== 'true') return null;
+                if (!token || token !== 'true') return Promise.reject(null);
                 return new Promise((res, rej) => {
                     jwt.verify(_token, process.env.JWT_SECRET, async (err, decoded) => {
                         if (err) return rej(err);
