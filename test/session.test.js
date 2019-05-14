@@ -90,7 +90,7 @@ describe("Retrieve userGroups, roles and permissions", () => {
 
 describe("Token Verification", ()=>{
     it("ValidateToken should return null if token is not defined", ()=>{
-        return expect(Session.Builder(ctx).validateToken()).resolves.toBeNull();
+        return expect(Session.Builder(ctx).validateToken()).rejects.toBeNull();
     });
 });
 
