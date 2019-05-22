@@ -102,7 +102,9 @@ class ApplicationEvent extends EventEmitter {
                 if (sumClosed === workOrders.length) {
                     const update = {status: 4, completed_date: Utils.date.dateToMysql()};
                     console.warn('TAIL', update);
+
                     this.api.faults().updateFault("id", fault.id, update, who, [], this.api).catch(err => {
+                        console.log(typeof fault.id, fault);
                         console.error("onWorkOrderUpdate:Fault:", err);
                     });
                 }
