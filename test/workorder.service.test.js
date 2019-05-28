@@ -132,6 +132,41 @@ describe("WorkOrder Update", () => {
     });
 });
 
+describe("Fault WorkOrder Update", () => {
+
+    beforeAll(() => {
+        tracker.on('query', query => {
+            if (query.sql.indexOf('from `work_orders`') !== -1) {
+                return query.response([{
+                    id: 3,
+                    type_id: 3,
+                    relation_id: 22,
+                    work_order_no: "SOMETHING"
+                }])
+            }
+        });
+    });
+
+    it("UpdateGroup should update the group successfully", () => {
+        return expect(API.workOrders().updateWorkOrder("id", 3, {
+            summary: "Changerrrrr",
+            status: 4
+        }, session, [], API)).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: {
+                    id: 3,
+                    type_id: 3,
+                    summary: "Changerrrrr",
+                    status: 4,
+                    updated_at: expect.any(String)
+                }
+            }
+        })
+    });
+});
+
+
 describe("Retrieve Work Orders", () => {
 
     const dummyWorkOrder = {

@@ -24,10 +24,6 @@ class WebEvent extends EventEmitter {
         return this;
     }
 
-    broadcast(){
-
-    }
-
     /**
      * This events is fired when a new note is added
      *
@@ -69,6 +65,7 @@ class WebEvent extends EventEmitter {
             title: `Note from ${fromName}`.ellipsize(30),
             message: note.note.ellipsize(70),
             to: `[${userIds.join(',')}]`,
+            record_ids:`[${note.id}]`,
             group: '[]',
             level: 3
         };

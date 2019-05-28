@@ -1,5 +1,6 @@
 const EventEmitter = require('events').EventEmitter;
 const _ = require('lodash');
+const Utils = require('../core/Utility/Utils');
 
 class MessageEvent extends EventEmitter {
 
@@ -38,15 +39,20 @@ class MessageEvent extends EventEmitter {
         userIds = userIds.map(i => i.id).filter(i => i);
         if (!userIds.length) return false;
 
+        const group = await this.api.groups().isGroupIdValid(workOrder.group_id);
+        const businessUnit = Utils.getGroupParent(group);
+        const message = `BU: ${(businessUnit) ? businessUnit.name : ""} \nStatus : ${Utils.getWorkStatuses(workOrder.type_id, workOrder.status)}`;
+
         const body = {
             type: "work_orders",
             title: `Work Order ${workOrder.work_order_no} has been assigned to you.`,
-            message: workOrder.summary,
+            message,
             level: workOrder.priority,
             from: who.getAuthUser().getUserId(),
             record_ids: `["${workOrder.id}"]`,
             to: userIds
         };
+        console.log(body);
         await this.api.notifications().sendNotification(body, who, this.api).catch(err => {
             console.log('MessageEvent:', err);
         });

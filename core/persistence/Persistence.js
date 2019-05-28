@@ -49,7 +49,7 @@ class Persistence {
      * @param values
      */
     set(...values) {
-        this.getClient().set(...values,  ()=>null);
+        this.getClient().set(...values, () => null);
     }
 
     /**
@@ -71,7 +71,7 @@ class Persistence {
      * @param keys
      * @returns {boolean}
      */
-    delete(...keys){
+    delete(...keys) {
         this.getClient().del(...keys);
         return true;
     }
