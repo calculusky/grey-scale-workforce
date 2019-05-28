@@ -43,7 +43,7 @@ class Notification extends DomainObject {
             message: 'string|required',
             status: 'numeric',
             from: 'integer|required',
-            record_ids:'string-array',
+            record_ids: 'string-array',
             to: 'required'
         };
     }
@@ -58,7 +58,7 @@ class Notification extends DomainObject {
      * @param title
      * @returns {{data: {title: string, body: *, type: *}, priority: string, ttl: number, registration_ids: *}}
      */
-    buildCloudNotification(registrationIds, title="IE Force"){
+    buildCloudNotification(registrationIds, title = this.title) {
         return {
             data: {
                 title,
