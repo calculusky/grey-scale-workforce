@@ -60,12 +60,20 @@ class WebEvent extends EventEmitter {
         userIds = userIds.filter(id => id !== note.created_by);
 
         let fromName = `${user.first_name + ' ' + user.last_name}`.replace(/\b\w/g, w => w.toUpperCase());
+
+        const notification_data = JSON.stringify({
+            record_type: "note",
+            related_to: note.module,
+            relation_id: note.relation_id
+        });
+
         const notification = {
             type: "note_added",
             title: `Note from ${fromName}`.ellipsize(30),
             message: note.note.ellipsize(70),
             to: `[${userIds.join(',')}]`,
-            record_ids:`[${note.id}]`,
+            record_ids: `[${note.id}]`,
+            notification_data,
             group: '[]',
             level: 3
         };

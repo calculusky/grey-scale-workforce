@@ -371,7 +371,6 @@ function onWorkOrderCreated(workOrder, body, who, files, API) {
  */
 function onWorkOrderUpdated(workOrder, model, who, files, API) {
     const newAssigned = (workOrder.assigned_to) ? JSON.parse(workOrder.assigned_to) : [];
-
     const assignees = differenceBy(newAssigned, model.assigned_to, 'id');
 
     const assignmentPayload = {
@@ -383,7 +382,9 @@ function onWorkOrderUpdated(workOrder, model, who, files, API) {
         status: workOrder.status || model.status
     };
 
-    Events.emit("assign_work_order", assignmentPayload, (assignees.length) ? assignees : workOrder.assigned_to, who);
+    if(assignees.length > 0){
+        Events.emit("assign_work_order", assignmentPayload, (assignees.length) ? assignees : workOrder.assigned_to, who);
+    }
     Events.emit("work_order_updated", workOrder, who, model);
 
     if (files.length) {

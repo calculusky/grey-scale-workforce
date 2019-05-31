@@ -44,6 +44,7 @@ class Notification extends DomainObject {
             status: 'numeric',
             from: 'integer|required',
             record_ids: 'string-array',
+            notification_data:"string-object",
             to: 'required'
         };
     }
@@ -63,7 +64,9 @@ class Notification extends DomainObject {
             data: {
                 title,
                 body: this.message,
-                type: this.type
+                type: this.type,
+                notification_data: this.notification_data,
+                record_ids: this.record_ids,
             },
             priority: "high",
             ttl: 3600,
