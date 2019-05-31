@@ -18,6 +18,7 @@ class ReportService {
      * @return {Promise<{data?: *, code?: *} | never>}
      */
     getBasicDashboard(who) {
+        console.log(who);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         return WorkOrderMapper.getTotalWorkOderByUserAndStatus(who.getAuthUser().getUserId(), 2, 3, 4).then(records => {
 
