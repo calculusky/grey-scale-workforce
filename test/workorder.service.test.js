@@ -94,6 +94,30 @@ describe("Work Order Creation", () => {
         });
     });
 
+    it("CreateWorkOrder should fail when the end_date is greater than the start_date", ()=>{
+        const workOrderDummy = {
+            type_id: 3,
+            related_to: "disconnection_billings",
+            relation_id: "2",
+            labels: '["work"]',
+            summary: "Fix it",
+            assigned_to: `["1"]`,
+            status: '1',
+            group_id: 1,
+            issue_date: '2019-12-05',
+            start_date: '2019-12-05',
+            end_date: '2019-12-04'
+        };
+        return expect(API.workOrders().createWorkOrder(workOrderDummy, session, API)).rejects.toMatchObject({
+            code: 400,
+            err: {
+                data: {
+                    end_date: ["The end date must be after start date."]
+                }
+            }
+        });
+    })
+
 });
 
 describe("WorkOrder Update", () => {
@@ -131,6 +155,41 @@ describe("WorkOrder Update", () => {
         })
     });
 });
+
+describe("Fault WorkOrder Update", () => {
+
+    beforeAll(() => {
+        tracker.on('query', query => {
+            if (query.sql.indexOf('from `work_orders`') !== -1) {
+                return query.response([{
+                    id: 3,
+                    type_id: 3,
+                    relation_id: 22,
+                    work_order_no: "SOMETHING"
+                }])
+            }
+        });
+    });
+
+    it("UpdateGroup should update the group successfully", () => {
+        return expect(API.workOrders().updateWorkOrder("id", 3, {
+            summary: "Changerrrrr",
+            status: 4
+        }, session, [], API)).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: {
+                    id: 3,
+                    type_id: 3,
+                    summary: "Changerrrrr",
+                    status: 4,
+                    updated_at: expect.any(String)
+                }
+            }
+        })
+    });
+});
+
 
 describe("Retrieve Work Orders", () => {
 

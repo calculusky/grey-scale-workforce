@@ -27,6 +27,12 @@ class Context extends EventEmitter {
         this.database = KNEX(knexConfig[process.env.NODE_ENV]);
         this._(this).persistence = new Persistence();
         this._(this).persistence.connect().getClient().on('ready', () => this.loadStaticData());
+        this._(this).persistence.getClient().on('error', err => {
+            if (err.errno === 'ECONNREFUSED') {
+                return console.log("Error: Redis Connection Refused.");
+            }
+            console.log(err);
+        });
 
         this._(this).incoming_store = {};
 

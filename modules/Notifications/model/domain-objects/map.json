@@ -8,6 +8,7 @@
   "from": "from",
   "to": "to",
   "record_ids": "record_ids",
+  "notification_data": "notification_data",
   "link": "link",
   "group": "group",
   "deleted_at": "deleted_at",

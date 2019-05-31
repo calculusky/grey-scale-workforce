@@ -48,7 +48,7 @@ class WorkOrder extends DomainObject {
             summary: 'string|required',
             issue_date: 'date',
             start_date: 'date',
-            end_date: 'date',
+            end_date: 'date|after:start_date',
             actual_start_date: 'date',
             labels: 'string-array',
             assigned_to: 'string-array',

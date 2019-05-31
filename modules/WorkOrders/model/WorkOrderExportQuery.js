@@ -163,6 +163,7 @@ class WorkOrderExportQuery extends ExportQuery {
         //@HelpTips - Log the Query to see the actual sql query. console.log(this.sqlQuery.toString());
         this.sqlQuery.orderBy(`${this.modelMapper.tableName}.created_at`, 'asc');
         this.sqlQuery.select(selectCols);
+        this.sqlQuery.where("deleted_at", null);
         ApiService.queryWithPermissions('works.index', this.sqlQuery, this.modelMapper, this.who);
     }
 

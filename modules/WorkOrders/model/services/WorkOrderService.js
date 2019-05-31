@@ -36,8 +36,6 @@ class WorkOrderService extends ApiService {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const workOrder = new WorkOrder(body);
 
-        console.log(workOrder);
-
         workOrder.serializeAssignedTo().setIssueDate();
 
         if (!workOrder.validate()) return Promise.reject(Error.ValidationFailure(workOrder.getErrors().all()));
@@ -373,16 +371,20 @@ function onWorkOrderCreated(workOrder, body, who, files, API) {
  */
 function onWorkOrderUpdated(workOrder, model, who, files, API) {
     const newAssigned = (workOrder.assigned_to) ? JSON.parse(workOrder.assigned_to) : [];
-
     const assignees = differenceBy(newAssigned, model.assigned_to, 'id');
 
     const assignmentPayload = {
         id: model.id,
         work_order_no: model.work_order_no,
-        summary: model.summary
+        summary: model.summary,
+        group_id: model.group_id,
+        type_id: model.type_id,
+        status: workOrder.status || model.status
     };
 
-    Events.emit("assign_work_order", assignmentPayload, (assignees.length) ? assignees : workOrder.assigned_to, who);
+    if(assignees.length > 0){
+        Events.emit("assign_work_order", assignmentPayload, (assignees.length) ? assignees : workOrder.assigned_to, who);
+    }
     Events.emit("work_order_updated", workOrder, who, model);
 
     if (files.length) {
