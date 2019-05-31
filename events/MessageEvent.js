@@ -35,13 +35,22 @@ class MessageEvent extends EventEmitter {
      * @returns {Promise<Boolean>}
      */
     async onWorkOrderAssigned(workOrder, userIds = [], who) {
+        //If the work order is not in the assigned state there is no need sending a notification.
+        const workStatus = Utils.getWorkStatuses(workOrder.type_id, workOrder.status);
+        console.log(workStatus);
+        if (typeof workStatus !== 'string' || workStatus.toLowerCase() !== "assigned") return true;
+
         userIds = (Array.isArray(userIds)) ? userIds : JSON.parse(userIds);
         userIds = userIds.map(i => i.id).filter(i => i);
         if (!userIds.length) return false;
 
         const group = await this.api.groups().isGroupIdValid(workOrder.group_id);
         const businessUnit = Utils.getGroupParent(group);
-        const message = `BU: ${(businessUnit) ? businessUnit.name : ""} \nStatus : ${Utils.getWorkStatuses(workOrder.type_id, workOrder.status)}`;
+        const message = `BU: ${(businessUnit) ? businessUnit.name : ""} \nStatus : ${workStatus}`;
+
+        const notification_data = JSON.stringify({
+            record_type: Utils.getWorkOrderType(workOrder.type_id).name
+        });
 
         const body = {
             type: "work_orders",
@@ -50,9 +59,9 @@ class MessageEvent extends EventEmitter {
             level: workOrder.priority,
             from: who.getAuthUser().getUserId(),
             record_ids: `["${workOrder.id}"]`,
+            notification_data,
             to: userIds
         };
-        console.log(body);
         await this.api.notifications().sendNotification(body, who, this.api).catch(err => {
             console.log('MessageEvent:', err);
         });

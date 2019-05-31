@@ -34,6 +34,12 @@ const constants = {
                 "name": "Closed",
                 "type": "FW",
                 "comments": []
+            },
+            "8": {
+                "id": 8,
+                "name": "Canceled",
+                "type": "FW",
+                "comments": []
             }
         },
         "Main": {
