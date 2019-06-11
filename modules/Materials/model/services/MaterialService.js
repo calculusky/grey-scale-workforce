@@ -2,6 +2,7 @@ const ApiService = require('../../../ApiService');
 const DomainFactory = require('../../../DomainFactory');
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
+const LegendService = require('../../../../processes/LegendService');
 let MapperFactory = null;
 
 
@@ -14,6 +15,7 @@ class MaterialService extends ApiService {
     constructor(context) {
         super(context);
         MapperFactory = this.context.modelMappers;
+        LegendService.init(context).catch(console.error);
     }
 
     /**
@@ -42,9 +44,14 @@ class MaterialService extends ApiService {
      */
     async getMaterials(query = {}, who = {}) {
         const Material = DomainFactory.build(DomainFactory.MATERIAL);
-        const results = await this.buildQuery(query).catch(err => (Utils.buildResponse({status: "fail", data: err}, 500)));
+        const results = await this.buildQuery(query).catch(() => (Error.InternalServerError));
         const groups = await this.context.getKey("groups", true);
         const materials = MaterialService.addBUAndUTAttributes(results, groups, Material);
+        if (query.category_id) {
+            const itemCode = LegendService.getItemCodeByMaterialCategoryId(query.category_id);
+            const legendMaterials = await LegendService.getMaterialsByItemCode(itemCode);
+            materials.push(...legendMaterials);
+        }
         return Utils.buildResponse({data: {items: materials}});
     }
 
@@ -61,7 +68,7 @@ class MaterialService extends ApiService {
 
         ApiService.insertPermissionRights(material, who);
 
-        if(!material.validate()) return Promise.reject(Error.ValidationFailure(material.getErrors().all()));
+        if (!material.validate()) return Promise.reject(Error.ValidationFailure(material.getErrors().all()));
 
         return MaterialMapper.createDomainRecord(material, who).then(domain => {
             if (!domain) return Promise.reject(false);
@@ -80,7 +87,7 @@ class MaterialService extends ApiService {
      * @param API {API}
      * @returns {Promise<{data?: *, code?: *}>}
      */
-    async updateMaterial(by, value, body={}, who, file = [], API) {
+    async updateMaterial(by, value, body = {}, who, file = [], API) {
         const Material = DomainFactory.build(DomainFactory.MATERIAL);
         const MaterialMapper = MapperFactory.build(MapperFactory.MATERIAL);
         const model = (await this.context.db()("materials").where(by, value).select(['assigned_to'])).shift();
@@ -152,13 +159,21 @@ class MaterialService extends ApiService {
      * @returns {*}
      * @private
      */
-    buildQuery(query){
+    buildQuery(query) {
         if (typeof query !== 'object') throw new TypeError("Query parameter must be an object");
 
-        const {name, measurement, unit_price: price, offset = 0, limit = 10} = query;
+        const {
+            name,
+            measurement,
+            unit_price: price,
+            category_id,
+            offset = 0,
+            limit = 10
+        } = query;
         const resultSets = this.context.db().select(['*']).from('materials');
 
         if (name) resultSets.where("name", name);
+        if (category_id) resultSets.where('material_category_id', category_id);
         if (measurement) resultSets.where("unit_of_measurement", measurement);
         if (price) resultSets.where("unit_price", price);
 
@@ -178,6 +193,7 @@ class MaterialService extends ApiService {
     static addBUAndUTAttributes(results, groups, Material) {
         return results.map(item => {
             const material = (!Material || item instanceof Material) ? item : new Material(item);
+            if (material instanceof Material) material.serialize(item, "client");
             let group = groups[material.group_id];
             const [bu, ut] = Utils.getBUAndUT(group, groups);
             let grp = {};

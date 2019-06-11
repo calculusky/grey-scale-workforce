@@ -69,6 +69,10 @@ class Context extends EventEmitter {
         return this._(this).persistence.delete(keys);
     }
 
+    hasKey(key) {
+        return this._(this).persistence.exists(key);
+    }
+
     /**
      *
      * @returns {Persistence}
@@ -110,7 +114,7 @@ class Context extends EventEmitter {
             fInnerJoin = ['fault_categories_subs', 'fault_categories.id', 'fault_categories_subs.parent_category_id'],
             statusCols = ['type', db.raw("JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name, 'type', type, 'comments', comments, 'next_status_ids', next_status_ids)) as `statuses`")];
 
-        const [dbGroups, groupChildren, woTypes, aTypes, dbFCategories, fCatChildren, dbStatus] = await
+        const [dbGroups, groupChildren, woTypes, aTypes, dbFCategories, fCatChildren, dbStatus, matCategories] = await
             Promise.all([
                 db.select(iCols).from("groups").leftJoin(...gLeftJoin).where('deleted_at', null),
                 db.select(tCols).from('groups').innerJoin(...gInnerJoin).where('deleted_at', null).groupBy('parent_group_id'),
@@ -118,11 +122,12 @@ class Context extends EventEmitter {
                 db.select(['id', 'name']).from("asset_types"),
                 db.select(fCols1).from("fault_categories").leftJoin(...fLeftJoin).where("fault_categories.deleted_at", null),
                 db.select(fCols).from("fault_categories").innerJoin(...fInnerJoin).where("fault_categories.deleted_at", null).groupBy('parent_category_id'),
-                db.select(statusCols).from("statuses").groupBy('type')
+                db.select(statusCols).from("statuses").groupBy('type'),
+                db.select(['*']).from("material_categories")
             ]);
 
         const groups = {}, groupParentChild = {}, workTypes = {}, assetTypes = {},
-            faultCategories = {}, fCatParentChild = {}, statuses = {};
+            faultCategories = {}, fCatParentChild = {}, statuses = {}, materialCategories = {};
 
         groupChildren.forEach(item => {
             if (item['children']) groupParentChild[item.parent] = item['children'].split(',').reverse()
@@ -133,6 +138,7 @@ class Context extends EventEmitter {
 
         woTypes.forEach(workType => workTypes[workType.id] = workType);
         aTypes.forEach(assetType => assetTypes[assetType.id] = assetType);
+        matCategories.forEach(mCategory => materialCategories[mCategory.id] = mCategory);
 
         const mergeParent = (dataList, parentKey, store) => {
             for (let data of dataList) {
@@ -174,6 +180,7 @@ class Context extends EventEmitter {
         this.setKey("asset:types", JSON.stringify(assetTypes));
         this.setKey("fault:categories", JSON.stringify(faultCategories));
         this.setKey("statuses", JSON.stringify(statuses));
+        this.setKey("material:categories", JSON.stringify(materialCategories));
 
         this.emit('loaded_static', true);
         return true;
