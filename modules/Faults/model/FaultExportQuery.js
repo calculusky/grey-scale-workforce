@@ -112,7 +112,7 @@ class FaultExportQuery extends ExportQuery {
         this.sqlQuery.groupBy(...groupBy);
         this.sqlQuery.orderBy(`${tableName}.created_at`, 'asc');
         this.sqlQuery.select(selectCols);
-        this.sqlQuery.where("deleted_at", null);
+        this.sqlQuery.where(`${tableName}.deleted_at`, null);
         ApiService.queryWithPermissions('faults.index', this.sqlQuery, this.modelMapper, this.who);
     }
 
