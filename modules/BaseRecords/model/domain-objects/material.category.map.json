@@ -1,0 +1,14 @@
+{
+  "id": "id",
+  "name":"name",
+  "source":"source",
+  "source_id":"source_id",
+  "parent_id":"parent_id",
+  "assigned_to":"assigned_to",
+  "group_id":"group_id",
+  "created_by": "created_by",
+  "deleted_at": "deleted_at",
+  "deleted_by": "deleted_by",
+  "created_at": "created_at",
+  "updated_at": "updated_at"
+}

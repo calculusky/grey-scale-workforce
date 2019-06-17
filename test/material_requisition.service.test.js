@@ -53,7 +53,7 @@ describe("Material Requisition Creation", () => {
 
     it("That materialRequisition is created", () => {
         const body = {
-            materials: '[{"id": "20","qty":"10"}]',
+            materials: [{"id": "20", "qty": "10", category: {id: 1}}],
             requested_by: 1,
             status: 1
         };
@@ -81,7 +81,7 @@ describe("Material Requisition Update", () => {
     });
 
     it("UpdateMaterialRequisition should successfully update a material requisition", () => {
-        const body = {status:2};
+        const body = {status: 2};
         return expect(
             API.materialRequisitions().updateMaterialRequisition('id', 1, body, session, [], API)
         ).resolves.toMatchObject({
@@ -122,7 +122,8 @@ describe("Retrieve Material Requisitions", () => {
                     items: [{
                         id: 1,
                         materials: [{id: 1, qty: 2}],
-                        requested_by: {id: 1}
+                        requested_by: 1,
+                        requested_by_user:{id:1}
                     }]
                 }
             }

@@ -86,7 +86,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /materials/{offset}/{limit}:
+     * /materials:
      *   get:
      *     summary: Retrieves a List of materials
      *     description: ''
@@ -104,9 +104,9 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
-    app.get('/materials/:offset(\\d+)?/:limit(\\d+)?', urlencodedParser, (req, res) => {
-        console.log('/materials/offset/limit');
-        return API.materials().getMaterial({}, undefined, req.who, req.params.offset || 0, req.params.limit || 10)
+    app.get('/materials', urlencodedParser, (req, res) => {
+        console.log('/materials');
+        return API.materials().getMaterials(req.query, req.who)
             .then(({data, code}) => {
                 return res.status(code).send(data);
             })

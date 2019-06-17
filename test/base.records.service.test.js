@@ -101,6 +101,31 @@ describe("Creating and Updating Base Records", () => {
         });
     });
 
+    it("CreateMaterialCategory should fail if mandatory fields are missing", () => {
+        return expect(API.baseRecords().createMaterialCategory({}, session)).rejects.toMatchObject({
+            code: 400,
+            err: {
+                code: "VALIDATION_ERROR",
+                data: {
+                    'name': ['The name is required.']
+                }
+            }
+        })
+    });
+
+    it("CreateMaterialCategory should fail if source is supplied without source_id", () => {
+        const category = {name:"Something light", "source":"ie_legend"};
+        return expect(API.baseRecords().createMaterialCategory(category, session)).rejects.toMatchObject({
+            code: 400,
+            err: {
+                code: "VALIDATION_ERROR",
+                data: {
+                    "source_id": ["The source id field is required when source is not empty."]
+                }
+            }
+        })
+    });
+
 });
 
 describe("Retrieve Base Records", () => {
@@ -133,6 +158,22 @@ describe("Retrieve Base Records", () => {
                 }
             }
         });
+    });
+
+    it("GetMaterialCategories should return a list of material categories", () => {
+        return expect(API.baseRecords().getMaterialCategories({source:"ie_legend"}, session)).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: {
+                    items: [{
+                        id: 1,
+                        name: "FUSE",
+                        source: "ie_legend",
+                        source_id: "11"
+                    }]
+                }
+            }
+        })
     });
 
     it("GetMobileFilterConfigs", () => {

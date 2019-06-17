@@ -42,44 +42,20 @@ class ApplicationEvent extends EventEmitter {
     }
 
     /**
-     * This event is triggered when an update is done
-     * on a work order.
+     * Uses the current status of the work order to determine what actions should be
+     * carried out.
      *
-     *
-     *
-     * @param workOrder - Either this or the {@param oldRecord} should have the
-     *                    work order id, type_id and {@link onWorkOrderUpdate#relation_id}
+     * @param workOrder
      * @param who
-     * @param oldRecord
-     * @returns {Promise<Boolean>}
+     * @return {Promise<boolean>}
      */
-    async onWorkOrderUpdate(workOrder = {}, who, oldRecord) {
-        if (!workOrder.status) return false;
-
-        const workId = workOrder.id || oldRecord.id;
-        const typeId = workOrder.type_id || oldRecord.type_id;
-        const relationId = workOrder.relation_id || oldRecord.relation_id;
-
-        if (!workId || !typeId || !relationId) {
-            console.error(
-                "onWorkOrderUpdate:",
-                "Either the workOrder or oldRecord must have an id, type_id and relation_id parameter set."
-            );
-            return false;
-        }
-
-        const oldStatus = Utils.getWorkStatuses(workOrder.type_id || oldRecord.type_id, oldRecord.status);
-        const status = Utils.getWorkStatuses(workOrder.type_id || oldRecord.type_id, workOrder.status);
-
-        const closedStatuses = ['disconnected', 'closed', 'canceled'];
-
-        if (!status || (typeof oldStatus === "string" && closedStatuses.includes(oldStatus.toLowerCase()))) return false;
+    async triggerWorkOrderWorkflow(workOrder, who) {
 
         const workflowEndRegex = /(close|disconnect|cancel)/gi;
 
-        if (status.toLowerCase().match(workflowEndRegex)) {
+        if (`${workOrder.status}`.toLowerCase().match(workflowEndRegex)) {
             const compDate = {completed_date: Utils.date.dateToMysql()};
-            const res = await this.api.workOrders().updateWorkOrder("id", workId, compDate, who, [], this.api).catch(
+            const res = await this.api.workOrders().updateWorkOrder("id", workOrder.id, compDate, who, [], this.api).catch(
                 err => console.error("onWorkOrderUpdate:", err)
             );
 
@@ -91,11 +67,11 @@ class ApplicationEvent extends EventEmitter {
             * if all the work orders related to that fault is closed
             * if all work orders is closed then it is ideal to close the fault itself
             * */
-            if (Number(typeId) === 3) {
+            if (Number(workOrder.type_id) === 3) {
                 const Fault = DomainFactory.build(DomainFactory.FAULT);
-                const fault = new Fault({id: relationId});
+                const fault = new Fault({id: workOrder.relation_id});
                 const workOrders = (await fault.workOrders()).records;
-                const statuses = Utils.getWorkStatuses(typeId);
+                const statuses = Utils.getWorkStatuses(workOrder.type_id);
 
                 const sumClosed = workOrders.reduce((acc, wo) => {
                     return acc + (statuses[wo.status]['name'].includes("Closed") ? 1 : 0)
@@ -122,7 +98,49 @@ class ApplicationEvent extends EventEmitter {
             }
             return true;
         }
-        return false;
+        return true;
+    }
+
+    /**
+     * This event is triggered when an update is done
+     * on a work order.
+     *
+     *
+     *
+     * @param updateOrder - Either this or the {@param oldRecord} should have the
+     *                    work order id, type_id and {@link onWorkOrderUpdate#relation_id}
+     * @param who
+     * @param oldRecord
+     * @returns {Promise<Boolean>}
+     */
+    async onWorkOrderUpdate(updateOrder = {}, who, oldRecord) {
+        const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
+        const workOrder = new WorkOrder({
+            id:updateOrder.id || oldRecord.id,
+            type_id: updateOrder.type_id || oldRecord.type_id,
+            relation_id:updateOrder.relation_id || oldRecord.relation_id,
+            status: updateOrder.status
+        });
+
+        if (!workOrder.status) return false;
+
+        if (!workOrder.id || !workOrder.type_id || !workOrder.relation_id) {
+            console.error(
+                "onWorkOrderUpdate:",
+                "Either the workOrder or oldRecord must have an id, type_id and relation_id parameter set."
+            );
+            return false;
+        }
+
+        const oldStatus = Utils.getWorkStatuses(workOrder.type_id, oldRecord.status);
+        const status = Utils.getWorkStatuses(workOrder.type_id, workOrder.status);
+        const closedStatuses = ['disconnected', 'closed', 'canceled'];
+
+        if (!status || (typeof oldStatus === "string" && closedStatuses.includes(oldStatus.toLowerCase()))) return false;
+
+        const bool = await this.triggerWorkOrderWorkflow(workOrder, who);
+
+        return bool && true;
     }
 
     /**
