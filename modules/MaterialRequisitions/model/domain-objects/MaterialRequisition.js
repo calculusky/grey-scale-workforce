@@ -36,10 +36,16 @@ class MaterialRequisition extends DomainObject {
 
     rules() {
         return {
-            materials: 'string|required',
+            "materials":"required|array",
+            "materials.*.id":"required|numeric",
+            "materials.*.category.id":"required",
             work_order_id: 'string',
             requested_by: 'numeric|required'
         };
+    }
+
+    setRequestById(id) {
+        this['requested_by'] = id;
     }
 
     /**

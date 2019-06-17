@@ -197,6 +197,48 @@ class BaseRecordService extends ApiService {
     }
 
 
+    /**
+     * Creates a new Material Category
+     *
+     * @param body
+     * @param who
+     * @return {Promise<*>}
+     */
+    async createMaterialCategory(body = {}, who) {
+        const MaterialCategoryMapper = MapperFactory.build(MapperFactory.MATERIAL_CATEGORY);
+        const MaterialCategory = DomainFactory.build(DomainFactory.MATERIAL_CATEGORY);
+        const category = new MaterialCategory(body);
+
+        if (!category.validate()) return Promise.reject(Error.ValidationFailure(category.getErrors().all()));
+
+        ApiService.insertPermissionRights(category, who);
+
+        return MaterialCategoryMapper.createDomainRecord(category).then(category => {
+            return Utils.buildResponse({data: category});
+        });
+    }
+
+    /**
+     * Fetch Material Categories
+     *
+     * @param query
+     * @param who
+     * @return {Promise<{data?: *, code?: *}>}
+     */
+    async getMaterialCategories(query = {}, who) {
+        const {id, source, source_id: sourceId} = query;
+        const categories = await this.context.getKey("material:categories", true);
+        const items = Object.entries(categories).reduce((acc, [key, value]) => {
+            if (id && id !== key) return;
+            if (source && source.toLowerCase() !== value['source']) return;
+            if (sourceId && sourceId.toLowerCase() !== value['source_id']) return;
+            acc.push(value);
+            return acc;
+        }, []);
+        return Utils.buildResponse({data: {items}});
+    }
+
+
     async getMobileFilterConfigs(who) {
         const configJson = require('../domain-objects/filter_config');
         const configKeys = Reflect.ownKeys(configJson);
@@ -216,7 +258,7 @@ class BaseRecordService extends ApiService {
                             {"key": "1", "value": "Medium"},
                             {"key": "2", "value": "High"},
                             {"key": "3", "value": "Urgent"}
-                            ];
+                        ];
                         break;
                     }
                 }

@@ -45,8 +45,10 @@ class MaterialService extends ApiService {
     async getMaterials(query = {}, who = {}) {
         const Material = DomainFactory.build(DomainFactory.MATERIAL);
         const results = await this.buildQuery(query).catch(() => (Error.InternalServerError));
-        const groups = await this.context.getKey("groups", true);
+        const extras = [this.context.getKey("groups", true), this.context.getKey("material:categories", true)];
+        const [groups, categories] = await Promise.all(extras);
         const materials = MaterialService.addBUAndUTAttributes(results, groups, Material);
+        materials.forEach(item => item['category'] = categories[item.category_id] || null);
         if (query.category_id) {
             const itemCode = LegendService.getItemCodeByMaterialCategoryId(query.category_id);
             const legendMaterials = await LegendService.getMaterialsByItemCode(itemCode);

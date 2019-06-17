@@ -67,6 +67,32 @@ beforeAll(async (done) => {
                 }
             };
         }
+        else if (url.indexOf('/requests?fault_id') !== -1) {
+            body = {
+                "data": [
+                    {
+                        "FAULT_ID": "F001",
+                        "Approvalstatus": "PENDING",
+                        "TRANS_DATE": "2019-06-10 00:00:00.0",
+                        "Collector": "Engr (Mrs) Gufrah Shuaib",
+                        "Quantity": "0",
+                        "REMARKS": "Testing from IForce",
+                        "RequestedBY": "TEST USER",
+                        "Approval": "admin"
+                    },
+                    {
+                        "FAULT_ID": "F001",
+                        "Approvalstatus": "PENDING",
+                        "TRANS_DATE": "2019-06-10 00:00:00.0",
+                        "Collector": "Engr (Mrs) Hope Gabriel",
+                        "Quantity": "0",
+                        "REMARKS": "Testing from IForce",
+                        "RequestedBY": "TEST USER",
+                        "Approval": "admin"
+                    }
+                ]
+            };
+        }
         callback(null, {}, body);
     });
     done();
@@ -144,7 +170,7 @@ describe("Request legend materials", () => {
         return expect(LegendService.requestMaterial("F001", material, {})).resolves.toBeDefined();
     });
 
-    it("checkMaterialRequestStatus: should check the status of a requisition", ()=>{
+    it("checkMaterialRequestStatus: should check the status of a requisition", () => {
         return expect(LegendService.checkMaterialRequestStatus("F001")).resolves.toBeDefined();
     });
 });

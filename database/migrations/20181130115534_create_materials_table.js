@@ -8,6 +8,7 @@ exports.up = function (knex) {
         table.decimal('unit_price', 13, 2).default(0.0);
         table.integer('total_quantity').nullable();
         table.string('image_path').nullable();
+        table.string('description').nullable();
         table.json("assigned_to").nullable();
         table.integer("group_id").unsigned().nullable();
         table.integer("created_by").unsigned().nullable();

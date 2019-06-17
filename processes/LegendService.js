@@ -52,7 +52,6 @@ module.exports = (function () {
         async getMaterialsByItemCode(typeCode) {
             _checkInitialized();
             const url = `${BASE_URL}/items?itemtype_code=${typeCode}`;
-            console.log(url);
             return new Promise((resolve, reject) => {
                 if (!itemTypes[typeCode]) return resolve([]);
                 request.get(url, options, (err, res, body) => {
@@ -60,13 +59,15 @@ module.exports = (function () {
                     const materials = body.data.entry.map(item => {
                         return {
                             id: item.id,
-                            name: item.description,
+                            name: item.code,
+                            description: item.description,
+                            category_id: itemTypes[typeCode].code,
                             category: {
                                 id: itemTypes[typeCode].code,
                                 name: itemTypes[typeCode].name,
                             },
                             source: "ie_legend",
-                            source_id: item.id
+                            source_id: item.code
                         };
                     });
                     return resolve(materials);
@@ -97,7 +98,7 @@ module.exports = (function () {
                 legendMatRequest['Collected By'] = "*";
                 legendMatRequest['supervisor'] = "*";
                 _options.json = legendMatRequest;
-                request.post(`${BASE_URL || process.env.IBM_APIC_BASE_URL}/requests`, _options, (err, res, body) => {
+                request.post(`${BASE_URL}/requests`, _options, (err, res, body) => {
                     if (err || res.statusCode !== 200) return reject(err || res.statusCode);
                     return resolve(body);
                 });
@@ -110,10 +111,15 @@ module.exports = (function () {
          * @param faultId
          * @return {Promise<any>}
          */
-        checkMaterialRequestStatus(faultId){
+        checkMaterialRequestStatus(faultId) {
             _checkInitialized();
-            const executor = (resolve, reject)=>{
-                request.post(`${BASE_URL}/`);
+            const executor = (resolve, reject) => {
+                request.get(`${BASE_URL}/requests?fault_id=${faultId}`, options, (err, res, body) => {
+                    if (err) return reject(err);
+                    //We only need to the pick the status of one.
+                    const rStatuses = body.data;
+                    return resolve(rStatuses[0]);
+                });
             };
             return new Promise(executor);
         }

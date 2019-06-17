@@ -189,6 +189,55 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
+     * /base_records/material_category:
+     *   post:
+     *     summary: Creates a new Material Category
+     *     description: ''
+     *     tags: [Base Records]
+     *     consumes:
+     *     - application/json
+     *     produces:
+     *     - application/json
+     *     operationId: createMaterialCategory
+     *     responses:
+     *       '200':
+     *         description: Successfully Added
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.post('/base_records/material_category', jsonParser, (req, res) => {
+        API.baseRecords().createMaterialCategory(req.body, req.who)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * @swagger
+     * /base_records/material_categories:
+     *   get:
+     *     summary: Retrieves material categories
+     *     description: ''
+     *     tags: [Base Records]
+     *     produces:
+     *     - application/json
+     *     operationId: getMaterialCategories
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/getMaterialCategories'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     */
+    app.get('/base_records/material_categories', urlencodedParser, (req, res) => {
+        API.baseRecords().getMaterialCategories(req.query, req.who)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+
+    /**
+     * @swagger
      * /base_records/mobile_filter_configs:
      *   get:
      *     summary: Retrieves mobile filterable configurations

@@ -6,6 +6,8 @@
   "requested_by": "requested_by",
   "description": "description",
   "location": "location",
+  "source": "source",
+  "source_id": "source_id",
   "assigned_to": "assigned_to",
   "created_by": "created_by",
   "group_id": "group_id",
