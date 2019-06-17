@@ -122,7 +122,8 @@ describe("Retrieve Material Requisitions", () => {
                     items: [{
                         id: 1,
                         materials: [{id: 1, qty: 2}],
-                        requested_by: {id: 1}
+                        requested_by: 1,
+                        requested_by_user:{id:1}
                     }]
                 }
             }

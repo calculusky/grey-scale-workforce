@@ -154,11 +154,12 @@ async function __doMaterialRequisitionList(db, materialRequisitions, query = {})
         const [assignedTo, materials, reqBy] = await Promise.all(task);
         materialReq.assigned_to = assignedTo;
         materialReq.materials = materials.map((mat, i) => {
-            mat.qty = materialReq.materials[i]['qty'];
-            mat['source'] = materialReq.materials[i]['source'];
-            mat['status'] = materialReq.materials[i]['status'];
-            mat['source_id'] = materials.material_id[i]['source_id'];
-            mat['category_id'] = materials.material_id[i]['category_id'];
+            const vMaterial = materialReq.materials[i];
+            mat.qty = vMaterial['qty'];
+            mat['source'] = vMaterial['source'];
+            mat['status'] = vMaterial['status'];
+            mat['source_id'] = vMaterial['source_id'];
+            mat['category_id'] = vMaterial['category_id'];
             return mat;
         });
         materialReq.requested_by_user = reqBy.records.shift() || {};
