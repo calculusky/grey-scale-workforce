@@ -100,7 +100,7 @@ describe("Material Update and Search", () => {
 
 describe("Retrieve List of Materials", () => {
     const request = require('request');
-    beforeAll(()=>{
+    beforeAll(() => {
         request.get = jest.fn((url, opt, callback) => {
             let body = {};
             if (url.indexOf(`/itemtypes`) !== -1) {
@@ -158,7 +158,7 @@ describe("Retrieve List of Materials", () => {
             }
             callback(null, {}, body);
         });
-        tracker.on('query', query=>{
+        tracker.on('query', query => {
             if (query.sql.indexOf('from `materials`')) {
                 return query.response([{
                     id: 1,
@@ -176,7 +176,7 @@ describe("Retrieve List of Materials", () => {
                 data: {
                     items: [{
                         id: 1,
-                        name:"Simulation",
+                        name: "Simulation",
                         unit_price: 23.19
                     }],
                 }
@@ -184,7 +184,7 @@ describe("Retrieve List of Materials", () => {
         });
     });
 
-    it("GetMaterials should get a list of materials by category", async  () => {
+    it("GetMaterials should get a list of materials by category", async () => {
         const LegendService = require('../processes/LegendService');
         await LegendService.init(ctx);
         return expect(API.materials().getMaterials({category_id: 1}, session)).resolves.toMatchObject({
@@ -193,32 +193,37 @@ describe("Retrieve List of Materials", () => {
                 data: {
                     items: [
                         {
-                        "business_unit": null,
-                        "group": {},
-                        "id": 1,
-                        "name": "Simulation",
-                        "undertaking": null,
-                        "unit_price": 23.19
-                    },
+                            "business_unit": null,
+                            "group": {},
+                            "id": 1,
+                            category: null,
+                            "name": "Simulation",
+                            "undertaking": null,
+                            "unit_price": 23.19
+                        },
                         {
+                            category_id:11,
                             "category": {
                                 "id": 11,
                                 "name": "FUSE"
                             },
                             "id": 230,
-                            "name": "5KVA UPS",
+                            "name": "INV/230",
+                            "description": "5KVA UPS",
                             "source": "ie_legend",
-                            "source_id": 230
+                            "source_id": "INV/230"
                         },
                         {
+                            category_id:11,
                             "category": {
                                 "id": 11,
                                 "name": "FUSE"
                             },
                             "id": 231,
-                            "name": "CASIO XJ A147 PROJECTOR",
+                            "name": "INV/231",
+                            "description": "CASIO XJ A147 PROJECTOR",
                             "source": "ie_legend",
-                            "source_id": 231
+                            "source_id": "INV/231"
                         }],
                 }
             }
@@ -228,12 +233,12 @@ describe("Retrieve List of Materials", () => {
 });
 
 
-it("DeleteMaterials delete material successfully.", ()=>{
+it("DeleteMaterials delete material successfully.", () => {
     return expect(API.materials().deleteMaterial('id', 1, session)).resolves.toMatchObject({
-        code:200,
-        data:{
-            data:{
-                message:"Material successfully deleted."
+        code: 200,
+        data: {
+            data: {
+                message: "Material successfully deleted."
             }
         }
     });
