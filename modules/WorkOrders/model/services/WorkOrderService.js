@@ -100,6 +100,7 @@ class WorkOrderService extends ApiService {
      * @returns {Promise<void>|*}
      */
     async updateWorkOrder(by, value, body = {}, who, files = [], API) {
+        console.log(body);
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const model = (await WorkOrderMapper.findDomainRecord({by, value})).records.shift();

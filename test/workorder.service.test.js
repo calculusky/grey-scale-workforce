@@ -269,7 +269,7 @@ describe("Work Order Relations", () => {
             if (query.sql.indexOf('from `material_requisitions`') !== -1) {
                 return query.response([{
                     id: 1,
-                    materials: [{"id": "1", "qty": "3"}, {"id": "9", "qty": "3"}],
+                    materials: [{"id": 1, "qty": "3"}, {"id": 9, "qty": "3"}],
                     work_order_id: 6,
                     status: 2,
                     description: "Gimme Sometime.",

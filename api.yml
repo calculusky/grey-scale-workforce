@@ -224,6 +224,20 @@ parameters:
     enum: ["FW", "DW", "FF"]
     description: The short key for the work order you are retrieving a status for.
 
+  materialCategoryId:
+    name: category_id
+    type: integer
+    required: false
+    in: query
+    description: The category of the material @see MaterialCategory
+
+  materialUnitOfMeasurement:
+    name: measurement
+    type: integer
+    required: false
+    in: query
+    description: The unit of measurement of a the material
+
 #----------------------Definitions-------------------------------
 definitions:
   loginInput:

@@ -51,7 +51,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
 
     /**
      * @swagger
-     * /materials:
+     * /materials/{id}:
      *   put:
      *     summary: Updates a Material
      *     description: ''
@@ -72,8 +72,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *        schema:
      *          $ref: '#/definitions/postMaterialInput'
      */
-    app.put('/materials', jsonParser, (req, res) => {
-        API.materials().updateMaterial(req.body, req.who)
+    app.put('/materials/:id', jsonParser, (req, res) => {
+        API.materials().updateMaterial('id', req.params['id'], req.body, req.who, [], API)
             .then(({data, code}) => {
                 console.log(data);
                 return res.status(code).send(data);
@@ -101,6 +101,8 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      *           $ref: '#/definitions/getMaterialOutput'
      *     parameters:
      *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/materialCategoryId'
+     *     - $ref: '#/parameters/materialUnitOfMeasurement'
      *     - $ref: '#/parameters/offset'
      *     - $ref: '#/parameters/limit'
      */
