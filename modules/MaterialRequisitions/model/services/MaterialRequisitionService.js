@@ -4,6 +4,7 @@ let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const {flattenDeep} = require("lodash");
+const LegendService = require('../../../../processes/LegendService');
 
 /**
  * @name MaterialRequisitionService
@@ -152,16 +153,28 @@ async function __doMaterialRequisitionList(db, materialRequisitions, query = {})
     for (const materialReq of materialRequisitions) {
         const task = [materialReq.getAssignedUsers(db), materialReq.getMaterials(db), materialReq.requestedBy()];
         const [assignedTo, materials, reqBy] = await Promise.all(task);
+
+        materialReq.materials = await materialReq.materials.reduce(async (acc, curr) => {
+            const _acc = await acc;
+            if (curr['source'] !== 'ie_legend') {
+                const item = materials.find(i => curr.id === i.id);
+                if(item){
+                    item.qty = curr['qty'];
+                    _acc.push(item);
+                }
+            } else {
+                const item = await LegendService.getMaterialByTypeCodeAndItemCode(curr['category_id'], curr['source_id']).catch(console.error);
+                if (item) {
+                    item['qty'] = curr['qty'];
+                    item['status'] = curr['status'];
+                    item['category_id'] = curr['category_id'];
+                }
+                _acc.push(item || curr);
+            }
+            return Promise.resolve(_acc);
+        }, Promise.resolve([]));
+
         materialReq.assigned_to = assignedTo;
-        materialReq.materials = materials.map((mat, i) => {
-            const vMaterial = materialReq.materials[i];
-            mat.qty = vMaterial['qty'];
-            mat['source'] = vMaterial['source'];
-            mat['status'] = vMaterial['status'];
-            mat['source_id'] = vMaterial['source_id'];
-            mat['category_id'] = vMaterial['category_id'];
-            return mat;
-        });
         materialReq.requested_by_user = reqBy.records.shift() || {};
     }
     let response = materialRequisitions;

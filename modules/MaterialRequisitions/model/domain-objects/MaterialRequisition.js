@@ -36,9 +36,9 @@ class MaterialRequisition extends DomainObject {
 
     rules() {
         return {
-            "materials":"required|array",
-            "materials.*.id":"required|numeric",
-            "materials.*.category.id":"required",
+            "materials": "required|array",
+            "materials.*.id": "required|numeric",
+            "materials.*.category.id": "required",
             work_order_id: 'string',
             requested_by: 'numeric|required'
         };
@@ -57,7 +57,7 @@ class MaterialRequisition extends DomainObject {
      */
     getMaterials(db, cols = ['id', 'name', 'unit_of_measurement', 'unit_price', 'total_quantity', 'created_at', 'updated_at', 'assigned_to']) {
         if (!this.materials || this.materials.length === 0) return [];
-        const filtered = this.materials.filter(i => i['id']);
+        const filtered = this.materials.filter(i => i['id'] && i['source'] !== 'ie_legend');
         return db.table("materials").whereIn('id', filtered.map(({id}) => id)).where("deleted_at", null).select(cols)
     }
 

@@ -5,7 +5,7 @@ const request = require('request');
  */
 module.exports = (function () {
 
-    const BASE_URL = process.env.IBM_APIC_BASE_URL;
+    const BASE_URL = process.env.IBM_APIC_BASE_URL || "https://api.eu.apiconnect.ibmcloud.com/cloudvasconsolutionscom-dev/ikedc/api/legend";
     const APIC_KEY = process.env.IBM_APIC_KEY;
     const options = {headers: {'x-ibm-client-id': APIC_KEY}, json: true};
 
@@ -55,7 +55,7 @@ module.exports = (function () {
             return new Promise((resolve, reject) => {
                 if (!itemTypes[typeCode]) return resolve([]);
                 request.get(url, options, (err, res, body) => {
-                    if (err) return reject(err);
+                    if (err || body == null) return reject(err);
                     const materials = body.data.entry.map(item => {
                         return {
                             id: item.id,
@@ -73,6 +73,14 @@ module.exports = (function () {
                     return resolve(materials);
                 });
             });
+        }
+
+        async getMaterialByTypeCodeAndItemCode(typeCode, itemCode) {
+            _checkInitialized();
+            const materials = await this.getMaterialsByItemCode(typeCode).catch(err => {
+                console.log("getMaterialByTypeCodeAndItemCode", err);
+            });
+            return materials.filter(item => item['name'] === itemCode).shift();
         }
 
         /**

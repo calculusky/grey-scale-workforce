@@ -144,6 +144,53 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
+
+    /**
+     * @swagger
+     * /material_requisitions/{id}/material/{id}/approve:
+     *   get:
+     *     summary: Approves a single material in the material requisition
+     *     description: ''
+     *     tags: [MaterialRequisitions]
+     *     produces:
+     *     - application/json
+     *     operationId: approveRequisitionMaterial
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/asset_id'
+     */
+    app.get('/material_requisitions/:id/material/:material_id/approve', urlencodedParser, (req, res) => {
+        return res.status(200).send("Not Implemented Yet");
+    });
+
+    /**
+     * @swagger
+     * /material_requisitions/{id}/material/{id}/reject:
+     *   get:
+     *     summary: Rejects a single material in the material requisition
+     *     description: ''
+     *     tags: [MaterialRequisitions]
+     *     produces:
+     *     - application/json
+     *     operationId: rejectRequisitionMaterial
+     *     responses:
+     *       '200':
+     *         description: Successful
+     *         schema:
+     *           $ref: '#/definitions/'
+     *     parameters:
+     *     - $ref: '#/parameters/sessionId'
+     *     - $ref: '#/parameters/asset_id'
+     */
+    app.get('/material_requisitions/:id/material/:material_id/reject', urlencodedParser, (req, res) => {
+        return res.status(200).send("Not Implemented Yet");
+    });
+
     /**
      * @swagger
      * /material_requisitions/{id}:
