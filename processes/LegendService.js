@@ -84,6 +84,27 @@ module.exports = (function () {
         }
 
         /**
+         * Creates multiple material
+         *
+         * @param faultId
+         * @param materials
+         * @param group
+         * @return {Promise<any>}
+         */
+        async requestMaterials(faultId, materials = [], group = {}) {
+            _checkInitialized();
+            return await materials.reduce(async (acc, curr) => {
+                const _accumulator = await acc;
+                // if (curr['category']) {
+                //     curr['category']['id'] = categoryToItemCodeMap[curr['category_id']]
+                // }
+                const mResponse = await this.requestMaterial(faultId, curr, group);
+                _accumulator.push(mResponse);
+                return Promise.resolve(_accumulator);
+            }, Promise.resolve([]));
+        }
+
+        /**
          *
          * @param faultId
          * @param material
@@ -95,6 +116,7 @@ module.exports = (function () {
             if (!faultId) throw new Error("The Fault ID is required");
             const executor = (resolve, reject) => {
                 //TODO use validate
+                console.log(material);
                 if (!itemTypes[material.category.id]) return reject("ItemTypes not found");
                 const _options = {...options};
                 const legendMatRequest = {Fault_ID: faultId};

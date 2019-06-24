@@ -58,37 +58,6 @@ class WorkOrderService extends ApiService {
     }
 
     /**
-     *
-     * @param value {String|Number}
-     * @param by
-     * @param who {Session}
-     * @param offset {Number}
-     * @param limit {Number}
-     * @returns {Promise}
-     * @deprecated Since v2.0.0-alpha01
-     * @see getWorkOrders
-     */
-    async getWorkOrder(value = '?', by = "id", who = {}, offset, limit) {
-        console.warn("Calling a deprecated function!");
-        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        if (typeof value === 'string' && Utils.isWorkOrderNo(value)) {
-            by = "work_order_no";
-            value = value.replace(/-/g, "");
-        }
-
-        const results = await WorkOrderMapper.findDomainRecord({by, value}, offset, limit, 'created_at', 'desc')
-            .catch(err => {
-                return Promise.reject(err)
-            });
-
-        const workOrders = results.records;
-
-        if (!workOrders.length) return Utils.buildResponse({data: {items: results.records}});
-
-        return onListWorkOrders(workOrders, this.context, this.moduleName, true);
-    }
-
-    /**
      * Updates a work order
      *
      * @param by {String}

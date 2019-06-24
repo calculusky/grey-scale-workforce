@@ -170,6 +170,18 @@ describe("Request legend materials", () => {
         return expect(LegendService.requestMaterial("F001", material, {})).resolves.toBeDefined();
     });
 
+    it("requestMaterial: should create multiple material requisition", () => {
+        const materials = [{
+            id: 126,
+            name: "INV/679",
+            category: {
+                id: 11,
+                name: ""
+            }
+        }];
+        return expect(LegendService.requestMaterials("F001", materials, {})).resolves.toEqual([{}]);
+    });
+
     it("checkMaterialRequestStatus: should check the status of a requisition", () => {
         return expect(LegendService.checkMaterialRequestStatus("F001")).resolves.toBeDefined();
     });
