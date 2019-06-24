@@ -176,7 +176,8 @@ describe("Request legend materials", () => {
             name: "INV/679",
             category: {
                 id: 11,
-                name: ""
+                name: "",
+                source:"ie_legend"
             }
         }];
         return expect(LegendService.requestMaterials("F001", materials, {})).resolves.toEqual([{}]);

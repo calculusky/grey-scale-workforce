@@ -94,7 +94,7 @@ module.exports = (function () {
          */
         async requestMaterials(faultId, materials = [], group = {}) {
             _checkInitialized();
-            return await materials.filter(i => i['source'] && i['source'] === 'ie_legend').reduce(async (acc, curr) => {
+            return await materials.filter(i => i['category']['source'] && i['category']['source'] === 'ie_legend').reduce(async (acc, curr) => {
                 const _accumulator = await acc;
                 const mResponse = await this.requestMaterial(faultId, curr, group);
                 _accumulator.push(mResponse);
