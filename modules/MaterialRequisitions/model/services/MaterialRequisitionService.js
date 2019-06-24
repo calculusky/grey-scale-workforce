@@ -84,7 +84,6 @@ class MaterialRequisitionService extends ApiService {
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);
         return MaterialRequisitionMapper.createDomainRecord(materialReq, who).then(materialRequisition => {
             if (!materialRequisition) return Promise.reject(Error.InternalServerError);
-            //TODO create requisition on legend
             LegendService.requestMaterials(`${materialReq.work_order_id}-${materialRequisition.id}`, body.materials).then(res => {
                 console.log(res);
             }).catch(err => {

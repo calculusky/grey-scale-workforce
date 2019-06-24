@@ -121,9 +121,9 @@ module.exports = (function () {
                 legendMatRequest['itemType'] = material.category.id;
                 legendMatRequest['category'] = itemTypes[material.category.id].category_code;
                 legendMatRequest['project'] = "";
-                legendMatRequest['user'] = "*";
-                legendMatRequest['Collected By'] = "*";
-                legendMatRequest['supervisor'] = "*";
+                legendMatRequest['user'] = "1261";//default
+                legendMatRequest['Collected By'] = "10044";//default
+                legendMatRequest['supervisor'] = "1263";//default
                 _options.json = legendMatRequest;
                 request.post(`${BASE_URL}/requests`, _options, (err, res, body) => {
                     if (err || res.statusCode !== 200) return reject(err || res.statusCode);
