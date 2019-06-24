@@ -27,7 +27,7 @@ afterAll(async done => {
 
 describe("Material Requisition Creation", () => {
     const request = require('request');
-    beforeAll(() => {
+    beforeAll(async () => {
         request.get = jest.fn((url, opt, callback) => {
             let body = {};
             if (url.indexOf(`/itemtypes`) !== -1) {
@@ -50,7 +50,8 @@ describe("Material Requisition Creation", () => {
                         ]
                     }
                 };
-            } else if (url.indexOf('/items?itemtype_code') !== -1) {
+            }
+            else if (url.indexOf('/items?itemtype_code') !== -1) {
                 body = {
                     "data": {
                         "xmlns": "ie_legend",
@@ -85,6 +86,10 @@ describe("Material Requisition Creation", () => {
             }
             callback(null, {}, body);
         });
+        request.post = jest.fn((url, opt, callback) => {
+            let body = {};
+            callback(null, {statusCode: 200}, body);
+        });
         tracker.on('query', query => {
             if (query.method === 'insert') {
                 return query.response([1, {
@@ -93,7 +98,8 @@ describe("Material Requisition Creation", () => {
                 }])
             }
         });
-
+        const LegendService = require('../processes/LegendService');
+        await LegendService.init(ctx);
     });
 
     it("Should fail when passed empty data", () => {
@@ -110,8 +116,6 @@ describe("Material Requisition Creation", () => {
     });
 
     it("That materialRequisition is created", async () => {
-        const LegendService = require('../processes/LegendService');
-        await LegendService.init(ctx);
         const body = {
             materials: [{"id": "20", "qty": "10", category: {id: 1}}],
             requested_by: 1,
@@ -124,6 +128,20 @@ describe("Material Requisition Creation", () => {
             }
         });
     });
+
+    it("That materialRequisition is created on legend for materials sourced from legend", async () => {
+        const body = {
+            materials: [{"id": "20", "qty": "10", category: {id: 11, source: "ie_legend"}}],
+            requested_by: 1,
+            status: 1
+        };
+        return expect(API.materialRequisitions().createMaterialRequisition(body, session)).resolves.toMatchObject({
+            code: 200,
+            data: {
+                data: body
+            }
+        });
+    })
 
 });
 
@@ -216,14 +234,14 @@ describe("Retrieve Material Requisitions", () => {
         });
         tracker.on('query', query => {
             if (query.sql.indexOf('from `material_requisitions`') !== -1) {
-                return query.response([ {
+                return query.response([{
                     id: 2,
                     materials: [{id: 2, qty: 4}],
                     requested_by: 1
                 },
                     {
                         id: 3,
-                        materials: [{id: 1, qty: 55, source:"ie_legend", source_id:"INV/230", category_id:11}],
+                        materials: [{id: 1, qty: 55, source: "ie_legend", source_id: "INV/230", category_id: 11}],
                         requested_by: 1
                     }
                 ]);
@@ -231,16 +249,16 @@ describe("Retrieve Material Requisitions", () => {
             else if (query.sql.indexOf('from `materials`') !== -1) {
                 return query.response([
                     {
-                       id:1,
-                       name:"Material One"
+                        id: 1,
+                        name: "Material One"
                     },
                     {
-                        id:2,
-                        name:"Material Two"
+                        id: 2,
+                        name: "Material Two"
                     }
                 ])
-            }else if(query.sql.indexOf('from `users`') !== -1){
-                return query.response([{id:1}]);
+            } else if (query.sql.indexOf('from `users`') !== -1) {
+                return query.response([{id: 1}]);
             }
             else {
                 return query.response([]);
