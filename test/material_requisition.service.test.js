@@ -26,8 +26,65 @@ afterAll(async done => {
 
 
 describe("Material Requisition Creation", () => {
-
+    const request = require('request');
     beforeAll(() => {
+        request.get = jest.fn((url, opt, callback) => {
+            let body = {};
+            if (url.indexOf(`/itemtypes`) !== -1) {
+                body = {
+                    "data": {
+                        "xmlns": "ie_legend",
+                        "entry": [
+                            {
+                                "id": 11,
+                                "code": 11,
+                                "name": "FUSE",
+                                "category_code": 24
+                            },
+                            {
+                                "id": 12,
+                                "code": 12,
+                                "name": "TYRE",
+                                "category_code": 10
+                            }
+                        ]
+                    }
+                };
+            } else if (url.indexOf('/items?itemtype_code') !== -1) {
+                body = {
+                    "data": {
+                        "xmlns": "ie_legend",
+                        "entry": [
+                            {
+                                "id": 230,
+                                "code": "INV/230",
+                                "description": "5KVA UPS",
+                                "weight": 1200,
+                                "itemtype_code": 11,
+                                "min_qty": 1,
+                                "weight_avg_cost": 1200,
+                                "min_amt_limit": 200,
+                                "max_amt_limit": 10000000,
+                                "category_code": 28
+                            },
+                            {
+                                "id": 231,
+                                "code": "INV/231",
+                                "description": "CASIO XJ A147 PROJECTOR",
+                                "weight": 1200,
+                                "itemtype_code": 11,
+                                "min_qty": 1,
+                                "weight_avg_cost": 1200,
+                                "min_amt_limit": 200,
+                                "max_amt_limit": 10000000,
+                                "category_code": 28
+                            }
+                        ]
+                    }
+                };
+            }
+            callback(null, {}, body);
+        });
         tracker.on('query', query => {
             if (query.method === 'insert') {
                 return query.response([1, {
@@ -36,6 +93,7 @@ describe("Material Requisition Creation", () => {
                 }])
             }
         });
+
     });
 
     it("Should fail when passed empty data", () => {
@@ -51,7 +109,9 @@ describe("Material Requisition Creation", () => {
         });
     });
 
-    it("That materialRequisition is created", () => {
+    it("That materialRequisition is created", async () => {
+        const LegendService = require('../processes/LegendService');
+        await LegendService.init(ctx);
         const body = {
             materials: [{"id": "20", "qty": "10", category: {id: 1}}],
             requested_by: 1,

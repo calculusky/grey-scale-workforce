@@ -51,7 +51,7 @@ class MaterialService extends ApiService {
         materials.forEach(item => item['category'] = categories[item.category_id] || null);
         if (query.category_id) {
             const itemCode = LegendService.getItemCodeByMaterialCategoryId(query.category_id);
-            const legendMaterials = await LegendService.getMaterialsByItemCode(itemCode);
+            const legendMaterials = await LegendService.getMaterialsByItemCode(itemCode).catch(console.error);
             materials.push(...legendMaterials);
         }
         return Utils.buildResponse({data: {items: materials}});

@@ -84,6 +84,12 @@ class MaterialRequisitionService extends ApiService {
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);
         return MaterialRequisitionMapper.createDomainRecord(materialReq, who).then(materialRequisition => {
             if (!materialRequisition) return Promise.reject(Error.InternalServerError);
+            //TODO create requisition on legend
+            // LegendService.requestMaterials(`${materialReq.work_order_id}-${materialRequisition.id}`, materials).then(res => {
+            //     console.log(res);
+            // }).catch(err=>{
+            //     console.log(err);
+            // });
             materialRequisition.materials = body.materials;
             materialRequisition.assigned_to = JSON.parse(materialRequisition.assigned_to);
             return Utils.buildResponse({data: materialRequisition});
@@ -158,7 +164,7 @@ async function __doMaterialRequisitionList(db, materialRequisitions, query = {})
             const _acc = await acc;
             if (curr['source'] !== 'ie_legend') {
                 const item = materials.find(i => curr.id === i.id);
-                if(item){
+                if (item) {
                     item.qty = curr['qty'];
                     _acc.push(item);
                 }
