@@ -1,6 +1,7 @@
 /**
  * Created by paulex on 7/5/17.
  */
+const ApiService = require('../../ApiService');
 /**
  *
  * @param app
@@ -73,6 +74,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser, m
      */
     app.put('/work_orders/:id', [multiPart.array("files"), jsonParser], (req, res) => {
         console.log('...Update WorkOrders...');
+        if (!ApiService.hasPermissions(req.who, "work_orders.edit")) return res.status(403).send();
         API.workOrders().updateWorkOrder('id', req.params['id'], req.body, req.who, req.files, API)
             .then(({data, code}) => {
                 return res.status(code).send(data);

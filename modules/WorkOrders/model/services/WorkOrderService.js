@@ -69,13 +69,17 @@ class WorkOrderService extends ApiService {
      * @returns {Promise<void>|*}
      */
     async updateWorkOrder(by, value, body = {}, who, files = [], API) {
-        console.log(body);
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const model = (await WorkOrderMapper.findDomainRecord({by, value})).records.shift();
         const workOrder = new WorkOrder(body);
 
         if (!model) return Promise.reject(Error.RecordNotFound());
+
+        // //TODO if the work-order has reached end of the cycle we should invalidate update
+        // if(WorkOrderUtils.isClosed(model)){
+        //     ApiService.hasPermissions()
+        // }
 
         workOrder.updateAssignedTo(model.assigned_to);
 
@@ -212,7 +216,8 @@ class WorkOrderService extends ApiService {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const exportWorkOrderQuery = new ExportQuery(query, WorkOrderMapper, who, API);
         const groups = await this.context.getKey("groups", true);
-        return exportWorkOrderQuery.setGroups(groups).export().catch(() => {
+        return exportWorkOrderQuery.setGroups(groups).export().catch((ee) => {
+            console.log(ee);
             return Utils.buildResponse({status: "fail", data: {message: "There was an error fetching the export"}});
         });
     }
