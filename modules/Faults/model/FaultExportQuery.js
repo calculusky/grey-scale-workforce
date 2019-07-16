@@ -60,9 +60,10 @@ class FaultExportQuery extends ExportQuery {
                     break;
                 }
                 case 'completed_date': {
-                    const dateFrom = Utils.date.dateFormat(value, undefined, 'YYYY-MM-DD');
-                    this.sqlQuery.where(`${tableName}.${key}`, ">=", `${dateFrom} 00:00:00`)
-                        .where(`${tableName}.${key}`, "<=", `${dateFrom} 23:59:00`);
+                    const dateFrom = Utils.date.dateFormat(value, undefined, 'YYYY-MM-DD HH:mm');
+                    const compDateTo = Utils.date.dateFormat(query['completed_date_to'] || value, undefined, 'YYYY-MM-DD HH:mm');
+                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, ">=", `${dateFrom}:00`)
+                        .where(`${this.modelMapper.tableName}.${key}`, "<=", `${compDateTo}:00`);
                     break;
                 }
                 case 'date_from': {
