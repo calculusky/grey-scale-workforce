@@ -1,5 +1,6 @@
 {
   "id": "id",
+  "category_id":"material_category_id",
   "name": "name",
   "unit_of_measurement": "unit_of_measurement",
   "unit_price": "unit_price",

@@ -69,6 +69,8 @@ class DomainFactory {
                     return require('./BaseRecords/model/domain-objects/Status');
                 case DomainFactory.FAULT_CATEGORY:
                     return require('./FaultCategories/model/domain-objects/FaultCategory');
+                case DomainFactory.MATERIAL_CATEGORY:
+                    return require('./BaseRecords/model/domain-objects/MaterialCategory');
                 case DomainFactory.LOCATION_HISTORY:
                     return require('./LocationHistory/model/domain-objects/LocationHistory');
                 case DomainFactory.PASSWORD_RESET:
@@ -106,6 +108,7 @@ DomainFactory.MATERIAL_LOCATION = "MaterialLocation";
 DomainFactory.STOCK_MOVEMENT = "StockMovement";
 DomainFactory.MATERIAL_UTILIZATION = "MaterialUtilization";
 DomainFactory.FAULT_CATEGORY = "FaultCategory";
+DomainFactory.MATERIAL_CATEGORY = "MaterialCategory";
 DomainFactory.ACTIVITY = "Activity";
 DomainFactory.PENDING_REASON = "PendingReason";
 DomainFactory.STATUS = "Status";

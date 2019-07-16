@@ -68,6 +68,20 @@ class Persistence {
 
     /**
      *
+     * @param key
+     * @return {Promise<any>}
+     */
+    exists(key) {
+        return new Promise((res, rej) => {
+            this.getClient().exists(key, (err, reply) => {
+                if (err) return rej(err);
+                return res(reply === 1);
+            })
+        });
+    }
+
+    /**
+     *
      * @param keys
      * @returns {boolean}
      */

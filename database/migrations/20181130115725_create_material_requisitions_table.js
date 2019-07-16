@@ -8,6 +8,8 @@ exports.up = function(knex, Promise) {
         table.integer('requested_by').unsigned();
         table.integer('approved_by').unsigned().nullable();
         table.string('description').nullable();
+        table.string('source').nullable();
+        table.string('source_id').nullable();
         table.specificType('location', 'POINT').nullable();
         table.json("assigned_to").nullable();
         table.integer("group_id").unsigned().nullable();

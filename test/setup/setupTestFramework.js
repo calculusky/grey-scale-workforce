@@ -3,6 +3,8 @@ const encoding = require('iconv-lite/encodings');
 iconv.encodings = encoding;
 
 const ProcessAPI = require('../../processes/ProcessAPI');
+const LegendService = require('../../processes/LegendService');
+
 ProcessAPI.init = jest.fn().mockImplementation(() => {
     ProcessAPI.token = {
         access_token: "dafffaf"
@@ -17,4 +19,8 @@ ProcessAPI.login = jest.fn().mockImplementation(() => new Promise((resolve, reje
 }));
 
 ProcessAPI.request = jest.fn().mockImplementation(() => Promise.resolve());
+
+LegendService.init = jest.fn(LegendService.init).mockImplementationOnce(() => {
+    return Promise.resolve(true);
+});
 

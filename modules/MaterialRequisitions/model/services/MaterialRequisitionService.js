@@ -4,6 +4,7 @@ let MapperFactory = null;
 const Utils = require('../../../../core/Utility/Utils');
 const Error = require('../../../../core/Utility/ErrorUtils')();
 const {flattenDeep} = require("lodash");
+const LegendService = require('../../../../processes/LegendService');
 
 /**
  * @name MaterialRequisitionService
@@ -69,9 +70,26 @@ class MaterialRequisitionService extends ApiService {
 
         ApiService.insertPermissionRights(materialReq, who);
 
+        const materials = materialReq.materials.map(({id, qty = 0, category = {}, source = null, source_id = null}) => ({
+            id,
+            qty,
+            category_id: category.id,
+            status: MaterialRequisitionService.MATERIAL_PENDING,
+            source,
+            source_id
+        }));
+
+        materialReq.materials = JSON.stringify(materials);
+
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);
         return MaterialRequisitionMapper.createDomainRecord(materialReq, who).then(materialRequisition => {
             if (!materialRequisition) return Promise.reject(Error.InternalServerError);
+            LegendService.requestMaterials(`${materialReq.work_order_id}-${materialRequisition.id}`, body.materials).then(res => {
+                console.log(res);
+            }).catch(err => {
+                console.log(err);
+            });
+            materialRequisition.materials = body.materials;
             materialRequisition.assigned_to = JSON.parse(materialRequisition.assigned_to);
             return Utils.buildResponse({data: materialRequisition});
         });
@@ -140,12 +158,29 @@ async function __doMaterialRequisitionList(db, materialRequisitions, query = {})
     for (const materialReq of materialRequisitions) {
         const task = [materialReq.getAssignedUsers(db), materialReq.getMaterials(db), materialReq.requestedBy()];
         const [assignedTo, materials, reqBy] = await Promise.all(task);
+
+        materialReq.materials = await materialReq.materials.reduce(async (acc, curr) => {
+            const _acc = await acc;
+            if (curr['source'] !== 'ie_legend') {
+                const item = materials.find(i => curr.id === i.id);
+                if (item) {
+                    item.qty = curr['qty'];
+                    _acc.push(item);
+                }
+            } else {
+                const item = await LegendService.getMaterialByTypeCodeAndItemCode(curr['category_id'], curr['source_id']).catch(console.error);
+                if (item) {
+                    item['qty'] = curr['qty'];
+                    item['status'] = curr['status'];
+                    item['category_id'] = curr['category_id'];
+                }
+                _acc.push(item || curr);
+            }
+            return Promise.resolve(_acc);
+        }, Promise.resolve([]));
+
         materialReq.assigned_to = assignedTo;
-        materialReq.materials = materials.map((mat, i) => {
-            mat.qty = materialReq.materials[i]['qty'];
-            return mat;
-        });
-        materialReq.requested_by = reqBy.records.shift() || {};
+        materialReq.requested_by_user = reqBy.records.shift() || {};
     }
     let response = materialRequisitions;
 
@@ -156,5 +191,8 @@ async function __doMaterialRequisitionList(db, materialRequisitions, query = {})
     }
     return response;
 }
+
+MaterialRequisitionService.MATERIAL_PENDING = "PENDING";
+MaterialRequisitionService.MATERIAL_APPROVED = "APPROVED";
 
 module.exports = MaterialRequisitionService;
