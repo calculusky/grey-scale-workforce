@@ -778,7 +778,9 @@ module.exports.getFaultStatus = function (key) {
 };
 
 module.exports.getWorkStatuses = function (type, key = null) {
+    console.log(key, typeof  key, "-----", type, typeof  type);
     const constants = require('../contants');
+    console.dir(constants);
     //for backward compatibility we are using a typeMap to represent old type values
     const typeMap = {'1': 'DW', '2': 'RW', '3': 'FW', 'F': 'F'};
 
@@ -786,7 +788,7 @@ module.exports.getWorkStatuses = function (type, key = null) {
     if ((key && isNaN(type)) || isNaN(key)) return "/invalid-status";
 
     const status = constants.statuses[typeMap[type]];
-
+    console.log('STATUS', status);
     if (!status) return '/unknown';
     if (key === null) return status;
     if (key !== null && status[key]) return status[key]['name'];
