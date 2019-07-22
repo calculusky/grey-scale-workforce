@@ -46,14 +46,15 @@ class ApplicationEvent extends EventEmitter {
      * carried out.
      *
      * @param workOrder
+     * @param status
      * @param who
      * @return {Promise<boolean>}
      */
-    async triggerWorkOrderWorkflow(workOrder, who) {
+    async triggerWorkOrderWorkflow(workOrder, status, who) {
 
         const workflowEndRegex = /(close|disconnect|cancel)/gi;
 
-        if (`${workOrder.status}`.toLowerCase().match(workflowEndRegex)) {
+        if (status.toLowerCase().match(workflowEndRegex)) {
             const compDate = {completed_date: Utils.date.dateToMysql()};
             const res = await this.api.workOrders().updateWorkOrder("id", workOrder.id, compDate, who, [], this.api).catch(
                 err => console.error("onWorkOrderUpdate:", err)
@@ -98,7 +99,7 @@ class ApplicationEvent extends EventEmitter {
             }
             return true;
         }
-        return true;
+        return false;
     }
 
     /**
@@ -138,7 +139,7 @@ class ApplicationEvent extends EventEmitter {
 
         if (!status || (typeof oldStatus === "string" && closedStatuses.includes(oldStatus.toLowerCase()))) return false;
 
-        const bool = await this.triggerWorkOrderWorkflow(workOrder, who);
+        const bool = await this.triggerWorkOrderWorkflow(workOrder, status, who);
 
         return bool && true;
     }
