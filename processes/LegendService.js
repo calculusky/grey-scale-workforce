@@ -94,8 +94,9 @@ module.exports = (function () {
          */
         async requestMaterials(faultId, materials = [], group = {}) {
             _checkInitialized();
-            return await materials.filter(i => i['category']['source'] && i['category']['source'] === 'ie_legend').reduce(async (acc, curr) => {
+            return await materials.filter(i => i['source'] && i['source'] === 'ie_legend').reduce(async (acc, curr) => {
                 const _accumulator = await acc;
+                console.log("Making Request", faultId);
                 const mResponse = await this.requestMaterial(faultId, curr, group);
                 _accumulator.push(mResponse);
                 return Promise.resolve(_accumulator);
@@ -117,12 +118,18 @@ module.exports = (function () {
                 if (!itemTypes[material.category.id]) return reject("ItemTypes not found");
                 const _options = {...options};
                 const legendMatRequest = {Fault_ID: faultId};
+                legendMatRequest['ID'] = faultId;
+                legendMatRequest['bu'] = "5";//default
                 legendMatRequest['item'] = material.name;
-                legendMatRequest['itemType'] = material.category.id;
-                legendMatRequest['category'] = itemTypes[material.category.id].category_code;
-                legendMatRequest['project'] = "";
-                legendMatRequest['user'] = "1261";//default
-                legendMatRequest['Collected By'] = "10044";//default
+                legendMatRequest['itemType'] = `${material.category.id}`;
+                legendMatRequest['quantity'] = `${material.qty}`;
+                legendMatRequest['category'] = `0${itemTypes[material.category.id].category_code}`;//TODO confirm
+                legendMatRequest['project'] = "IForce";
+                legendMatRequest['section'] = "001";//default
+                legendMatRequest['department'] = "002";//default
+                legendMatRequest['user'] = "1263";//default
+                legendMatRequest['remark'] = "Material Requisition from IForce";//default
+                legendMatRequest['Collected By'] = "1004";//default
                 legendMatRequest['supervisor'] = "1263";//default
                 _options.json = legendMatRequest;
                 request.post(`${BASE_URL}/requests`, _options, (err, res, body) => {

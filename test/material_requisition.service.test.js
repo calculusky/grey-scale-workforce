@@ -131,7 +131,7 @@ describe("Material Requisition Creation", () => {
 
     it("That materialRequisition is created on legend for materials sourced from legend", async () => {
         const body = {
-            materials: [{"id": "20", "qty": "10", category: {id: 11, source: "ie_legend"}}],
+            materials: [{"id": "20", "qty": "10", category: {id: 11}, source: "ie_legend"}],
             requested_by: 1,
             status: 1
         };
