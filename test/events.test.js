@@ -257,6 +257,7 @@ describe("Web Events", () => {
 
 
 describe("Application Events", () => {
+
     beforeAll(() => {
         tracker.on('query', query => {
             if (query.sql.indexOf('from `work_orders`') !== -1) {
@@ -268,15 +269,19 @@ describe("Application Events", () => {
                     relation_id: 3
                 }]);
             }
+            return query.response([]);
         });
     });
+    //
     // it("OnWorkOrderUpdate should run successfully", () => {
+    //     API.workOrders().updateWorkOrder = jest.fn(()=>(Promise.resolve(true)));
     //     const workOrder = {id: 1, type_id: 1, status: 3, relation_id:3};
     //     const oldWorkOrder = {status: 2};
     //     return expect(ApplicationEvent.onWorkOrderUpdate(workOrder, session, oldWorkOrder)).resolves.toBeTruthy();
     // });
-
+    //
     // it("OnWorkOrderUpdate:faults should run successfully", () => {
+    //     API.workOrders().updateWorkOrder = jest.fn(()=>(Promise.resolve(true)));
     //     const workOrder = {id: 1, type_id: 3, status: 8, relation_id: 3};
     //     const oldWorkOrder = {status: 2};
     //     return expect(ApplicationEvent.onWorkOrderUpdate(workOrder, session, oldWorkOrder)).resolves.toBeTruthy();
