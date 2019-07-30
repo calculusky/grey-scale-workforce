@@ -31,6 +31,12 @@ const constants = {
             },
             "3": {
                 "id": 3,
+                "name": "Pending",
+                "type": "FW",
+                "comments": []
+            },
+            "4": {
+                "id": 4,
                 "name": "Closed",
                 "type": "FW",
                 "comments": []

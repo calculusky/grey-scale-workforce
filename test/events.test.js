@@ -264,7 +264,7 @@ describe("Application Events", () => {
                 return query.response([{
                     id: 1,
                     assigned_to: [{id: 1, created_at: ""}],
-                    status: 3,
+                    status: 4,
                     type_id: 1,
                     relation_id: 3
                 }]);
@@ -275,13 +275,26 @@ describe("Application Events", () => {
     //
     // it("OnWorkOrderUpdate should run successfully", () => {
     //     API.workOrders().updateWorkOrder = jest.fn(()=>(Promise.resolve(true)));
-    //     const workOrder = {id: 1, type_id: 1, status: 3, relation_id:3};
+    //     const workOrder = {id: 1, type_id: 1, status: 4, relation_id:3};
     //     const oldWorkOrder = {status: 2};
     //     return expect(ApplicationEvent.onWorkOrderUpdate(workOrder, session, oldWorkOrder)).resolves.toBeTruthy();
     // });
     //
     // it("OnWorkOrderUpdate:faults should run successfully", () => {
     //     API.workOrders().updateWorkOrder = jest.fn(()=>(Promise.resolve(true)));
+    //     const workOrder = {id: 1, type_id: 3, status: 8, relation_id: 3};
+    //     const oldWorkOrder = {status: 2};
+    //     return expect(ApplicationEvent.onWorkOrderUpdate(workOrder, session, oldWorkOrder)).resolves.toBeTruthy();
+    // });
+
+    // it("modifyFaultStatusByTotalWorkOrderStatus:should run successfully", () => {
+    //     API.faults().updateFault = jest.fn(() => (Promise.resolve(true)));
+    //     const _u = undefined;
+    //     return expect(ApplicationEvent.modifyFaultStatusByTotalWorkOrderStatus(1, session, _u, "Closed")).resolves.toEqual(expect.arrayContaining([1]));
+    // });
+
+    // it("OnFaultUpdate:faults should run successfully", () => {
+    //     API.faults().updateFault = jest.fn(() => (Promise.resolve(true)));
     //     const workOrder = {id: 1, type_id: 3, status: 8, relation_id: 3};
     //     const oldWorkOrder = {status: 2};
     //     return expect(ApplicationEvent.onWorkOrderUpdate(workOrder, session, oldWorkOrder)).resolves.toBeTruthy();
