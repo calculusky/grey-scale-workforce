@@ -36,7 +36,7 @@ module.exports = function main(context, Api) {
 
         cron.scheduleJob('*/3 * * * *', main.updateCustomerAssets.bind(this));
 
-        cron.scheduleJob('65 21 * * *', main.scriptUpdateFaults.bind(this, context));
+        cron.scheduleJob('15 22 * * *', main.scriptUpdateFaults.bind(this, context));
     }
     //schedule job for running a database backup
     if (process.env.NODE_ENV === 'production') {
