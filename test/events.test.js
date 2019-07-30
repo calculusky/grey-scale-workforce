@@ -287,11 +287,11 @@ describe("Application Events", () => {
     //     return expect(ApplicationEvent.onWorkOrderUpdate(workOrder, session, oldWorkOrder)).resolves.toBeTruthy();
     // });
 
-    it("modifyFaultStatusByTotalWorkOrderStatus:should run successfully", () => {
-        API.faults().updateFault = jest.fn(() => (Promise.resolve(true)));
-        const _u = undefined;
-        return expect(ApplicationEvent.modifyFaultStatusByTotalWorkOrderStatus(1, session, _u, "Closed")).resolves.toEqual(expect.arrayContaining([1]));
-    });
+    // it("modifyFaultStatusByTotalWorkOrderStatus:should run successfully", () => {
+    //     API.faults().updateFault = jest.fn(() => (Promise.resolve(true)));
+    //     const _u = undefined;
+    //     return expect(ApplicationEvent.modifyFaultStatusByTotalWorkOrderStatus(1, session, _u, "Closed")).resolves.toEqual(expect.arrayContaining([1]));
+    // });
 
     // it("OnFaultUpdate:faults should run successfully", () => {
     //     API.faults().updateFault = jest.fn(() => (Promise.resolve(true)));
