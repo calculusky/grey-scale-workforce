@@ -36,7 +36,7 @@ module.exports = function main(context, Api) {
 
         cron.scheduleJob('*/3 * * * *', main.updateCustomerAssets.bind(this));
 
-        cron.scheduleJob('35 21 * * *', main.scriptUpdateFaults.bind(this, context));
+        cron.scheduleJob('50 21 * * *', main.scriptUpdateFaults.bind(this, context));
     }
     //schedule job for running a database backup
     if (process.env.NODE_ENV === 'production') {
@@ -104,8 +104,10 @@ module.exports.scriptUpdateFaults = function (context) {
                 await appEvent.triggerWorkOrderWorkflow(workOrder, status, session, compDate);
             } else {
                 const fault = await db.table("faults").where("id", workOrder.relation_id).whereNot('status', 4).first('id');
-                const compDate = moment(workOrder.completed_date).utc().format('YYYY-MM-DD H:m:s');
-                await appEvent.modifyFaultStatusByTotalWorkOrderStatus(fault.id, session, compDate, "Closed", "Cancelled");
+                if (fault) {
+                    const compDate = moment(workOrder.completed_date).utc().format('YYYY-MM-DD H:m:s');
+                    await appEvent.modifyFaultStatusByTotalWorkOrderStatus(fault.id, session, compDate, "Closed", "Cancelled");
+                }
                 //TODO Modify the activity time
             }
             console.log('Done Processing Task.');
