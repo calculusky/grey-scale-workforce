@@ -71,11 +71,10 @@ class IntegratorEvent extends EventEmitter {
     }
 
     /**
-     * TODO
      *
      * @param uFault
      * @param who
-     * @returns {Promise<Boolean>}
+     * @return {Promise<*>}
      */
     async onFaultUpdated(uFault, who) {
         if (!uFault.id) throw new TypeError("The fault.id is not set.");
@@ -124,7 +123,7 @@ class IntegratorEvent extends EventEmitter {
             form: iFault,
             timeout: 1500
         };
-        return await Utils.requestPromise(options, "POST", headers);
+        return await Utils.requestPromise(options, "POST", headers).catch(console.error);
     }
 
 }

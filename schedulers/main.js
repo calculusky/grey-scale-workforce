@@ -36,7 +36,7 @@ module.exports = function main(context, Api) {
 
         cron.scheduleJob('*/3 * * * *', main.updateCustomerAssets.bind(this));
 
-        cron.scheduleJob('15 22 * * *', main.scriptUpdateFaults.bind(this, context));
+        cron.scheduleJob('35 22 * * *', main.scriptUpdateFaults.bind(this, context));
     }
     //schedule job for running a database backup
     if (process.env.NODE_ENV === 'production') {
@@ -88,7 +88,7 @@ module.exports.scriptUpdateFaults = function (context) {
             const query = {module: "work_orders", event_type: 'update', relation_id: `${workOrder.id}`};
             const {data: {data: {items}}} = await API.activities().getActivities(query, {}, API);
             const activity = _.find(items, (o) => {
-                const fieldVal = (o.field_value) ? o.field_value.toLowerCase() : "";
+                const fieldVal = (o.field_value) ? `${o.field_value}`.toLowerCase() : "";
                 return o.field_name === 'status' && (fieldVal === 'closed' || fieldVal === '/unknown' || fieldVal === 'cancelled')
             });
 
