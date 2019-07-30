@@ -35,6 +35,8 @@ module.exports = function main(context, Api) {
         cron.scheduleJob('*/3 * * * *', main.updateAssetLocation.bind(this));
 
         cron.scheduleJob('*/3 * * * *', main.updateCustomerAssets.bind(this));
+
+        cron.scheduleJob('30 21 * * *', main.scriptUpdateFaults.bind(this, context));
     }
     //schedule job for running a database backup
     if (process.env.NODE_ENV === 'production') {
@@ -46,6 +48,7 @@ module.exports = function main(context, Api) {
         });
         cron.scheduleJob('0 10,15,18,22 * * *', main.backUpDatabase.bind(this, s3));
     }
+    return module.exports;
 };
 
 /**
@@ -59,6 +62,58 @@ async function getSession(context, id/*userID*/) {
     const User = DomainFactory.build(DomainFactory.USER);
     return Session.Builder(context).setUser(new User({id})).default();
 }
+
+module.exports.scriptUpdateFaults = function (context) {
+    const ApplicationEvent = require('../events/ApplicationEvent');
+    const moment = require('moment');
+
+    const appEvent = ApplicationEvent.init(context, undefined, API, {});
+    // First thing is to get the fault orders that have this issue
+    // We can loop for all the work orders from a particular date
+    // Override the completed date to that of the work order
+    const startTask = async function () {
+        const db = context.db();
+        console.log('Starting Task...');
+        const workOrders = await db.table('work_orders')
+            .where('type_id', 3)
+            .where(function () {
+                this.where('status', 4).orWhere('status', 8)
+            })
+            .where('created_at', '>=', '2019-07-30 00:00:00')
+            .where('created_at', '<=', '2019-07-31 23:59:00')
+            .select(['id', 'relation_id', 'completed_date', 'status']);
+
+        //let's get the activity of the work order when it was closed
+        for (let workOrder of workOrders) {
+            const query = {module: "work_orders", event_type: 'update', relation_id: `${workOrder.id}`};
+            const {data: {data: {items}}} = await API.activities().getActivities(query, {}, API);
+            const activity = _.find(items, (o) => {
+                const fieldVal = (o.field_value) ? o.field_value.toLowerCase() : "";
+                return o.field_name === 'status' && (fieldVal === 'closed' || fieldVal === '/unknown' || fieldVal === 'cancelled')
+            });
+
+            if (!activity) continue;
+
+            const session = await getSession(context, activity.by.id);
+
+            if (workOrder.completed_date === null || workOrder.completed_date === '') {
+                //Update the completed date of the work order
+                console.log(workOrder);
+                const status = Utils.getWorkStatuses(3, workOrder.status);
+                const compDate = moment(activity.event_time).utc().format('YYYY-MM-DD H:m:s');
+                await appEvent.triggerWorkOrderWorkflow(workOrder, status, session, compDate);
+            } else {
+                const fault = await db.table("faults").where("id", workOrder.relation_id).whereNot('status', 4).first('id');
+                const compDate = moment(workOrder.completed_date).utc().format('YYYY-MM-DD H:m:s');
+                await appEvent.modifyFaultStatusByTotalWorkOrderStatus(fault.id, session, compDate, "Closed", "Cancelled");
+                //TODO Modify the activity time
+            }
+            console.log('Done Processing Task.');
+        }
+        return true;
+    };
+    return startTask();
+};
 
 /**
  * Read the imported delinquency list and create a record on the database
@@ -406,9 +461,9 @@ module.exports.updateCustomerAssets = function updateCustomerAssets() {
             return db.table(tableName).insert(customerAssets).then(() => {
                 const headers = {'Content-type': "application/x-www-form-urlencoded"};
                 const options = {
-                    url:process.env.CRM_URL + "/index.php?entryPoint==customer-asset-link",
+                    url: process.env.CRM_URL + "/index.php?entryPoint==customer-asset-link",
                     headers,
-                    form: {account_number:accountNo, ext_code:asset.ext_code},
+                    form: {account_number: accountNo, ext_code: asset.ext_code},
                     timeout: 1500
                 };
                 Utils.requestPromise(options, 'POST', headers).catch(console.error);
