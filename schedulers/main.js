@@ -36,7 +36,7 @@ module.exports = function main(context, Api) {
 
         cron.scheduleJob('*/3 * * * *', main.updateCustomerAssets.bind(this));
 
-        cron.scheduleJob('35 22 * * *', main.scriptUpdateFaults.bind(this, context));
+        cron.scheduleJob('15 13 * * *', main.scriptUpdateFaults.bind(this, context));
     }
     //schedule job for running a database backup
     if (process.env.NODE_ENV === 'production') {
@@ -79,9 +79,9 @@ module.exports.scriptUpdateFaults = function (context) {
             .where(function () {
                 this.where('status', 4).orWhere('status', 8)
             })
-            .where('created_at', '>=', '2019-07-15 00:00:00')
+            .where('created_at', '>=', '2019-07-05 00:00:00')
             .where('created_at', '<=', '2019-07-23 23:59:00')
-            .select(['id', 'relation_id', 'completed_date', 'status']);
+            .select(['id', 'relation_id', 'completed_date', 'status', 'type_id']);
 
         //let's get the activity of the work order when it was closed
         for (let workOrder of workOrders) {
