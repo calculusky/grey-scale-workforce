@@ -105,7 +105,7 @@ class ApplicationEvent extends EventEmitter {
             if (!res) return false;
 
             if (Number(workOrder.type_id) === 3) {
-                this.modifyFaultStatusByTotalWorkOrderStatus(workOrder.relation_id, who, undefined, "Closed", "Canceled").catch(err => {
+                this.modifyFaultStatusByTotalWorkOrderStatus(workOrder.relation_id, who, completed_date, "Closed", "Cancelled").catch(err => {
                     console.error("Failed To Modify Fault Status", err);
                 });
             }

@@ -79,9 +79,9 @@ module.exports.scriptUpdateFaults = function (context) {
             .where(function () {
                 this.where('status', 4).orWhere('status', 8)
             })
-            .where('created_at', '>=', '2019-07-15 00:00:00')
+            .where('created_at', '>=', '2019-07-05 00:00:00')
             .where('created_at', '<=', '2019-07-23 23:59:00')
-            .select(['id', 'relation_id', 'completed_date', 'status']);
+            .select(['id', 'relation_id', 'completed_date', 'status', 'type_id']);
 
         //let's get the activity of the work order when it was closed
         for (let workOrder of workOrders) {
