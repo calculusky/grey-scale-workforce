@@ -54,7 +54,7 @@ class ActivityService extends ApiService {
     async getActivities(query, who = {}, API) {
         const db = this.context.db();
 
-        const {module, relation_id, activity_type, activity_by, offset = 0, limit = 10} = query;
+        const {module, relation_id, activity_type, activity_by, date_from, date_to, offset = 0, limit = 10} = query;
 
         const resultSet = db.table("activities").select(["*"]);
 
@@ -62,6 +62,8 @@ class ActivityService extends ApiService {
         if (relation_id) resultSet.where("relation_id", relation_id);
         if (activity_by) resultSet.where("activity_by", activity_by);
         if (activity_type) resultSet.where("activity_type", activity_type.toUpperCase());
+        if (date_from) resultSet.where("date_from", '>=', date_from);
+        if (date_to) resultSet.where("date_to", '<=', date_to);
 
         const activities = await resultSet.limit(Number(limit)).offset(Number(offset)).orderBy("id", "asc");
 
