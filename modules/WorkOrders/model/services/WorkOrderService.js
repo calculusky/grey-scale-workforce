@@ -82,10 +82,10 @@ class WorkOrderService extends ApiService {
         // }
 
         workOrder.updateAssignedTo(model.assigned_to);
-
+        if (!workOrder.id) workOrder.setId(model.id);
         if (!workOrder.type_id) workOrder.setType(model.type_id);
 
-        return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}, who).then(result => {
+        return WorkOrderMapper.updateDomainRecord({value: model.id, domain: workOrder}, who).then(result => {
             const [updateRecord] = result;
             onWorkOrderUpdated(updateRecord, model, who, files, API);
             return Utils.buildResponse({data: updateRecord});
@@ -357,7 +357,7 @@ function onWorkOrderUpdated(workOrder, model, who, files, API) {
         status: workOrder.status || model.status
     };
 
-    if(assignees.length > 0){
+    if (assignees.length > 0) {
         Events.emit("assign_work_order", assignmentPayload, (assignees.length) ? assignees : workOrder.assigned_to, who);
     }
     Events.emit("work_order_updated", workOrder, who, model);

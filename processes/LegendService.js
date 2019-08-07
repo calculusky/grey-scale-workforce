@@ -56,7 +56,7 @@ module.exports = (function () {
             return new Promise((resolve, reject) => {
                 if (!itemTypes[typeCode]) return resolve([]);
                 request.get(url, options, (err, res, body) => {
-                    if (err || body == null) return reject(err);
+                    if (err || body == null || !body.data) return reject(err);
                     const materials = body.data.entry.map(item => {
                         return {
                             id: item.id,
@@ -96,8 +96,8 @@ module.exports = (function () {
             _checkInitialized();
             return await materials.filter(i => i['source'] && i['source'] === 'ie_legend').reduce(async (acc, curr) => {
                 const _accumulator = await acc;
-                console.log("Making Request", faultId);
-                const mResponse = await this.requestMaterial(faultId, curr, group);
+                console.log("Making Request", `${faultId}-${curr.id}`);
+                const mResponse = await this.requestMaterial(`${faultId}-${curr.id}`, curr, group);
                 _accumulator.push(mResponse);
                 return Promise.resolve(_accumulator);
             }, Promise.resolve([]));
@@ -116,6 +116,7 @@ module.exports = (function () {
             const executor = (resolve, reject) => {
                 //TODO use validate
                 if (!itemTypes[material.category.id]) return reject("ItemTypes not found");
+                console.log('PASSING',faultId);
                 const _options = {...options};
                 const legendMatRequest = {Fault_ID: faultId};
                 legendMatRequest['ID'] = faultId;
@@ -133,6 +134,7 @@ module.exports = (function () {
                 legendMatRequest['supervisor'] = "1263";//default
                 _options.json = legendMatRequest;
                 request.post(`${BASE_URL}/requests`, _options, (err, res, body) => {
+                    console.log('BODY', body);
                     if (err || res.statusCode !== 200) return reject(err || res.statusCode);
                     return resolve(body);
                 });

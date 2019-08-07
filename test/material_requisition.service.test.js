@@ -100,6 +100,7 @@ describe("Material Requisition Creation", () => {
         });
         const LegendService = require('../processes/LegendService');
         await LegendService.init(ctx);
+        API.workOrders().updateWorkOrder = jest.fn(() => Promise.resolve());
     });
 
     it("Should fail when passed empty data", () => {
@@ -121,7 +122,7 @@ describe("Material Requisition Creation", () => {
             requested_by: 1,
             status: 1
         };
-        return expect(API.materialRequisitions().createMaterialRequisition(body, session)).resolves.toMatchObject({
+        return expect(API.materialRequisitions().createMaterialRequisition(body, session, API)).resolves.toMatchObject({
             code: 200,
             data: {
                 data: body
@@ -135,7 +136,7 @@ describe("Material Requisition Creation", () => {
             requested_by: 1,
             status: 1
         };
-        return expect(API.materialRequisitions().createMaterialRequisition(body, session)).resolves.toMatchObject({
+        return expect(API.materialRequisitions().createMaterialRequisition(body, session, API)).resolves.toMatchObject({
             code: 200,
             data: {
                 data: body

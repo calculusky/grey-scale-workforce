@@ -50,3 +50,12 @@ describe("Data Export", () => {
 
 });
 
+
+describe("Work Orders Export", ()=>{
+    it("Export Work Orders successfully", async () => {
+        const WorkBook = require('exceljs').Workbook;
+        const query = { type_id: '3', with: 'records', status: '', group_id: '', created_by: '', work_order_no: '', completed_date: '2019/04/25 07:34',completed_date_to:"2019/04/25 07:35", date_from: '', date_to: '' };
+        return expect(API.workOrders().exportWorkOrders(query, session, API)).resolves.toBeInstanceOf(WorkBook);
+    });
+});
+
