@@ -38,7 +38,7 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
      */
     app.post('/material_requisitions', jsonParser, (req, res) => {
         console.log(req.body);
-        API.materialRequisitions().createMaterialRequisition(req.body, req.who)
+        API.materialRequisitions().createMaterialRequisition(req.body, req.who, API)
             .then(({data, code}) => {
                 console.log(data);
                 return res.status(code).send(data);

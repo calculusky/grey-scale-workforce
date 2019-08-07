@@ -58,8 +58,9 @@ class MaterialRequisitionService extends ApiService {
      * //TODO Validate material request: Closed work order should not have material requisition
      * @param body {Object}
      * @param who {Session}
+     * @param API {API}
      */
-    createMaterialRequisition(body = {}, who) {
+    createMaterialRequisition(body = {}, who, API) {
         const MaterialRequisition = DomainFactory.build(DomainFactory.MATERIAL_REQUISITION);
         let materialReq = new MaterialRequisition(body);
 
@@ -84,9 +85,12 @@ class MaterialRequisitionService extends ApiService {
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);
         return MaterialRequisitionMapper.createDomainRecord(materialReq, who).then(materialRequisition => {
             if (!materialRequisition) return Promise.reject(Error.InternalServerError);
-            console.log(`${materialReq.work_order_id}-${materialRequisition.id}`);
             LegendService.requestMaterials(`${materialReq.work_order_id}-${materialRequisition.id}`, body.materials).then(res => {
-                console.log(res);
+                //Move the work order to Awaiting Material
+                API.workOrders()
+                    .updateWorkOrder("work_order_no", materialReq.work_order_id, {status: 6}, who, [], API)
+                    .catch(console.error);
+
             }).catch(err => {
                 console.log(err);
             });
