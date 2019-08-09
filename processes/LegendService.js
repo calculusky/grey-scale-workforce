@@ -81,7 +81,7 @@ module.exports = (function () {
             const materials = await this.getMaterialsByItemCode(typeCode).catch(err => {
                 console.log("getMaterialByTypeCodeAndItemCode", err);
             });
-            return (materials) ? materials.filter(item => item['name'] === itemCode).shift() : [];
+            return (materials) ? materials.filter(item => item['name'] === itemCode).shift() : null;
         }
 
         /**

@@ -29,7 +29,7 @@ class MaterialRequisitionService extends ApiService {
         const db = this.context.database;
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);
         const results = await MaterialRequisitionMapper.findDomainRecord({by, value}, offset, limit);
-        const materialRequisitions = await __doMaterialRequisitionList(db, results.records);
+        const materialRequisitions = await __doMaterialRequisitionList(this.context, results.records);
         return Utils.buildResponse({data: {items: materialRequisitions}});
     }
 
@@ -159,7 +159,9 @@ class MaterialRequisitionService extends ApiService {
     }
 }
 
-async function __doMaterialRequisitionList(db, materialRequisitions, query = {}) {
+async function __doMaterialRequisitionList(context, materialRequisitions, query = {}) {
+    const db = context.db();
+    const categories = await context.getKey("material:categories", true);
     for (const requisition of materialRequisitions) {
         const task = [requisition.getAssignedUsers(db), requisition.getMaterials(db), requisition.requestedBy()];
         const [assignedTo, materials, reqBy] = await Promise.all(task);
@@ -169,9 +171,9 @@ async function __doMaterialRequisitionList(db, materialRequisitions, query = {})
             if (curr['source'] !== 'ie_legend') {
                 const item = materials.find(i => curr.id === i.id);
                 if (item) {
+                    const {id, name} = categories[curr['category_id']];
                     item.qty = curr['qty'];
-                    //TODO get the material category
-                    //item.category = await
+                    item.category = {id, name};
                     _acc.push(item);
                 }
             } else {
