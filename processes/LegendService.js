@@ -81,7 +81,7 @@ module.exports = (function () {
             const materials = await this.getMaterialsByItemCode(typeCode).catch(err => {
                 console.log("getMaterialByTypeCodeAndItemCode", err);
             });
-            return materials.filter(item => item['name'] === itemCode).shift();
+            return (materials) ? materials.filter(item => item['name'] === itemCode).shift() : [];
         }
 
         /**
@@ -192,7 +192,6 @@ module.exports = (function () {
             itemTypes = _cacheItemTypes;
             return _joinLocalCategories();
         }
-
         return new Promise((resolve, reject) => {
             request.get(`${BASE_URL}/itemtypes`, options, (err, res, body) => {
                 if (err) return reject(err);
@@ -201,7 +200,7 @@ module.exports = (function () {
 
                 entries.forEach(elem => entryByCode[elem['code']] = elem);
                 itemTypes = entryByCode;
-                context.setKey('LEGEND_ITEM_TYPES', JSON.stringify(itemTypes));
+                context.setKey('LEGEND_ITEM_TYPES', JSON.stringify(itemTypes), 'EX', 259200);
                 _joinLocalCategories().then(resolve);
             });//end of request
         });
