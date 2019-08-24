@@ -714,6 +714,10 @@ module.exports.processMakerError = function (err) {
             obj.msg = "You are currently not permitted to perform this action. This task was assigned to a different user";
             obj.code = "PM_ERROR_NOT_ASSIGNED";
             return obj;
+        }else if(msg.includes("Server Error")){
+            obj.msg = error;
+            obj.code = "PM_ERROR_INTERNAL";
+            return obj;
         }
     };
     switch (error.code) {
@@ -722,7 +726,7 @@ module.exports.processMakerError = function (err) {
         case 401:
             return this.buildResponse(processMessage(error.message, {status: 'fail'}), 401);
         default:
-            return this.buildResponse(processMessage(error.message, {status: 'fail'}), 500);
+            return this.buildResponse(processMessage("PM:Internal Server Error", {status: 'fail'}), 500);
     }
 };
 
