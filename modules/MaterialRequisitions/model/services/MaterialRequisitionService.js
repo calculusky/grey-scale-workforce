@@ -26,10 +26,9 @@ class MaterialRequisitionService extends ApiService {
      * @returns {Promise<{data?: *, code?: *}>}
      */
     async getMaterialRequisition(value, by = "id", who, offset = 0, limit = 10) {
-        const db = this.context.database;
         const MaterialRequisitionMapper = MapperFactory.build(MapperFactory.MATERIAL_REQUISITION);
         const results = await MaterialRequisitionMapper.findDomainRecord({by, value}, offset, limit);
-        const materialRequisitions = await __doMaterialRequisitionList(db, results.records);
+        const materialRequisitions = await __doMaterialRequisitionList(this.context, results.records);
         return Utils.buildResponse({data: {items: materialRequisitions}});
     }
 
@@ -48,7 +47,7 @@ class MaterialRequisitionService extends ApiService {
 
         if (!materialRequisitions.length) return Utils.buildResponse({data: {items: materialRequisitions}});
 
-        const items = await __doMaterialRequisitionList(this.context.db(), materialRequisitions, query);
+        const items = await __doMaterialRequisitionList(this.context, materialRequisitions, query);
 
         return Utils.buildResponse({data: {items}});
     }
@@ -58,8 +57,9 @@ class MaterialRequisitionService extends ApiService {
      * //TODO Validate material request: Closed work order should not have material requisition
      * @param body {Object}
      * @param who {Session}
+     * @param API {API}
      */
-    createMaterialRequisition(body = {}, who) {
+    createMaterialRequisition(body = {}, who, API) {
         const MaterialRequisition = DomainFactory.build(DomainFactory.MATERIAL_REQUISITION);
         let materialReq = new MaterialRequisition(body);
 
@@ -85,7 +85,11 @@ class MaterialRequisitionService extends ApiService {
         return MaterialRequisitionMapper.createDomainRecord(materialReq, who).then(materialRequisition => {
             if (!materialRequisition) return Promise.reject(Error.InternalServerError);
             LegendService.requestMaterials(`${materialReq.work_order_id}-${materialRequisition.id}`, body.materials).then(res => {
-                console.log(res);
+                //Move the work order to Awaiting Material
+                API.workOrders()
+                    .updateWorkOrder("work_order_no", materialReq.work_order_id, {status: 6}, who, [], API)
+                    .catch(console.error);
+
             }).catch(err => {
                 console.log(err);
             });
@@ -154,17 +158,21 @@ class MaterialRequisitionService extends ApiService {
     }
 }
 
-async function __doMaterialRequisitionList(db, materialRequisitions, query = {}) {
-    for (const materialReq of materialRequisitions) {
-        const task = [materialReq.getAssignedUsers(db), materialReq.getMaterials(db), materialReq.requestedBy()];
+async function __doMaterialRequisitionList(context, materialRequisitions, query = {}) {
+    const db = context.db();
+    const categories = await context.getKey("material:categories", true);
+    for (const requisition of materialRequisitions) {
+        const task = [requisition.getAssignedUsers(db), requisition.getMaterials(db), requisition.requestedBy()];
         const [assignedTo, materials, reqBy] = await Promise.all(task);
 
-        materialReq.materials = await materialReq.materials.reduce(async (acc, curr) => {
+        requisition.materials = await requisition.materials.reduce(async (acc, curr) => {
             const _acc = await acc;
             if (curr['source'] !== 'ie_legend') {
                 const item = materials.find(i => curr.id === i.id);
                 if (item) {
+                    const {id, name} = categories[curr['category_id']] || {};
                     item.qty = curr['qty'];
+                    item.category = {id, name};
                     _acc.push(item);
                 }
             } else {
@@ -179,8 +187,8 @@ async function __doMaterialRequisitionList(db, materialRequisitions, query = {})
             return Promise.resolve(_acc);
         }, Promise.resolve([]));
 
-        materialReq.assigned_to = assignedTo;
-        materialReq.requested_by_user = reqBy.records.shift() || {};
+        requisition.assigned_to = assignedTo;
+        requisition.requested_by_user = reqBy.records.shift() || {};
     }
     let response = materialRequisitions;
 

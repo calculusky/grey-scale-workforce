@@ -103,7 +103,7 @@ class WorkflowService {
      * @param retry - determines if this should be retried in-case an error occurs
      */
     async createUser(body = {}, who = {}, retry = true) {
-        if (!this.token) await ProcessAPI.login(this.username, this.password);
+        if (!this.token) await ProcessAPI.login(this.username, this.password).catch(e => (Promise.reject(Utils.processMakerError(e))));
 
         if(Object.keys(body).length === 0) return Promise.reject(false);
 

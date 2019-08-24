@@ -69,7 +69,6 @@ class WorkOrderService extends ApiService {
      * @returns {Promise<void>|*}
      */
     async updateWorkOrder(by, value, body = {}, who, files = [], API) {
-        console.log(body);
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const model = (await WorkOrderMapper.findDomainRecord({by, value})).records.shift();
@@ -77,11 +76,16 @@ class WorkOrderService extends ApiService {
 
         if (!model) return Promise.reject(Error.RecordNotFound());
 
-        workOrder.updateAssignedTo(model.assigned_to);
+        // //TODO if the work-order has reached end of the cycle we should invalidate update
+        // if(WorkOrderUtils.isClosed(model)){
+        //     ApiService.hasPermissions()
+        // }
 
+        workOrder.updateAssignedTo(model.assigned_to);
+        if (!workOrder.id) workOrder.setId(model.id);
         if (!workOrder.type_id) workOrder.setType(model.type_id);
 
-        return WorkOrderMapper.updateDomainRecord({value, domain: workOrder}, who).then(result => {
+        return WorkOrderMapper.updateDomainRecord({value: model.id, domain: workOrder}, who).then(result => {
             const [updateRecord] = result;
             onWorkOrderUpdated(updateRecord, model, who, files, API);
             return Utils.buildResponse({data: updateRecord});
@@ -212,7 +216,8 @@ class WorkOrderService extends ApiService {
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
         const exportWorkOrderQuery = new ExportQuery(query, WorkOrderMapper, who, API);
         const groups = await this.context.getKey("groups", true);
-        return exportWorkOrderQuery.setGroups(groups).export().catch(() => {
+        return exportWorkOrderQuery.setGroups(groups).export().catch((ee) => {
+            console.log(ee);
             return Utils.buildResponse({status: "fail", data: {message: "There was an error fetching the export"}});
         });
     }
@@ -352,7 +357,7 @@ function onWorkOrderUpdated(workOrder, model, who, files, API) {
         status: workOrder.status || model.status
     };
 
-    if(assignees.length > 0){
+    if (assignees.length > 0) {
         Events.emit("assign_work_order", assignmentPayload, (assignees.length) ? assignees : workOrder.assigned_to, who);
     }
     Events.emit("work_order_updated", workOrder, who, model);
