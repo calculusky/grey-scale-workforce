@@ -189,20 +189,24 @@ class WorkOrder extends DomainObject {
             switch (key) {
                 case 'status': {
                     newData[key] = getWorkStatuses(typeId, value);
+                    newData['status_value'] = value;
                     break;
                 }
                 case 'type_id': {
                     newData[key] = getWorkOrderType(typeId).name;
+                    newData['type_id_value'] = value;
                     break;
                 }
                 case 'group_id': {
                     context.getKey("groups", true).then(groups=>{
                         newData[key] = groups[value].name;
                     });
+                    newData['group_id_value'] = value;
                     break;
                 }
                 case 'priority': {
                     newData[key] = getWorkPriorities(1, value);
+                    newData['priority_value'] = value;
                     break;
                 }
                 case 'labels': {

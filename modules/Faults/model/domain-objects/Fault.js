@@ -144,14 +144,17 @@ class Fault extends DomainObject {
                     context.getKey("fault:categories", true).then(categories => {
                         newData[key] = categories[value].name;
                     });
+                    newData['category_id_value'] = value;
                     break;
                 }
                 case 'status': {
                     newData[key] = getFaultStatus(value);
+                    newData['status_value'] = value;
                     break;
                 }
                 case 'priority': {
                     newData[key] = getFaultPriority(value);
+                    newData['priority_value'] = value;
                     break;
                 }
                 case 'labels': {

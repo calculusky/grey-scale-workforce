@@ -42,20 +42,61 @@ class ApplicationEvent extends EventEmitter {
     }
 
     /**
+     *
+     * For Work Orders that are related to fault; we are going to check
+     * if all the work orders related to that fault is closed
+     * if all work orders is closed then it is ideal to close the fault itself
+     *
+     * @param faultId
+     * @param who
+     * @param completedDate
+     * @param sumType
+     * @return {Promise<Array>}
+     */
+    async modifyFaultStatusByTotalWorkOrderStatus(faultId, who, completedDate = Utils.date.dateToMysql(), ...sumType) {
+        const Fault = DomainFactory.build(DomainFactory.FAULT);
+        const fault = new Fault({id: faultId});
+        const {records: workOrders} = await fault.workOrders();
+        const statuses = Utils.getWorkStatuses(3);
+
+        const sums = [];
+
+        for (let type of sumType) {
+            const status = (type.toLowerCase() === 'closed') ? 4 : 8;
+            const update = {status, completed_date: completedDate};
+
+            const sum = workOrders.reduce((acc, wo) => {
+                return acc + (statuses[wo.status]['name'].includes(type) ? 1 : 0)
+            }, 0);
+
+            if (sum === workOrders.length) {
+                //TODO please it is important to fix the manual setting of status ids
+                this.api.faults().updateFault("id", fault.id, update, who, [], this.api).catch(err => {
+                    console.error("onWorkOrderUpdate:Fault:", err);
+                });
+            }
+
+            sums.push(sum);
+        }
+        return sums;
+    }
+
+    /**
      * Uses the current status of the work order to determine what actions should be
      * carried out.
      *
      * @param workOrder
      * @param status
      * @param who
+     * @param completed_date
      * @return {Promise<boolean>}
      */
-    async triggerWorkOrderWorkflow(workOrder, status, who) {
+    async triggerWorkOrderWorkflow(workOrder, status, who, completed_date = Utils.date.dateToMysql()) {
 
         const workflowEndRegex = /(close|disconnect|cancel)/gi;
 
         if (status.toLowerCase().match(workflowEndRegex)) {
-            const compDate = {completed_date: Utils.date.dateToMysql()};
+            const compDate = {completed_date};
             const res = await this.api.workOrders().updateWorkOrder("id", workOrder.id, compDate, who, [], this.api).catch(
                 err => console.error("onWorkOrderUpdate:", err)
             );
@@ -63,39 +104,10 @@ class ApplicationEvent extends EventEmitter {
             console.warn('onWorkOrderUpdate:success', res);
             if (!res) return false;
 
-            /*
-            * For Work Orders that are related to fault; we are going to check
-            * if all the work orders related to that fault is closed
-            * if all work orders is closed then it is ideal to close the fault itself
-            * */
             if (Number(workOrder.type_id) === 3) {
-                const Fault = DomainFactory.build(DomainFactory.FAULT);
-                const fault = new Fault({id: workOrder.relation_id});
-                const workOrders = (await fault.workOrders()).records;
-                const statuses = Utils.getWorkStatuses(workOrder.type_id);
-
-                const sumClosed = workOrders.reduce((acc, wo) => {
-                    return acc + (statuses[wo.status]['name'].includes("Closed") ? 1 : 0)
-                }, 0);
-
-                const sumCanceled = workOrders.reduce((acc, wo) => {
-                    return acc + (statuses[wo.status]['name'].includes("Canceled") ? 1 : 0)
-                }, 0);
-
-                if (sumClosed === workOrders.length) {
-                    const update = {status: 4, completed_date: Utils.date.dateToMysql()};
-                    this.api.faults().updateFault("id", fault.id, update, who, [], this.api).catch(err => {
-                        console.error("onWorkOrderUpdate:Fault:", err);
-                    });
-                }
-                else if (sumCanceled === workOrders.length) {
-                    //TODO setting the status id manually can pose problems
-                    const update = {status: 8, completed_date: Utils.date.dateToMysql()};
-                    this.api.faults().updateFault("id", fault.id, update, who, [], this.api).catch(err => {
-                        console.error("onWorkOrderUpdateCancel:Fault:", err);
-                    });
-                    console.log("Canceled Faults");
-                }
+                this.modifyFaultStatusByTotalWorkOrderStatus(workOrder.relation_id, who, completed_date, "Closed", "Cancelled").catch(err => {
+                    console.error("Failed To Modify Fault Status", err);
+                });
             }
             return true;
         }
@@ -117,9 +129,9 @@ class ApplicationEvent extends EventEmitter {
     async onWorkOrderUpdate(updateOrder = {}, who, oldRecord) {
         const WorkOrder = DomainFactory.build(DomainFactory.WORK_ORDER);
         const workOrder = new WorkOrder({
-            id:updateOrder.id || oldRecord.id,
+            id: updateOrder.id || oldRecord.id,
             type_id: updateOrder.type_id || oldRecord.type_id,
-            relation_id:updateOrder.relation_id || oldRecord.relation_id,
+            relation_id: updateOrder.relation_id || oldRecord.relation_id,
             status: updateOrder.status
         });
 
@@ -185,13 +197,13 @@ class ApplicationEvent extends EventEmitter {
         if (!status || (typeof oldStatus === "string" && oldStatus.toLowerCase().includes("closed"))) return false;
 
         if (status.toLowerCase().includes("closed")) {
-            const compDate = {completed_date: Utils.date.dateToMysql()};
-
-            const res = await this.api.faults().updateFault("id", faultId, compDate, who, [], this.api).catch(
-                err => console.error("onFaultUpdated:", err)
-            );
-
-            if (!res) return false;
+            if (!fault.completed_date) {
+                const compDate = {completed_date: Utils.date.dateToMysql()};
+                const res = await this.api.faults().updateFault("id", faultId, compDate, who, [], this.api).catch(
+                    err => console.error("onFaultUpdated:", err)
+                );
+                if (!res) return false;
+            }
 
             if (relatedTo && relatedTo.toLowerCase() !== "assets") return false;
 

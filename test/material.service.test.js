@@ -159,7 +159,7 @@ describe("Retrieve List of Materials", () => {
             callback(null, {}, body);
         });
         tracker.on('query', query => {
-            if (query.sql.indexOf('from `materials`')) {
+            if (query.sql.indexOf('from `materials`')!==-1) {
                 return query.response([{
                     id: 1,
                     name: "Simulation",

@@ -35,6 +35,7 @@ module.exports = function main(context, Api) {
         cron.scheduleJob('*/3 * * * *', main.updateAssetLocation.bind(this));
 
         cron.scheduleJob('*/3 * * * *', main.updateCustomerAssets.bind(this));
+
     }
     //schedule job for running a database backup
     if (process.env.NODE_ENV === 'production') {
@@ -46,6 +47,7 @@ module.exports = function main(context, Api) {
         });
         cron.scheduleJob('0 10,15,18,22 * * *', main.backUpDatabase.bind(this, s3));
     }
+    return module.exports;
 };
 
 /**
@@ -406,9 +408,9 @@ module.exports.updateCustomerAssets = function updateCustomerAssets() {
             return db.table(tableName).insert(customerAssets).then(() => {
                 const headers = {'Content-type': "application/x-www-form-urlencoded"};
                 const options = {
-                    url:process.env.CRM_URL + "/index.php?entryPoint==customer-asset-link",
+                    url: process.env.CRM_URL + "/index.php?entryPoint==customer-asset-link",
                     headers,
-                    form: {account_number:accountNo, ext_code:asset.ext_code},
+                    form: {account_number: accountNo, ext_code: asset.ext_code},
                     timeout: 1500
                 };
                 Utils.requestPromise(options, 'POST', headers).catch(console.error);

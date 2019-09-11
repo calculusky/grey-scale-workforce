@@ -236,7 +236,7 @@ class ModelMapper {
             .then(itemsUpdated => {
                 updateData[by] = value;
                 filteredDomain.serialize(updateData, "client");
-                onAudit(this, filteredDomain, who, updateData[`${deletedAt}`] ? "DELETE" : "UPDATE");
+                if (itemsUpdated) onAudit(this, filteredDomain, who, updateData[`${deletedAt}`] ? "DELETE" : "UPDATE");
                 return Promise.resolve([filteredDomain, itemsUpdated]);
             })
             .catch(err => {
