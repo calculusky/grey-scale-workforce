@@ -39,6 +39,12 @@ created *.env* file
 process maker etc.
 
 
+#### Database Migration
+
+1. Ensure you have knex installed
+2. run `knex migrate` to create all the tables
+
+
 
 #### Authors
 

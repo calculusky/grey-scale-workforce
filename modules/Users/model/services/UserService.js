@@ -132,7 +132,7 @@ class UserService extends ApiService {
 
         user.updateAssignedTo(model.assigned_to);
 
-        const [result] = await UserMapper.updateDomainRecord({by, value, domain: user}, who);
+        const [result] = await UserMapper.updateDomainRecord({by: 'id', value: model.id, domain: user}, who);
 
         onUserUpdated(result, body, who, API).catch(console.warn);
 
@@ -174,6 +174,10 @@ class UserService extends ApiService {
      * @returns {Promise<*>}
      */
     async resetPassword(body = {}, who, API) {
+        const Session = require('../../../../core/Session');
+        const User = DomainFactory.build(DomainFactory.USER);
+        const session = await Session.Builder(context).setUser(new User({id: 1})).default();
+
         const PasswordReset = DomainFactory.build(DomainFactory.PASSWORD_RESET);
         const pwdReset = new PasswordReset(body);
 
@@ -181,7 +185,7 @@ class UserService extends ApiService {
 
         if (!(await pwdReset.validateToken(this.context.db(), body.email))) return Promise.reject(Error.InvalidPasswordResetToken);
 
-        await this.updateUser("email", body.email, {password: pwdReset.password}, who, null, API).catch(e => (Promise.reject(e)));
+        await this.updateUser("email", body.email, {password: pwdReset.password}, session, null, API).catch(e => (Promise.reject(e)));
 
         return Utils.buildResponse({data: pwdReset});
     }
