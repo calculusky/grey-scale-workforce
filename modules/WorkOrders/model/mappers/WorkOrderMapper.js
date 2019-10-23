@@ -22,6 +22,51 @@ class WorkOrderMapper extends ModelMapper {
             })
             .whereIn("status", statuses);
     }
+
+    async getQueryDisconnectionOrder(startDate, endDate) {
+        const db = this.context.database;
+        const dbName = db.table(this.tableName);
+
+        const spot = db.raw('sum(disconnection_billings.current_bill + disconnection_billings.arrears) as spot');
+        const pv = db.raw('sum(disconnection_billings.total_amount_payable + disconnection_billings.reconnection_fee) as pv');
+        const total = db.raw('sum(disconnection_billings.current_bill + disconnection_billings.arrears + disconnection_billings.total_amount_payable + disconnection_billings.reconnection_fee) as total');
+
+        const results = await dbName
+            .join('groups', 'groups.id', '=', 'work_orders.group_id')
+            .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
+            .select(['work_orders.group_id', 'groups.name', 'work_orders.issue_date'])
+            .select([spot, pv, total])
+            .count('work_orders.work_order_no as dos')
+            .where('work_orders.type_id', 1)
+            .whereBetween('work_orders.issue_date', [startDate, endDate])
+            .groupBy('work_orders.group_id', 'work_orders.issue_date');
+
+        return results;
+    }
+
+    async getQueryDisconnectionOrderByGroup(groupId, startDate, endDate) {
+        const db = this.context.database;
+        const dbName = db.table(this.tableName);
+
+        const spot = db.raw('sum(disconnection_billings.current_bill + disconnection_billings.arrears) as spot');
+        const pv = db.raw('sum(disconnection_billings.total_amount_payable + disconnection_billings.reconnection_fee) as pv');
+        const total = db.raw('sum(disconnection_billings.current_bill + disconnection_billings.arrears + disconnection_billings.total_amount_payable + disconnection_billings.reconnection_fee) as total');
+
+        const results = await dbName
+            .join('groups', 'groups.id', '=', 'work_orders.group_id')
+            .join('group_subs', 'group_subs.child_group_id', '=', 'groups.id')
+            .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
+            .select(['work_orders.group_id', 'groups.name', 'work_orders.issue_date'])
+            .select([spot, pv, total])
+            .count('work_orders.work_order_no as dos')
+            .where('group_subs.parent_group_id', groupId)
+            .whereIn('work_orders.type_id', [1])
+            .whereBetween('work_orders.issue_date', [startDate, endDate])
+            .groupBy('work_orders.group_id', 'work_orders.issue_date');
+
+        return results;
+    }
 }
+
 
 module.exports = WorkOrderMapper;
