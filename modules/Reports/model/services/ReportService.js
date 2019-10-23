@@ -47,6 +47,62 @@ class ReportService {
             return Utils.buildResponse({data: {items}});
         }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
     }
+
+    /**
+     * @return
+     * Query {startDate, endDate}
+     * {Promise<{data?: *, code?: *} | never>}
+     */
+    getDisconnectionOrder(query) {
+        const keys = Object.keys(query);
+        const queryData = [];
+
+        keys.forEach(function (item) {
+            const data = JSON.parse(item);
+
+            queryData['startDate'] = data.startDate;
+            queryData['endDate'] = data.endDate;
+        });
+
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.getQueryDisconnectionOrder(queryData['startDate'], queryData['endDate']).then(records => {
+
+            const items = [];
+            records.forEach(function(value){
+                items.push(value);
+            });
+
+            return Utils.buildResponse({data: items});
+        }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
+    }
+    /**
+     * @return
+     * Query {startDate, endDate}
+     * Params {groupId}
+     * {Promise<{data?: *, code?: *} | never>}
+     */
+    getDisconnectionOrderByGroup(groupId, query) {
+        const keys = Object.keys(query);
+        const queryData = [];
+
+        keys.forEach(function (item) {
+            const data = JSON.parse(item);
+
+            queryData['startDate'] = data.startDate;
+            queryData['endDate'] = data.endDate;
+        });
+
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.getQueryDisconnectionOrderByGroup(groupId, queryData['startDate'], queryData['endDate']).then(records => {
+
+            const items = [];
+            records.forEach(function(value){
+                items.push(value);
+            });
+
+            return Utils.buildResponse({data: items});
+        }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
+    }
 }
 
 module.exports = ReportService;
