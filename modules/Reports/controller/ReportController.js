@@ -64,4 +64,10 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
             });
     });
 
+    app.get('/reports/dc_rc_status_lookup', urlencodedParser, (req, res) => {
+        // console.log(req.query);
+        return API.reports().getStatusLookup(req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
 };

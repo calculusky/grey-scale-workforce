@@ -119,6 +119,16 @@ class WorkOrderMapper extends ModelMapper {
         return results;
     }
 
+    async getQueryStatusLookup(dcFilter, rcFilter) {
+        const db = this.context.database;
+
+        return await db.table(this.tableName)
+            .join('statuses', 'statuses.id', '=', 'work_orders.status')
+            .select(['work_orders.work_order_no','statuses.name', 'work_orders.updated_at', 'work_orders.type_id'])
+            .where('work_orders.work_order_no', dcFilter)
+            .orWhere('work_orders.work_order_no', rcFilter)
+            .groupBy('work_orders.work_order_no');
+    }
 }
 
 

@@ -159,6 +159,29 @@ class ReportService {
             return Utils.buildResponse({data: items});
         }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
     }
+
+    getStatusLookup(query) {
+        const keys = Object.keys(query);
+        const queryData = [];
+
+        keys.forEach(function (item) {
+            const data = JSON.parse(item);
+
+            queryData['dcFilter'] = data.dcFilter;
+            queryData['rcFilter'] = data.rcFilter;
+        });
+
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.getQueryStatusLookup(queryData['dcFilter'], queryData['rcFilter']).then(records => {
+
+            const items = [];
+            records.forEach(function (value) {
+                items.push(value);
+            });
+
+            return Utils.buildResponse({data: {items}});
+        }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
+    }
 }
 
 module.exports = ReportService;
