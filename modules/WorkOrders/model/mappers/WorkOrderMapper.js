@@ -127,7 +127,6 @@ class WorkOrderMapper extends ModelMapper {
             .select(['work_orders.work_order_no','statuses.name', 'work_orders.updated_at', 'work_orders.type_id'])
             .where('work_orders.work_order_no', dcFilter)
             .orWhere('work_orders.work_order_no', rcFilter)
-            .groupBy('work_orders.work_order_no');
     }
 }
 
