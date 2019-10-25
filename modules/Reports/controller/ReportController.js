@@ -39,4 +39,29 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(err);
             });
     });
+
+    // Disconnection Order By Business Unit
+    app.get('/reports/disconnection_order/disconnection_order_by_bu/:groupId/:buId', urlencodedParser, (req, res) => {
+        // console.log(req);
+        return API.reports().getDisconnectionOrderByBu(req.params['groupId'], req.params['buId'], req.query)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
+                return res.status(code).send(err);
+            });
+    });
+
+    // Disconnection Order By Undertaking
+    app.get('/reports/disconnection_order/disconnection_order_by_ut/:groupId/:buId/:utId', urlencodedParser, (req, res) => {
+        // console.log(req);
+        return API.reports().getDisconnectionOrderByUt(req.params['groupId'], req.params['buId'], req.params['utId'], req.query)
+            .then(({data, code}) => {
+                return res.status(code).send(data);
+            })
+            .catch(({err, code}) => {
+                return res.status(code).send(err);
+            });
+    });
+
 };

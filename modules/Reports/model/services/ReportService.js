@@ -103,6 +103,62 @@ class ReportService {
             return Utils.buildResponse({data: items});
         }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
     }
+    /**
+     * @return
+     * Query {startDate, endDate}
+     * Params {groupId, buId}
+     * {Promise<{data?: *, code?: *} | never>}
+     */
+    getDisconnectionOrderByBu(groupId, buId, query) {
+        const keys = Object.keys(query);
+        const queryData = [];
+
+        keys.forEach(function (item) {
+            const data = JSON.parse(item);
+
+            queryData['startDate'] = data.startDate;
+            queryData['endDate'] = data.endDate;
+        });
+
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.getQueryDisconnectionOrderByBu(groupId, buId, queryData['startDate'], queryData['endDate']).then(records => {
+
+            const items = [];
+            records.forEach(function(value){
+                items.push(value);
+            });
+
+            return Utils.buildResponse({data: items});
+        }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
+    }
+    /**
+     * @return
+     * Query {startDate, endDate}
+     * Params {groupId, buId, utId}
+     * {Promise<{data?: *, code?: *} | never>}
+     */
+    getDisconnectionOrderByUt(groupId, buId, utId ,query) {
+        const keys = Object.keys(query);
+        const queryData = [];
+
+        keys.forEach(function (item) {
+            const data = JSON.parse(item);
+
+            queryData['startDate'] = data.startDate;
+            queryData['endDate'] = data.endDate;
+        });
+
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.getQueryDisconnectionOrderByUt(groupId, buId, utId, queryData['startDate'], queryData['endDate']).then(records => {
+
+            const items = [];
+            records.forEach(function(value){
+                items.push(value);
+            });
+
+            return Utils.buildResponse({data: items});
+        }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
+    }
 }
 
 module.exports = ReportService;
