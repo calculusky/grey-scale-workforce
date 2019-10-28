@@ -27,19 +27,19 @@ class WorkOrderMapper extends ModelMapper {
         const db = this.context.database;
         const dbName = db.table(this.tableName);
 
-        const spot = db.raw('sum(disconnection_billings.current_bill + disconnection_billings.arrears) as spot');
-        const pv = db.raw('sum(disconnection_billings.total_amount_payable + disconnection_billings.reconnection_fee) as pv');
-        const total = db.raw('sum(disconnection_billings.current_bill + disconnection_billings.arrears + disconnection_billings.total_amount_payable + disconnection_billings.reconnection_fee) as total');
+        const spot = db.raw('sum(if(work_orders.status IN(7), current_bill, 0)) as spot');
+        const pv = db.raw('sum(if(work_orders.status NOT IN(7), current_bill, 0)) as pv');
+        const total = db.raw('sum(if(status IN(7), current_bill, 0) + if(status NOT IN(7), current_bill, 0)) as total');
 
         const results = await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
             .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
-            .select(['work_orders.group_id', 'groups.name', 'work_orders.issue_date'])
+            .select(['work_orders.group_id', 'groups.name', 'work_orders.updated_at'])
             .select([spot, pv, total])
-            .count('work_orders.work_order_no as dos')
+            .count('work_orders.id as dos')
             .where('work_orders.type_id', 1)
-            .whereBetween('work_orders.issue_date', [startDate, endDate])
-            .groupBy('work_orders.group_id', 'work_orders.issue_date');
+            .whereBetween('work_orders.updated_at', [startDate, endDate])
+            .groupBy('work_orders.group_id', 'work_orders.updated_at');
 
         return results;
     }
@@ -48,23 +48,85 @@ class WorkOrderMapper extends ModelMapper {
         const db = this.context.database;
         const dbName = db.table(this.tableName);
 
-        const spot = db.raw('sum(disconnection_billings.current_bill + disconnection_billings.arrears) as spot');
-        const pv = db.raw('sum(disconnection_billings.total_amount_payable + disconnection_billings.reconnection_fee) as pv');
-        const total = db.raw('sum(disconnection_billings.current_bill + disconnection_billings.arrears + disconnection_billings.total_amount_payable + disconnection_billings.reconnection_fee) as total');
+        const spot = db.raw('sum(if(work_orders.status IN(7), current_bill, 0)) as spot');
+        const pv = db.raw('sum(if(work_orders.status NOT IN(7), current_bill, 0)) as pv');
+        const total = db.raw('sum(if(status IN(7), current_bill, 0) + if(status NOT IN(7), current_bill, 0)) as total');
 
         const results = await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
             .join('group_subs', 'group_subs.child_group_id', '=', 'groups.id')
             .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
-            .select(['work_orders.group_id', 'groups.name', 'work_orders.issue_date'])
+            .select(['work_orders.group_id', 'groups.name', 'work_orders.updated_at'])
             .select([spot, pv, total])
             .count('work_orders.work_order_no as dos')
-            .where('group_subs.parent_group_id', groupId)
-            .whereIn('work_orders.type_id', [1])
-            .whereBetween('work_orders.issue_date', [startDate, endDate])
-            .groupBy('work_orders.group_id', 'work_orders.issue_date');
+            .where({
+                'group_subs.parent_group_id': groupId,
+                'work_orders.type_id': 1,
+            })
+            .whereBetween('work_orders.updated_at', [startDate, endDate])
+            .groupBy('work_orders.group_id', 'work_orders.updated_at');
 
         return results;
+    }
+
+    async getQueryDisconnectionOrderByBu(groupId, buId, startDate, endDate) {
+        const db = this.context.database;
+        const dbName = db.table(this.tableName);
+
+        const spot = db.raw('sum(if(work_orders.status IN(7), current_bill, 0)) as spot');
+        const pv = db.raw('sum(if(work_orders.status NOT IN(7), current_bill, 0)) as pv');
+        const total = db.raw('sum(if(status IN(7), current_bill, 0) + if(status NOT IN(7), current_bill, 0)) as total');
+
+        const results = await dbName
+            .join('groups', 'groups.id', '=', 'work_orders.group_id')
+            .join('group_subs', 'group_subs.child_group_id', '=', 'groups.id')
+            .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
+            .select(['work_orders.group_id', 'groups.name', 'work_orders.updated_at'])
+            .select([spot, pv, total])
+            .count('work_orders.work_order_no as dos')
+            .where({
+                'group_subs.parent_group_id': buId,
+                'work_orders.type_id': 1,
+            })
+            .whereBetween('work_orders.updated_at', [startDate, endDate])
+            .groupBy('work_orders.group_id', 'work_orders.updated_at');
+
+        return results;
+    }
+
+    async getQueryDisconnectionOrderByUt(groupId, buId, utId ,startDate, endDate) {
+        const db = this.context.database;
+        const dbName = db.table(this.tableName);
+
+        const spot = db.raw('sum(if(work_orders.status IN(7), current_bill, 0)) as spot');
+        const pv = db.raw('sum(if(work_orders.status NOT IN(7), current_bill, 0)) as pv');
+        const total = db.raw('sum(if(status IN(7), current_bill, 0) + if(status NOT IN(7), current_bill, 0)) as total');
+
+        const results = await dbName
+            .join('groups', 'groups.id', '=', 'work_orders.group_id')
+            .join('group_subs', 'group_subs.child_group_id', '=', 'groups.id')
+            .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
+            .select(['work_orders.group_id', 'groups.name', 'work_orders.updated_at'])
+            .select([spot, pv, total])
+            .count('work_orders.work_order_no as dos')
+            .where({
+                'group_subs.parent_group_id': utId,
+                'work_orders.type_id': 1,
+            })
+            .whereBetween('work_orders.updated_at', [startDate, endDate])
+            .groupBy('work_orders.group_id', 'work_orders.updated_at');
+
+        return results;
+    }
+
+    async getQueryStatusLookup(dcFilter, rcFilter) {
+        const db = this.context.database;
+
+        return await db.table(this.tableName)
+            .join('statuses', 'statuses.id', '=', 'work_orders.status')
+            .select(['work_orders.work_order_no','statuses.name', 'work_orders.updated_at', 'work_orders.type_id'])
+            .where('work_orders.work_order_no', dcFilter)
+            .orWhere('work_orders.work_order_no', rcFilter)
     }
 }
 
