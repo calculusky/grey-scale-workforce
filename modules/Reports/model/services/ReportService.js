@@ -53,7 +53,8 @@ class ReportService {
      * Query {startDate, endDate}
      * {Promise<{data?: *, code?: *} | never>}
      */
-    getDisconnectionOrder(query) {
+    getDisconnectionOrder(query = {}) {
+        /*
         const keys = Object.keys(query);
         const queryData = [];
 
@@ -63,9 +64,10 @@ class ReportService {
             queryData['startDate'] = data.startDate;
             queryData['endDate'] = data.endDate;
         });
-
+        */
+        const {start_date, end_date} = query;
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.getQueryDisconnectionOrder(queryData['startDate'], queryData['endDate']).then(records => {
+        return WorkOrderMapper.getQueryDisconnectionOrder(start_date, end_date).then(records => {
 
             const items = [];
             records.forEach(function(value){
@@ -81,19 +83,10 @@ class ReportService {
      * Params {groupId}
      * {Promise<{data?: *, code?: *} | never>}
      */
-    getDisconnectionOrderByGroup(groupId, query) {
-        const keys = Object.keys(query);
-        const queryData = [];
-
-        keys.forEach(function (item) {
-            const data = JSON.parse(item);
-
-            queryData['startDate'] = data.startDate;
-            queryData['endDate'] = data.endDate;
-        });
-
+    getDisconnectionOrderByGroup(groupId, query = {}) {
+        const {start_date, end_date} = query;
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.getQueryDisconnectionOrderByGroup(groupId, queryData['startDate'], queryData['endDate']).then(records => {
+        return WorkOrderMapper.getQueryDisconnectionOrderByGroup(groupId, start_date, end_date).then(records => {
 
             const items = [];
             records.forEach(function(value){
@@ -109,19 +102,10 @@ class ReportService {
      * Params {groupId, buId}
      * {Promise<{data?: *, code?: *} | never>}
      */
-    getDisconnectionOrderByBu(groupId, buId, query) {
-        const keys = Object.keys(query);
-        const queryData = [];
-
-        keys.forEach(function (item) {
-            const data = JSON.parse(item);
-
-            queryData['startDate'] = data.startDate;
-            queryData['endDate'] = data.endDate;
-        });
-
+    getDisconnectionOrderByBu(groupId, buId, query = {}) {
+        const {start_date, end_date} = query;
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.getQueryDisconnectionOrderByBu(groupId, buId, queryData['startDate'], queryData['endDate']).then(records => {
+        return WorkOrderMapper.getQueryDisconnectionOrderByBu(groupId, buId, start_date, end_date).then(records => {
 
             const items = [];
             records.forEach(function(value){
@@ -137,19 +121,10 @@ class ReportService {
      * Params {groupId, buId, utId}
      * {Promise<{data?: *, code?: *} | never>}
      */
-    getDisconnectionOrderByUt(groupId, buId, utId ,query) {
-        const keys = Object.keys(query);
-        const queryData = [];
-
-        keys.forEach(function (item) {
-            const data = JSON.parse(item);
-
-            queryData['startDate'] = data.startDate;
-            queryData['endDate'] = data.endDate;
-        });
-
+    getDisconnectionOrderByUt(groupId, buId, utId ,query = {}) {
+        const {start_date, end_date} = query;
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.getQueryDisconnectionOrderByUt(groupId, buId, utId, queryData['startDate'], queryData['endDate']).then(records => {
+        return WorkOrderMapper.getQueryDisconnectionOrderByUt(groupId, buId, utId, start_date, end_date).then(records => {
 
             const items = [];
             records.forEach(function(value){

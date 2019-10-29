@@ -27,12 +27,13 @@ class WorkOrderMapper extends ModelMapper {
         const db = this.context.database;
         const dbName = db.table(this.tableName);
 
-        const spot = db.raw('sum(if(work_orders.status IN(7), current_bill, 0)) as spot');
-        const pv = db.raw('sum(if(work_orders.status NOT IN(7), current_bill, 0)) as pv');
-        const total = db.raw('sum(if(status IN(7), current_bill, 0) + if(status NOT IN(7), current_bill, 0)) as total');
+        const spot = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0)) as spot');
+        const pv = db.raw('sum(if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as pv');
+        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status NOT IN(7), current_bill, 0)) as total');
 
-        const results = await dbName
+        return await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
+            // .join('statuses', 'statuses.id', '=', 'work_orders.status')
             .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
             .select(['work_orders.group_id', 'groups.name', 'work_orders.updated_at'])
             .select([spot, pv, total])
@@ -40,19 +41,17 @@ class WorkOrderMapper extends ModelMapper {
             .where('work_orders.type_id', 1)
             .whereBetween('work_orders.updated_at', [startDate, endDate])
             .groupBy('work_orders.group_id', 'work_orders.updated_at');
-
-        return results;
     }
 
     async getQueryDisconnectionOrderByGroup(groupId, startDate, endDate) {
         const db = this.context.database;
         const dbName = db.table(this.tableName);
 
-        const spot = db.raw('sum(if(work_orders.status IN(7), current_bill, 0)) as spot');
-        const pv = db.raw('sum(if(work_orders.status NOT IN(7), current_bill, 0)) as pv');
-        const total = db.raw('sum(if(status IN(7), current_bill, 0) + if(status NOT IN(7), current_bill, 0)) as total');
+        const spot = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0)) as spot');
+        const pv = db.raw('sum(if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as pv');
+        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status NOT IN(7), current_bill, 0)) as total');
 
-        const results = await dbName
+        return await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
             .join('group_subs', 'group_subs.child_group_id', '=', 'groups.id')
             .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
@@ -65,19 +64,17 @@ class WorkOrderMapper extends ModelMapper {
             })
             .whereBetween('work_orders.updated_at', [startDate, endDate])
             .groupBy('work_orders.group_id', 'work_orders.updated_at');
-
-        return results;
     }
 
     async getQueryDisconnectionOrderByBu(groupId, buId, startDate, endDate) {
         const db = this.context.database;
         const dbName = db.table(this.tableName);
 
-        const spot = db.raw('sum(if(work_orders.status IN(7), current_bill, 0)) as spot');
-        const pv = db.raw('sum(if(work_orders.status NOT IN(7), current_bill, 0)) as pv');
-        const total = db.raw('sum(if(status IN(7), current_bill, 0) + if(status NOT IN(7), current_bill, 0)) as total');
+        const spot = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0)) as spot');
+        const pv = db.raw('sum(if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as pv');
+        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status NOT IN(7), current_bill, 0)) as total');
 
-        const results = await dbName
+        return await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
             .join('group_subs', 'group_subs.child_group_id', '=', 'groups.id')
             .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
@@ -90,19 +87,17 @@ class WorkOrderMapper extends ModelMapper {
             })
             .whereBetween('work_orders.updated_at', [startDate, endDate])
             .groupBy('work_orders.group_id', 'work_orders.updated_at');
-
-        return results;
     }
 
     async getQueryDisconnectionOrderByUt(groupId, buId, utId ,startDate, endDate) {
         const db = this.context.database;
         const dbName = db.table(this.tableName);
 
-        const spot = db.raw('sum(if(work_orders.status IN(7), current_bill, 0)) as spot');
-        const pv = db.raw('sum(if(work_orders.status NOT IN(7), current_bill, 0)) as pv');
-        const total = db.raw('sum(if(status IN(7), current_bill, 0) + if(status NOT IN(7), current_bill, 0)) as total');
+        const spot = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0)) as spot');
+        const pv = db.raw('sum(if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as pv');
+        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status NOT IN(7), current_bill, 0)) as total');
 
-        const results = await dbName
+        return await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
             .join('group_subs', 'group_subs.child_group_id', '=', 'groups.id')
             .join('disconnection_billings', 'disconnection_billings.id', '=', 'work_orders.relation_id')
@@ -115,8 +110,6 @@ class WorkOrderMapper extends ModelMapper {
             })
             .whereBetween('work_orders.updated_at', [startDate, endDate])
             .groupBy('work_orders.group_id', 'work_orders.updated_at');
-
-        return results;
     }
 
     async getQueryStatusLookup(dcFilter, rcFilter) {
