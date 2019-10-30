@@ -29,7 +29,7 @@ class WorkOrderMapper extends ModelMapper {
 
         const spot = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0)) as spot');
         const pv = db.raw('sum(if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as pv');
-        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status NOT IN(7), current_bill, 0)) as total');
+        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as total');
 
         return await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
@@ -49,7 +49,7 @@ class WorkOrderMapper extends ModelMapper {
 
         const spot = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0)) as spot');
         const pv = db.raw('sum(if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as pv');
-        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status NOT IN(7), current_bill, 0)) as total');
+        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as total');
 
         return await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
@@ -72,7 +72,7 @@ class WorkOrderMapper extends ModelMapper {
 
         const spot = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0)) as spot');
         const pv = db.raw('sum(if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as pv');
-        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status NOT IN(7), current_bill, 0)) as total');
+        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as total');
 
         return await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
@@ -95,7 +95,7 @@ class WorkOrderMapper extends ModelMapper {
 
         const spot = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0)) as spot');
         const pv = db.raw('sum(if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as pv');
-        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status NOT IN(7), current_bill, 0)) as total');
+        const total = db.raw('sum(if(status_comment = "Spot Payment" && status IN(7), current_bill, 0) + if(status_comment = "Customer Already Paid" && status IN(7), current_bill, 0)) as total');
 
         return await dbName
             .join('groups', 'groups.id', '=', 'work_orders.group_id')
