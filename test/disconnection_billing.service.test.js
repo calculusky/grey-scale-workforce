@@ -39,9 +39,9 @@ function registerGeneralTracker() {
         }
         if (query.sql.indexOf('`amount` from `rc_fees`') !== -1) {
             return query.response([{
-                id:1,
-                name:"R2STP",
-                amount:3000
+                id: 1,
+                name: "R2STP",
+                amount: 3000.00
             }])
         }
     });
@@ -127,22 +127,26 @@ describe("CreateDisconnectionBilling with WorkOrder", () => {
     });
 
 
-    it("Should successfully create a disconnection and a work order", () => {
+    it("Should successfully create a disconnection and a work order", async () => {
         const disconnections = {
             account_no: '0100656722',
-            current_bill: 3000,
-            arrears: 2000,
+            current_bill: 3000.56,
+            arrears: 2000.67,
             work_order: {
                 issue_date: "2019-01-08",
                 summary: "Disconnection Customers",
                 status: 1
             }
         };
-        return expect(API.disconnections().createDisconnectionBilling(disconnections, session, API))
-            .resolves.toEqual(expect.objectContaining({
-                code: 200,
-                data: expect.any(Object)
-            }));
+        const {data} = await API.disconnections().createDisconnectionBilling(disconnections, session, API);
+        const totalAmountPayable = data.data.total_amount_payable;
+
+        expect(totalAmountPayable).toEqual(8001.23);
+        expect(data).toEqual(expect.objectContaining({
+            status: 'success',
+            data: expect.any(Object)
+        }));
+
     });
 });
 

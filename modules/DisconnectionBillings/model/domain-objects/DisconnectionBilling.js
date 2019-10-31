@@ -49,7 +49,7 @@ class DisconnectionBilling extends DomainObject {
     }
 
     setReconnectionFee(fee){
-        this.reconnection_fee =fee;
+        this.reconnection_fee = fee;
     }
 
     paymentPlan() {
