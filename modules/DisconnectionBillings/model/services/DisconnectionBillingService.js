@@ -48,8 +48,10 @@ class DisconnectionBillingService extends ApiService {
 
         const fee = await customer.getReconnectionFee(db);
 
+        console.log(typeof fee);
+
         dBilling.calculateMinAmount();
-        dBilling.setReconnectionFee(fee);
+        dBilling.setReconnectionFee(parseFloat(fee));
         dBilling.calculateTotalAmount();
 
         const DisconnectionBillingMapper = MapperFactory.build(MapperFactory.DISCONNECTION_ORDER);
