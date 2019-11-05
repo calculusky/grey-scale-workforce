@@ -135,19 +135,15 @@ class ReportService {
         }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
     }
 
-    getStatusLookup(query) {
-        const keys = Object.keys(query);
-        const queryData = [];
-
-        keys.forEach(function (item) {
-            const data = JSON.parse(item);
-
-            queryData['dcFilter'] = data.dcFilter;
-            queryData['rcFilter'] = data.rcFilter;
-        });
-
+    /**
+     * @return
+     * Query {dc_filter, rc_filter}
+     * {Promise<{data?: *, code?: *} | never>}
+     */
+    getStatusLookup(query = {}) {
+        const {dc_filter, rc_filter} = query;
         const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
-        return WorkOrderMapper.getQueryStatusLookup(queryData['dcFilter'], queryData['rcFilter']).then(records => {
+        return WorkOrderMapper.getQueryStatusLookup(dc_filter, rc_filter).then(records => {
 
             const items = [];
             records.forEach(function (value) {
@@ -155,6 +151,65 @@ class ReportService {
             });
 
             return Utils.buildResponse({data: {items}});
+        }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
+    }
+
+    /**
+     * @return
+     * Query {startDate, endDate}
+     * {Promise<{data?: *, code?: *} | never>}
+     */
+    getPerformanceIndices(query = {}) {
+        const {start_date, end_date} = query;
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.getQueryPerformanceIndices(start_date, end_date).then(records => {
+
+            const items = [];
+            records.forEach(function (value) {
+                items.push(value);
+            });
+
+            return Utils.buildResponse({data: {items}});
+        }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
+    }
+
+    /**
+     * @return
+     * Query {startDate, endDate}
+     * Params {buId}
+     * {Promise<{data?: *, code?: *} | never>}
+     */
+    getPerformanceIndicesByBu(buId, query = {}) {
+        const {start_date, end_date} = query;
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.getQueryPerformanceIndicesByBu(buId, start_date, end_date).then(records => {
+
+            const items = [];
+            records.forEach(function (value) {
+                items.push(value);
+            });
+
+            return Utils.buildResponse({data: {items}});
+        }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
+    }
+
+    /**
+     * @return
+     * Query {startDate, endDate}
+     * Params {buId, utId}
+     * {Promise<{data?: *, code?: *} | never>}
+     */
+    getPerformanceIndicesByUt(buId, utId, query) {
+        const {start_date, end_date} = query;
+        const WorkOrderMapper = MapperFactory.build(MapperFactory.WORK_ORDER);
+        return WorkOrderMapper.getQueryPerformanceIndicesByUt(buId, utId, start_date, end_date).then(records => {
+
+            const items = [];
+            records.forEach(function(value){
+                items.push(value);
+            });
+
+            return Utils.buildResponse({data: items});
         }).catch(() => Utils.buildResponse({status: 'fail'}, 500))
     }
 }
