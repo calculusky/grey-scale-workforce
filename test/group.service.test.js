@@ -354,7 +354,9 @@ describe("GetGroups", () => {
                         name: 'Abule-Egba-BU',
                         type: expect.stringMatching("business_unit"),
                         short_name: 'ABL'
-                    }]
+                    },
+                    expect.any(Object)
+                    ]
                 }
             }
         });
