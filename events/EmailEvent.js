@@ -89,7 +89,7 @@ class EmailEvent extends EventEmitter {
         const users = await db.table("users").whereIn("id", assignedTo)
             .select(['id', 'email', 'username', 'first_name', 'last_name', 'group_id', 'wf_user_pass']);
 
-        users.forEach(async user => {
+        for (const user of users) {
             const tokenOpt = {
                 sub: user.id,
                 aud: `api`,
@@ -111,7 +111,7 @@ class EmailEvent extends EventEmitter {
                 recipient: `${user.first_name} ${user.last_name}`,
                 link: `${process.env.APP_WEB_URL}/payment-plan-approval/${planId}/${token}`
             });
-        });
+        }
         return true;
     }
 

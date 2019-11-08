@@ -158,7 +158,8 @@ class WorkOrder extends DomainObject {
         const Utils = require('../../../../core/Utility/Utils');
         const bu = getGroupParent(group, 'business_unit') || group;
         const prefix = WorkOrder.getWorkOrderPrefix(this.type_id);
-        const uniqueNo = await Utils.generateUniqueSystemNumber(prefix, bu['short_name'], 'work_orders', ctx);
+        const shortName = bu['short_name'] || (bu.name.substring(0, 2) + bu.name.charAt(3)).toUpperCase();
+        const uniqueNo = await Utils.generateUniqueSystemNumber(prefix, shortName, 'work_orders', ctx);
         this.work_order_no = uniqueNo.toUpperCase();
 
         return this.work_order_no;

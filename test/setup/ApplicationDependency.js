@@ -25,7 +25,7 @@ exports.applicationBeforeAll = async function (ctx) {
     await new Promise((res, rej) => {
         ctx.on('loaded_static', () => {
             ctx.setKey("fault:categories", '{"1":{"id":1, "name":"ApplicationDependency", "type":"default"}}');
-            ctx.setKey("groups", '{"1":{ "id": 1, "name": "Abule-Egba-BU","type": "business_unit","short_name": "ABL"}}');
+            ctx.setKey("groups", '{"1":{ "id": 1, "name": "Abule-Egba-BU","type": "business_unit","short_name": "ABL"}, "6":{ "id": 1, "name": "Akowonjo-BU","type": "business_unit","short_name": null}}');
             ctx.setKey("work:types", '{"1": {"id": 1, "name": "Disconnections"}, "2": {"id": 2, "name": "Re-connections"}, "3": {"id": 3, "name": "Faults"}}');
             ctx.setKey("statuses", '{"DW":[{"id":1,"name":"New","comments":[]},{"id":2,"name":"Assigned","comments":[]},{"id":3,"name":"Closed","comments":[]}],"FW":[{"id":1,"name":"New","comments":[]},{"id":2,"name":"Assigned","comments":[]},{"id":3,"name":"Closed","comments":[]}]}');
             ctx.setKey('material:categories', '{"1":{"id":1, "name":"FUSE", "source":"ie_legend", "source_id":"11"}}');
