@@ -153,7 +153,7 @@ class WorkOrderExportQuery extends ExportQuery {
                         'work_orders.completed_date', 'work_orders.status', 'work_orders.priority', 'work_orders.created_at',
                         db.raw("CONCAT(u.first_name, ' ', u.last_name) as owner"),
                         db.raw("work_orders.assigned_to->'$[*].created_at' as times_assigned"),
-                        db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', ua.first_name, ' ', ua.last_name, '"')), ']')as JSON) as assigned_to`),
+                        db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', ua.first_name, ' ', ua.last_name, '"')), ']') as JSON) as assigned_to`),
                         db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', att.file_name, '"')), ']') as JSON) as attachments`),
                         db.raw(`GROUP_CONCAT(DISTINCT CONCAT(nu.first_name, ' - ', nt.note, ' : ', nt.created_at) SEPARATOR '<@>') as notes`)
                     );
@@ -166,6 +166,8 @@ class WorkOrderExportQuery extends ExportQuery {
         this.sqlQuery.select(selectCols);
         this.sqlQuery.where(`${this.modelMapper.tableName}.deleted_at`, null);
         ApiService.queryWithPermissions('works.index', this.sqlQuery, this.modelMapper, this.who);
+
+        console.log(this.sqlQuery.toString());
     }
 
     /**
@@ -194,6 +196,7 @@ class WorkOrderExportQuery extends ExportQuery {
             row['undertaking'] = (undertaking) ? undertaking.name : null;
             return row;
         });
+        console.log(results);
         super.onResultQuery(results);
     }
 
