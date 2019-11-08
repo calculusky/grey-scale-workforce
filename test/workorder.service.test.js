@@ -72,6 +72,21 @@ describe("Work Order Creation", () => {
         });
     });
 
+    it("CreateWorkOrder should create a work order successfully if the business unit short name is null", async () => {
+        const workOrderDummy = {
+            type_id: 3,
+            related_to: "disconnection_billings",
+            relation_id: "2",
+            labels: '["work"]',
+            summary: "Fix it",
+            assigned_to: `["1"]`,
+            status: '1',
+            group_id: 6
+        };
+        const {data:{data}} = await API.workOrders().createWorkOrder(workOrderDummy, session, API);
+        return expect(data.work_order_no.substring(0, 4)).toEqual("FAKW");
+    });
+
     it("CreateGroup should fail when an invalid group_id is given", () => {
         const workOrderDummy = {
             type_id: 3,
