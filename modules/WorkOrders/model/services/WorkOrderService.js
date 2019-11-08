@@ -208,7 +208,7 @@ class WorkOrderService extends ApiService {
      * @param query {Object}
      * @param who {Session}
      * @param API {API}
-     * @returns {Promise<void>}
+     * @returns {Promise<{data?: *, code?: *}>}
      */
     async exportWorkOrders(query, who, API) {
         const validator = new validate(query, {type_id: "required"});

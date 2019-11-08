@@ -65,6 +65,7 @@ class WorkOrderExportQuery extends ExportQuery {
      */
     onQuery(query) {
         const db = this.modelMapper.context.database;
+        const tableName = this.modelMapper.tableName;
         this.sqlQuery = db.table(this.modelMapper.tableName);
         const selectCols = [];
         for (const [key, value] of Object.entries(query)) {
@@ -84,15 +85,15 @@ class WorkOrderExportQuery extends ExportQuery {
                 case 'completed_date': {
                     const dateFrom = Utils.date.dateFormat(value, undefined, 'YYYY-MM-DD HH:mm');
                     const compDateTo = Utils.date.dateFormat(query['completed_date_to'] || value, undefined, 'YYYY-MM-DD HH:mm');
-                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, ">=", `${dateFrom}:00`)
-                        .where(`${this.modelMapper.tableName}.${key}`, "<=", `${compDateTo}:00`);
+                    this.sqlQuery.where(`${tableName}.${key}`, ">=", `${dateFrom}:00`)
+                        .where(`${tableName}.${key}`, "<=", `${compDateTo}:00`);
                     break;
                 }
                 case 'date_from': {
                     const dateFrom = Utils.date.dateFormat(value, undefined, 'YYYY-MM-DD');
                     const dateTo = Utils.date.dateFormat(query['date_to'] || value, undefined, 'YYYY-MM-DD');
-                    this.sqlQuery.where(`${this.modelMapper.tableName}.created_at`, ">=", `${dateFrom} 00:00:00`)
-                        .where(`${this.modelMapper.tableName}.created_at`, "<=", `${dateTo} 23:59:00`);
+                    this.sqlQuery.where(`${tableName}.created_at`, ">=", `${dateFrom} 00:00:00`)
+                        .where(`${tableName}.created_at`, "<=", `${dateTo} 23:59:00`);
                     break;
                 }
                 case 'account_no': {
@@ -110,13 +111,13 @@ class WorkOrderExportQuery extends ExportQuery {
                 }
                 case 'work_order_no': {
                     const workOrderNo = value.replace(/-/g, "");
-                    this.sqlQuery.where(`${this.modelMapper.tableName}.${key}`, workOrderNo);
+                    this.sqlQuery.where(`${tableName}.${key}`, workOrderNo);
                     break;
                 }
                 case 'type_id': {
                     //@Query for Disconnection and Reconnection work orders
                     if (`${value}` === '1' || `${value}` === '2') {
-                        this.sqlQuery.innerJoin('disconnection_billings AS db', 'work_orders.work_order_no', 'db.work_order_id');
+                        this.sqlQuery.innerJoin('disconnection_billings AS db', `${tableName}.work_order_no`, 'db.work_order_id');
                         this.sqlQuery.innerJoin('customers AS c', 'db.account_no', 'c.account_no');
                         this.sqlQuery.leftJoin('customers_assets AS ca', 'c.account_no', 'ca.customer_id');
                         this.sqlQuery.leftJoin('assets AS a2', 'ca.asset_id', 'a2.id');
@@ -126,7 +127,7 @@ class WorkOrderExportQuery extends ExportQuery {
                             'db.total_amount_payable'
                         );
                         this.sqlQuery.groupBy(
-                            'work_orders.work_order_no', 'a2.asset_name', 'c.account_no',
+                            `${tableName}.work_order_no`, 'a2.asset_name', 'c.account_no',
                             'db.current_bill', 'db.arrears', 'db.min_amount_payable', 'db.total_amount_payable'
                         );
                     }
@@ -137,23 +138,28 @@ class WorkOrderExportQuery extends ExportQuery {
                         this.sqlQuery.leftJoin('fault_categories AS fc', 'fc.id', 'ft.fault_category_id');
                         selectCols.push('ft.id as fault_no', 'a2.asset_name as asset_name',
                             'a2.group_id as undertaking', 'fc.name as fault_operation');
-                        this.sqlQuery.groupBy('work_orders.work_order_no', 'asset_name');
+                        this.sqlQuery.groupBy(`${tableName}.work_order_no`, 'asset_name');
                     }
                     /*--------------------------------------------------
                     * @Query default query for all type of work orders |
                     *--------------------------------------------------*/
                     this.sqlQuery.where(key, value);
-                    this.sqlQuery.leftJoin('notes AS nt', 'work_orders.id', 'nt.relation_id');
-                    this.sqlQuery.leftJoin('attachments AS att', 'nt.id', 'att.relation_id');
-                    this.sqlQuery.leftJoin('users AS ua', db.raw(`JSON_CONTAINS(work_orders.assigned_to->'$[*].id', CAST(ua.id as JSON))`));
+                    this.sqlQuery.leftJoin('notes AS nt', function () {
+                        this.on(`${tableName}.id`, '=', 'nt.relation_id').andOn('nt.module', '=', db.raw('?', [`${tableName}`]));
+                    });
+                    this.sqlQuery.leftJoin('attachments AS att', function () {
+                        this.on('nt.id', '=', 'att.relation_id').andOn('att.module', '=', db.raw('?', ['notes']));
+                        this.orOn(`${tableName}.id`, '=', 'att.relation_id').andOn('att.module', '=', db.raw('?', [`${tableName}`]))
+                    });
+                    this.sqlQuery.leftJoin('users AS ua', db.raw(`JSON_CONTAINS(${tableName}.assigned_to->'$[*].id', CAST(ua.id as JSON))`));
                     this.sqlQuery.leftJoin("users AS nu", 'nt.created_by', 'nu.id');
-                    this.sqlQuery.leftJoin("users AS u", 'work_orders.created_by', 'u.id');
+                    this.sqlQuery.leftJoin("users AS u", `${tableName}.created_by`, 'u.id');
                     selectCols.push(
-                        'work_orders.id as id', 'work_order_no', 'work_orders.start_date',
-                        'work_orders.completed_date', 'work_orders.status', 'work_orders.priority', 'work_orders.created_at',
+                        `${tableName}.id as id`, 'work_order_no', `${tableName}.start_date`,
+                        `${tableName}.completed_date`, `${tableName}.status`, `${tableName}.priority`, `${tableName}.created_at`,
                         db.raw("CONCAT(u.first_name, ' ', u.last_name) as owner"),
-                        db.raw("work_orders.assigned_to->'$[*].created_at' as times_assigned"),
-                        db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', ua.first_name, ' ', ua.last_name, '"')), ']')as JSON) as assigned_to`),
+                        db.raw(`${tableName}.assigned_to->'$[*].created_at' as times_assigned`),
+                        db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', ua.first_name, ' ', ua.last_name, '"')), ']') as JSON) as assigned_to`),
                         db.raw(`CAST(CONCAT('[', GROUP_CONCAT(DISTINCT CONCAT('"', att.file_name, '"')), ']') as JSON) as attachments`),
                         db.raw(`GROUP_CONCAT(DISTINCT CONCAT(nu.first_name, ' - ', nt.note, ' : ', nt.created_at) SEPARATOR '<@>') as notes`)
                     );
@@ -166,6 +172,8 @@ class WorkOrderExportQuery extends ExportQuery {
         this.sqlQuery.select(selectCols);
         this.sqlQuery.where(`${this.modelMapper.tableName}.deleted_at`, null);
         ApiService.queryWithPermissions('works.index', this.sqlQuery, this.modelMapper, this.who);
+
+        console.log(this.sqlQuery.toString());
     }
 
     /**
