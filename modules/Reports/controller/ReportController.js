@@ -123,4 +123,146 @@ module.exports.controller = function (app, {API, jsonParser, urlencodedParser}) 
                 return res.status(code).send(err);
             });
     });
+
+    /**
+     * DO Performance Report
+     * Description: This report displays the number of Disconnection Orders completed daily over a time period.
+     **/
+    app.get('/reports/do_performance', (req, res) => {
+        return API.reports().getDoPerformance(req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * DO Performance Report by BU drill down
+     **/
+    app.get('/reports/do_performance/do_performance_by_bu/:groupId', (req, res) => {
+        return API.reports().getDoPerformanceByBu(req.params['groupId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * DO Performance Report by UT drill down
+     **/
+    app.get('/reports/do_performance/do_performance_by_ut/:groupId/:utId', (req, res) => {
+        return API.reports().getDoPerformanceByUt(req.params['groupId'], req.params['utId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * DO Performance Report by Gang drill down
+     **/
+    app.get('/reports/do_performance/do_performance_by_gang/:groupId/:utId/:gangId', (req, res) => {
+        return API.reports().getDoPerformanceByGang(req.params['groupId'], req.params['utId'], req.params['gangId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * RO Performance Report
+     * Description: This report displays the number of Reconnection Orders executed over the past five days.
+     **/
+    app.get('/reports/ro_performance', (req, res) => {
+        // console.log(req.query);
+        return API.reports().getRoPerformance(req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * RO Performance Report by BU drill down
+     **/
+    app.get('/reports/ro_performance/ro_performance_by_bu/:groupId', (req, res) => {
+        return API.reports().getRoPerformanceByBu(req.params['groupId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * RO Performance Report by UT drill down
+     **/
+    app.get('/reports/ro_performance/ro_performance_by_ut/:groupId/:utId', (req, res) => {
+        return API.reports().getRoPerformanceByUt(req.params['groupId'], req.params['utId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * RO Performance Report by Gang drill down
+     **/
+    app.get('/reports/ro_performance/ro_performance_by_gang/:groupId/:utId/:gangId', (req, res) => {
+        return API.reports().getRoPerformanceByGang(req.params['groupId'], req.params['utId'], req.params['gangId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err));
+    });
+
+    /**
+     * Classification of Disconnections/ Reconnections
+     * Description: This dashboard displays the number of disconnections and reconnections by Customer type; namely MD and NMD.
+     **/
+    app.get('/reports/classification', (req, res) => {
+        return API.reports().getClassification(req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err))
+    });
+
+    /**
+     * Classification of Disconnections/ Reconnections (by BU) drilldown
+     * Description: This dashboard displays the number of disconnections and reconnections by Customer type; namely MD and NMD.
+     **/
+    app.get('/reports/classification/classification_by_type/:customerType', (req, res) => {
+        return API.reports().getClassificationByType(req.params['customerType'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err))
+    });
+
+    /**
+     * Classification of Disconnections/ Reconnections (by UT) drilldown
+     * Description: This dashboard displays the number of disconnections and reconnections by Customer type; namely MD and NMD.
+     **/
+    app.get('/reports/classification/classification_by_bu/:customerType/:buId', (req, res) => {
+        return API.reports().getClassificationByBu(req.params['customerType'], req.params['buId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err))
+    });
+
+    /**
+     * Classification of Disconnections/ Reconnections (by Gang) drilldown
+     * Description: This dashboard displays the number of disconnections and reconnections by Customer type; namely MD and NMD.
+     **/
+    app.get('/reports/classification/classification_by_ut/:customerType/:buId/:utId', (req, res) => {
+        return API.reports().getClassificationByUt(req.params['customerType'], req.params['buId'], req.params['utId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err))
+    });
+
+    /**
+     * List of Customers Disconnected/ Reconnected drilldown by BU
+     **/
+    app.get('/reports/classification/list_of_customer/:customerType/:buId', (req, res) => {
+        return API.reports().getListCustomerByBu(req.params['customerType'], req.params['buId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err))
+    });
+
+    /**
+     * List of Customers Disconnected/ Reconnected drilldown by UT
+     **/
+    app.get('/reports/classification/list_of_customer/:customerType/:buId/:utId', (req, res) => {
+        return API.reports().getListCustomerByUt(req.params['customerType'], req.params['buId'], req.params['utId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err))
+    });
+
+    /**
+     * List of Customers Disconnected/ Reconnected drilldown by Gang
+     **/
+    app.get('/reports/classification/list_of_customer/:customerType/:buId/:utId/:gangId', (req, res) => {
+        return API.reports().getListCustomerByGang(req.params['customerType'], req.params['buId'], req.params['utId'], req.params['gangId'], req.query)
+            .then(({data, code}) => res.status(code).send(data))
+            .catch(({err, code}) => res.status(code).send(err))
+    });
 };
