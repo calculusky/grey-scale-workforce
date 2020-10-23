@@ -6,7 +6,7 @@ Original API Design and Implementation:
   Paul Okeke <pugochukwu@vas-consulting.com, donpaul120@gmail.com>
 
 Process Maker Integration:
-  Paul Okeke <pugochukwu@vas-consulting.com, donpaul120@gmail.com>
+  Paul Okeke <pugochukwu@vas-consulting.com, donpaul120@gmail.com, calculusky@gmail.com>
 
 
 Patch Contributors:
